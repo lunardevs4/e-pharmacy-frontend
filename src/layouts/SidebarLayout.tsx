@@ -61,6 +61,7 @@ export default function SidebarLayout() {
         return [
           { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
           { path: '/admin/users', label: 'Users', icon: Users },
+          { path: '/admin/medicines', label: 'Medicines', icon: Package },
           { path: '/admin/roles', label: 'Roles & Access', icon: ShieldAlert },
           { path: '/admin/settings', label: 'Settings', icon: Settings },
           { path: '/admin/audit', label: 'Audit Logs', icon: FileLock2 },
@@ -88,17 +89,7 @@ export default function SidebarLayout() {
       }`}>
         {/* Brand header */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-emerald-900/60">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded bg-emerald-400 text-emerald-950 flex items-center justify-center font-bold text-base">
-              R
-            </div>
-            <div>
-              <span className="font-bold text-sm leading-tight block">National E-Pharmacy</span>
-              <span className="block text-[8px] text-emerald-350 tracking-wider font-semibold uppercase -mt-0.5">
-                {user?.role} Portal
-              </span>
-            </div>
-          </div>
+          <div className="w-8 h-8 rounded bg-emerald-400/80" />
           <button onClick={toggleSidebar} className="md:hidden text-white hover:text-emerald-300">
             <X className="w-5 h-5" />
           </button>
