@@ -6,6 +6,9 @@ export default function PublicRoute() {
   const { isAuthenticated, user } = useAuthStore()
 
   if (isAuthenticated && user) {
+    if (user.firstLogin) {
+      return <Navigate to="/change-password" replace />
+    }
     switch (user.role) {
       case 'PATIENT':
         return <Navigate to="/patient" replace />

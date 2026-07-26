@@ -8,6 +8,8 @@ import SidebarLayout from '@/layouts/SidebarLayout'
 import LandingPage from '@/pages/public/Landing'
 import Login from '@/pages/public/Login'
 import Register from '@/pages/public/Register'
+import ForgotPassword from '@/pages/public/ForgotPassword'
+import ChangePassword from '@/pages/public/ChangePassword'
 
 // Patient Pages
 import PatientDashboard from '@/pages/patient/Dashboard'
@@ -51,12 +53,21 @@ import AdminAuditLogs from '@/pages/admin/AuditLogs'
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Unrestricted Landing Page */}
+      <Route path="/" element={<LandingPage />} />
+
+      {/* Public Routes (Guests only, redirects if authenticated) */}
       <Route element={<PublicRoute />}>
-        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-email" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ForgotPassword />} />
+        <Route path="/success" element={<ForgotPassword />} />
       </Route>
+
+      {/* Auth State Pending Password Enforce Route */}
+      <Route path="/change-password" element={<ChangePassword />} />
 
       {/* Patient Portal */}
       <Route element={<ProtectedRoute allowedRoles={['PATIENT']} />}>

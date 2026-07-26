@@ -8,6 +8,11 @@ export interface User {
   nid?: string // National ID (crucial for Rwanda healthcare)
   licenseNumber?: string // For Pharmacy
   insuranceProvider?: string // For Insurance Company
+  firstLogin?: boolean // Mandatory first-time password change flag
+  position?: string // Employee position (e.g. Pharmacist)
+  permissions?: string[] // Employee permissions array
+  pharmacyId?: string // Link to pharmacy organization
+  pharmacyName?: string // Name of the pharmacy
 }
 
 export interface AuthState {
