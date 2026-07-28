@@ -25,7 +25,11 @@ import PharmacyDashboard from '@/pages/pharmacy/Dashboard'
 import PharmacyInventory from '@/pages/pharmacy/Inventory'
 import PharmacyReservations from '@/pages/pharmacy/Reservations'
 import PharmacyInsuranceClaims from '@/pages/pharmacy/InsuranceClaims'
+import PharmacyPatients from '@/pages/pharmacy/Patients'
+import PharmacyStaff from '@/pages/pharmacy/StaffManagement'
+import PharmacyAudit from '@/pages/pharmacy/AuditTrail'
 import PharmacyReports from '@/pages/pharmacy/Reports'
+import PharmacySettings from '@/pages/pharmacy/Settings'
 import PharmacyNotifications from '@/pages/pharmacy/Notifications'
 import PharmacyProfile from '@/pages/pharmacy/Profile'
 
@@ -88,8 +92,12 @@ export default function AppRoutes() {
           <Route index element={<PharmacyDashboard />} />
           <Route path="inventory" element={<PharmacyInventory />} />
           <Route path="reservations" element={<PharmacyReservations />} />
+          <Route path="patients" element={<PharmacyPatients />} />
           <Route path="claims" element={<PharmacyInsuranceClaims />} />
+          <Route path="staff" element={<PharmacyStaff />} />
+          <Route path="audit" element={<PharmacyAudit />} />
           <Route path="reports" element={<PharmacyReports />} />
+          <Route path="settings" element={<PharmacySettings />} />
           <Route path="notifications" element={<PharmacyNotifications />} />
           <Route path="profile" element={<PharmacyProfile />} />
         </Route>

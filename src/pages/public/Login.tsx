@@ -6,10 +6,10 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
 import AuthLayout from '@/layouts/AuthLayout'
-import { Lock, Mail, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Lock, User, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff } from 'lucide-react'
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  identifier: z.string().min(1, 'Username or Email is required'),
   password: z.string().min(1, 'Password is required'),
 })
 
@@ -34,16 +34,16 @@ export default function Login() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      identifier: '',
       password: '',
     },
   })
 
-  // Load remembered email on mount
+  // Load remembered identifier on mount
   useEffect(() => {
-    const savedEmail = localStorage.getItem('epharmacy_remembered_email')
-    if (savedEmail) {
-      setValue('email', savedEmail)
+    const savedIdentifier = localStorage.getItem('epharmacy_remembered_identifier')
+    if (savedIdentifier) {
+      setValue('identifier', savedIdentifier)
       setRememberMe(true)
     }
   }, [setValue])
@@ -55,13 +55,13 @@ export default function Login() {
 
     try {
       // Authenticate via NestJS-compatible auth service
-      const res = await AuthApi.login(data.email, data.password)
+      const res = await AuthApi.login(data.identifier, data.password)
       
-      // Save email if rememberMe is enabled
+      // Save identifier if rememberMe is enabled
       if (rememberMe) {
-        localStorage.setItem('epharmacy_remembered_email', data.email)
+        localStorage.setItem('epharmacy_remembered_identifier', data.identifier)
       } else {
-        localStorage.removeItem('epharmacy_remembered_email')
+        localStorage.removeItem('epharmacy_remembered_identifier')
       }
 
       setSuccessMsg('Authentication successful! Redirecting...')
@@ -69,14 +69,13 @@ export default function Login() {
       // Save details to Zustand authStore
       login(res.user, res.accessToken)
 
-      // Automatically check firstLogin flag
+      // Direct roles to appropriate dashboards based STRICTLY on returned user role
       setTimeout(() => {
         if (res.user.firstLogin) {
           navigate('/change-password')
           return
         }
 
-        // Direct roles to appropriate dashboards
         switch (res.user.role) {
           case 'PATIENT':
             navigate('/patient')
@@ -121,28 +120,28 @@ export default function Login() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email Address */}
+        {/* Username or Email Address */}
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
-            Email Address
+          <label htmlFor="identifier" className="block text-sm font-semibold text-gray-700">
+            Username or Email
           </label>
           <div className="mt-1 relative rounded-md shadow-sm">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-4 w-4 text-gray-400" />
+              <User className="h-4 w-4 text-gray-400" />
             </div>
             <input
-              id="email"
-              type="email"
+              id="identifier"
+              type="text"
               disabled={isLoading}
-              {...register('email')}
+              {...register('identifier')}
               className={`block w-full pl-10 pr-3 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 ${
-                errors.email ? 'border-red-300' : 'border-gray-300'
+                errors.identifier ? 'border-red-300' : 'border-gray-300'
               }`}
-              placeholder="e.g. staff@epharmacy.rw"
+              placeholder="Username or Email address"
             />
           </div>
-          {errors.email && (
-            <p className="mt-1 text-xs text-red-650">{errors.email.message}</p>
+          {errors.identifier && (
+            <p className="mt-1 text-xs text-red-655">{errors.identifier.message}</p>
           )}
         </div>
 
@@ -179,7 +178,7 @@ export default function Login() {
             </button>
           </div>
           {errors.password && (
-            <p className="mt-1 text-xs text-red-650">{errors.password.message}</p>
+            <p className="mt-1 text-xs text-red-655">{errors.password.message}</p>
           )}
         </div>
 
@@ -194,7 +193,7 @@ export default function Login() {
               onChange={(e) => setRememberMe(e.target.checked)}
               className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded cursor-pointer"
             />
-            <label htmlFor="remember_me" className="ml-2 block text-xs text-gray-750 font-medium cursor-pointer">
+            <label htmlFor="remember_me" className="ml-2 block text-xs text-gray-755 font-medium cursor-pointer">
               Remember me
             </label>
           </div>

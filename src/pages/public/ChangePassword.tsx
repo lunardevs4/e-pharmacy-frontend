@@ -58,7 +58,7 @@ export default function ChangePassword() {
 
     try {
       // Call mock auth api
-      await AuthApi.changePassword(user.email, currentPass, newPass)
+      await AuthApi.changePassword(user.username, currentPass, newPass)
       setSuccessMsg('Password updated successfully! Redirecting to portal...')
       
       // Update state in Zustand store
