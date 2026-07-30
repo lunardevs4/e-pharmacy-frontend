@@ -384,9 +384,74 @@ export const AuthApi = {
     })
   },
 
-  getCurrentUser: async (): Promise<AuthUser> => {
+  getCurrentUser: async (): Promise<any> => {
     const session = localStorage.getItem(CURRENT_USER_KEY)
     if (!session) throw new Error('No active session.')
     return JSON.parse(session).user
+  },
+
+  updateProfile: async (emailOrUsername: string, updatedFields: any): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const idClean = emailOrUsername.toLowerCase().trim()
+        const dynamicUsers = getDynamicUsers()
+        
+        let account = Object.values(MOCK_ACCOUNTS).find(
+          (acc) => acc.username.toLowerCase() === idClean || acc.email?.toLowerCase() === idClean
+        )
+
+        let isDynamic = false
+        if (!account) {
+          account = Object.values(dynamicUsers).find(
+            (acc) => acc.username.toLowerCase() === idClean || acc.email?.toLowerCase() === idClean
+          )
+          isDynamic = true
+        }
+
+        if (!account) {
+          reject(new Error('User account not found.'))
+          return
+        }
+
+        // Merge properties
+        Object.assign(account, updatedFields)
+
+        if (isDynamic) {
+          dynamicUsers[account.username.toLowerCase()] = account
+          localStorage.setItem(DYNAMIC_USERS_KEY, JSON.stringify(dynamicUsers))
+        }
+
+        // Also update cached session CURRENT_USER_KEY
+        const sessionStr = localStorage.getItem(CURRENT_USER_KEY)
+        if (sessionStr) {
+          const session = JSON.parse(sessionStr)
+          session.user = { ...session.user, ...updatedFields }
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(session))
+        }
+
+        resolve(account)
+      }, 600)
+    })
+  },
+
+  uploadProfilePhoto: async (file: File): Promise<{ profilePhoto: string }> => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return { profilePhoto: URL.createObjectURL(file) }
+  },
+
+  getProfile: async (emailOrUsername: string): Promise<any> => {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    const idClean = emailOrUsername.toLowerCase().trim()
+    const dynamicUsers = getDynamicUsers()
+    let account = Object.values(MOCK_ACCOUNTS).find(
+      (acc) => acc.username.toLowerCase() === idClean || acc.email?.toLowerCase() === idClean
+    )
+    if (!account) {
+      account = Object.values(dynamicUsers).find(
+        (acc) => acc.username.toLowerCase() === idClean || acc.email?.toLowerCase() === idClean
+      )
+    }
+    if (!account) throw new Error('Account not found')
+    return account
   }
 }

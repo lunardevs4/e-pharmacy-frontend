@@ -477,5 +477,129 @@ export const MedicineApi = {
   getReservationHistory: async (): Promise<Reservation[]> => {
     await new Promise((resolve) => setTimeout(resolve, 600))
     return getSavedReservations()
+  },
+
+  // Fetch notifications log
+  getNotifications: async (): Promise<any[]> => {
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    const key = 'epharmacy_notifications_mock'
+    const data = localStorage.getItem(key)
+    if (data) return JSON.parse(data)
+    
+    // Seed initial notifications matching constraints
+    const seeded = [
+      { id: 'not-001', title: 'Reservation Confirmed', message: 'Your reservation for Artemether + Lumefantrine has been confirmed by Bralirwa Pharmacy.', type: 'RESERVATION', read: false, createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
+      { id: 'not-002', title: 'Medicine Ready for Pickup', message: 'Amoxicillin 500mg is packaged and ready for collection at CityMed Nyarugenge.', type: 'RESERVATION', read: false, createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+      { id: 'not-003', title: 'Prescription Approved', message: 'MOH validation successfully approved your prescription for Insulin Glargine.', type: 'PRESCRIPTION', read: true, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'not-004', title: 'Password Changed', message: 'Your patient portal access password was updated successfully.', type: 'SECURITY', read: true, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
+    ]
+    localStorage.setItem(key, JSON.stringify(seeded))
+    return seeded
+  },
+
+  markNotificationRead: async (id: string): Promise<boolean> => {
+    const key = 'epharmacy_notifications_mock'
+    const list = await MedicineApi.getNotifications()
+    const updated = list.map((n) => n.id === id ? { ...n, read: true } : n)
+    localStorage.setItem(key, JSON.stringify(updated))
+    return true
+  },
+
+  markAllNotificationsRead: async (): Promise<boolean> => {
+    const key = 'epharmacy_notifications_mock'
+    const list = await MedicineApi.getNotifications()
+    const updated = list.map((n) => ({ ...n, read: true }))
+    localStorage.setItem(key, JSON.stringify(updated))
+    return true
+  },
+
+  deleteNotification: async (id: string): Promise<boolean> => {
+    const key = 'epharmacy_notifications_mock'
+    const list = await MedicineApi.getNotifications()
+    const updated = list.filter((n) => n.id !== id)
+    localStorage.setItem(key, JSON.stringify(updated))
+    return true
+  },
+
+  clearAllNotifications: async (): Promise<boolean> => {
+    const key = 'epharmacy_notifications_mock'
+    localStorage.setItem(key, JSON.stringify([]))
+    return true
+  },
+
+  // Favourite Medicines list
+  getFavouriteMedicines: async (): Promise<string[]> => {
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    const key = 'epharmacy_fav_medicines_mock'
+    const data = localStorage.getItem(key)
+    return data ? JSON.parse(data) : []
+  },
+
+  saveFavouriteMedicine: async (medicineId: string, isFav: boolean): Promise<boolean> => {
+    const key = 'epharmacy_fav_medicines_mock'
+    const list = await MedicineApi.getFavouriteMedicines()
+    let updated = [...list]
+    if (isFav) {
+      if (!updated.includes(medicineId)) updated.push(medicineId)
+    } else {
+      updated = updated.filter((id) => id !== medicineId)
+    }
+    localStorage.setItem(key, JSON.stringify(updated))
+    return true
+  },
+
+  // Favourite Pharmacies list
+  getFavouritePharmacies: async (): Promise<string[]> => {
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    const key = 'epharmacy_fav_pharmacies_mock'
+    const data = localStorage.getItem(key)
+    return data ? JSON.parse(data) : []
+  },
+
+  saveFavouritePharmacy: async (pharmacyId: string, isFav: boolean): Promise<boolean> => {
+    const key = 'epharmacy_fav_pharmacies_mock'
+    const list = await MedicineApi.getFavouritePharmacies()
+    let updated = [...list]
+    if (isFav) {
+      if (!updated.includes(pharmacyId)) updated.push(pharmacyId)
+    } else {
+      updated = updated.filter((id) => id !== pharmacyId)
+    }
+    localStorage.setItem(key, JSON.stringify(updated))
+    return true
+  },
+
+  // Search History tracking (Max 20 searches)
+  getSearchHistory: async (): Promise<any[]> => {
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    const key = 'epharmacy_search_history_mock'
+    const data = localStorage.getItem(key)
+    return data ? JSON.parse(data) : []
+  },
+
+  saveSearchHistory: async (query: string, category: string): Promise<boolean> => {
+    if (!query.trim()) return false
+    const key = 'epharmacy_search_history_mock'
+    const list = await MedicineApi.getSearchHistory()
+    
+    // Filter duplicates of same query string
+    const filtered = list.filter((item) => item.query.toLowerCase() !== query.toLowerCase())
+    
+    const newItem = {
+      id: `sh-${Math.random().toString(36).substring(2, 9)}`,
+      query,
+      category: category || 'All',
+      timestamp: new Date().toISOString()
+    }
+    
+    const updated = [newItem, ...filtered].slice(0, 20)
+    localStorage.setItem(key, JSON.stringify(updated))
+    return true
+  },
+
+  clearSearchHistory: async (): Promise<boolean> => {
+    const key = 'epharmacy_search_history_mock'
+    localStorage.setItem(key, JSON.stringify([]))
+    return true
   }
 }

@@ -1,18 +1,39 @@
 import React from 'react'
+import { Star } from 'lucide-react'
 import { Medicine } from '@/types'
 
 interface MedicineCardProps {
   medicine: Medicine
   onViewAvailability: (med: Medicine) => void
+  isBookmarked?: boolean
+  onToggleBookmark?: (medId: string) => void
 }
 
-export default function MedicineCard({ medicine, onViewAvailability }: MedicineCardProps) {
+export default function MedicineCard({ 
+  medicine, 
+  onViewAvailability,
+  isBookmarked = false,
+  onToggleBookmark
+}: MedicineCardProps) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:border-emerald-350 transition-colors flex flex-col justify-between space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-        <div className="space-y-2">
+        <div className="space-y-2 flex-grow">
           <div className="flex items-center flex-wrap gap-2">
             <h3 className="font-black text-gray-900 text-lg leading-tight">{medicine.name}</h3>
+            
+            {/* Bookmarking toggler icon button */}
+            {onToggleBookmark && (
+              <button
+                type="button"
+                onClick={() => onToggleBookmark(medicine.id)}
+                className="p-1 hover:bg-slate-100 rounded-full transition-colors text-rose-500"
+                title={isBookmarked ? 'Remove Bookmark' : 'Add Bookmark'}
+              >
+                <Star className={`w-5 h-5 ${isBookmarked ? 'fill-rose-500' : 'text-gray-300'}`} />
+              </button>
+            )}
+
             <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full uppercase border border-emerald-100">
               {medicine.category}
             </span>
@@ -41,7 +62,7 @@ export default function MedicineCard({ medicine, onViewAvailability }: MedicineC
         </div>
 
         {/* Nearby preview snippet */}
-        <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-2.5 w-full sm:w-64">
+        <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-2.5 w-full sm:w-64 flex-shrink-0">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Nearby Availability</span>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between items-center text-gray-700">

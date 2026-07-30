@@ -3,10 +3,12 @@ import { useLocation } from 'react-router-dom'
 import { Map, List, Star, MapPin, Check, X, Shield, ArrowRight, ArrowLeft, CheckCircle2, RefreshCw, AlertCircle, ChevronRight } from 'lucide-react'
 import { useMedicineSearch } from '@/hooks/useMedicineSearch'
 import { Medicine, PharmacyStock, Reservation } from '@/types'
+import { MedicineApi } from '@/services/medicine-api'
 import MedicineSearchBar from '@/components/patient/MedicineSearchBar'
 import MedicineCard from '@/components/patient/MedicineCard'
 import PharmacyAvailabilityTable from '@/components/patient/PharmacyAvailabilityTable'
 import PrescriptionUploader from '@/components/patient/PrescriptionUploader'
+import { CardSkeleton } from '@/components/patient/LoadingSkeleton'
 import { INSURANCE_COVERAGE_RATES } from '@/config/insurance-rates'
 
 export default function MedicineSearch() {
@@ -31,10 +33,24 @@ export default function MedicineSearch() {
   const [sortBy, setSortBy] = useState('proximity')
   const [hasSearched, setHasSearched] = useState(!!initialQuery)
 
+  // Bookmarking and search history states
+  const [bookmarkedMedicines, setBookmarkedMedicines] = useState<string[]>([])
+  const [bookmarkedPharmacies, setBookmarkedPharmacies] = useState<string[]>([])
+  const [searchHistory, setSearchHistory] = useState<any[]>([])
+  const [inputFocused, setInputFocused] = useState(false)
+
+  // Load bookmarks and history on mount
+  useEffect(() => {
+    MedicineApi.getFavouriteMedicines().then(setBookmarkedMedicines)
+    MedicineApi.getFavouritePharmacies().then(setBookmarkedPharmacies)
+    MedicineApi.getSearchHistory().then(setSearchHistory)
+  }, [])
+
   // Trigger search immediately if quick search initialQuery exists
   useEffect(() => {
     if (initialQuery) {
       executeSearch(initialQuery, '', false)
+      MedicineApi.saveSearchHistory(initialQuery, '')
     }
   }, [initialQuery, executeSearch])
 
@@ -78,6 +94,11 @@ export default function MedicineSearch() {
     setSelectedMedicine(null)
     setStockList([])
     executeSearch(query, category, inStockOnly)
+    if (query.trim()) {
+      MedicineApi.saveSearchHistory(query, category)
+      // Refresh search history cache
+      MedicineApi.getSearchHistory().then(setSearchHistory)
+    }
     setHasSearched(true)
   }
 
@@ -87,7 +108,36 @@ export default function MedicineSearch() {
     setSelectedMedicine(null)
     setStockList([])
     executeSearch(term, category, inStockOnly)
+    MedicineApi.saveSearchHistory(term, category)
+    MedicineApi.getSearchHistory().then(setSearchHistory)
     setHasSearched(true)
+  }
+
+  // Bookmarks toggles
+  const handleToggleBookmarkMedicine = async (medId: string) => {
+    const isFav = bookmarkedMedicines.includes(medId)
+    const nextStatus = !isFav
+    try {
+      await MedicineApi.saveFavouriteMedicine(medId, nextStatus)
+      setBookmarkedMedicines((prev) => 
+        nextStatus ? [...prev, medId] : prev.filter((id) => id !== medId)
+      )
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleToggleBookmarkPharmacy = async (pharmId: string) => {
+    const isFav = bookmarkedPharmacies.includes(pharmId)
+    const nextStatus = !isFav
+    try {
+      await MedicineApi.saveFavouritePharmacy(pharmId, nextStatus)
+      setBookmarkedPharmacies((prev) => 
+        nextStatus ? [...prev, pharmId] : prev.filter((id) => id !== pharmId)
+      )
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   // Load pharmacy availability details
@@ -275,14 +325,40 @@ export default function MedicineSearch() {
             <h1 className="text-lg font-black text-gray-900 leading-none">Find Medicines Near You</h1>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto flex-grow max-w-2xl">
-            <input
-              type="text"
-              placeholder="Search trade brand or generic molecule name..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="flex-grow pl-4 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 text-xs font-semibold"
-            />
+          <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto flex-grow max-w-2xl relative">
+            <div className="relative flex-grow">
+              <input
+                type="text"
+                placeholder="Search trade brand or generic molecule name..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setTimeout(() => setInputFocused(false), 200)}
+                className="w-full pl-4 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 text-xs font-semibold"
+              />
+              {/* Recent searches dropdown list */}
+              {inputFocused && searchHistory.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-250 rounded-lg shadow-xl z-55 max-h-48 overflow-y-auto text-xs font-bold text-gray-700 divide-y divide-gray-100">
+                  <div className="p-2 bg-gray-55/30 text-[9px] uppercase tracking-wider text-gray-400">Recent Searches</div>
+                  {searchHistory.slice(0, 5).map((item) => (
+                    <div
+                      key={item.id}
+                      onMouseDown={() => {
+                        setQuery(item.query)
+                        setSelectedMedicine(null)
+                        setStockList([])
+                        executeSearch(item.query, item.category, inStockOnly)
+                        setHasSearched(true)
+                      }}
+                      className="p-2.5 hover:bg-slate-50 cursor-pointer flex items-center justify-between text-gray-900"
+                    >
+                      <span>{item.query}</span>
+                      <span className="text-[9px] text-gray-400 font-mono font-medium">{item.category}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             
             <select
               value={category}
@@ -359,13 +435,23 @@ export default function MedicineSearch() {
               )}
 
               <div className="space-y-4">
-                {results.map((med) => (
-                  <MedicineCard
-                    key={med.id}
-                    medicine={med}
-                    onViewAvailability={handleViewAvailability}
-                  />
-                ))}
+                {loading ? (
+                  <>
+                    <CardSkeleton />
+                    <CardSkeleton />
+                    <CardSkeleton />
+                  </>
+                ) : (
+                  results.map((med) => (
+                    <MedicineCard
+                      key={med.id}
+                      medicine={med}
+                      onViewAvailability={handleViewAvailability}
+                      isBookmarked={bookmarkedMedicines.includes(med.id)}
+                      onToggleBookmark={handleToggleBookmarkMedicine}
+                    />
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -436,6 +522,8 @@ export default function MedicineSearch() {
                     setShowResModal(true)
                   }}
                   onSelectPharmacy={handleSelectPharmacyMap}
+                  bookmarkedPharmacies={bookmarkedPharmacies}
+                  onToggleBookmarkPharmacy={handleToggleBookmarkPharmacy}
                 />
               )}
             </div>

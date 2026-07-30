@@ -54,9 +54,10 @@ export default function SidebarLayout() {
       case 'GOVERNMENT':
         return [
           { path: '/government', label: 'Dashboard', icon: LayoutDashboard },
-          { path: '/government/medicine', label: 'Medicine Analytics', icon: Package },
-          { path: '/government/district', label: 'District Analytics', icon: BarChart2 },
-          { path: '/government/province', label: 'Province Analytics', icon: TrendingUp },
+          { path: '/government/pharmacies', label: 'Pharmacy Registry', icon: Users },
+          { path: '/government/medicines', label: 'Medicine Registry', icon: Package },
+          { path: '/government/analytics', label: 'National Analytics', icon: BarChart2 },
+          { path: '/government/compliance', label: 'Compliance Audits', icon: FileLock2 },
           { path: '/government/reports', label: 'MOH Reports', icon: FileText },
         ]
       case 'ADMIN':

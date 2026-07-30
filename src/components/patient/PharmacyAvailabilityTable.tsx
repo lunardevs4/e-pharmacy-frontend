@@ -8,6 +8,8 @@ interface PharmacyAvailabilityTableProps {
   sortBy: string
   onSortChange: (val: string) => void
   onSelectPharmacy?: (pharm: PharmacyStock) => void
+  bookmarkedPharmacies?: string[]
+  onToggleBookmarkPharmacy?: (pharmId: string) => void
 }
 
 export default function PharmacyAvailabilityTable({
@@ -15,7 +17,9 @@ export default function PharmacyAvailabilityTable({
   onReserve,
   sortBy,
   onSortChange,
-  onSelectPharmacy
+  onSelectPharmacy,
+  bookmarkedPharmacies = [],
+  onToggleBookmarkPharmacy
 }: PharmacyAvailabilityTableProps) {
   
   const renderStockBadge = (status: string, count: number) => {
@@ -70,26 +74,41 @@ export default function PharmacyAvailabilityTable({
 
       {/* Grid wrapper stacked cards on mobile and side elements on desktop */}
       <div className="space-y-3">
-        {pharmacies.map((pharm) => (
-          <div
-            key={pharm.pharmacyId}
-            className={`border rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${
-              pharm.isOpen ? 'bg-white border-gray-200 hover:border-emerald-350 shadow-xs' : 'bg-gray-50 border-gray-200 opacity-60'
-            }`}
-          >
-            <div className="space-y-1.5 flex-grow">
-              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <h4 className="font-bold text-gray-900 text-sm">{pharm.pharmacyName}</h4>
-                <div className="flex items-center text-amber-500 text-xs">
-                  <Star className="w-3.5 h-3.5 fill-current" />
-                  <span className="font-bold ml-1 text-gray-800">{pharm.rating}</span>
+        {pharmacies.map((pharm) => {
+          const isFav = bookmarkedPharmacies.includes(pharm.pharmacyId)
+          return (
+            <div
+              key={pharm.pharmacyId}
+              className={`border rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${
+                pharm.isOpen ? 'bg-white border-gray-200 hover:border-emerald-350 shadow-xs' : 'bg-gray-50 border-gray-200 opacity-60'
+              }`}
+            >
+              <div className="space-y-1.5 flex-grow">
+                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                  <h4 className="font-bold text-gray-900 text-sm">{pharm.pharmacyName}</h4>
+                  
+                  {/* Pharmacy Bookmark Star */}
+                  {onToggleBookmarkPharmacy && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleBookmarkPharmacy(pharm.pharmacyId)}
+                      className="p-0.5 hover:bg-slate-100 rounded-full transition-colors text-rose-500"
+                      title={isFav ? 'Remove Pharmacy Bookmark' : 'Bookmark Pharmacy'}
+                    >
+                      <Star className={`w-4 h-4 ${isFav ? 'fill-rose-500' : 'text-gray-300'}`} />
+                    </button>
+                  )}
+
+                  <div className="flex items-center text-amber-500 text-xs">
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    <span className="font-bold ml-1 text-gray-800">{pharm.rating}</span>
+                  </div>
+                  {pharm.isOpen ? (
+                    <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-250 uppercase">Open Now</span>
+                  ) : (
+                    <span className="text-[9px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase">Closed</span>
+                  )}
                 </div>
-                {pharm.isOpen ? (
-                  <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-250 uppercase">Open Now</span>
-                ) : (
-                  <span className="text-[9px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase">Closed</span>
-                )}
-              </div>
               
               <p 
                 onClick={(e) => {
@@ -131,7 +150,7 @@ export default function PharmacyAvailabilityTable({
               </button>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   )

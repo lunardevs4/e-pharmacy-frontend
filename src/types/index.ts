@@ -14,6 +14,18 @@ export interface User {
   permissions?: string[] // Employee permissions array
   pharmacyId?: string // Link to pharmacy organization
   pharmacyName?: string // Name of the pharmacy
+  phone?: string
+  dob?: string
+  gender?: string
+  province?: string
+  district?: string
+  sector?: string
+  cell?: string
+  village?: string
+  emergencyContact?: string
+  preferredPharmacy?: string
+  medicalNotes?: string
+  profilePhoto?: string
 }
 
 export interface AuthState {
@@ -72,4 +84,20 @@ export interface Reservation {
   pickupDeadline: string
   status: 'PENDING' | 'RESERVED' | 'CONFIRMED' | 'COLLECTED' | 'CANCELLED' | 'EXPIRED'
   createdAt: string
+}
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'RESERVATION' | 'PRESCRIPTION' | 'SECURITY' | 'SYSTEM'
+  read: boolean
+  createdAt: string
+}
+
+export interface SearchHistoryItem {
+  id: string
+  query: string
+  category: string
+  timestamp: string
 }

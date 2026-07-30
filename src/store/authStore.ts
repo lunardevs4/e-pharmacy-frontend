@@ -12,6 +12,7 @@ interface AuthStore {
   logout: () => void
   setError: (error: string | null) => void
   setLoading: (isLoading: boolean) => void
+  updateProfile: (updatedFields: Partial<User>) => void
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -30,4 +31,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
   setError: (error) => set({ error }),
   setLoading: (isLoading) => set({ isLoading }),
+  updateProfile: (updatedFields) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...updatedFields } : null
+    }))
+  }
 }))

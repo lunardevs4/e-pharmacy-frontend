@@ -42,9 +42,10 @@ import InsurancePatients from '@/pages/insurance/Patients'
 
 // Government Pages
 import GovernmentDashboard from '@/pages/government/Dashboard'
-import MedicineAnalytics from '@/pages/government/MedicineAnalytics'
-import DistrictAnalytics from '@/pages/government/DistrictAnalytics'
-import ProvinceAnalytics from '@/pages/government/ProvinceAnalytics'
+import PharmacyRegistry from '@/pages/government/PharmacyRegistry'
+import MedicineRegistry from '@/pages/government/MedicineRegistry'
+import NationalAnalytics from '@/pages/government/NationalAnalytics'
+import GovernmentCompliance from '@/pages/government/Compliance'
 import GovernmentReports from '@/pages/government/Reports'
 
 // Admin Pages
@@ -118,9 +119,10 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute allowedRoles={['GOVERNMENT']} />}>
         <Route path="/government" element={<SidebarLayout />}>
           <Route index element={<GovernmentDashboard />} />
-          <Route path="medicine" element={<MedicineAnalytics />} />
-          <Route path="district" element={<DistrictAnalytics />} />
-          <Route path="province" element={<ProvinceAnalytics />} />
+          <Route path="pharmacies" element={<PharmacyRegistry />} />
+          <Route path="medicines" element={<MedicineRegistry />} />
+          <Route path="analytics" element={<NationalAnalytics />} />
+          <Route path="compliance" element={<GovernmentCompliance />} />
           <Route path="reports" element={<GovernmentReports />} />
         </Route>
       </Route>
