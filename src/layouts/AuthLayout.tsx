@@ -21,7 +21,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
           {/* Official Branding Logo */}
           <div className="text-center">
             <img 
-              src="/logo.jpg" 
+              src="/logo1.png" 
               alt="Rwanda E-Pharmacy Logo" 
               className="mx-auto h-24 w-auto object-contain mb-4" 
             />

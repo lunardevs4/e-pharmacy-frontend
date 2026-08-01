@@ -143,16 +143,10 @@ export default function LandingPage() {
       <header className="bg-white border-b border-gray-150 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div 
-              className="w-8 h-8 rounded-full border border-gray-200 flex-shrink-0 bg-white shadow-sm"
-              style={{
-                backgroundImage: 'url(/logo.jpg)',
-                backgroundSize: '270%',
-                backgroundPosition: '50% 12%',
-                backgroundRepeat: 'no-repeat'
-              }}
-              role="img"
-              aria-label="Rwanda E-Pharmacy Logo"
+            <img
+              src="/logo1.png"
+              alt="Rwanda E-Pharmacy Logo"
+              className="h-12 w-auto object-contain flex-shrink-0"
             />
             <div>
               <span className="text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">Rwanda</span>
@@ -483,16 +477,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
-                <div 
-                  className="w-10 h-10 rounded-full border border-gray-800 flex-shrink-0 bg-white"
-                  style={{
-                    backgroundImage: 'url(/logo.jpg)',
-                    backgroundSize: '270%',
-                    backgroundPosition: '50% 12%',
-                    backgroundRepeat: 'no-repeat'
-                  }}
-                  role="img"
-                  aria-label="Rwanda E-Pharmacy Logo"
+                <img
+                  src="/logo1.png"
+                  alt="Rwanda E-Pharmacy Logo"
+                  className="h-10 w-auto object-contain flex-shrink-0"
                 />
                 <div>
                   <span className="text-xs font-black text-white tracking-wider block uppercase leading-none">Rwanda</span>

@@ -13,11 +13,11 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   return (
     <div className="flex items-center gap-2">
       <img 
-        src="/logo.png" 
+        src="/logo1.png" 
         alt="Rwanda E-Pharmacy Logo" 
         className={`object-contain ${className}`}
         onError={() => {
-          console.error("Logo image failed to load from /logo.png");
+          console.error("Logo image failed to load from /logo1.png");
         }}
       />
       {showText && (
