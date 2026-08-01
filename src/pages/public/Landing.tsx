@@ -104,11 +104,6 @@ export default function LandingPage() {
       desc: 'Track claims, monitor patient usage, process reimbursements to pharmacies.',
       icon: Shield,
     },
-    {
-      role: 'Ministry of Health',
-      desc: 'Monitor national medicine availability, track disease trends, detect shortages.',
-      icon: MoHIcon,
-    },
   ]
 
   const faqs = [
@@ -126,7 +121,7 @@ export default function LandingPage() {
     },
     {
       q: 'Who can use this platform?',
-      a: 'All citizens and residents of Rwanda with a valid National ID or passport can register as patients. Licensed pharmacies, insurance companies, and Ministry of Health personnel have dedicated portals.',
+      a: 'All citizens and residents of Rwanda with a valid National ID or passport can register as patients. Licensed pharmacies and insurance companies have dedicated portals.',
     },
     {
       q: 'Is my medical data secure?',
@@ -178,9 +173,20 @@ export default function LandingPage() {
             <Link to="/login" className="text-sm font-bold text-gray-800 hover:text-health-primary transition-colors">
               Log In
             </Link>
-            <Link to="/register" className="bg-health-primary hover:bg-health-secondary text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors">
-              Register Free
-            </Link>
+            <div className="relative group">
+              <button className="bg-health-primary hover:bg-health-secondary text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer">
+                <span>Register</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-250 rounded-xl shadow-xl py-2 hidden group-hover:block hover:block z-50">
+                <Link to="/register/patient" className="block px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-emerald-50 hover:text-health-primary transition-colors">
+                  Register as Patient
+                </Link>
+                <Link to="/register/pharmacy" className="block px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-emerald-50 hover:text-health-primary border-t border-gray-100 transition-colors">
+                  Register as Pharmacy
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -223,12 +229,14 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <Link to="/register" className="font-bold text-health-primary hover:underline">
-                  Create Account &gt;
+              <div className="flex items-center space-x-4 text-xs font-bold text-gray-500">
+                <Link to="/register/patient" className="text-health-primary hover:underline">
+                  Register as Patient &gt;
                 </Link>
                 <span className="text-gray-300">|</span>
-                <span>Free &middot; No card required</span>
+                <Link to="/register/pharmacy" className="text-health-primary hover:underline">
+                  Register as Pharmacy &gt;
+                </Link>
               </div>
             </div>
 
@@ -455,10 +463,13 @@ export default function LandingPage() {
             Join 2.4 million Rwandans already registered. Free for all patients.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2">
-            <Link to="/register" className="w-full sm:w-auto bg-white text-health-primary hover:bg-emerald-50 px-6 py-3 rounded-lg text-sm font-bold shadow-md transition-colors text-center">
-              Create Free Account
+            <Link to="/register/patient" className="w-full sm:w-auto bg-white text-health-primary hover:bg-emerald-50 px-6 py-3 rounded-lg text-sm font-bold shadow-md transition-colors text-center">
+              Register as Patient
             </Link>
-            <Link to="/login" className="w-full sm:w-auto border border-white hover:bg-white/10 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center">
+            <Link to="/register/pharmacy" className="w-full sm:w-auto border border-white hover:bg-white/10 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center font-sans">
+              Register as Pharmacy
+            </Link>
+            <Link to="/login" className="w-full sm:w-auto bg-emerald-950/40 border border-white/20 hover:bg-emerald-950/60 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center">
               Sign In
             </Link>
           </div>
@@ -510,7 +521,6 @@ export default function LandingPage() {
                 <li><Link to="/login" className="hover:text-white transition-colors">Patient Portal</Link></li>
                 <li><Link to="/login" className="hover:text-white transition-colors">Pharmacy Portal</Link></li>
                 <li><Link to="/login" className="hover:text-white transition-colors">Insurance Portal</Link></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Government Portal</Link></li>
               </ul>
             </div>
 

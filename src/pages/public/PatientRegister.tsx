@@ -10,7 +10,7 @@ import {
 
 type RegStep = 1 | 2 | 3
 
-export default function Register() {
+export default function PatientRegister() {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<RegStep>(1)
 
@@ -173,7 +173,7 @@ export default function Register() {
     setErrorMsg(null)
 
     try {
-      await AuthApi.register({
+      await AuthApi.registerPatient({
         fullName,
         nid,
         dob,
@@ -190,7 +190,7 @@ export default function Register() {
         gpsCoords
       })
       
-      setSuccessMsg('Account created successfully! Redirecting to login...')
+      setSuccessMsg('Patient account created successfully! Redirecting to login...')
       setTimeout(() => {
         navigate('/login')
       }, 1500)
@@ -243,7 +243,7 @@ export default function Register() {
   }
 
   return (
-    <AuthLayout title="Registration" subtitle="Register a secure account to access medicine search and reservation.">
+    <AuthLayout title="Patient Registration" subtitle="Register a secure citizen account to access medicine search and reservation.">
       
       {/* Visual Stepper */}
       <div className="mb-6 bg-gray-50 border border-gray-150 rounded-xl p-3 max-w-sm mx-auto flex items-center justify-around">
@@ -292,9 +292,9 @@ export default function Register() {
 
       {/* Step 1: Personal Details */}
       {currentStep === 1 && (
-        <div className="space-y-4">
+        <div className="space-y-4 font-semibold text-xs text-gray-700">
           {/* Information Notice */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start space-x-2 text-blue-800 text-[11px] leading-normal">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start space-x-2 text-blue-800 text-[11px] leading-normal font-medium">
             <ShieldAlert className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
               <span className="font-bold block">Government Identity Linking</span>
@@ -317,7 +317,7 @@ export default function Register() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
                 placeholder="e.g. Mugisha Jean"
               />
             </div>
@@ -339,7 +339,7 @@ export default function Register() {
                 maxLength={16}
                 value={nid}
                 onChange={(e) => setNid(e.target.value.replace(/\D/g, ''))}
-                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-mono"
+                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-mono font-bold"
                 placeholder="1YYYY7XXXXXXXXXXXXXXXX"
               />
             </div>
@@ -361,7 +361,7 @@ export default function Register() {
                   required
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+                  className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
                 />
               </div>
             </div>
@@ -376,7 +376,7 @@ export default function Register() {
                 required
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
-                className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+                className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
               >
                 <option value="">Select...</option>
                 <option value="MALE">Male</option>
@@ -402,7 +402,7 @@ export default function Register() {
                 maxLength={10}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-mono"
+                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-mono font-bold"
                 placeholder="07XXXXXXXX"
               />
             </div>
@@ -422,7 +422,7 @@ export default function Register() {
 
       {/* Step 2: Account Security */}
       {currentStep === 2 && (
-        <div className="space-y-4">
+        <div className="space-y-4 font-semibold text-xs text-gray-700">
           {/* Username */}
           <div>
             <label htmlFor="username" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -438,7 +438,7 @@ export default function Register() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
                 placeholder="e.g. jean_paul"
               />
             </div>
@@ -458,7 +458,7 @@ export default function Register() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
                 placeholder="e.g. user@domain.rw"
               />
             </div>
@@ -479,7 +479,7 @@ export default function Register() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+                className="block w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
                 placeholder="••••••••"
               />
               <button
@@ -495,7 +495,7 @@ export default function Register() {
             {password && (
               <div className="mt-2 space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500">Strength:</span>
+                  <span className="text-gray-500 font-medium">Strength:</span>
                   <span className="font-bold text-gray-700">{strength.label}</span>
                 </div>
                 <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
@@ -508,27 +508,27 @@ export default function Register() {
             )}
 
             {/* Validation Checklist */}
-            <div className="mt-3 bg-gray-50 border border-gray-250 p-3 rounded-lg text-xs space-y-1.5">
+            <div className="mt-3 bg-gray-50 border border-gray-250 p-3 rounded-lg text-xs space-y-1.5 font-medium text-gray-600">
               <span className="font-bold text-gray-700 block mb-1">Password Requirements:</span>
               <div className="flex items-center space-x-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.length ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                <span className={passwordCriteria.length ? 'text-emerald-800' : 'text-gray-500'}>Minimum 8 characters</span>
+                <span className={passwordCriteria.length ? 'text-emerald-805 font-bold' : 'text-gray-500'}>Minimum 8 characters</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.uppercase ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                <span className={passwordCriteria.uppercase ? 'text-emerald-800' : 'text-gray-500'}>At least one uppercase letter</span>
+                <span className={passwordCriteria.uppercase ? 'text-emerald-805 font-bold' : 'text-gray-500'}>At least one uppercase letter</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.lowercase ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                <span className={passwordCriteria.lowercase ? 'text-emerald-800' : 'text-gray-500'}>At least one lowercase letter</span>
+                <span className={passwordCriteria.lowercase ? 'text-emerald-805 font-bold' : 'text-gray-500'}>At least one lowercase letter</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.number ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                <span className={passwordCriteria.number ? 'text-emerald-800' : 'text-gray-500'}>At least one number</span>
+                <span className={passwordCriteria.number ? 'text-emerald-805 font-bold' : 'text-gray-500'}>At least one number</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.special ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                <span className={passwordCriteria.special ? 'text-emerald-800' : 'text-gray-500'}>At least one special character (@$!%*?&)</span>
+                <span className={passwordCriteria.special ? 'text-emerald-805 font-bold' : 'text-gray-500'}>At least one special character (@$!%*?&)</span>
               </div>
             </div>
           </div>
@@ -548,12 +548,12 @@ export default function Register() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
                 placeholder="••••••••"
               />
             </div>
             {password && confirmPassword && password !== confirmPassword && (
-              <p className="mt-1 text-xs text-red-655">Passwords do not match.</p>
+              <p className="mt-1 text-xs text-red-655 font-bold">Passwords do not match.</p>
             )}
           </div>
 
@@ -562,7 +562,7 @@ export default function Register() {
             <button
               type="button"
               onClick={goBack}
-              className="w-1/3 flex items-center justify-center py-2.5 border border-gray-300 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+              className="w-1/3 flex items-center justify-center py-2.5 border border-gray-300 rounded-lg text-sm font-bold text-gray-655 hover:bg-gray-50 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
               <span>Back</span>
@@ -579,12 +579,12 @@ export default function Register() {
         </div>
       )}
 
-      {/* Step 3: Residence Cascading Dropdowns */}
+      {/* Step 3: Residence Address */}
       {currentStep === 3 && (
-        <form onSubmit={handleFinalSubmit} className="space-y-4">
+        <form onSubmit={handleFinalSubmit} className="space-y-4 font-semibold text-xs text-gray-700">
           <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4 flex items-start space-x-3">
             <MapPin className="w-5 h-5 text-health-primary mt-0.5 flex-shrink-0" />
-            <div className="text-xs text-emerald-800 leading-normal">
+            <div className="text-xs text-emerald-805 leading-normal font-medium">
               <span className="font-bold block mb-0.5">Official Residence Details</span>
               Addresses are mapped according to Rwanda's national administrative registry to locate nearby pharmacies accurately.
             </div>
@@ -605,7 +605,7 @@ export default function Register() {
                 setCell('')
                 setVillage('')
               }}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
             >
               <option value="">Select Province...</option>
               {provincesList.map((p) => (
@@ -629,7 +629,7 @@ export default function Register() {
                 setCell('')
                 setVillage('')
               }}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 disabled:opacity-50"
+              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 disabled:opacity-50 font-bold"
             >
               <option value="">Select District...</option>
               {districtsList.map((d) => (
@@ -652,7 +652,7 @@ export default function Register() {
                 setCell('')
                 setVillage('')
               }}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 disabled:opacity-50"
+              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 disabled:opacity-50 font-bold"
             >
               <option value="">Select Sector...</option>
               {sectorsList.map((s) => (
@@ -674,7 +674,7 @@ export default function Register() {
                 setCell(e.target.value)
                 setVillage('')
               }}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 disabled:opacity-50"
+              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 disabled:opacity-50 font-bold"
             >
               <option value="">Select Cell...</option>
               {cellsList.map((c) => (
@@ -693,7 +693,7 @@ export default function Register() {
               disabled={!cell}
               value={village}
               onChange={(e) => setVillage(e.target.value)}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 disabled:opacity-50"
+              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 disabled:opacity-50 font-bold"
             >
               <option value="">Select Village...</option>
               {villagesList.map((v) => (
@@ -730,7 +730,7 @@ export default function Register() {
           </div>
 
           {/* Terms & Privacy checkboxes */}
-          <div className="space-y-2 pt-2 border-t border-gray-150">
+          <div className="space-y-2 pt-2 border-t border-gray-150 font-medium text-gray-600">
             <div className="flex items-start">
               <input
                 id="terms"
@@ -740,7 +740,7 @@ export default function Register() {
                 onChange={(e) => setAcceptTerms(e.target.checked)}
                 className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded mt-0.5 cursor-pointer"
               />
-              <label htmlFor="terms" className="ml-2 block text-xs text-gray-600 leading-normal cursor-pointer">
+              <label htmlFor="terms" className="ml-2 block text-xs text-gray-650 leading-normal cursor-pointer">
                 I accept the <a href="#" className="font-semibold text-health-primary hover:underline">Terms of Service</a> for the Rwanda National Health System.
               </label>
             </div>
@@ -754,7 +754,7 @@ export default function Register() {
                 onChange={(e) => setAcceptPrivacy(e.target.checked)}
                 className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded mt-0.5 cursor-pointer"
               />
-              <label htmlFor="privacy" className="ml-2 block text-xs text-gray-600 leading-normal cursor-pointer">
+              <label htmlFor="privacy" className="ml-2 block text-xs text-gray-650 leading-normal cursor-pointer">
                 I agree to the <a href="#" className="font-semibold text-health-primary hover:underline">Privacy Policy</a> regarding my health and medical records data processing.
               </label>
             </div>
@@ -766,7 +766,7 @@ export default function Register() {
               type="button"
               disabled={isLoading}
               onClick={goBack}
-              className="w-1/3 flex items-center justify-center py-2.5 border border-gray-300 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="w-1/3 flex items-center justify-center py-2.5 border border-gray-300 rounded-lg text-sm font-bold text-gray-650 hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
               <span>Back</span>
@@ -791,8 +791,8 @@ export default function Register() {
 
       {/* Footer Link */}
       <div className="text-center text-xs mt-6 pt-4 border-t border-gray-150">
-        <span className="text-gray-500">Already have an account? </span>
-        <Link to="/login" className="font-semibold text-health-primary hover:underline">
+        <span className="text-gray-500 font-semibold">Already have an account? </span>
+        <Link to="/login" className="font-bold text-health-primary hover:underline">
           Sign In
         </Link>
       </div>

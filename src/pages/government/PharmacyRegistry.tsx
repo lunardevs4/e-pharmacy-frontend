@@ -1,474 +1,700 @@
-import React, { useState } from 'react'
-import { RWANDA_LOCATIONS } from '@/utils/rwanda-locations'
-import { Users, Search, Plus, X, Check, Eye, Trash2, ShieldAlert, CheckCircle2 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { 
+  Users, Search, X, Check, Eye, AlertTriangle, CheckCircle2, 
+  MapPin, User, FileText, Download, Landmark, Calendar, RefreshCw, XCircle, ArrowLeft, Loader2
+} from 'lucide-react'
+import { AuthApi } from '@/services/auth-api'
+
+interface TimelineEvent {
+  event: string
+  date: string
+  notes?: string
+}
 
 interface Pharmacy {
   id: string
-  name: string
+  pharmacyName: string
+  tradingName?: string
   licenseNumber: string
+  businessRegistrationNumber: string
+  tin: string
+  category: string
+  ownershipType: string
+  officialEmail: string
+  officialPhone: string
+  username: string
   province: string
   district: string
   sector: string
-  rating: number
-  isOpen: boolean
-  distance: number
-  status: 'Approved' | 'Pending Approval' | 'Suspended'
+  cell: string
+  village: string
+  gpsCoords?: { lat: number; lng: number } | null
+  pharmacistName: string
+  pharmacistNid: string
+  pharmacistLicense: string
+  pharmacistPhone: string
+  pharmacistEmail: string
+  documents: Array<{ name: string; fileType: string; fileSize: number }>
+  status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | 'EXPIRED' | 'MORE_INFO_REQUESTED'
+  statusNotes?: string
+  submissionDate: string
+  estimatedReviewTime: string
+  timeline: TimelineEvent[]
 }
 
 export default function PharmacyRegistry() {
-  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([
-    { id: 'ph-001', name: 'Kigali National Pharmacy', licenseNumber: 'LIC-KIG-48293-2026', province: 'Kigali City', district: 'Nyarugenge', sector: 'Kiyovu', rating: 4.8, isOpen: true, distance: 1.2, status: 'Approved' },
-    { id: 'ph-002', name: 'Remera City Medical', licenseNumber: 'LIC-GAS-90238-2026', province: 'Kigali City', district: 'Gasabo', sector: 'Remera', rating: 4.5, isOpen: true, distance: 2.1, status: 'Approved' },
-    { id: 'ph-003', name: 'Nyarugenge Health Pharmacy', licenseNumber: 'LIC-NYA-72819-2026', province: 'Kigali City', district: 'Nyarugenge', sector: 'Muhima', rating: 4.2, isOpen: true, distance: 3.4, status: 'Approved' },
-    { id: 'ph-004', name: 'Gikondo District Pharmacy', licenseNumber: 'LIC-KIC-19238-2026', province: 'Kigali City', district: 'Kicukiro', sector: 'Gikondo', rating: 4.0, isOpen: false, distance: 4.5, status: 'Suspended' },
-    { id: 'ph-005', name: 'MedPlus Kigali Heights', licenseNumber: 'LIC-GAS-78901-2026', province: 'Kigali City', district: 'Gasabo', sector: 'Kacyiru', rating: 4.9, isOpen: true, distance: 0.8, status: 'Pending Approval' }
-  ])
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([])
+  const [selectedPharm, setSelectedPharm] = useState<Pharmacy | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
 
   // Filters
   const [searchVal, setSearchVal] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
 
-  // Register Pharmacy Modal states
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [name, setName] = useState('')
-  const [licenseNumber, setLicenseNumber] = useState('')
-  const [province, setProvince] = useState('Kigali City')
-  const [district, setDistrict] = useState('Gasabo')
-  const [sector, setSector] = useState('Remera')
-  
-  // Manager account states
-  const [managerName, setManagerName] = useState('')
-  const [managerEmail, setManagerEmail] = useState('')
-  const [showCredentialsModal, setShowCredentialsModal] = useState(false)
-  const [generatedCredentials, setGeneratedCredentials] = useState<{ username: string; tempPass: string } | null>(null)
-  
-  const [toastMsg, setToastMsg] = useState<string | null>(null)
+  // Verification Dialogs/Modals
+  const [activeModal, setActiveModal] = useState<'REJECT' | 'SUSPEND' | 'REQUEST_INFO' | null>(null)
+  const [modalComment, setModalComment] = useState('')
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false)
+
+  // Mock Document Viewer Modal
+  const [viewingDoc, setViewingDoc] = useState<{ label: string; name: string } | null>(null)
+
+  useEffect(() => {
+    fetchPharmacies()
+  }, [])
+
+  const fetchPharmacies = async () => {
+    setIsLoading(true)
+    setErrorMsg(null)
+    try {
+      const data = await AuthApi.getAllPharmacies()
+      setPharmacies(data)
+      if (data.length > 0) {
+        setSelectedPharm(data[0])
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to load pharmacy directory.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const triggerToast = (msg: string) => {
     setToastMsg(msg)
     setTimeout(() => setToastMsg(null), 3000)
   }
 
-  // Location selector cascading triggers
-  const handleProvinceChange = (e: string) => {
-    setProvince(e)
-    const districts = Object.keys(RWANDA_LOCATIONS[e] || {})
-    if (districts.length > 0) {
-      setDistrict(districts[0])
-      const sectors = Object.keys(RWANDA_LOCATIONS[e]?.[districts[0]] || {})
-      if (sectors.length > 0) {
-        setSector(sectors[0])
-      }
+  // Handle regulatory actions
+  const handleApprove = async () => {
+    if (!selectedPharm) return
+    setIsSubmittingAction(true)
+    try {
+      const updated = await AuthApi.approvePharmacy(selectedPharm.id)
+      updateLocalList(updated)
+      triggerToast(`License approved for ${selectedPharm.pharmacyName}.`)
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Approval action failed.')
+    } finally {
+      setIsSubmittingAction(false)
     }
   }
 
-  const handleDistrictChange = (d: string) => {
-    setDistrict(d)
-    const sectors = Object.keys(RWANDA_LOCATIONS[province]?.[d] || {})
-    if (sectors.length > 0) {
-      setSector(sectors[0])
+  const handleReactivate = async () => {
+    if (!selectedPharm) return
+    setIsSubmittingAction(true)
+    try {
+      const updated = await AuthApi.reactivatePharmacy(selectedPharm.id)
+      updateLocalList(updated)
+      triggerToast(`Pharmacy store reactivated: ${selectedPharm.pharmacyName}.`)
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Reactivation action failed.')
+    } finally {
+      setIsSubmittingAction(false)
     }
   }
 
-  // Save new pharmacy
-  const handleRegisterPharmacy = (e: React.FormEvent) => {
+  const handleModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !licenseNumber || !managerName || !managerEmail) return
+    if (!selectedPharm || !activeModal || !modalComment.trim()) return
 
-    const newPharmId = `ph-00${pharmacies.length + 1}`
-    const newPharm: Pharmacy = {
-      id: newPharmId,
-      name,
-      licenseNumber,
-      province,
-      district,
-      sector,
-      rating: 5.0,
-      isOpen: true,
-      distance: 1.5,
-      status: 'Approved'
+    setIsSubmittingAction(true)
+    try {
+      let updated: Pharmacy
+      if (activeModal === 'REJECT') {
+        updated = await AuthApi.rejectPharmacy(selectedPharm.id, modalComment)
+        triggerToast(`Application rejected for ${selectedPharm.pharmacyName}.`)
+      } else if (activeModal === 'SUSPEND') {
+        updated = await AuthApi.suspendPharmacy(selectedPharm.id, modalComment)
+        triggerToast(`Pharmacy license suspended for ${selectedPharm.pharmacyName}.`)
+      } else {
+        updated = await AuthApi.requestMoreInformation(selectedPharm.id, modalComment)
+        triggerToast(`Information requested from ${selectedPharm.pharmacyName}.`)
+      }
+      
+      updateLocalList(updated)
+      setActiveModal(null)
+      setModalComment('')
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Regulatory control action failed.')
+    } finally {
+      setIsSubmittingAction(false)
     }
-
-    // Generate credentials
-    const cleanEmail = managerEmail.toLowerCase().trim()
-    const tempPass = 'ManagerRw2026!'
-
-    // Register Pharmacy Manager mock user account in dynamic users DB
-    const dynamicUsersKey = 'epharmacy_registered_users'
-    const storedUsers = localStorage.getItem(dynamicUsersKey)
-    const usersMap = storedUsers ? JSON.parse(storedUsers) : {}
-
-    const newManagerAccount = {
-      id: `usr_man_${Date.now()}`,
-      username: cleanEmail,
-      email: cleanEmail,
-      name: managerName,
-      role: 'PHARMACY',
-      position: 'Pharmacy Manager',
-      permissions: ['MANAGE_INVENTORY', 'UPDATE_PRICING', 'MANAGE_STAFF', 'VIEW_PHARMACY_REPORTS', 'VIEW_RESERVATIONS', 'CONFIRM_RESERVATION', 'DISPENSE_MEDICINE', 'VIEW_INVENTORY'],
-      pharmacyId: newPharmId,
-      pharmacyName: name,
-      firstLogin: true, // Force password reset at first sign in
-      passwordHash: tempPass
-    }
-
-    usersMap[cleanEmail] = newManagerAccount
-    localStorage.setItem(dynamicUsersKey, JSON.stringify(usersMap))
-
-    setPharmacies((prev) => [...prev, newPharm])
-    setShowAddModal(false)
-    
-    // Save to show credentials modal popup
-    setGeneratedCredentials({ username: cleanEmail, tempPass })
-    setShowCredentialsModal(true)
-
-    triggerToast('New pharmacy store registered and licensed successfully.')
-    
-    // Clear inputs
-    setName('')
-    setLicenseNumber('')
-    setManagerName('')
-    setManagerEmail('')
   }
 
-  // Status updates
-  const handleApprove = (id: string) => {
+  const updateLocalList = (updated: Pharmacy) => {
     setPharmacies((prev) => 
-      prev.map((p) => p.id === id ? { ...p, status: 'Approved' } : p)
+      prev.map((ph) => ph.id === updated.id ? updated : ph)
     )
-    triggerToast('Pharmacy licence approved.')
-  }
-
-  const handleSuspend = (id: string) => {
-    setPharmacies((prev) => 
-      prev.map((p) => p.id === id ? { ...p, status: 'Suspended' } : p)
-    )
-    triggerToast('Pharmacy licence suspended.')
+    setSelectedPharm(updated)
   }
 
   // Filter listings
   const filteredPharmacies = pharmacies.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchVal.toLowerCase()) || 
-                          p.licenseNumber.toLowerCase().includes(searchVal.toLowerCase())
-    const matchesStatus = statusFilter === 'ALL' || p.status === statusFilter
+    const matchesSearch = 
+      p.pharmacyName.toLowerCase().includes(searchVal.toLowerCase()) || 
+      p.licenseNumber.toLowerCase().includes(searchVal.toLowerCase()) ||
+      p.pharmacistName.toLowerCase().includes(searchVal.toLowerCase())
+    
+    let matchesStatus = true
+    if (statusFilter !== 'ALL') {
+      if (statusFilter === 'PENDING') {
+        matchesStatus = p.status === 'PENDING_VERIFICATION'
+      } else {
+        matchesStatus = p.status === statusFilter
+      }
+    }
     return matchesSearch && matchesStatus
   })
 
+  const getStatusBadge = (status: string) => {
+    const maps = {
+      APPROVED: 'text-emerald-700 bg-emerald-50 border-emerald-250',
+      PENDING_VERIFICATION: 'text-amber-700 bg-amber-50 border-amber-250',
+      MORE_INFO_REQUESTED: 'text-blue-700 bg-blue-50 border-blue-250',
+      SUSPENDED: 'text-rose-700 bg-rose-50 border-rose-250',
+      REJECTED: 'text-red-700 bg-red-50 border-red-250',
+      EXPIRED: 'text-gray-700 bg-gray-50 border-gray-250'
+    }
+    const label = {
+      APPROVED: 'Approved',
+      PENDING_VERIFICATION: 'Pending Review',
+      MORE_INFO_REQUESTED: 'Info Requested',
+      SUSPENDED: 'Suspended',
+      REJECTED: 'Rejected',
+      EXPIRED: 'Expired'
+    }
+    return (
+      <span className={`inline-flex items-center text-[10px] font-bold border px-2 py-0.5 rounded uppercase tracking-wider ${maps[status as keyof typeof maps] || maps.EXPIRED}`}>
+        {label[status as keyof typeof label] || 'Unknown'}
+      </span>
+    )
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
-      
       {/* Toast alert popup */}
       {toastMsg && (
-        <div className="fixed top-20 right-6 z-55 bg-emerald-50 border border-emerald-250 text-emerald-800 px-4.5 py-3 rounded-lg shadow-xl animate-fadeIn flex items-center space-x-2 text-xs font-bold">
-          <CheckCircle2 className="w-5 h-5" />
+        <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-250 text-emerald-805 px-4.5 py-3 rounded-lg shadow-xl animate-fadeIn flex items-center space-x-2 text-xs font-bold">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
           <span>{toastMsg}</span>
         </div>
       )}
 
-      {/* Directory table card list */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
-        
-        <div className="flex justify-between items-center pb-2 border-b border-gray-150">
-          <div className="flex items-center space-x-2">
-            <Users className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-sm font-black text-gray-900">Pharmacy Registry Console</h3>
-          </div>
-          <span className="text-xs text-slate-500 font-bold">{filteredPharmacies.length} Total Verified Stores</span>
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <span>{errorMsg}</span>
         </div>
+      )}
 
-        {/* Filters console and Add store button */}
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
-          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto flex-grow max-w-2xl">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Pane: Registry Search and List (5 Cols) */}
+        <div className="lg:col-span-5 bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+          <div className="flex justify-between items-center pb-2 border-b border-gray-150">
+            <div className="flex items-center space-x-2">
+              <Users className="w-4 h-4 text-emerald-700" />
+              <h3 className="text-sm font-black text-gray-900">Verification Module</h3>
+            </div>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{filteredPharmacies.length} Match(es)</span>
+          </div>
+
+          {/* Filters console */}
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-grow">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search store name or licence ref key..."
+                placeholder="Search name, license, pharmacist..."
                 value={searchVal}
                 onChange={(e) => setSearchVal(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
+                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs font-semibold text-gray-900"
               />
             </div>
             
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="bg-gray-50 border border-gray-300 rounded-lg px-2 py-2 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
-              <option value="ALL">All Status</option>
-              <option value="Approved">Approved</option>
-              <option value="Pending Approval">Pending Review</option>
-              <option value="Suspended">Suspended</option>
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="MORE_INFO_REQUESTED">Info Requested</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="EXPIRED">Expired</option>
             </select>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowAddModal(true)}
-            className="bg-health-primary hover:bg-health-secondary text-white font-bold px-4 py-2 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5 shadow-sm focus:outline-none"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Register Pharmacy</span>
-          </button>
-        </div>
-
-        {/* Pharmacies table grid */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs divide-y divide-gray-150">
-            <thead>
-              <tr className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
-                <th className="py-2.5">Store Name</th>
-                <th className="py-2.5">Licence Key</th>
-                <th className="py-2.5">Province</th>
-                <th className="py-2.5">District</th>
-                <th className="py-2.5">Sector</th>
-                <th className="py-2.5">Rating</th>
-                <th className="py-2.5">Licence Status</th>
-                <th className="py-2.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-              {filteredPharmacies.map((pharm) => (
-                <tr key={pharm.id} className="hover:bg-gray-50/50">
-                  <td className="py-3 font-bold text-gray-950 flex items-center space-x-2">
-                    <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-650">
-                      {pharm.name.split(' ').map((n) => n[0]).join('').toUpperCase()}
-                    </span>
-                    <span>{pharm.name}</span>
-                  </td>
-                  <td className="py-3 font-mono text-gray-550 font-bold">{pharm.licenseNumber}</td>
-                  <td className="py-3">{pharm.province}</td>
-                  <td className="py-3">{pharm.district}</td>
-                  <td className="py-3">{pharm.sector}</td>
-                  <td className="py-3 font-bold">{pharm.rating} ★</td>
-                  <td className="py-3">
-                    {pharm.status === 'Approved' ? (
-                      <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-250">
-                        Approved
-                      </span>
-                    ) : pharm.status === 'Pending Approval' ? (
-                      <span className="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-255">
-                        Pending
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                        Suspended
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 text-right">
-                    <div className="inline-flex space-x-1 justify-end">
-                      {pharm.status !== 'Approved' && (
-                        <button
-                          type="button"
-                          onClick={() => handleApprove(pharm.id)}
-                          className="border border-emerald-350 hover:bg-emerald-50 text-health-primary font-bold px-2 py-1 rounded text-[10px] transition-colors focus:outline-none"
-                        >
-                          Approve
-                        </button>
-                      )}
-                      {pharm.status !== 'Suspended' && (
-                        <button
-                          type="button"
-                          onClick={() => handleSuspend(pharm.id)}
-                          className="border border-red-300 hover:bg-red-50 text-red-700 font-bold px-2 py-1 rounded text-[10px] transition-colors focus:outline-none"
-                        >
-                          Suspend
-                        </button>
-                      )}
+          {/* Pharmacy Listings */}
+          {isLoading ? (
+            <div className="text-center py-10 flex flex-col items-center justify-center gap-2">
+              <RefreshCw className="w-6 h-6 text-emerald-600 animate-spin" />
+              <span className="text-xs text-gray-400 font-medium">Fetching directory...</span>
+            </div>
+          ) : filteredPharmacies.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-xl text-gray-400 font-medium text-xs">
+              No matching applications found.
+            </div>
+          ) : (
+            <div className="space-y-2.5 overflow-y-auto max-h-[550px] pr-1">
+              {filteredPharmacies.map((pharm) => {
+                const isSelected = selectedPharm?.id === pharm.id
+                return (
+                  <div
+                    key={pharm.id}
+                    onClick={() => {
+                      setSelectedPharm(pharm)
+                      setErrorMsg(null)
+                    }}
+                    className={`border p-3.5 rounded-xl transition-all cursor-pointer text-left flex flex-col gap-2 ${
+                      isSelected 
+                        ? 'border-emerald-600 bg-emerald-50/10 shadow-xs' 
+                        : 'border-gray-200 hover:border-gray-350 hover:bg-gray-50/20'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-0.5 max-w-[70%]">
+                        <span className="font-extrabold text-xs text-gray-950 block truncate">{pharm.pharmacyName}</span>
+                        <span className="text-[10px] text-gray-450 block font-mono font-semibold">{pharm.licenseNumber}</span>
+                      </div>
+                      {getStatusBadge(pharm.status)}
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div className="text-[10px] text-gray-500 font-medium flex justify-between pt-1 border-t border-gray-100">
+                      <span>Submitted: {pharm.submissionDate}</span>
+                      <span className="text-gray-800 font-bold">{pharm.province}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
+        {/* Right Pane: Auditing Report & Verification Console (7 Cols) */}
+        <div className="lg:col-span-7 bg-white border border-gray-200 rounded-xl p-5 shadow-xs text-left">
+          {!selectedPharm ? (
+            <div className="text-center py-24 text-gray-400 font-medium text-xs">
+              Select a pharmacy registry card from the left panel to review compliance details.
+            </div>
+          ) : (
+            <div className="space-y-6 font-semibold text-xs text-gray-700">
+              
+              {/* Detailed Header */}
+              <div className="pb-4 border-b border-gray-150 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-base font-black text-gray-950 uppercase tracking-tight">{selectedPharm.pharmacyName}</h3>
+                  <p className="text-[10px] text-gray-500 font-medium">Licensed under RDB and National Superintendent Register</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {getStatusBadge(selectedPharm.status)}
+                  <span className="text-[10px] text-gray-400 font-mono">ID: {selectedPharm.id}</span>
+                </div>
+              </div>
+
+              {/* Status Alert for Rejections/Suspensions */}
+              {selectedPharm.statusNotes && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-xl text-[11px] leading-relaxed font-sans flex items-start space-x-2.5">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                  <div>
+                    <span className="font-bold block">Board Regulatory Comments:</span>
+                    <p className="font-mono mt-0.5">{selectedPharm.statusNotes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Report Tab Container */}
+              <div className="space-y-5">
+                
+                {/* Section 1: Corporate Details */}
+                <div className="space-y-2">
+                  <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
+                    <Landmark className="w-3.5 h-3.5 text-emerald-805" />
+                    <span>Pharmacy Operating Details</span>
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[11px] font-medium leading-relaxed">
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Trading Name</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.tradingName || 'None'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Category</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.category}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Ownership Type</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.ownershipType}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">MoH License Ref</span>
+                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.licenseNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Business TIN</span>
+                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.tin}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">RDB Business Reg</span>
+                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.businessRegistrationNumber}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Contact Info */}
+                <div className="space-y-2">
+                  <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-emerald-805" />
+                    <span>Contact Info</span>
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[11px] font-medium leading-relaxed">
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Official Email</span>
+                      <span className="text-gray-950 font-bold break-all block">{selectedPharm.officialEmail}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Official Phone</span>
+                      <span className="text-gray-950 font-bold">{selectedPharm.officialPhone}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Portal Username</span>
+                      <span className="text-gray-955 font-bold font-mono">{selectedPharm.username}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Geographic jurisdiction */}
+                <div className="space-y-2">
+                  <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-805" />
+                    <span>Geographic Jurisdiction</span>
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[11px] font-medium leading-relaxed">
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Province</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.province}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">District</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.district}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Sector</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.sector}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Cell</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.cell}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Village</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.village}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">GPS Coordinates</span>
+                      <span className="text-gray-900 font-mono font-bold">
+                        {selectedPharm.gpsCoords 
+                          ? `${selectedPharm.gpsCoords.lat.toFixed(5)}, ${selectedPharm.gpsCoords.lng.toFixed(5)}` 
+                          : 'Not Captured'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Responsible Superintendent Pharmacist */}
+                <div className="space-y-2">
+                  <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-emerald-805" />
+                    <span>Responsible Pharmacist</span>
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[11px] font-medium leading-relaxed">
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Full Name</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.pharmacistName}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">National ID (NID)</span>
+                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.pharmacistNid}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Professional License</span>
+                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.pharmacistLicense}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Phone Number</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.pharmacistPhone}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[9px] uppercase font-bold">Email Address</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.pharmacistEmail}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 5: Documents Auditing */}
+                <div className="space-y-2">
+                  <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-emerald-805" />
+                    <span>Compliance Certificates</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                    {[
+                      { key: 'pharmacyLicense', label: 'Operating License (MoH)' },
+                      { key: 'businessReg', label: 'Business Reg Cert (RDB)' },
+                      { key: 'pharmacistLicense', label: 'Pharmacist Council License' },
+                      { key: 'taxCertificate', label: 'RRA Tax Clearance Certificate' }
+                    ].map((doc) => {
+                      const file = selectedPharm.documents.find(d => d.name.toLowerCase().includes(doc.key.toLowerCase())) 
+                                  || { name: `${doc.key}_mock_file.pdf`, fileType: 'application/pdf', fileSize: 240000 }
+                      return (
+                        <div key={doc.key} className="border border-gray-200 rounded-xl p-3 flex items-center justify-between bg-gray-50/50 shadow-xxs">
+                          <div className="space-y-0.5">
+                            <span className="text-gray-700 font-bold block leading-none">{doc.label}</span>
+                            <span className="text-[9px] text-gray-400 font-mono block truncate max-w-[150px]">{file.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setViewingDoc({ label: doc.label, name: file.name })}
+                            className="bg-white border border-gray-300 hover:border-health-primary text-gray-700 hover:text-health-primary text-[10px] font-bold px-2 py-1 rounded transition-colors flex items-center gap-1 shadow-sm"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Audit</span>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Section 6: Auditing history timeline */}
+                <div className="space-y-2">
+                  <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-805" />
+                    <span>Auditing Review Timeline</span>
+                  </h4>
+                  <div className="space-y-3 pl-3 border-l border-gray-200 pt-1">
+                    {selectedPharm.timeline && selectedPharm.timeline.map((evt, idx) => (
+                      <div key={idx} className="relative space-y-0.5">
+                        <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-emerald-600 border border-white" />
+                        <div className="flex items-center justify-between text-[11px] font-medium text-gray-500">
+                          <span className="font-extrabold text-gray-900">{evt.event}</span>
+                          <span className="font-mono">{evt.date}</span>
+                        </div>
+                        {evt.notes && <p className="text-[10px] text-gray-550 leading-relaxed font-sans">{evt.notes}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Section 7: Verification Actions */}
+              <div className="pt-5 border-t border-gray-200 flex flex-wrap gap-2.5 justify-end">
+                {selectedPharm.status === 'PENDING_VERIFICATION' || selectedPharm.status === 'MORE_INFO_REQUESTED' ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={isSubmittingAction}
+                      onClick={() => {
+                        setActiveModal('REQUEST_INFO')
+                        setModalComment('')
+                      }}
+                      className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-3 py-2 rounded-lg transition-colors focus:outline-none cursor-pointer"
+                    >
+                      Request Info
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmittingAction}
+                      onClick={() => {
+                        setActiveModal('REJECT')
+                        setModalComment('')
+                      }}
+                      className="border border-red-300 hover:bg-red-50 text-red-750 font-bold px-3 py-2 rounded-lg transition-colors focus:outline-none cursor-pointer"
+                    >
+                      Reject Application
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmittingAction}
+                      onClick={handleApprove}
+                      className="bg-health-primary hover:bg-health-secondary text-white font-bold px-4.5 py-2 rounded-lg shadow-sm transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
+                    >
+                      {isSubmittingAction ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-4 h-4" />}
+                      <span>Approve &amp; Activate</span>
+                    </button>
+                  </>
+                ) : selectedPharm.status === 'APPROVED' ? (
+                  <button
+                    type="button"
+                    disabled={isSubmittingAction}
+                    onClick={() => {
+                      setActiveModal('SUSPEND')
+                      setModalComment('')
+                    }}
+                    className="bg-rose-50 border border-rose-205 hover:bg-rose-100 text-rose-800 font-bold px-3.5 py-2 rounded-lg transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Suspend License</span>
+                  </button>
+                ) : (
+                  // Rejected or Suspended
+                  <button
+                    type="button"
+                    disabled={isSubmittingAction}
+                    onClick={handleReactivate}
+                    className="bg-health-primary hover:bg-health-secondary text-white font-bold px-4.5 py-2 rounded-lg shadow-sm transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
+                  >
+                    {isSubmittingAction ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-4 h-4" />}
+                    <span>Reactivate Store License</span>
+                  </button>
+                )}
+              </div>
+
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Add Pharmacy Modal Wizard */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center px-4 py-6">
-          <div onClick={() => setShowAddModal(false)} className="absolute inset-0 bg-gray-900/50 backdrop-blur-xs" />
+      {/* Decision comment dialog popup */}
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div onClick={() => setActiveModal(null)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xxs" />
           
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-55 flex flex-col">
-            
-            {/* Modal Header */}
-            <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900">
+          <div className="relative w-full max-w-sm bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-50 flex flex-col text-left text-xs font-bold text-gray-700">
+            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
               <div>
-                <h3 className="font-black text-sm">Register New Pharmacy</h3>
-                <p className="text-xs text-emerald-300">Grant MOH operating licence keys</p>
+                <h3 className="font-black text-sm">
+                  {activeModal === 'REJECT' && 'Reject Application'}
+                  {activeModal === 'SUSPEND' && 'Suspend Pharmacy License'}
+                  {activeModal === 'REQUEST_INFO' && 'Request Additional Information'}
+                </h3>
+                <p className="text-[10px] text-slate-400">MoH Audit board decision log</p>
               </div>
-              <button onClick={() => setShowAddModal(false)} className="text-emerald-300 hover:text-white">
+              <button onClick={() => setActiveModal(null)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Form */}
-            <form onSubmit={handleRegisterPharmacy} className="p-6 space-y-4 text-xs font-bold text-gray-700">
-              
-              <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Pharmacy Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Nyarugenge Wellness Pharmacy"
+            <form onSubmit={handleModalSubmit} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="block text-gray-400 uppercase tracking-wider text-[9px]">Justification Comments</label>
+                <textarea
                   required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
+                  rows={4}
+                  placeholder="Provide details for this audit decision..."
+                  value={modalComment}
+                  onChange={(e) => setModalComment(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-medium leading-relaxed font-sans"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Licence Reference Number</label>
-                <input
-                  type="text"
-                  placeholder="e.g. LIC-NYA-12893-2026"
-                  required
-                  value={licenseNumber}
-                  onChange={(e) => setLicenseNumber(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-mono font-bold"
-                />
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="w-1/3 py-2 border border-gray-300 rounded-lg text-gray-650 hover:bg-gray-55 font-bold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingAction || !modalComment.trim()}
+                  className={`w-2/3 py-2 text-white font-bold rounded-lg shadow-sm transition-colors disabled:opacity-50 ${
+                    activeModal === 'REQUEST_INFO' ? 'bg-blue-600 hover:bg-blue-755' : 'bg-red-600 hover:bg-red-755'
+                  }`}
+                >
+                  Confirm Decision
+                </button>
               </div>
-
-              {/* Manager credentials section */}
-              <div className="space-y-3 pt-2 border-t border-gray-150">
-                <span className="text-[10px] text-gray-450 uppercase block">Assign Pharmacy Manager</span>
-                
-                <div className="space-y-2">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-405">Manager Full Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Marie Grace Ineza"
-                      required
-                      value={managerName}
-                      onChange={(e) => setManagerName(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-405">Manager Email Address</label>
-                    <input
-                      type="email"
-                      placeholder="e.g. manager@remerawellness.rw"
-                      required
-                      value={managerEmail}
-                      onChange={(e) => setManagerEmail(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Location fields */}
-              <div className="space-y-3 pt-2 border-t border-gray-150">
-                <span className="text-[10px] text-gray-450 uppercase block">Licencing Jurisdiction</span>
-                
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-450">Province</label>
-                    <select
-                      value={province}
-                      onChange={(e) => handleProvinceChange(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg p-1.5 focus:outline-none text-gray-950 font-bold"
-                    >
-                      {Object.keys(RWANDA_LOCATIONS).map((p) => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-450">District</label>
-                    <select
-                      value={district}
-                      onChange={(e) => handleDistrictChange(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg p-1.5 focus:outline-none text-gray-950 font-bold"
-                    >
-                      {Object.keys(RWANDA_LOCATIONS[province] || {}).map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-450">Sector</label>
-                    <select
-                      value={sector}
-                      onChange={(e) => setSector(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg p-1.5 focus:outline-none text-gray-950 font-bold"
-                    >
-                      {Object.keys(RWANDA_LOCATIONS[province]?.[district] || {}).map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-lg text-xs transition-colors shadow-sm focus:outline-none mt-2"
-              >
-                Approve &amp; Activate Licence
-              </button>
-
             </form>
-
           </div>
         </div>
       )}
 
-      {/* Generated credentials success modal */}
-      {showCredentialsModal && generatedCredentials && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center px-4 py-6">
-          <div onClick={() => setShowCredentialsModal(false)} className="absolute inset-0 bg-gray-900/50 backdrop-blur-xs" />
+      {/* Simulated Document Viewer Modal */}
+      {viewingDoc && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
+          <div onClick={() => setViewingDoc(null)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xxs" />
           
-          <div className="relative w-full max-w-sm bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-55 flex flex-col">
-            
-            {/* Header */}
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-55 flex flex-col text-left">
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900">
               <div>
-                <h3 className="font-black text-sm">Manager Credentials</h3>
-                <p className="text-xs text-emerald-300">Share default logins with the manager</p>
+                <h3 className="font-black text-sm">{viewingDoc.label}</h3>
+                <p className="text-xs text-emerald-300 font-bold">{viewingDoc.name}</p>
               </div>
-              <button onClick={() => setShowCredentialsModal(false)} className="text-emerald-300 hover:text-white">
+              <button onClick={() => setViewingDoc(null)} className="text-emerald-300 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Contents */}
-            <div className="p-6 space-y-4 text-xs font-bold text-gray-700">
-              <p className="text-gray-500 font-medium leading-normal">
-                Pharmacy Manager account created. Give these credentials to the manager to access the **Pharmacy Portal**.
-              </p>
-
-              <div className="bg-slate-50 border border-gray-250 p-4 rounded-xl space-y-2.5">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Login Username</span>
-                  <span className="text-xs text-gray-950 block font-mono bg-white border border-gray-200 px-2.5 py-1.5 rounded">{generatedCredentials.username}</span>
+            <div className="p-8 bg-gray-50 flex items-center justify-center min-h-[300px]">
+              <div className="bg-white border-4 border-double border-emerald-800 p-8 rounded-xl shadow-md max-w-sm text-center space-y-6 relative overflow-hidden">
+                {/* Background Watermark */}
+                <div className="absolute inset-0 opacity-5 flex items-center justify-center font-bold text-3xl rotate-45 pointer-events-none select-none">
+                  RWANDA MOH
                 </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Temporary Password</span>
-                  <span className="text-xs text-gray-950 block font-mono bg-white border border-gray-200 px-2.5 py-1.5 rounded">{generatedCredentials.tempPass}</span>
+
+                <div className="flex flex-col items-center gap-2">
+                  <Landmark className="w-10 h-10 text-emerald-800" />
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-805">Republic of Rwanda</span>
+                  <span className="text-[9px] font-bold text-gray-500">Ministry of Health Regulatory Board</span>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-gray-950 text-xs border-y border-emerald-100 py-2.5 uppercase tracking-wide">
+                    Certificate of Official Validation
+                  </h4>
+                  <p className="text-[10px] text-gray-500 leading-normal font-sans">
+                    This document certifies that the licensing credentials uploaded for **{selectedPharm?.pharmacyName}** have been cross-checked against national databases.
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center text-[9px] font-bold text-gray-450 border-t border-gray-100 pt-4">
+                  <span className="font-mono">VERIFIED MoH MOCK</span>
+                  <span>Board Inspector Seal</span>
                 </div>
               </div>
-
-              <div className="bg-amber-50 border border-amber-250 text-amber-850 p-3 rounded-lg flex items-start space-x-2 text-[10px] font-medium leading-normal">
-                <span>⚠️ The manager will be forced to change this password during their initial login session.</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowCredentialsModal(false)}
-                className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm focus:outline-none"
-              >
-                Done
-              </button>
             </div>
 
+            <div className="bg-white p-4 border-t border-gray-150 flex justify-end space-x-2.5">
+              <button
+                type="button"
+                onClick={() => setViewingDoc(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-650 hover:bg-gray-50 text-xs font-bold transition-colors"
+              >
+                Close Audit View
+              </button>
+              <button
+                type="button"
+                onClick={() => triggerToast(`Downloaded ${viewingDoc.name} locally.`)}
+                className="bg-health-primary hover:bg-health-secondary text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors flex items-center gap-1"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Copy</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
