@@ -4,7 +4,7 @@ import { useUIStore } from '@/store/uiStore'
 import { 
   Menu, X, LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
-  ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2 
+  ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2, MapPin
 } from 'lucide-react'
 
 export default function SidebarLayout() {
@@ -57,6 +57,9 @@ export default function SidebarLayout() {
           { path: '/government/pharmacies', label: 'Pharmacy Registry', icon: Users },
           { path: '/government/medicines', label: 'Medicine Registry', icon: Package },
           { path: '/government/analytics', label: 'National Analytics', icon: BarChart2 },
+          { path: '/government/districts', label: 'District Heatmap', icon: MapPin },
+          { path: '/government/province-analytics', label: 'Province Analytics', icon: TrendingUp },
+          { path: '/government/medicine-analytics', label: 'Drug Analytics', icon: Package },
           { path: '/government/compliance', label: 'Compliance Audits', icon: FileLock2 },
           { path: '/government/reports', label: 'MOH Reports', icon: FileText },
         ]

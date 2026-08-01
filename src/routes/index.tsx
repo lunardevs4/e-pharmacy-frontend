@@ -46,12 +46,16 @@ import GovernmentDashboard from '@/pages/government/Dashboard'
 import PharmacyRegistry from '@/pages/government/PharmacyRegistry'
 import MedicineRegistry from '@/pages/government/MedicineRegistry'
 import NationalAnalytics from '@/pages/government/NationalAnalytics'
+import DistrictAnalytics from '@/pages/government/DistrictAnalytics'
+import MedicineAnalytics from '@/pages/government/MedicineAnalytics'
+import ProvinceAnalytics from '@/pages/government/ProvinceAnalytics'
 import GovernmentCompliance from '@/pages/government/Compliance'
 import GovernmentReports from '@/pages/government/Reports'
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard'
 import AdminUsers from '@/pages/admin/Users'
+import AdminMedicines from '@/pages/admin/Medicines'
 import AdminRoles from '@/pages/admin/Roles'
 import AdminSettings from '@/pages/admin/Settings'
 import AdminAuditLogs from '@/pages/admin/AuditLogs'
@@ -124,6 +128,9 @@ export default function AppRoutes() {
           <Route path="pharmacies" element={<PharmacyRegistry />} />
           <Route path="medicines" element={<MedicineRegistry />} />
           <Route path="analytics" element={<NationalAnalytics />} />
+          <Route path="districts" element={<DistrictAnalytics />} />
+          <Route path="medicine-analytics" element={<MedicineAnalytics />} />
+          <Route path="province-analytics" element={<ProvinceAnalytics />} />
           <Route path="compliance" element={<GovernmentCompliance />} />
           <Route path="reports" element={<GovernmentReports />} />
         </Route>
@@ -134,6 +141,7 @@ export default function AppRoutes() {
         <Route path="/admin" element={<SidebarLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="medicines" element={<AdminMedicines />} />
           <Route path="roles" element={<AdminRoles />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="audit" element={<AdminAuditLogs />} />
