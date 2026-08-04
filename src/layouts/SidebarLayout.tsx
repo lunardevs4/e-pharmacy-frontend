@@ -1,6 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
+import { useEffect } from 'react'
 import { 
   Menu, X, LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
@@ -17,6 +18,15 @@ export default function SidebarLayout() {
     logout()
     navigate('/')
   }
+
+  // Close sidebar on Escape key
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && sidebarOpen) toggleSidebar()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [sidebarOpen, toggleSidebar])
 
   // Define sidebar links based on role
   const getLinks = () => {
@@ -84,35 +94,44 @@ export default function SidebarLayout() {
       {/* Mobile Drawer Backdrop */}
       {sidebarOpen && (
         <div 
-          onClick={toggleSidebar} 
+          onClick={toggleSidebar}
+          aria-hidden="true"
           className="fixed inset-0 z-30 bg-gray-900/40 md:hidden transition-opacity"
         />
       )}
 
       {/* Sidebar Panel */}
-      <aside className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col transform transition-transform duration-250 ease-in-out md:translate-x-0 md:static ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <aside
+        id="main-sidebar"
+        aria-label="Main navigation"
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         {/* Brand header */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-xs">
-              R
-            </div>
+            <img src="/logo1.png" alt="Rwanda E-Pharmacy" className="h-8 w-auto object-contain" />
             <div>
               <span className="font-bold text-sm leading-none block text-white">Rwanda</span>
-              <span className="block text-[8px] text-emerald-450 tracking-wider font-semibold uppercase mt-0.5">
+              <span className="block text-[8px] text-emerald-400 tracking-wider font-semibold uppercase mt-0.5">
                 E-Pharmacy
               </span>
             </div>
           </div>
-          <button onClick={toggleSidebar} className="md:hidden text-white hover:text-slate-300">
-            <X className="w-5 h-5" />
+          <button
+            onClick={toggleSidebar}
+            aria-label="Close navigation menu"
+            aria-expanded={sidebarOpen}
+            aria-controls="main-sidebar"
+            className="md:hidden text-white hover:text-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 rounded"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Navigation list */}
-        <nav className="flex-grow py-6 px-4 space-y-1 overflow-y-auto">
+        <nav aria-label={`${user?.role} portal navigation`} className="flex-grow py-6 px-4 space-y-1 overflow-y-auto">
           <span className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase px-3 mb-2">
             {user?.role} Portal
           </span>
@@ -123,41 +142,43 @@ export default function SidebarLayout() {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 ${
                   isActive 
                     ? 'bg-slate-800 text-white font-bold shadow-sm' 
                     : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-450'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} aria-hidden="true" />
                   <span>{link.label}</span>
                 </div>
-                {isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
+                {isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />}
               </Link>
             )
           })}
         </nav>
 
         {/* Footer profile & logout */}
-        <div className="p-4 border-t border-slate-800 bg-[#0f172a]/40 flex items-center justify-between">
+        <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
           <div className="flex items-center space-x-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 flex-shrink-0">
-              {user?.name ? (
-                user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
-              ) : 'MU'}
+            <div
+              aria-hidden="true"
+              className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 flex-shrink-0"
+            >
+              {user?.name ? user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() : 'MU'}
             </div>
             <div className="overflow-hidden">
-              <span className="block font-bold text-xs text-white truncate">{user?.name || 'Marie Uwimana'}</span>
+              <span className="block font-bold text-xs text-white truncate">{user?.name || 'User'}</span>
               <span className="block text-[10px] text-slate-400 truncate">v2.4.1</span>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            title="Sign Out"
-            className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-colors focus:outline-none"
+            aria-label="Sign out of your account"
+            className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </aside>
@@ -168,10 +189,13 @@ export default function SidebarLayout() {
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">
           <div className="flex items-center space-x-4">
             <button 
-              onClick={toggleSidebar} 
-              className="text-gray-500 hover:text-health-primary focus:outline-none"
+              onClick={toggleSidebar}
+              aria-label="Toggle navigation menu"
+              aria-expanded={sidebarOpen}
+              aria-controls="main-sidebar"
+              className="text-gray-500 hover:text-health-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-6 h-6" aria-hidden="true" />
             </button>
             <div className="hidden sm:block text-sm text-gray-500 font-medium">
               Republic of Rwanda &bull; Integrated Healthcare Platform
@@ -179,10 +203,12 @@ export default function SidebarLayout() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Notifications toggle */}
-            <button className="relative w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-550 hover:text-health-primary transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
+            <button
+              className="relative w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 hover:text-health-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+              aria-label="Notifications — 1 unread"
+            >
+              <Bell className="w-5 h-5" aria-hidden="true" />
+              <span aria-hidden="true" className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
             </button>
 
             {/* Profile widget */}
@@ -190,7 +216,10 @@ export default function SidebarLayout() {
               <span className="text-xs font-bold text-gray-800 hidden md:block">
                 {user?.name}
               </span>
-              <div className="w-8 h-8 rounded-full bg-emerald-100 text-health-primary flex items-center justify-center font-bold text-sm">
+              <div
+                aria-hidden="true"
+                className="w-8 h-8 rounded-full bg-emerald-100 text-health-primary flex items-center justify-center font-bold text-sm"
+              >
                 {user?.name?.[0]}
               </div>
             </div>
@@ -198,7 +227,7 @@ export default function SidebarLayout() {
         </header>
 
         {/* Content Page Container */}
-        <main className="flex-grow p-6 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main id="main-content" className="flex-grow p-6 overflow-y-auto max-w-7xl w-full mx-auto">
           <Outlet />
         </main>
       </div>

@@ -501,10 +501,10 @@ export default function PharmacyInventory() {
             {/* Refresh btn */}
             <button
               onClick={loadInventory}
-              className="p-1.5 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 text-gray-600 transition-colors"
-              title="Refresh inventory"
+              aria-label="Refresh inventory"
+              className="p-1.5 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 text-gray-600 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -537,7 +537,7 @@ export default function PharmacyInventory() {
                   <th scope="col" className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('name')}>
                     <div className="flex items-center space-x-1">
                       <span>Drug Name (Generic)</span>
-                      <ArrowUpDown className="w-3 h-3" />
+                      <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
                     </div>
                   </th>
                   <th scope="col" className="px-6 py-3">Category</th>
@@ -545,19 +545,19 @@ export default function PharmacyInventory() {
                   <th scope="col" className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('expiry')}>
                     <div className="flex items-center space-x-1">
                       <span>Expiry Date</span>
-                      <ArrowUpDown className="w-3 h-3" />
+                      <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
                     </div>
                   </th>
                   <th scope="col" className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100 text-center" onClick={() => toggleSort('stock')}>
                     <div className="flex items-center space-x-1 justify-center">
                       <span>Stock Qty</span>
-                      <ArrowUpDown className="w-3 h-3" />
+                      <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
                     </div>
                   </th>
                   <th scope="col" className="px-6 py-3 cursor-pointer select-none hover:bg-gray-100" onClick={() => toggleSort('price')}>
                     <div className="flex items-center space-x-1">
                       <span>Unit Price</span>
-                      <ArrowUpDown className="w-3 h-3" />
+                      <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
                     </div>
                   </th>
                   <th scope="col" className="px-6 py-3 text-center">Status</th>
@@ -676,15 +676,25 @@ export default function PharmacyInventory() {
 
       {/* Edit Stock & Price Modal */}
       {showEditModal && selectedItem && (
-        <div className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+          className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowEditModal(false) }}
+        >
           <div className="bg-white rounded-xl border border-gray-200 w-full max-w-md shadow-xl overflow-hidden">
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
               <div>
-                <h3 className="font-black text-gray-900 text-sm">Adjust Pharmacy Inventory</h3>
+                <h3 id="edit-modal-title" className="font-black text-gray-900 text-sm">Adjust Pharmacy Inventory</h3>
                 <p className="text-[10px] text-gray-400 font-mono mt-0.5">{selectedItem.medicine.name}</p>
               </div>
-              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
+              <button
+                onClick={() => setShowEditModal(false)}
+                aria-label="Close edit modal"
+                className="text-gray-400 hover:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             
@@ -759,19 +769,29 @@ export default function PharmacyInventory() {
 
       {/* Add Medicine Drawer Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-xs flex items-center justify-end">
-          <div className="bg-white h-full w-full max-w-lg shadow-2xl flex flex-col border-l border-gray-250 transform transition-transform animate-slide-in">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-modal-title"
+          className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-sm flex items-center justify-end"
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowAddModal(false) }}
+        >
+          <div className="bg-white h-full w-full max-w-lg shadow-2xl flex flex-col border-l border-gray-200">
             {/* Header */}
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center space-x-2">
-                <HeartPulse className="w-5 h-5 text-health-accent" />
+                <HeartPulse className="w-5 h-5 text-health-accent" aria-hidden="true" />
                 <div>
-                  <h3 className="font-black text-gray-950 text-base">Add Medication to Catalog</h3>
+                  <h3 id="add-modal-title" className="font-black text-gray-900 text-base">Add Medication to Catalog</h3>
                   <p className="text-[10px] text-gray-400 font-semibold">Store-specific dynamic stock definition</p>
                 </div>
               </div>
-              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
+              <button
+                onClick={() => setShowAddModal(false)}
+                aria-label="Close add medicine panel"
+                className="text-gray-400 hover:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 

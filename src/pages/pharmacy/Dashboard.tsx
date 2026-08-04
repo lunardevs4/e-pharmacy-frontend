@@ -117,16 +117,16 @@ export default function PharmacyDashboard() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs divide-y divide-gray-150">
+                <table className="w-full text-left text-xs divide-y divide-gray-150" aria-label="Recent reservations">
                   <thead>
                     <tr className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
-                      <th className="py-2.5">ID</th>
-                      <th className="py-2.5">Patient</th>
-                      <th className="py-2.5">Medicine</th>
-                      <th className="py-2.5">Date</th>
-                      <th className="py-2.5 text-center">Insur.</th>
-                      <th className="py-2.5">Status</th>
-                      <th className="py-2.5 text-right">Action</th>
+                      <th scope="col" className="py-2.5">ID</th>
+                      <th scope="col" className="py-2.5">Patient</th>
+                      <th scope="col" className="py-2.5">Medicine</th>
+                      <th scope="col" className="py-2.5">Date</th>
+                      <th scope="col" className="py-2.5 text-center">Insur.</th>
+                      <th scope="col" className="py-2.5">Status</th>
+                      <th scope="col" className="py-2.5 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
@@ -138,29 +138,29 @@ export default function PharmacyDashboard() {
                         <td className="py-3 text-gray-500">{res.date}</td>
                         <td className="py-3 text-center">
                           {res.insurance ? (
-                            <CheckCircle className="w-4 h-4 text-emerald-600 inline-block" />
+                            <CheckCircle className="w-4 h-4 text-emerald-600 inline-block" aria-label="Insurance accepted" />
                           ) : (
-                            <XCircle className="w-4 h-4 text-gray-300 inline-block" />
+                            <XCircle className="w-4 h-4 text-gray-300 inline-block" aria-label="No insurance" />
                           )}
                         </td>
                         <td className="py-3">
                           {res.status === 'Ready for Pickup' && (
-                            <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.25 rounded border border-emerald-200">
+                            <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                               Ready for Pickup
                             </span>
                           )}
                           {res.status === 'Pending' && (
-                            <span className="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.25 rounded border border-amber-200">
+                            <span className="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                               Pending
                             </span>
                           )}
                           {res.status === 'Collected' && (
-                            <span className="inline-flex items-center text-[10px] font-bold text-slate-650 bg-slate-50 px-2 py-0.25 rounded border border-slate-200">
+                            <span className="inline-flex items-center text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
                               Collected
                             </span>
                           )}
                           {res.status === 'Expired' && (
-                            <span className="inline-flex items-center text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.25 rounded border border-red-200">
+                            <span className="inline-flex items-center text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200">
                               Expired
                             </span>
                           )}
@@ -170,7 +170,8 @@ export default function PharmacyDashboard() {
                             <button
                               type="button"
                               onClick={() => handleConfirmReservation(res.id)}
-                              className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-3 py-1 rounded text-[10px] transition-colors focus:outline-none"
+                              aria-label={`Confirm collection for reservation ${res.id}`}
+                              className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-3 py-1 rounded text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
                             >
                               Confirm
                             </button>
@@ -179,7 +180,8 @@ export default function PharmacyDashboard() {
                             <button
                               type="button"
                               onClick={() => handleMarkReady(res.id)}
-                              className="bg-health-primary hover:bg-health-secondary text-white font-bold px-3 py-1 rounded text-[10px] transition-colors focus:outline-none"
+                              aria-label={`Mark reservation ${res.id} as ready for pickup`}
+                              className="bg-health-primary hover:bg-health-secondary text-white font-bold px-3 py-1 rounded text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
                             >
                               Mark Ready
                             </button>
