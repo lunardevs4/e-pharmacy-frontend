@@ -70,77 +70,81 @@ export interface AuthResponse {
 const CURRENT_USER_KEY = 'epharmacy_current_session_user'
 
 const normalizeUser = (payload: any): AuthUser => {
-  const firstName = payload.firstName || payload.first_name || ''
-  const lastName = payload.lastName || payload.last_name || ''
-  const displayName = payload.name || [firstName, lastName].filter(Boolean).join(' ') || payload.email || 'User'
-  const role = (payload.role || 'PATIENT') as UserRole
-  const username = payload.username || payload.email || [firstName, lastName].filter(Boolean).join('.').toLowerCase() || 'user'
+  const userObj = payload?.user || payload?.data || payload || {}
+  const firstName = userObj.firstName || userObj.first_name || ''
+  const lastName = userObj.lastName || userObj.last_name || ''
+  const displayName = userObj.name || [firstName, lastName].filter(Boolean).join(' ') || userObj.email || 'User'
+  const role = (userObj.role || 'PATIENT') as UserRole
+  const username = userObj.username || userObj.email || [firstName, lastName].filter(Boolean).join('.').toLowerCase() || 'user'
 
   return {
-    id: payload.id || '',
+    id: userObj.id || '',
     username,
-    email: payload.email,
+    email: userObj.email,
     name: displayName,
     firstName,
     lastName,
     role,
-    phone: payload.phone,
-    position: payload.position,
-    permissions: payload.permissions || [],
-    pharmacyId: payload.pharmacyId,
-    organizationId: payload.organizationId,
-    pharmacyName: payload.pharmacyName,
-    firstLogin: payload.firstLogin ?? false,
-    isActive: payload.isActive ?? true,
-    createdAt: payload.createdAt,
-    updatedAt: payload.updatedAt,
-    deletedAt: payload.deletedAt ?? null,
-    nid: payload.nid,
-    licenseNumber: payload.licenseNumber,
-    insuranceProvider: payload.insuranceProvider,
-    dob: payload.dob || payload.dateOfBirth,
-    gender: payload.gender,
-    province: payload.province,
-    district: payload.district,
-    sector: payload.sector,
-    cell: payload.cell,
-    village: payload.village,
-    emergencyContact: payload.emergencyContact,
-    preferredPharmacy: payload.preferredPharmacy,
-    medicalNotes: payload.medicalNotes,
-    profilePhoto: payload.profilePhoto,
-    patient: payload.patient ? {
-      id: payload.patient.id,
-      userId: payload.patient.userId,
-      medicalProfile: payload.patient.medicalProfile,
-      address: payload.patient.address,
-      dateOfBirth: payload.patient.dateOfBirth,
-      gender: payload.patient.gender,
-      createdAt: payload.patient.createdAt,
-      updatedAt: payload.patient.updatedAt,
+    phone: userObj.phone,
+    position: userObj.position,
+    permissions: userObj.permissions || [],
+    pharmacyId: userObj.pharmacyId,
+    organizationId: userObj.organizationId,
+    pharmacyName: userObj.pharmacyName,
+    firstLogin: userObj.firstLogin ?? false,
+    isActive: userObj.isActive ?? true,
+    createdAt: userObj.createdAt,
+    updatedAt: userObj.updatedAt,
+    deletedAt: userObj.deletedAt ?? null,
+    nid: userObj.nid,
+    licenseNumber: userObj.licenseNumber,
+    insuranceProvider: userObj.insuranceProvider,
+    dob: userObj.dob || userObj.dateOfBirth,
+    gender: userObj.gender,
+    province: userObj.province,
+    district: userObj.district,
+    sector: userObj.sector,
+    cell: userObj.cell,
+    village: userObj.village,
+    emergencyContact: userObj.emergencyContact,
+    preferredPharmacy: userObj.preferredPharmacy,
+    medicalNotes: userObj.medicalNotes,
+    profilePhoto: userObj.profilePhoto,
+    patient: userObj.patient ? {
+      id: userObj.patient.id,
+      userId: userObj.patient.userId,
+      medicalProfile: userObj.patient.medicalProfile,
+      address: userObj.patient.address,
+      dateOfBirth: userObj.patient.dateOfBirth,
+      gender: userObj.patient.gender,
+      createdAt: userObj.patient.createdAt,
+      updatedAt: userObj.patient.updatedAt,
     } : undefined,
-    pharmacy: payload.pharmacy ? {
-      id: payload.pharmacy.id,
-      name: payload.pharmacy.name,
-      address: payload.pharmacy.address,
-      phone: payload.pharmacy.phone,
-      licenseNumber: payload.pharmacy.licenseNumber,
-      district: payload.pharmacy.district,
-      province: payload.pharmacy.province,
-      managerName: payload.pharmacy.managerName,
-      status: payload.pharmacy.status,
-      isActive: payload.pharmacy.isActive,
-      createdAt: payload.pharmacy.createdAt,
-      updatedAt: payload.pharmacy.updatedAt,
+    pharmacy: userObj.pharmacy ? {
+      id: userObj.pharmacy.id,
+      name: userObj.pharmacy.name,
+      address: userObj.pharmacy.address,
+      phone: userObj.pharmacy.phone,
+      licenseNumber: userObj.pharmacy.licenseNumber,
+      district: userObj.pharmacy.district,
+      province: userObj.pharmacy.province,
+      managerName: userObj.pharmacy.managerName,
+      status: userObj.pharmacy.status,
+      isActive: userObj.pharmacy.isActive,
+      createdAt: userObj.pharmacy.createdAt,
+      updatedAt: userObj.pharmacy.updatedAt,
     } : undefined,
   }
 }
 
-const normalizeAuthResponse = (payload: any): AuthResponse => ({
-  accessToken: payload.accessToken,
-  refreshToken: payload.refreshToken,
-  user: normalizeUser(payload.user || payload),
-})
+const normalizeAuthResponse = (payload: any): AuthResponse => {
+  const data = payload?.data || payload
+  return {
+    accessToken: data?.accessToken || payload?.accessToken,
+    refreshToken: data?.refreshToken || payload?.refreshToken,
+    user: normalizeUser(data?.user || data),
+  }
+}
 
 const getErrorMessage = (error: any): string => {
   if (error?.response?.data?.message) {

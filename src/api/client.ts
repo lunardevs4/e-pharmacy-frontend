@@ -40,11 +40,12 @@ apiClient.interceptors.response.use(
 
           try {
             const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken })
-            const accessToken = res.data?.accessToken
+            const payload = res.data?.data || res.data
+            const accessToken = payload?.accessToken
             if (accessToken) {
               TokenStorage.setToken(accessToken)
-              if (res.data?.refreshToken) {
-                TokenStorage.setRefreshToken(res.data.refreshToken)
+              if (payload?.refreshToken) {
+                TokenStorage.setRefreshToken(payload.refreshToken)
               }
               isRefreshing = false
               refreshQueue.forEach((cb) => cb(accessToken))
