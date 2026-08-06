@@ -1,11 +1,40 @@
-export type UserRole = 'PATIENT' | 'PHARMACY' | 'INSURANCE' | 'GOVERNMENT' | 'ADMIN'
+export type UserRole = 'PATIENT' | 'PHARMACY' | 'PHARMACY_OWNER' | 'PHARMACIST' | 'INSURANCE' | 'GOVERNMENT' | 'ADMIN'
+
+export interface PatientProfile {
+  id?: string
+  userId?: string
+  medicalProfile?: string | null
+  address?: string | null
+  dateOfBirth?: string | null
+  gender?: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface PharmacySummary {
+  id?: string
+  name?: string
+  address?: string
+  phone?: string
+  licenseNumber?: string
+  district?: string
+  province?: string
+  managerName?: string
+  status?: string
+  isActive?: boolean
+  createdAt?: string
+  updatedAt?: string
+}
 
 export interface User {
   id: string
   username: string
   email?: string
   name: string
+  firstName?: string
+  lastName?: string
   role: UserRole
+  phone?: string
   nid?: string // National ID (crucial for Rwanda healthcare)
   licenseNumber?: string // For Pharmacy
   insuranceProvider?: string // For Insurance Company
@@ -13,8 +42,12 @@ export interface User {
   position?: string // Employee position (e.g. Pharmacist)
   permissions?: string[] // Employee permissions array
   pharmacyId?: string // Link to pharmacy organization
+  organizationId?: string // Backend organization linkage
   pharmacyName?: string // Name of the pharmacy
-  phone?: string
+  isActive?: boolean
+  createdAt?: string
+  updatedAt?: string
+  deletedAt?: string | null
   dob?: string
   gender?: string
   province?: string
@@ -26,6 +59,8 @@ export interface User {
   preferredPharmacy?: string
   medicalNotes?: string
   profilePhoto?: string
+  patient?: PatientProfile
+  pharmacy?: PharmacySummary
 }
 
 export interface AuthState {

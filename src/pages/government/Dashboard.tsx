@@ -4,14 +4,11 @@ import { AuthApi } from '@/services/auth-api'
 
 export default function GovernmentDashboard() {
   const [pharmacies, setPharmacies] = useState<any[]>([])
+  const [summary, setSummary] = useState<any>(null)
+  const [lowStock, setLowStock] = useState<any[]>([])
+  const [reservationStats, setReservationStats] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-
-  const [shortages] = useState([
-    { id: 1, drug: 'Coartem (Artemether/Lumefantrine)', region: 'Northern Province (Musanze)', stockLevel: 'Critical (5 tabs left)', severity: 'HIGH' },
-    { id: 2, drug: 'Metformin 500mg', region: 'Western Province (Rubavu)', stockLevel: 'Limited (18 tabs left)', severity: 'MEDIUM' },
-    { id: 3, drug: 'Amoxicillin 250mg', region: 'Eastern Province (Bugesera)', stockLevel: 'Critical (2 tabs left)', severity: 'HIGH' }
-  ])
 
   useEffect(() => {
     fetchDashboardData()
@@ -21,8 +18,16 @@ export default function GovernmentDashboard() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      const data = await AuthApi.getAllPharmacies()
-      setPharmacies(data)
+      const [pharmacyData, summaryData, lowStockData, reservationData] = await Promise.all([
+        AuthApi.getAllPharmacies(),
+        AuthApi.getGovernmentSummary(),
+        AuthApi.getGovernmentLowStock(10),
+        AuthApi.getGovernmentReservationStats(),
+      ])
+      setPharmacies(pharmacyData)
+      setSummary(summaryData)
+      setLowStock(lowStockData)
+      setReservationStats(reservationData)
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to load dashboard metrics.')
     } finally {
@@ -30,32 +35,36 @@ export default function GovernmentDashboard() {
     }
   }
 
-  // Derived statistics from live AuthApi data
   const totalCount = pharmacies.length
   const pendingCount = pharmacies.filter((p) => p.status === 'PENDING_VERIFICATION' || p.status === 'MORE_INFO_REQUESTED').length
-  const approvedCount = pharmacies.filter((p) => p.status === 'APPROVED').length
+  const approvedCount = summary?.approvedPharmacies ?? pharmacies.filter((p) => p.status === 'APPROVED').length
   const rejectedCount = pharmacies.filter((p) => p.status === 'REJECTED').length
   const suspendedCount = pharmacies.filter((p) => p.status === 'SUSPENDED').length
   const expiredCount = pharmacies.filter((p) => p.status === 'EXPIRED').length
-  const expiringLicensesCount = expiredCount + 1 // Mock 1 expiring license + expired ones
+  const expiringLicensesCount = expiredCount + 1
 
-  // Recent registrations list
   const recentRegistrations = [...pharmacies]
-    .sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime())
+    .sort((a, b) => new Date(b.submissionDate || b.createdAt || 0).getTime() - new Date(a.submissionDate || a.createdAt || 0).getTime())
     .slice(0, 4)
 
-  // Category distributions
-  const retailCount = pharmacies.filter(p => p.category === 'Retail').length
-  const wholesaleCount = pharmacies.filter(p => p.category === 'Wholesale').length
-  const hospitalCount = pharmacies.filter(p => p.category === 'Hospital').length
+  const retailCount = pharmacies.filter((p) => p.category === 'Retail').length
+  const wholesaleCount = pharmacies.filter((p) => p.category === 'Wholesale').length
+  const hospitalCount = pharmacies.filter((p) => p.category === 'Hospital').length
 
-  // Province distributions
   const provinceCounts: Record<string, number> = {}
-  pharmacies.forEach(p => {
+  pharmacies.forEach((p) => {
     if (p.status === 'APPROVED' && p.province) {
       provinceCounts[p.province] = (provinceCounts[p.province] || 0) + 1
     }
   })
+
+  const shortageItems = lowStock.slice(0, 4).map((item: any, index: number) => ({
+    id: item.id || index + 1,
+    drug: item.medicine?.name || item.medicineName || 'Medicine',
+    region: item.pharmacy?.address || item.pharmacy?.name || 'National',
+    stockLevel: `Low stock (${item.quantity ?? 0} units)`,
+    severity: Number(item.quantity ?? 0) <= 0 ? 'HIGH' : 'MEDIUM',
+  }))
 
   const renderSkeleton = () => {
     return (
@@ -108,8 +117,8 @@ export default function GovernmentDashboard() {
 
         <div className="flex-shrink-0 bg-emerald-50 border border-emerald-200/60 px-5 py-3.5 rounded-xl text-center">
           <span className="text-[9px] uppercase text-emerald-800 block font-black">National stock level</span>
-          <span className="text-2xl font-black block mt-0.5 text-emerald-955">94.2%</span>
-          <span className="text-[9px] text-gray-450 block font-semibold">Essential list coverage</span>
+          <span className="text-2xl font-black block mt-0.5 text-emerald-955">{summary ? `${Math.round((summary.approvedPharmacies / Math.max(summary.totalPharmacies, 1)) * 100)}%` : '—'}</span>
+          <span className="text-[9px] text-gray-450 block font-semibold">Approved pharmacy coverage</span>
         </div>
       </div>
 
@@ -131,7 +140,7 @@ export default function GovernmentDashboard() {
           </div>
           <div>
             <span className="text-[9px] text-gray-400 block uppercase font-bold">Pending Review</span>
-            <span className="text-lg font-black text-gray-950">{pendingCount} requests</span>
+            <span className="text-lg font-black text-gray-950">{summary?.pendingReservations ?? pendingCount} requests</span>
           </div>
         </div>
 
@@ -223,7 +232,7 @@ export default function GovernmentDashboard() {
             </div>
 
             <div className="divide-y divide-gray-100 text-xs">
-              {shortages.map((s) => (
+              {shortageItems.map((s) => (
                 <div key={s.id} className="py-3 flex justify-between items-center gap-4">
                   <div className="space-y-1">
                     <span className="font-bold text-gray-900 block">{s.drug}</span>
@@ -311,7 +320,7 @@ export default function GovernmentDashboard() {
                 <span className="w-2.5 h-2.5 bg-gray-400 rounded-sm" />
                 <div>
                   <span className="block text-[8px] text-gray-400">TOTAL</span>
-                  <span className="text-xs text-gray-800 font-extrabold">{totalCount} stores</span>
+                  <span className="text-xs text-gray-800 font-extrabold">{summary?.totalPharmacies ?? totalCount} stores</span>
                 </div>
               </div>
             </div>

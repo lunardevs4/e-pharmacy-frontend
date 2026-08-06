@@ -79,7 +79,8 @@ export default function Login() {
       }
 
       setSuccessMsg('Authentication successful! Redirecting...')
-      
+      console.log('Login successful:', res)
+      alert("Error Message: " + errorMsg)
       // Save details to Zustand authStore
       login(res.user, res.accessToken)
 

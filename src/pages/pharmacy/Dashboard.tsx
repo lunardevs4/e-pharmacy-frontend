@@ -1,29 +1,68 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Bookmark, Box, Users, TrendingUp, CheckCircle, XCircle, ChevronRight, Activity, AlertTriangle } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
+import { MedicineApi } from '@/services/medicine-api'
+
+interface PharmacyDashboardReservation {
+  id: string
+  patient: string
+  medicine: string
+  date: string
+  insurance: boolean
+  status: string
+}
 
 export default function PharmacyDashboard() {
-  // Eric Mugisha's pharmacy profile states (mock data matching screenshot)
-  const [reservations, setReservations] = useState([
-    { id: 'RES-2024-001', patient: 'Marie Uwimana', medicine: 'Artemether + Lumefantrine', date: '2024-08-12', insurance: true, status: 'Ready for Pickup' },
-    { id: 'RES-2024-002', patient: 'Jean-Pierre Nkurunziza', medicine: 'Amoxicillin 500mg', date: '2024-08-12', insurance: false, status: 'Pending' },
-    { id: 'RES-2024-003', patient: 'Aline Mukamana', medicine: 'Insulin Glargine', date: '2024-08-11', insurance: true, status: 'Collected' },
-    { id: 'RES-2024-004', patient: 'Emmanuel Habimana', medicine: 'Metformin 850mg', date: '2024-08-11', insurance: true, status: 'Expired' },
-    { id: 'RES-2024-005', patient: 'Clarisse Ingabire', medicine: 'Paracetamol 500mg', date: '2024-08-10', insurance: false, status: 'Collected' }
-  ])
+  const { user } = useAuthStore()
+  const [reservations, setReservations] = useState<PharmacyDashboardReservation[]>([])
+  const [inventory, setInventory] = useState<any[]>([])
+  const [report, setReport] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  // Handles state changes for confirming or marking ready from dashboard actions
-  const handleConfirmReservation = (id: string) => {
-    setReservations((prev) => 
-      prev.map((r) => r.id === id ? { ...r, status: 'Collected' } : r)
-    )
-  }
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      setErrorMsg(null)
+      try {
+        const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
+        if (!pharmacyId) {
+          throw new Error('No pharmacy is linked to your account yet.')
+        }
 
-  const handleMarkReady = (id: string) => {
-    setReservations((prev) => 
-      prev.map((r) => r.id === id ? { ...r, status: 'Ready for Pickup' } : r)
-    )
-  }
+        const data = await MedicineApi.getPharmacyDashboardData(pharmacyId)
+        const mappedReservations = (data.reservations || []).map((item: any) => ({
+          id: item.id,
+          patient: item.patient?.user?.name || item.patient?.name || 'Patient',
+          medicine: item.medicine?.name || 'Medication',
+          date: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '—',
+          insurance: Boolean(item.insuranceProvider || item.insuranceId),
+          status: String(item.status || 'PENDING').replace('_', ' '),
+        }))
+
+        setReservations(mappedReservations)
+        setInventory(data.inventory || [])
+        setReport(data.report || {})
+      } catch (err: any) {
+        console.error(err)
+        setErrorMsg(err.message || 'Unable to load pharmacy dashboard data.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [user?.pharmacy?.id, user?.pharmacyId])
+
+  const summary = useMemo(() => {
+    const pending = reservations.filter((res) => res.status.toUpperCase().includes('PENDING')).length
+    const ready = reservations.filter((res) => res.status.toUpperCase().includes('READY')).length
+    const collected = reservations.filter((res) => res.status.toUpperCase().includes('COLLECTED')).length
+    const lowStock = inventory.filter((item) => Number(item.quantity) < 10).length
+    const totalInventory = inventory.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+    return { pending, ready, collected, lowStock, totalInventory }
+  }, [inventory, reservations])
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -35,8 +74,8 @@ export default function PharmacyDashboard() {
             EM
           </div>
           <div className="text-xs space-y-0.5">
-            <p className="text-gray-500">Logged in as <span className="font-bold text-gray-900">Eric Mugisha</span></p>
-            <p className="text-gray-500">Role <span className="font-bold text-gray-900">Pharmacy Manager</span></p>
+            <p className="text-gray-500">Logged in as <span className="font-bold text-gray-900">{user?.name || 'Pharmacy User'}</span></p>
+            <p className="text-gray-500">Role <span className="font-bold text-gray-900">{user?.role || 'PHARMACY_OWNER'}</span></p>
           </div>
         </div>
         <div className="h-px md:h-8 w-full md:w-px bg-gray-200" />
@@ -52,8 +91,8 @@ export default function PharmacyDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Today's Reservations</span>
-            <p className="text-3xl font-black text-gray-900 mt-1">42</p>
-            <span className="text-[11px] text-gray-400 block font-medium">8 ready for pickup</span>
+            <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : reservations.length}</p>
+            <span className="text-[11px] text-gray-400 block font-medium">{summary.ready} ready for pickup</span>
             <span className="text-[10px] font-black text-emerald-600 block pt-1">↗ 8% vs last month</span>
           </div>
           <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100 flex-shrink-0">
@@ -65,8 +104,8 @@ export default function PharmacyDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total SKUs</span>
-            <p className="text-3xl font-black text-gray-900 mt-1">1,284</p>
-            <span className="text-[11px] text-gray-400 block font-medium">12 low stock • 3 expired</span>
+            <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.totalInventory}</p>
+            <span className="text-[11px] text-gray-400 block font-medium">{summary.lowStock} low stock</span>
           </div>
           <div className="p-2 bg-gray-50 text-gray-600 rounded-lg border border-gray-205 flex-shrink-0">
             <Box className="w-4 h-4" />
@@ -77,8 +116,8 @@ export default function PharmacyDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Patients (Month)</span>
-            <p className="text-3xl font-black text-gray-900 mt-1">3,420</p>
-            <span className="text-[10px] font-black text-emerald-600 block pt-1">↗ 15% vs last month</span>
+            <p className="text-3xl font-black text-gray-900 mt-1">{report?.totalReservations ?? 0}</p>
+            <span className="text-[10px] font-black text-emerald-600 block pt-1">Live reservation count</span>
           </div>
           <div className="p-2 bg-gray-50 text-gray-650 rounded-lg border border-gray-205 flex-shrink-0">
             <Users className="w-4 h-4" />
@@ -89,8 +128,8 @@ export default function PharmacyDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Monthly Revenue</span>
-            <p className="text-2xl font-black text-gray-900 mt-1">RWF 6.2M</p>
-            <span className="text-[10px] font-black text-emerald-600 block pt-1">↗ 6.9% vs last month</span>
+            <p className="text-2xl font-black text-gray-900 mt-1">{report?.pharmacy ? 'Live report' : '—'}</p>
+            <span className="text-[10px] font-black text-emerald-600 block pt-1">Inventory report available</span>
           </div>
           <div className="p-2 bg-gray-50 text-gray-650 rounded-lg border border-gray-205 flex-shrink-0">
             <TrendingUp className="w-4 h-4" />
@@ -116,6 +155,10 @@ export default function PharmacyDashboard() {
                 </Link>
               </div>
 
+              {errorMsg && (
+                <div className="text-red-600 text-xs font-medium">{errorMsg}</div>
+              )}
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs divide-y divide-gray-150">
                   <thead>
@@ -132,7 +175,7 @@ export default function PharmacyDashboard() {
                   <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
                     {reservations.map((res) => (
                       <tr key={res.id} className="hover:bg-gray-50/50">
-                        <td className="py-3 font-semibold text-gray-950">{res.id}</td>
+                        <td className="py-3 font-semibold text-gray-950">{res.id.slice(0, 8)}</td>
                         <td className="py-3 font-bold text-gray-900">{res.patient}</td>
                         <td className="py-3">{res.medicine}</td>
                         <td className="py-3 text-gray-500">{res.date}</td>
@@ -144,46 +187,29 @@ export default function PharmacyDashboard() {
                           )}
                         </td>
                         <td className="py-3">
-                          {res.status === 'Ready for Pickup' && (
+                          {res.status.toUpperCase().includes('READY') && (
                             <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.25 rounded border border-emerald-200">
                               Ready for Pickup
                             </span>
                           )}
-                          {res.status === 'Pending' && (
+                          {res.status.toUpperCase().includes('PENDING') && (
                             <span className="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.25 rounded border border-amber-200">
                               Pending
                             </span>
                           )}
-                          {res.status === 'Collected' && (
+                          {res.status.toUpperCase().includes('COLLECTED') && (
                             <span className="inline-flex items-center text-[10px] font-bold text-slate-650 bg-slate-50 px-2 py-0.25 rounded border border-slate-200">
                               Collected
                             </span>
                           )}
-                          {res.status === 'Expired' && (
+                          {res.status.toUpperCase().includes('CANCELLED') && (
                             <span className="inline-flex items-center text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.25 rounded border border-red-200">
-                              Expired
+                              Cancelled
                             </span>
                           )}
                         </td>
                         <td className="py-3 text-right">
-                          {res.status === 'Ready for Pickup' && (
-                            <button
-                              type="button"
-                              onClick={() => handleConfirmReservation(res.id)}
-                              className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-3 py-1 rounded text-[10px] transition-colors focus:outline-none"
-                            >
-                              Confirm
-                            </button>
-                          )}
-                          {res.status === 'Pending' && (
-                            <button
-                              type="button"
-                              onClick={() => handleMarkReady(res.id)}
-                              className="bg-health-primary hover:bg-health-secondary text-white font-bold px-3 py-1 rounded text-[10px] transition-colors focus:outline-none"
-                            >
-                              Mark Ready
-                            </button>
-                          )}
+                          <span className="text-[10px] text-gray-500">Live</span>
                         </td>
                       </tr>
                     ))}
