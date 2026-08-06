@@ -22,6 +22,8 @@ export interface PharmacySummary {
   managerName?: string
   status?: string
   isActive?: boolean
+  category?: string
+  ownershipType?: string
   createdAt?: string
   updatedAt?: string
 }

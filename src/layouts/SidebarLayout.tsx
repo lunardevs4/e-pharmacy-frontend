@@ -119,12 +119,22 @@ export default function SidebarLayout() {
           {navLinks.map((link) => {
             const Icon = link.icon
             const isActive = location.pathname === link.path
+            const isPharmacyApproved = user?.role !== 'PHARMACY' || user?.pharmacy?.status === 'APPROVED'
+            const isDisabled = !isPharmacyApproved && link.path !== '/pharmacy'
+
             return (
               <Link
                 key={link.path}
-                to={link.path}
+                to={isDisabled ? '#' : link.path}
+                onClick={(e) => {
+                  if (isDisabled) {
+                    e.preventDefault()
+                  }
+                }}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  isActive 
+                  isDisabled
+                    ? 'opacity-40 cursor-not-allowed pointer-events-none'
+                    : isActive 
                     ? 'bg-slate-800 text-white font-bold shadow-sm' 
                     : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
                 }`}

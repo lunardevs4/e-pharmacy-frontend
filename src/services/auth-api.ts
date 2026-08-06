@@ -56,6 +56,8 @@ export interface AuthUser {
     managerName?: string
     status?: string
     isActive?: boolean
+    category?: string
+    ownershipType?: string
     createdAt?: string
     updatedAt?: string
   }
@@ -131,6 +133,8 @@ const normalizeUser = (payload: any): AuthUser => {
       managerName: userObj.pharmacy.managerName,
       status: userObj.pharmacy.status,
       isActive: userObj.pharmacy.isActive,
+      category: userObj.pharmacy.category,
+      ownershipType: userObj.pharmacy.ownershipType,
       createdAt: userObj.pharmacy.createdAt,
       updatedAt: userObj.pharmacy.updatedAt,
     } : undefined,
@@ -212,40 +216,16 @@ export const AuthApi = {
   },
 
   registerPharmacy: async (pharmacyData: {
-    pharmacyName: string
-    tradingName?: string
-    licenseNumber?: string
-    businessRegistrationNumber?: string
-    tin?: string
-    category?: string
-    ownershipType?: string
-    officialEmail: string
-    officialPhone: string
-    username?: string
+    fullname: string
+    email: string
+    phone: string
     passwordHash: string
-    province: string
-    district: string
-    sector: string
-    cell: string
-    village: string
-    gpsCoords?: { lat: number; lng: number } | null
-    pharmacistName: string
-    pharmacistNid?: string
-    pharmacistLicense?: string
-    pharmacistPhone?: string
-    pharmacistEmail?: string
-    documents?: Array<{ name: string; fileType: string; fileSize: number }>
   }): Promise<any> => {
     try {
       const response = await apiClient.post('/auth/register-pharmacy', {
-        pharmacyName: pharmacyData.pharmacyName,
-        licenseNumber: pharmacyData.licenseNumber || 'PENDING',
-        district: pharmacyData.district,
-        province: pharmacyData.province,
-        address: [pharmacyData.province, pharmacyData.district, pharmacyData.sector, pharmacyData.cell, pharmacyData.village].filter(Boolean).join(', '),
-        managerName: pharmacyData.pharmacistName,
-        email: pharmacyData.officialEmail,
-        phone: pharmacyData.officialPhone,
+        fullname: pharmacyData.fullname,
+        email: pharmacyData.email,
+        phone: pharmacyData.phone,
         password: pharmacyData.passwordHash,
       })
       return response.data
@@ -448,6 +428,23 @@ export const AuthApi = {
 
   uploadProfilePhoto: async (file: File): Promise<{ profilePhoto: string }> => {
     return { profilePhoto: URL.createObjectURL(file) }
+  },
+
+  updatePharmacy: async (pharmacyId: string, data: {
+    name: string
+    address: string
+    licenseNumber: string
+    category: string
+    ownershipType: string
+    province: string
+    district: string
+  }): Promise<any> => {
+    try {
+      const response = await apiClient.patch(`/pharmacies/${pharmacyId}`, data)
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
   },
 
   getProfile: async (_emailOrUsername: string): Promise<any> => {
