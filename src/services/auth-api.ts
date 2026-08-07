@@ -14,7 +14,6 @@ export interface AuthUser {
   position?: string
   permissions?: string[]
   pharmacyId?: string
-  organizationId?: string
   pharmacyName?: string
   firstLogin: boolean
   isActive?: boolean
@@ -91,7 +90,6 @@ const normalizeUser = (payload: any): AuthUser => {
     position: userObj.position,
     permissions: userObj.permissions || [],
     pharmacyId: userObj.pharmacyId,
-    organizationId: userObj.organizationId,
     pharmacyName: userObj.pharmacyName,
     firstLogin: userObj.firstLogin ?? false,
     isActive: userObj.isActive ?? true,

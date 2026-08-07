@@ -44,7 +44,6 @@ export interface User {
   position?: string // Employee position (e.g. Pharmacist)
   permissions?: string[] // Employee permissions array
   pharmacyId?: string // Link to pharmacy organization
-  organizationId?: string // Backend organization linkage
   pharmacyName?: string // Name of the pharmacy
   isActive?: boolean
   createdAt?: string
