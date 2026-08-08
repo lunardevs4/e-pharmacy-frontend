@@ -197,7 +197,9 @@ export default function AdminDashboard() {
       <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <img src="/logo1.png" alt="" aria-hidden="true" className="h-7 w-auto object-contain opacity-80" />
+            <div className="bg-white rounded-lg p-1 flex-shrink-0">
+              <img src="/logo1.png" alt="" aria-hidden="true" className="h-6 w-auto object-contain" />
+            </div>
             <h1 className="text-xl font-black text-gray-800">Administrator Dashboard</h1>
           </div>
           <p className="text-xs text-gray-400 font-medium">

@@ -100,21 +100,27 @@ export default function SidebarLayout() {
         />
       )}
 
-      {/* Sidebar Panel */}
+      {/* Sidebar Panel — always fixed, never scrolls with page */}
       <aside
         id="main-sidebar"
         aria-label="Main navigation"
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col transform transition-transform duration-200 ease-in-out ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         {/* Brand header */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
-          <div className="flex items-center space-x-2">
-            <img src="/logo1.png" alt="Rwanda E-Pharmacy" className="h-8 w-auto object-contain" />
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
+          <div className="flex items-center space-x-2.5">
+            <div className="bg-white rounded-lg p-1.5 flex-shrink-0">
+              <img
+                src="/logo1.png"
+                alt="Rwanda E-Pharmacy"
+                className="h-8 w-auto object-contain"
+              />
+            </div>
             <div>
-              <span className="font-bold text-sm leading-none block text-white">Rwanda</span>
-              <span className="block text-[8px] text-emerald-400 tracking-wider font-semibold uppercase mt-0.5">
+              <span className="font-black text-sm leading-none block text-white tracking-wide">Rwanda</span>
+              <span className="block text-[9px] text-emerald-400 tracking-widest font-bold uppercase mt-0.5">
                 E-Pharmacy
               </span>
             </div>
@@ -185,8 +191,8 @@ export default function SidebarLayout() {
         </div>
       </aside>
 
-      {/* Main Container */}
-      <div className="flex-grow flex flex-col min-w-0">
+      {/* Main Container — offset by sidebar width on desktop */}
+      <div className="flex-grow flex flex-col min-w-0 md:ml-64">
         {/* Top Header */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">
           <div className="flex items-center space-x-4">
