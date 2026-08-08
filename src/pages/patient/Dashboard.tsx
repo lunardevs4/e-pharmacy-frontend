@@ -170,13 +170,13 @@ export default function PatientDashboard() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      
+
       {/* Top Welcome & Search Hero panel banner */}
       <div className="bg-white text-gray-900 rounded-xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-xs border border-emerald-800/20 relative overflow-hidden">
-        
+
         {/* Abstract design elements */}
         <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-50/50 rounded-full blur-xl pointer-events-none" />
-        
+
         <div className="space-y-2 flex-grow">
           <h1 className="text-xl sm:text-2xl font-black text-gray-950">Muraho, {user?.name || 'Citizen'}</h1>
           <p className="text-gray-500 text-xs max-w-lg font-medium leading-normal">
@@ -203,8 +203,8 @@ export default function PatientDashboard() {
 
         {/* Completion Progress widget */}
         <div className="flex-shrink-0 bg-emerald-50/60 border border-emerald-200/60 p-4 rounded-xl text-center space-y-2.5 max-w-[200px] w-full">
-          <span className="text-[10px] text-emerald-850 block uppercase tracking-wider font-bold">Health Profile Score</span>
-          
+          <span className="text-[10px] text-emerald-800 block uppercase tracking-wider font-bold">Health Profile Score</span>
+
           {/* Progress Circle Ring */}
           <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90">
@@ -232,7 +232,7 @@ export default function PatientDashboard() {
 
       {/* Stats blocks overview grids */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        
+
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
           <div className="p-2.5 bg-amber-50 rounded-lg text-amber-700">
             <Clock className="w-5 h-5" />
@@ -277,10 +277,10 @@ export default function PatientDashboard() {
 
       {/* Main dashboard content sections */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
+
         {/* Left Side: Table & History (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Recent Reservations Table card */}
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
@@ -387,7 +387,7 @@ export default function PatientDashboard() {
 
         {/* Right Side Column (1/3 width) */}
         <div className="space-y-6">
-          
+
           {/* Notifications widget preview */}
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
@@ -414,9 +414,8 @@ export default function PatientDashboard() {
                   <div
                     key={not.id}
                     onClick={() => navigate('/patient/notifications')}
-                    className={`p-3 rounded-lg border text-xs leading-normal transition-all cursor-pointer ${
-                      !not.read ? 'bg-emerald-50/20 border-emerald-100' : 'bg-gray-50 border-gray-150'
-                    }`}
+                    className={`p-3 rounded-lg border text-xs leading-normal transition-all cursor-pointer ${!not.read ? 'bg-emerald-50/20 border-emerald-100' : 'bg-gray-50 border-gray-150'
+                      }`}
                   >
                     <div className="flex justify-between font-black text-gray-900">
                       <span>{not.title}</span>
@@ -454,7 +453,7 @@ export default function PatientDashboard() {
                       <span className="font-bold text-gray-900 block">{med.name}</span>
                       <span className="text-[10px] text-gray-400 block font-semibold">{med.category} &bull; {med.manufacturer}</span>
                     </div>
-                    
+
                     <button
                       type="button"
                       onClick={(e) => handleRemoveFavMedicine(e, med.id)}
@@ -493,7 +492,7 @@ export default function PatientDashboard() {
                       <span className="font-bold text-gray-900 block">{pharm.pharmacyName}</span>
                       <span className="text-[10px] text-gray-400 block font-semibold">{pharm.locationText} &bull; {pharm.distance} km</span>
                     </div>
-                    
+
                     <button
                       type="button"
                       onClick={(e) => handleRemoveFavPharmacy(e, pharm.pharmacyId)}

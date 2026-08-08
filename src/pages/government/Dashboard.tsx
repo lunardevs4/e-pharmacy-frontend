@@ -4,9 +4,9 @@ import { AuthApi } from '@/services/auth-api'
 
 export default function GovernmentDashboard() {
   const [pharmacies, setPharmacies] = useState<any[]>([])
-  const [summary, setSummary] = useState<any>(null)
+  const [summary, setSummary] = useState<GovernmentSummary | null>(null)
   const [lowStock, setLowStock] = useState<any[]>([])
-  const [reservationStats, setReservationStats] = useState<any[]>([])
+  // const [reservationStats, setReservationStats] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -14,26 +14,110 @@ export default function GovernmentDashboard() {
     fetchDashboardData()
   }, [])
 
+interface GovernmentSummary {
+  totalPharmacies: number
+  approvedPharmacies: number
+  totalMedicines: number
+  totalPatients: number
+  totalReservations: number
+  pendingReservations: number
+}
+
   const fetchDashboardData = async () => {
-    setIsLoading(true)
-    setErrorMsg(null)
-    try {
-      const [pharmacyData, summaryData, lowStockData, reservationData] = await Promise.all([
-        AuthApi.getAllPharmacies(),
-        AuthApi.getGovernmentSummary(),
-        AuthApi.getGovernmentLowStock(10),
-        AuthApi.getGovernmentReservationStats(),
-      ])
-      setPharmacies(pharmacyData)
-      setSummary(summaryData)
-      setLowStock(lowStockData)
-      setReservationStats(reservationData)
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to load dashboard metrics.')
-    } finally {
-      setIsLoading(false)
+  setIsLoading(true)
+  setErrorMsg(null)
+
+  try {
+    const results = await Promise.allSettled([
+      AuthApi.getAllPharmacies(),
+      AuthApi.getGovernmentSummary(),
+      AuthApi.getGovernmentLowStock(10),
+      AuthApi.getGovernmentReservationStats(),
+    ])
+
+    const [
+      pharmacyResult,
+      summaryResult,
+      lowStockResult,
+      reservationResult,
+    ] = results
+
+    // Pharmacies
+    if (pharmacyResult.status === 'fulfilled') {
+      setPharmacies(
+        Array.isArray(pharmacyResult.value)
+          ? pharmacyResult.value
+          : []
+      )
+    } else {
+      console.error(
+        'Failed to load pharmacies:',
+        pharmacyResult.reason
+      )
+      setPharmacies([])
     }
+
+    // Summary
+    if (summaryResult.status === 'fulfilled') {
+      console.log('SUMMARY:', summaryResult.value)
+      console.log(
+        'SUMMARY INNER DATA:',
+        summaryResult.value?.data
+      )
+
+      setSummary(
+        summaryResult.value?.data ?? null
+      )
+    } else {
+      console.error(
+        'Failed to load government summary:',
+        summaryResult.reason
+      )
+      setSummary(null)
+    }
+
+    // Low stock
+    if (lowStockResult.status === 'fulfilled') {
+      setLowStock(
+        Array.isArray(lowStockResult.value)
+          ? lowStockResult.value
+          : []
+      )
+    } else {
+      console.error(
+        'Failed to load low stock:',
+        lowStockResult.reason
+      )
+      setLowStock([])
+    }
+
+    // Reservation stats
+    if (reservationResult.status === 'fulfilled') {
+      console.log(
+        'RESERVATION STATS:',
+        reservationResult.value
+      )
+    } else {
+      console.error(
+        'Failed to load reservation stats:',
+        reservationResult.reason
+      )
+    }
+
+  } catch (err: any) {
+    console.error(
+      'Government dashboard error:',
+      err
+    )
+
+    setErrorMsg(
+      err.message ||
+      'Failed to load dashboard metrics.'
+    )
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const totalCount = summary?.totalPharmacies ?? pharmacies.length
   const pendingCount = pharmacies.filter((p) => p.status === 'PENDING').length
@@ -54,13 +138,19 @@ export default function GovernmentDashboard() {
     }
   })
 
-  const shortageItems = lowStock.slice(0, 4).map((item: any, index: number) => ({
-    id: item.id || index + 1,
-    drug: item.medicine?.name || item.medicineName || 'Medicine',
-    region: item.pharmacy?.name || item.pharmacy?.address || 'National',
-    stockLevel: `Low stock (${item.quantity ?? 0} units)`,
-    severity: Number(item.quantity ?? 0) <= 0 ? 'HIGH' : 'MEDIUM',
-  }))
+  const shortageItems = Array.isArray(lowStock)
+    ? lowStock.slice(0, 4).map((item: any, index: number) => ({
+      id: item.id || index + 1,
+      drug: item.medicine?.name || item.medicineName || 'Medicine',
+      region:
+        item.pharmacy?.name ||
+        item.pharmacy?.address ||
+        'National',
+      stockLevel: `Low stock (${item.quantity ?? 0} units)`,
+      severity:
+        Number(item.quantity ?? 0) <= 0 ? 'HIGH' : 'MEDIUM',
+    }))
+    : []
 
   const renderSkeleton = () => {
     return (
@@ -103,7 +193,7 @@ export default function GovernmentDashboard() {
         <div className="space-y-2 text-center sm:text-left flex-grow">
           <div className="flex justify-center sm:justify-start items-center space-x-2.5">
             <Landmark className="w-5 h-5 text-emerald-800" />
-            <span className="text-[9px] tracking-widest font-black uppercase text-emerald-850 bg-emerald-50/80 px-2 py-0.5 rounded border border-emerald-200">MoH Regulator Portal</span>
+            <span className="text-[9px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50/80 px-2 py-0.5 rounded border border-emerald-200">MoH Regulator Portal</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-950">Ministry of Health Regulator Dashboard</h1>
           <p className="text-gray-500 text-xs max-w-xl leading-normal font-medium">
@@ -112,9 +202,9 @@ export default function GovernmentDashboard() {
         </div>
 
         <div className="flex-shrink-0 bg-emerald-50 border border-emerald-200/60 px-5 py-3.5 rounded-xl text-center">
-          <span className="text-[9px] uppercase text-emerald-800 block font-black">National stock level</span>
+          <span className="text-[9px] uppercase text-emerald-800 block font-black">Approved pharmacy coverage</span>
           <span className="text-2xl font-black block mt-0.5 text-emerald-955">{summary ? `${Math.round((summary.approvedPharmacies / Math.max(summary.totalPharmacies, 1)) * 100)}%` : '—'}</span>
-          <span className="text-[9px] text-gray-450 block font-semibold">Approved pharmacy coverage</span>
+          <span className="text-[9px] text-gray-450 block font-semibold">of registered pharmacies</span>
         </div>
       </div>
 
@@ -257,7 +347,9 @@ export default function GovernmentDashboard() {
             <div className="space-y-3 font-semibold text-gray-800">
               {['Kigali City', 'Eastern Province', 'Western Province', 'Northern Province', 'Southern Province'].map((prov) => {
                 const count = provinceCounts[prov] || 0
-                const percent = totalCount > 0 ? (count / approvedCount) * 100 : 0
+                const percent = approvedCount > 0
+                  ? (count / approvedCount) * 100
+                  : 0
                 return (
                   <div key={prov} className="space-y-1">
                     <div className="flex justify-between text-xs">

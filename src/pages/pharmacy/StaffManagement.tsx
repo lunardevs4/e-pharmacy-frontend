@@ -85,11 +85,11 @@ export default function StaffManagement() {
 
   // Toggle status (Active / Inactive)
   const toggleEmployeeStatus = (id: string) => {
-    setEmployees((prev) => 
+    setEmployees((prev) =>
       prev.map((emp) => {
         if (emp.id === id) {
           const nextStatus = emp.status === 'Active' ? 'Inactive' : 'Active'
-          
+
           return { ...emp, status: nextStatus }
         }
         return emp
@@ -99,9 +99,9 @@ export default function StaffManagement() {
 
   // Apply filters
   const filteredEmployees = employees.filter((emp) => {
-    const matchesSearch = emp.name.toLowerCase().includes(searchVal.toLowerCase()) || 
-                          emp.email.toLowerCase().includes(searchVal.toLowerCase()) ||
-                          emp.phone.includes(searchVal)
+    const matchesSearch = emp.name.toLowerCase().includes(searchVal.toLowerCase()) ||
+      emp.email.toLowerCase().includes(searchVal.toLowerCase()) ||
+      emp.phone.includes(searchVal)
     const matchesRole = roleFilter ? emp.role === roleFilter : true
     const matchesStatus = statusFilter ? emp.status === statusFilter : true
     return matchesSearch && matchesRole && matchesStatus
@@ -109,7 +109,7 @@ export default function StaffManagement() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      
+
       {/* Information Header Banner matching layout mockup */}
       <div className="bg-blue-50/60 border border-blue-200 text-blue-800 rounded-xl p-4 flex items-start space-x-3 text-xs shadow-xs">
         <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -153,7 +153,7 @@ export default function StaffManagement() {
 
       {/* Filters Search console and staff list table */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
-        
+
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
           <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto flex-grow max-w-2xl">
             <div className="relative flex-grow">
@@ -166,7 +166,7 @@ export default function StaffManagement() {
                 className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
               />
             </div>
-            
+
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
@@ -226,7 +226,7 @@ export default function StaffManagement() {
                     <span>{emp.name}</span>
                   </td>
                   <td className="py-3">
-                    <span className="text-[10px] font-bold text-emerald-850 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
                       {emp.role}
                     </span>
                   </td>
@@ -248,11 +248,10 @@ export default function StaffManagement() {
                     <button
                       type="button"
                       onClick={() => toggleEmployeeStatus(emp.id)}
-                      className={`font-bold px-3 py-1 rounded text-[10px] transition-colors focus:outline-none ${
-                        emp.status === 'Active'
+                      className={`font-bold px-3 py-1 rounded text-[10px] transition-colors focus:outline-none ${emp.status === 'Active'
                           ? 'border border-red-300 hover:bg-red-50 text-red-700'
                           : 'border border-emerald-300 hover:bg-emerald-50 text-emerald-700'
-                      }`}
+                        }`}
                     >
                       {emp.status === 'Active' ? 'Deactivate' : 'Activate'}
                     </button>
@@ -268,9 +267,9 @@ export default function StaffManagement() {
       {showAddModal && (
         <div className="fixed inset-0 z-55 flex items-center justify-center px-4 py-6">
           <div onClick={handleCloseAddModal} className="absolute inset-0 bg-gray-900/50 backdrop-blur-xs" />
-          
+
           <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-55 flex flex-col">
-            
+
             {/* Modal Header */}
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900">
               <div>
@@ -284,7 +283,7 @@ export default function StaffManagement() {
 
             {/* Modal Form */}
             <form onSubmit={handleSaveStaff} className="p-6 space-y-4">
-              
+
               {!showCredentialsBanner ? (
                 <>
                   <div className="space-y-1.5">
@@ -350,7 +349,7 @@ export default function StaffManagement() {
                   <div className="w-12 h-12 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mx-auto">
                     <Check className="w-6 h-6" />
                   </div>
-                  
+
                   <div className="space-y-1">
                     <h4 className="font-black text-gray-900 text-sm">Staff Member Registered!</h4>
                     <p className="text-xs text-gray-500">Provide these default login credentials to the user.</p>

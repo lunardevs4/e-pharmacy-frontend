@@ -21,7 +21,7 @@ export default function PharmacyAvailabilityTable({
   bookmarkedPharmacies = [],
   onToggleBookmarkPharmacy
 }: PharmacyAvailabilityTableProps) {
-  
+
   const renderStockBadge = (status: string, count: number) => {
     switch (status) {
       case 'HIGH':
@@ -79,14 +79,13 @@ export default function PharmacyAvailabilityTable({
           return (
             <div
               key={pharm.pharmacyId}
-              className={`border rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${
-                pharm.isOpen ? 'bg-white border-gray-200 hover:border-emerald-350 shadow-xs' : 'bg-gray-50 border-gray-200 opacity-60'
-              }`}
+              className={`border rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${pharm.isOpen ? 'bg-white border-gray-200 hover:border-emerald-350 shadow-xs' : 'bg-gray-50 border-gray-200 opacity-60'
+                }`}
             >
               <div className="space-y-1.5 flex-grow">
                 <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                   <h4 className="font-bold text-gray-900 text-sm">{pharm.pharmacyName}</h4>
-                  
+
                   {/* Pharmacy Bookmark Star */}
                   {onToggleBookmarkPharmacy && (
                     <button
@@ -109,48 +108,49 @@ export default function PharmacyAvailabilityTable({
                     <span className="text-[9px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase">Closed</span>
                   )}
                 </div>
-              
-              <p 
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onSelectPharmacy?.(pharm)
-                }}
-                className="text-xs text-gray-500 flex items-center hover:text-health-primary hover:underline cursor-pointer transition-colors"
-                title="Click to view pharmacy location on Google Map"
-              >
-                <MapPin className="w-3 h-3 mr-1 text-gray-400" />
-                <span>{pharm.locationText} &bull; <b>{pharm.distance} km</b> <span className="text-[10px] text-health-primary font-bold ml-1">(Locate on Map)</span></span>
-              </p>
 
-              <div className="flex items-center space-x-2.5 pt-1 flex-wrap gap-y-1">
-                {renderStockBadge(pharm.stockStatus, pharm.stock)}
-                <div className="flex gap-1">
-                  {pharm.insuranceAccepted.map((ins) => (
-                    <span key={ins} className="text-[9px] font-bold text-emerald-850 bg-emerald-50 border border-emerald-200 px-1.5 py-0.25 rounded">
-                      {ins} Accepted
-                    </span>
-                  ))}
+                <p
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelectPharmacy?.(pharm)
+                  }}
+                  className="text-xs text-gray-500 flex items-center hover:text-health-primary hover:underline cursor-pointer transition-colors"
+                  title="Click to view pharmacy location on Google Map"
+                >
+                  <MapPin className="w-3 h-3 mr-1 text-gray-400" />
+                  <span>{pharm.locationText} &bull; <b>{pharm.distance} km</b> <span className="text-[10px] text-health-primary font-bold ml-1">(Locate on Map)</span></span>
+                </p>
+
+                <div className="flex items-center space-x-2.5 pt-1 flex-wrap gap-y-1">
+                  {renderStockBadge(pharm.stockStatus, pharm.stock)}
+                  <div className="flex gap-1">
+                    {pharm.insuranceAccepted.map((ins) => (
+                      <span key={ins} className="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.25 rounded">
+                        {ins} Accepted
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Price & Action button columns */}
-            <div className="text-right w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100">
-              <div>
-                <span className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider leading-none">Price per tab</span>
-                <span className="text-base font-black text-gray-950 mt-1 block">{pharm.price} RWF</span>
+              {/* Price & Action button columns */}
+              <div className="text-right w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100">
+                <div>
+                  <span className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider leading-none">Price per tab</span>
+                  <span className="text-base font-black text-gray-950 mt-1 block">{pharm.price} RWF</span>
+                </div>
+                <button
+                  type="button"
+                  disabled={!pharm.isOpen || pharm.stock === 0}
+                  onClick={() => onReserve(pharm)}
+                  className="bg-health-primary hover:bg-health-secondary text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors shadow-sm focus:outline-none disabled:opacity-50"
+                >
+                  Reserve Medication
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={!pharm.isOpen || pharm.stock === 0}
-                onClick={() => onReserve(pharm)}
-                className="bg-health-primary hover:bg-health-secondary text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors shadow-sm focus:outline-none disabled:opacity-50"
-              >
-                Reserve Medication
-              </button>
             </div>
-          </div>
-        )})}
+          )
+        })}
       </div>
     </div>
   )

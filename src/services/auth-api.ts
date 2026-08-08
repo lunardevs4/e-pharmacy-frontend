@@ -364,23 +364,26 @@ export const AuthApi = {
   getAllPharmacies: async (): Promise<any[]> => {
     try {
       const response = await apiClient.get('/pharmacies')
+      console.log("PHARMACIES API RESPONSE: ",response.data)
       const payload = response.data
+
       if (Array.isArray(payload)) return payload
       if (Array.isArray(payload?.data)) return payload.data
+      if (Array.isArray(payload?.data?.data)) return payload.data.data
       return []
     } catch (error: any) {
       const isNetworkError = !error?.response || error?.code === 'ECONNABORTED'
-      if (isNetworkError) {
-        // Return mock pharmacy list for offline/demo mode
-        return [
-          { id: 'ph-001', pharmacyName: 'Bralirwa Pharmacy', pharmacistName: 'Alice Uwimana', status: 'APPROVED', submissionDate: '2026-01-15', province: 'Kigali City', category: 'Retail', licenseNumber: 'LIC-KIG-48293-2026' },
-          { id: 'ph-002', pharmacyName: 'CityMed Nyarugenge', pharmacistName: 'Eric Mugisha', status: 'APPROVED', submissionDate: '2026-02-01', province: 'Kigali City', category: 'Retail', licenseNumber: 'LIC-NYA-90238-2026' },
-          { id: 'ph-003', pharmacyName: 'Remera City Medical', pharmacistName: 'Diane Ineza', status: 'PENDING_VERIFICATION', submissionDate: '2026-07-20', province: 'Kigali City', category: 'Hospital', licenseNumber: 'LIC-GAS-72819-2026' },
-          { id: 'ph-004', pharmacyName: 'Musanze District Pharmacy', pharmacistName: 'Patrick Habimana', status: 'APPROVED', submissionDate: '2026-03-10', province: 'Northern Province', category: 'Retail', licenseNumber: 'LIC-MUS-19238-2026' },
-          { id: 'ph-005', pharmacyName: 'Rubavu Health Centre', pharmacistName: 'Grace Niyonzima', status: 'SUSPENDED', submissionDate: '2025-11-05', province: 'Western Province', category: 'Wholesale', licenseNumber: 'LIC-RUB-38291-2025' },
-          { id: 'ph-006', pharmacyName: 'Bugesera Community Pharmacy', pharmacistName: 'Jean Claude', status: 'MORE_INFO_REQUESTED', submissionDate: '2026-07-28', province: 'Eastern Province', category: 'Retail', licenseNumber: 'LIC-BUG-00192-2026' },
-        ]
-      }
+      // if (isNetworkError) {
+      //    Return mock pharmacy list for offline/demo mode
+      //   return [
+      //     { id: 'ph-001', pharmacyName: 'Bralirwa Pharmacy', pharmacistName: 'Alice Uwimana', status: 'APPROVED', submissionDate: '2026-01-15', province: 'Kigali City', category: 'Retail', licenseNumber: 'LIC-KIG-48293-2026' },
+      //     { id: 'ph-002', pharmacyName: 'CityMed Nyarugenge', pharmacistName: 'Eric Mugisha', status: 'APPROVED', submissionDate: '2026-02-01', province: 'Kigali City', category: 'Retail', licenseNumber: 'LIC-NYA-90238-2026' },
+      //     { id: 'ph-003', pharmacyName: 'Remera City Medical', pharmacistName: 'Diane Ineza', status: 'PENDING_VERIFICATION', submissionDate: '2026-07-20', province: 'Kigali City', category: 'Hospital', licenseNumber: 'LIC-GAS-72819-2026' },
+      //     { id: 'ph-004', pharmacyName: 'Musanze District Pharmacy', pharmacistName: 'Patrick Habimana', status: 'APPROVED', submissionDate: '2026-03-10', province: 'Northern Province', category: 'Retail', licenseNumber: 'LIC-MUS-19238-2026' },
+      //     { id: 'ph-005', pharmacyName: 'Rubavu Health Centre', pharmacistName: 'Grace Niyonzima', status: 'SUSPENDED', submissionDate: '2025-11-05', province: 'Western Province', category: 'Wholesale', licenseNumber: 'LIC-RUB-38291-2025' },
+      //     { id: 'ph-006', pharmacyName: 'Bugesera Community Pharmacy', pharmacistName: 'Jean Claude', status: 'MORE_INFO_REQUESTED', submissionDate: '2026-07-28', province: 'Eastern Province', category: 'Retail', licenseNumber: 'LIC-BUG-00192-2026' },
+      //   ]
+      // }
       throw new Error(getErrorMessage(error))
     }
   },
@@ -406,7 +409,10 @@ export const AuthApi = {
   getGovernmentLowStock: async (threshold = 10): Promise<any[]> => {
     try {
       const response = await apiClient.get(`/government/low-stock?threshold=${threshold}`)
-      return response.data
+      const payload= response.data
+      if (Array.isArray(payload)) return payload
+      if (Array.isArray(payload?.data)) return payload.data
+      return []
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -415,7 +421,10 @@ export const AuthApi = {
   getGovernmentReservationStats: async (): Promise<any[]> => {
     try {
       const response = await apiClient.get('/government/reservation-stats')
-      return response.data
+      const payload= response.data
+      if(Array.isArray(payload)) return payload;
+      if(Array.isArray(payload?.data)) return payload.data;
+      return []
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
