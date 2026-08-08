@@ -175,8 +175,12 @@ export default function AdminUsers() {
       )}
       {/* Toast */}
       {toastMsg && (
-        <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2">
-          <Check className="w-4 h-4" />
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2"
+        >
+          <Check className="w-4 h-4" aria-hidden="true" />
           <span>{toastMsg}</span>
         </div>
       )}
@@ -247,16 +251,16 @@ export default function AdminUsers() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs" aria-label="System users">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                <th className="px-5 py-3">User</th>
-                <th className="px-5 py-3">Role</th>
-                <th className="px-5 py-3">Contact</th>
-                <th className="px-5 py-3">Registered</th>
-                <th className="px-5 py-3">Last Login</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3 text-right">Actions</th>
+                <th scope="col" className="px-5 py-3">User</th>
+                <th scope="col" className="px-5 py-3">Role</th>
+                <th scope="col" className="px-5 py-3">Contact</th>
+                <th scope="col" className="px-5 py-3">Registered</th>
+                <th scope="col" className="px-5 py-3">Last Login</th>
+                <th scope="col" className="px-5 py-3">Status</th>
+                <th scope="col" className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
@@ -335,16 +339,26 @@ export default function AdminUsers() {
 
       {/* Add User Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div onClick={() => setShowAddModal(false)} className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-user-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowAddModal(false) }}
+        >
+          <div onClick={() => setShowAddModal(false)} aria-hidden="true" className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
           <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-50">
             <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
               <div>
-                <h3 className="font-black text-sm">Add System User</h3>
+                <h3 id="add-user-title" className="font-black text-sm">Add System User</h3>
                 <p className="text-xs text-slate-400">Create a new user account across any portal</p>
               </div>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
+              <button
+                onClick={() => setShowAddModal(false)}
+                aria-label="Close add user modal"
+                className="text-slate-400 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 rounded"
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={handleAddUser} className="p-6 space-y-4 text-xs">
@@ -388,16 +402,26 @@ export default function AdminUsers() {
 
       {/* View User Modal */}
       {showViewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div onClick={() => setShowViewModal(null)} className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="view-user-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowViewModal(null) }}
+        >
+          <div onClick={() => setShowViewModal(null)} aria-hidden="true" className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
           <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-50">
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between">
               <div>
-                <h3 className="font-black text-sm">User Profile</h3>
+                <h3 id="view-user-title" className="font-black text-sm">User Profile</h3>
                 <p className="text-xs text-emerald-300">{showViewModal.id}</p>
               </div>
-              <button onClick={() => setShowViewModal(null)} className="text-emerald-300 hover:text-white">
-                <X className="w-5 h-5" />
+              <button
+                onClick={() => setShowViewModal(null)}
+                aria-label="Close user profile modal"
+                className="text-emerald-300 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 rounded"
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <div className="p-6 space-y-4 text-xs">

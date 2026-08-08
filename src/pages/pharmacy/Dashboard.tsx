@@ -274,44 +274,84 @@ export default function PharmacyDashboard() {
                   </Link>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs divide-y divide-gray-150">
-                    <thead>
-                      <tr className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
-                        <th className="py-2.5">ID</th>
-                        <th className="py-2.5">Patient</th>
-                        <th className="py-2.5">Medicine</th>
-                        <th className="py-2.5">Date</th>
-                        <th className="py-2.5 text-center">Insur.</th>
-                        <th className="py-2.5">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-                      {reservations.map((res) => (
-                        <tr key={res.id} className="hover:bg-gray-50/50">
-                          <td className="py-3 font-semibold text-gray-950">{res.id.slice(0, 8)}</td>
-                          <td className="py-3 font-bold text-gray-900">{res.patient}</td>
-                          <td className="py-3">{res.medicine}</td>
-                          <td className="py-3 text-gray-500">{res.date}</td>
-                          <td className="py-3 text-center">
-                            {res.insurance ? (
-                              <CheckCircle className="w-4 h-4 text-emerald-600 inline-block" />
-                            ) : (
-                              <XCircle className="w-4 h-4 text-gray-300 inline-block" />
-                            )}
-                          </td>
-                          <td className="py-3">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs divide-y divide-gray-150">
+                  <thead>
+                    <tr className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
+                      <th className="py-2.5">ID</th>
+                      <th className="py-2.5">Patient</th>
+                      <th className="py-2.5">Medicine</th>
+                      <th className="py-2.5">Date</th>
+                      <th className="py-2.5 text-center">Insur.</th>
+                      <th className="py-2.5">Status</th>
+                      <th className="py-2.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
+                    {reservations.map((res) => (
+                      <tr key={res.id} className="hover:bg-gray-50/50">
+                        <td className="py-3 font-semibold text-gray-950">{res.id}</td>
+                        <td className="py-3 font-bold text-gray-900">{res.patient}</td>
+                        <td className="py-3">{res.medicine}</td>
+                        <td className="py-3 text-gray-500">{res.date}</td>
+                        <td className="py-3 text-center">
+                          {res.insurance ? (
+                            <CheckCircle className="w-4 h-4 text-emerald-600 inline-block" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-gray-300 inline-block" />
+                          )}
+                        </td>
+                        <td className="py-3">
+                          {res.status === 'Ready for Pickup' && (
                             <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.25 rounded border border-emerald-200">
-                              {res.status}
+                              Ready for Pickup
                             </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          )}
+                          {res.status === 'Pending' && (
+                            <span className="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.25 rounded border border-amber-200">
+                              Pending
+                            </span>
+                          )}
+                          {res.status === 'Collected' && (
+                            <span className="inline-flex items-center text-[10px] font-bold text-slate-650 bg-slate-50 px-2 py-0.25 rounded border border-slate-200">
+                              Collected
+                            </span>
+                          )}
+                          {res.status === 'Expired' && (
+                            <span className="inline-flex items-center text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.25 rounded border border-red-200">
+                              Expired
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 text-right">
+                          {res.status === 'Ready for Pickup' && (
+                            <button
+                              type="button"
+                              onClick={() => setReservations((prev) => prev.map((r) => r.id === res.id ? { ...r, status: 'Collected' } : r))}
+                              aria-label={`Confirm collection for reservation ${res.id}`}
+                              className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-3 py-1 rounded text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+                            >
+                              Confirm
+                            </button>
+                          )}
+                          {res.status === 'Pending' && (
+                            <button
+                              type="button"
+                              onClick={() => setReservations((prev) => prev.map((r) => r.id === res.id ? { ...r, status: 'Ready for Pickup' } : r))}
+                              aria-label={`Mark reservation ${res.id} ready for pickup`}
+                              className="bg-health-primary hover:bg-health-secondary text-white font-bold px-3 py-1 rounded text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
+                            >
+                              Mark Ready
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
+          </div>
 
             <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
               <div className="flex justify-between items-center pb-2 border-b border-gray-105">
