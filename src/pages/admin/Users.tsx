@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
-  Users, Search, Plus, X, Check, AlertTriangle, Shield,
-  UserCheck, UserX, RefreshCw, Eye, EyeOff, ChevronDown
+  Users, Search, Plus, X, Check, AlertTriangle,
+  UserCheck, UserX, Eye, EyeOff
 } from 'lucide-react'
+import { UserApi } from '@/services/user-api'
 
 type UserRole = 'PATIENT' | 'PHARMACY' | 'INSURANCE' | 'GOVERNMENT' | 'ADMIN'
 type UserStatus = 'Active' | 'Suspended' | 'Pending'
@@ -19,16 +20,7 @@ interface SystemUser {
   nid?: string
 }
 
-const MOCK_USERS: SystemUser[] = [
-  { id: 'USR-001', name: 'Marie Uwimana', email: 'marie@gmail.com', phone: '+250 788 001 001', role: 'PATIENT', status: 'Active', createdAt: '2026-01-15', lastLogin: '2026-07-30', nid: '1199780001234567' },
-  { id: 'USR-002', name: 'Eric Mugisha', email: 'eric@bralirwa.rw', phone: '+250 782 345 678', role: 'PHARMACY', status: 'Active', createdAt: '2026-02-01', lastLogin: '2026-08-01', nid: '1198580009876543' },
-  { id: 'USR-003', name: 'Jean Bosco Gasana', email: 'jb@moh.gov.rw', phone: '+250 788 200 200', role: 'GOVERNMENT', status: 'Active', createdAt: '2026-01-05', lastLogin: '2026-07-31' },
-  { id: 'USR-004', name: 'Diane Mukamana', email: 'diane@rssb.rw', phone: '+250 783 300 300', role: 'INSURANCE', status: 'Active', createdAt: '2026-03-10', lastLogin: '2026-07-28' },
-  { id: 'USR-005', name: 'Aline Ingabire', email: 'aline@gmail.com', phone: '+250 788 400 400', role: 'PATIENT', status: 'Pending', createdAt: '2026-07-29', lastLogin: '—', nid: '1200180005554321' },
-  { id: 'USR-006', name: 'Patrick Habimana', email: 'ph@citymed.rw', phone: '+250 784 500 500', role: 'PHARMACY', status: 'Suspended', createdAt: '2025-11-20', lastLogin: '2026-06-01' },
-  { id: 'USR-007', name: 'Claudine Uwera', email: 'claudine@mmi.rw', phone: '+250 786 600 600', role: 'INSURANCE', status: 'Active', createdAt: '2026-04-12', lastLogin: '2026-07-25' },
-  { id: 'USR-008', name: 'System Admin', email: 'admin@epharmacy.rw', phone: '+250 787 700 700', role: 'ADMIN', status: 'Active', createdAt: '2025-01-01', lastLogin: '2026-08-01' },
-]
+
 
 const ROLE_COLORS: Record<UserRole, string> = {
   PATIENT: 'bg-sky-50 text-sky-800 border-sky-200',
@@ -39,10 +31,12 @@ const ROLE_COLORS: Record<UserRole, string> = {
 }
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<SystemUser[]>(MOCK_USERS)
+  const [users, setUsers] = useState<SystemUser[]>([])
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | ''>('')
   const [statusFilter, setStatusFilter] = useState<UserStatus | ''>('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState<SystemUser | null>(null)
@@ -53,52 +47,97 @@ export default function AdminUsers() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [role, setRole] = useState<UserRole>('PATIENT')
-  const [nid, setNid] = useState('')
-  const [tempPass, setTempPass] = useState('Rwanda@2026!')
-  const [showPass, setShowPass] = useState(false)
 
   const triggerToast = (msg: string) => {
     setToastMsg(msg)
     setTimeout(() => setToastMsg(null), 3200)
   }
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const loadUsers = async () => {
+    setIsLoading(true)
+    setErrorMsg(null)
+    try {
+      const result = await UserApi.getUsers(1, 100)
+      setUsers(result.map((user) => ({
+        id: user.id,
+        name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || user.id,
+        email: user.email || '—',
+        phone: user.phone || '—',
+        role: user.role as UserRole,
+        status: user.isActive ? 'Active' : 'Suspended',
+        createdAt: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : '—',
+        lastLogin: '—',
+      })))
+    } catch (error: any) {
+      setErrorMsg(error?.message || 'Unable to load users from backend.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadUsers()
+  }, [])
+
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !email || !phone) return
-    const newUser: SystemUser = {
-      id: `USR-00${users.length + 1}`,
-      name,
-      email,
-      phone,
-      role,
-      status: 'Pending',
-      createdAt: new Date().toISOString().split('T')[0],
-      lastLogin: '—',
-      nid: nid || undefined,
-    }
-    setUsers((prev) => [newUser, ...prev])
-    triggerToast(`User ${name} added successfully.`)
-    setShowAddModal(false)
-    setName(''); setEmail(''); setPhone(''); setNid('')
-  }
 
-  const toggleStatus = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id !== id) return u
-        const next: UserStatus = u.status === 'Active' ? 'Suspended' : 'Active'
-        triggerToast(`${u.name} status changed to ${next}.`)
-        return { ...u, status: next }
+    const [firstName, ...rest] = name.trim().split(/\s+/)
+    const lastName = rest.join(' ') || ''
+
+    try {
+      await UserApi.createUser({
+        firstName,
+        lastName,
+        email,
+        phone,
+        role,
       })
-    )
+      triggerToast(`User ${name} added successfully.`)
+      setShowAddModal(false)
+      setName('')
+      setEmail('')
+      setPhone('')
+      setRole('PATIENT')
+      await loadUsers()
+    } catch (error: any) {
+      triggerToast(error?.message || 'Unable to create user.')
+    }
   }
 
-  const deleteUser = (id: string) => {
+  const toggleStatus = async (id: string) => {
+    const u = users.find((x) => x.id === id)
+    if (!u) return
+
+    try {
+      const nextStatus = u.status !== 'Active'
+      await UserApi.updateUserStatus(id, nextStatus)
+      triggerToast(`${u.name} ${nextStatus ? 'activated' : 'suspended'} successfully.`)
+      await loadUsers()
+      if (showViewModal?.id === id) {
+        setShowViewModal(null)
+      }
+    } catch (error: any) {
+      triggerToast(error?.message || 'Unable to update user status.')
+    }
+  }
+
+  const deleteUser = async (id: string) => {
     const u = users.find((x) => x.id === id)
     if (!u) return
     if (!window.confirm(`Delete ${u.name}? This action is irreversible.`)) return
-    setUsers((prev) => prev.filter((x) => x.id !== id))
-    triggerToast(`User ${u.name} deleted.`)
+
+    try {
+      await UserApi.deleteUser(id)
+      triggerToast(`User ${u.name} deleted.`)
+      await loadUsers()
+      if (showViewModal?.id === id) {
+        setShowViewModal(null)
+      }
+    } catch (error: any) {
+      triggerToast(error?.message || 'Unable to delete user.')
+    }
   }
 
   const filtered = users.filter((u) => {
@@ -113,12 +152,27 @@ export default function AdminUsers() {
   const counts = {
     total: users.length,
     active: users.filter((u) => u.status === 'Active').length,
-    pending: users.filter((u) => u.status === 'Pending').length,
     suspended: users.filter((u) => u.status === 'Suspended').length,
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto pb-16 pt-8">
+        <div className="h-10 bg-gray-200 rounded-xl animate-pulse" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-24 bg-gray-200 rounded-xl animate-pulse" />)}
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
+      {errorMsg && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {errorMsg}
+        </div>
+      )}
       {/* Toast */}
       {toastMsg && (
         <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2">
@@ -132,7 +186,6 @@ export default function AdminUsers() {
         {[
           { label: 'Total Users', value: counts.total, color: 'text-gray-900', bg: 'bg-gray-50', icon: Users },
           { label: 'Active', value: counts.active, color: 'text-emerald-700', bg: 'bg-emerald-50', icon: UserCheck },
-          { label: 'Pending', value: counts.pending, color: 'text-amber-700', bg: 'bg-amber-50', icon: AlertTriangle },
           { label: 'Suspended', value: counts.suspended, color: 'text-red-700', bg: 'bg-red-50', icon: UserX },
         ].map((s) => (
           <div key={s.label} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3 shadow-xs">
@@ -253,11 +306,10 @@ export default function AdminUsers() {
                       </button>
                       <button
                         onClick={() => toggleStatus(u.id)}
-                        className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-colors ${
-                          u.status === 'Active'
-                            ? 'border-red-200 text-red-700 hover:bg-red-50'
-                            : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                        }`}
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-colors ${u.status === 'Active'
+                          ? 'border-red-200 text-red-700 hover:bg-red-50'
+                          : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                          }`}
                       >
                         {u.status === 'Active' ? 'Suspend' : 'Activate'}
                       </button>
@@ -324,23 +376,6 @@ export default function AdminUsers() {
                     ))}
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">NID (optional)</label>
-                  <input value={nid} onChange={(e) => setNid(e.target.value)}
-                    placeholder="16-digit NID"
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono font-semibold" />
-                </div>
-                <div className="col-span-2 space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Temporary Password</label>
-                  <div className="relative">
-                    <input type={showPass ? 'text' : 'password'} value={tempPass} onChange={(e) => setTempPass(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 pr-10 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono font-semibold" />
-                    <button type="button" onClick={() => setShowPass((p) => !p)}
-                      className="absolute right-3 top-2 text-gray-400 hover:text-gray-600">
-                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
               </div>
               <button type="submit"
                 className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-lg text-xs transition-colors shadow-sm mt-2">
@@ -395,11 +430,10 @@ export default function AdminUsers() {
               <div className="flex space-x-3 pt-2 border-t border-gray-100">
                 <button
                   onClick={() => { toggleStatus(showViewModal.id); setShowViewModal(null) }}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${
-                    showViewModal.status === 'Active'
-                      ? 'border-red-200 text-red-700 hover:bg-red-50'
-                      : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                  }`}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${showViewModal.status === 'Active'
+                    ? 'border-red-200 text-red-700 hover:bg-red-50'
+                    : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                    }`}
                 >
                   {showViewModal.status === 'Active' ? 'Suspend User' : 'Activate User'}
                 </button>

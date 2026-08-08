@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Search, Shield, X, Check, Key, ClipboardList, Info, HelpCircle } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
+import { AuthApi } from '@/services/auth-api'
+import { PharmacyApi } from '@/services/pharmacy-api'
 
 interface Employee {
   id: string
@@ -12,14 +15,23 @@ interface Employee {
 }
 
 export default function StaffManagement() {
-  // Pre-populated employees (matching screenshot mockup exactly)
-  const [employees, setEmployees] = useState<Employee[]>([
-    { id: 'EMP-001', name: 'Alice Uwimana', role: 'Pharmacist', email: 'alice@bralirwa.rw', phone: '+250 781 234 567', status: 'Active', lastLogin: '2024-08-12 08:14' },
-    { id: 'EMP-002', name: 'Eric Mugisha', role: 'Pharmacy Manager', email: 'eric@bralirwa.rw', phone: '+250 782 345 678', status: 'Active', lastLogin: '2024-08-12 07:58' },
-    { id: 'EMP-003', name: 'Diane Ineza', role: 'Cashier', email: 'diane@bralirwa.rw', phone: '+250 783 456 789', status: 'Active', lastLogin: '2024-08-11 16:30' },
-    { id: 'EMP-004', name: 'Patrick Habimana', role: 'Inventory Officer', email: 'patrick@bralirwa.rw', phone: '+250 784 567 890', status: 'Active', lastLogin: '2024-08-12 09:02' },
-    { id: 'EMP-005', name: 'Grace Niyonzima', role: 'Pharmacist', email: 'grace@bralirwa.rw', phone: '+250 785 678 901', status: 'Inactive', lastLogin: '2024-07-28 10:15' }
-  ])
+  const { user } = useAuthStore()
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
+    if (!pharmacyId) return
+    PharmacyApi.getDetails(pharmacyId).then((pharmacy: any) => {
+      const rows = (pharmacy.employees || []).map((employee: any) => {
+        const account = employee.user || {}
+        const roleMap: Record<string, Employee['role']> = { PHARMACIST: 'Pharmacist', PHARMACY_OWNER: 'Pharmacy Owner', PHARMACY_MANAGER: 'Pharmacy Manager', INVENTORY_OFFICER: 'Inventory Officer', CASHIER: 'Cashier' }
+        return { id: employee.id, name: [account.firstName, account.lastName].filter(Boolean).join(' ') || account.email, role: roleMap[employee.role] || 'Pharmacist', email: account.email || '—', phone: account.phone || '—', status: account.isActive === false ? 'Inactive' : 'Active', lastLogin: account.updatedAt ? new Date(account.updatedAt).toLocaleString() : '—' }
+      })
+      setEmployees(rows)
+    }).catch((err) => setError(err.message || 'Unable to load staff.')).finally(() => setLoading(false))
+  }, [user?.pharmacy?.id, user?.pharmacyId])
 
   // Filter states
   const [searchVal, setSearchVal] = useState('')
@@ -44,33 +56,21 @@ export default function StaffManagement() {
   }, [showAddModal])
 
   // Save new staff member and append action to audit trail logs
-  const handleSaveStaff = (e: React.FormEvent) => {
+  const handleSaveStaff = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !email || !phone) return
 
-    const newEmp: Employee = {
-      id: `EMP-00${employees.length + 1}`,
-      name,
-      role,
-      email,
-      phone,
-      status: 'Active',
-      lastLogin: '--'
-    }
-
-    setEmployees((prev) => [...prev, newEmp])
+    const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
+    if (!pharmacyId) return
+    const [firstName, ...rest] = name.trim().split(/\s+/)
+    const roleValue = role === 'Pharmacist' ? 'PHARMACIST' : 'PHARMACY_OWNER'
+    try {
+      await AuthApi.createStaff(pharmacyId, { firstName, lastName: rest.join(' ') || firstName, email, phone, role: roleValue, position: role })
+      const pharmacy = await PharmacyApi.getDetails(pharmacyId)
+      setEmployees((pharmacy.employees || []).map((employee: any) => ({ id: employee.id, name: [employee.user?.firstName, employee.user?.lastName].filter(Boolean).join(' ') || employee.user?.email, role: employee.role === 'PHARMACIST' ? 'Pharmacist' : 'Pharmacy Manager', email: employee.user?.email || '—', phone: employee.user?.phone || '—', status: employee.user?.isActive === false ? 'Inactive' : 'Active', lastLogin: employee.user?.updatedAt ? new Date(employee.user.updatedAt).toLocaleString() : '—' })))
+    } catch (err: any) { setError(err.message || 'Unable to create staff member.'); return }
     setShowCredentialsBanner(true)
 
-    // Save action to LocalStorage audit trail
-    const timestamp = new Date().toLocaleString()
-    const logMsg = `Eric added staff member ${name} (${role})`
-    const localLogs = localStorage.getItem('pharmacy_audit_logs')
-    const currentLogs = localLogs ? JSON.parse(localLogs) : []
-    const updatedLogs = [
-      { time: timestamp, staff: 'Eric Mugisha', role: 'Pharmacy Manager', action: logMsg, ip: '197.243.12.90', status: 'Success' },
-      ...currentLogs
-    ]
-    localStorage.setItem('pharmacy_audit_logs', JSON.stringify(updatedLogs))
   }
 
   const handleCloseAddModal = () => {
@@ -90,17 +90,6 @@ export default function StaffManagement() {
         if (emp.id === id) {
           const nextStatus = emp.status === 'Active' ? 'Inactive' : 'Active'
           
-          // Log status update to LocalStorage audit trail
-          const timestamp = new Date().toLocaleString()
-          const logMsg = `Eric updated status of ${emp.name} to ${nextStatus}`
-          const localLogs = localStorage.getItem('pharmacy_audit_logs')
-          const currentLogs = localLogs ? JSON.parse(localLogs) : []
-          const updatedLogs = [
-            { time: timestamp, staff: 'Eric Mugisha', role: 'Pharmacy Manager', action: logMsg, ip: '197.243.12.90', status: 'Success' },
-            ...currentLogs
-          ]
-          localStorage.setItem('pharmacy_audit_logs', JSON.stringify(updatedLogs))
-
           return { ...emp, status: nextStatus }
         }
         return emp

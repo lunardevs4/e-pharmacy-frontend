@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { FileLock2, Search, Filter, ShieldAlert, RefreshCw } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
+import { PharmacyApi } from '@/services/pharmacy-api'
 
 interface AuditLog {
   time: string
@@ -15,31 +17,17 @@ export default function AuditTrail() {
   const [searchVal, setSearchVal] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
-  // Default pre-populated log records (matching screenshots)
-  const defaultLogs: AuditLog[] = [
-    { time: '2024-08-12 10:15', staff: 'Patrick Habimana', role: 'Inventory Officer', action: 'updated Paracetamol stock (+500 units)', ip: '197.243.10.85', status: 'Success' },
-    { time: '2024-08-12 09:40', staff: 'Diane Ineza', role: 'Cashier', action: 'processed payment for Reservation RES-2024-003', ip: '197.243.10.82', status: 'Success' },
-    { time: '2024-08-12 09:05', staff: 'Eric Mugisha', role: 'Pharmacy Manager', action: 'confirmed Reservation RES-2024-001', ip: '197.243.12.90', status: 'Success' },
-    { time: '2024-08-12 08:30', staff: 'Alice Uwimana', role: 'Pharmacist', action: 'added 200 units of Amoxicillin 500mg', ip: '197.243.10.64', status: 'Success' },
-    { time: '2024-08-11 15:45', staff: 'Grace Niyonzima', role: 'Pharmacist', action: 'Failed login attempt (invalid password)', ip: '197.243.15.11', status: 'Failed' }
-  ]
+  const { user } = useAuthStore()
+  const [error, setError] = useState<string | null>(null)
 
-  // Read logs from LocalStorage or seed default ones on load
   useEffect(() => {
-    const localLogs = localStorage.getItem('pharmacy_audit_logs')
-    if (localLogs) {
-      setLogs(JSON.parse(localLogs))
-    } else {
-      localStorage.setItem('pharmacy_audit_logs', JSON.stringify(defaultLogs))
-      setLogs(defaultLogs)
-    }
-  }, [])
+    const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
+    if (!pharmacyId) return
+    PharmacyApi.getAuditLogs(pharmacyId).then((rows: any[]) => setLogs(rows.map((log) => ({ time: new Date(log.createdAt).toLocaleString(), staff: [log.user?.firstName, log.user?.lastName].filter(Boolean).join(' ') || 'System', role: log.user?.role || 'SYSTEM', action: `${log.action} ${log.entityType}`, ip: log.ipAddress || '—', status: 'Success' })))).catch((err) => setError(err.message || 'Unable to load audit logs.'))
+  }, [user?.pharmacy?.id, user?.pharmacyId])
 
   // Clear Audit Trail
-  const handleClearAuditLogs = () => {
-    localStorage.removeItem('pharmacy_audit_logs')
-    setLogs([])
-  }
+  const handleClearAuditLogs = () => setLogs([])
 
   // Filter logs list
   const filteredLogs = logs.filter((log) => {
@@ -93,10 +81,11 @@ export default function AuditTrail() {
             onClick={handleClearAuditLogs}
             className="border border-red-300 hover:bg-red-50 text-red-700 font-bold px-4 py-2 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5 focus:outline-none"
           >
-            <span>Reset Logs</span>
+            <span>Clear View</span>
           </button>
         </div>
 
+        {error && <div className="text-sm text-red-600">{error}</div>}
         {/* Audit Logs Table Grid */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs divide-y divide-gray-150">

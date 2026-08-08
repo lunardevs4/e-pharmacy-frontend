@@ -35,16 +35,12 @@ export default function GovernmentDashboard() {
     }
   }
 
-  const totalCount = pharmacies.length
-  const pendingCount = pharmacies.filter((p) => p.status === 'PENDING_VERIFICATION' || p.status === 'MORE_INFO_REQUESTED').length
+  const totalCount = summary?.totalPharmacies ?? pharmacies.length
+  const pendingCount = pharmacies.filter((p) => p.status === 'PENDING').length
   const approvedCount = summary?.approvedPharmacies ?? pharmacies.filter((p) => p.status === 'APPROVED').length
   const rejectedCount = pharmacies.filter((p) => p.status === 'REJECTED').length
-  const suspendedCount = pharmacies.filter((p) => p.status === 'SUSPENDED').length
-  const expiredCount = pharmacies.filter((p) => p.status === 'EXPIRED').length
-  const expiringLicensesCount = expiredCount + 1
-
   const recentRegistrations = [...pharmacies]
-    .sort((a, b) => new Date(b.submissionDate || b.createdAt || 0).getTime() - new Date(a.submissionDate || a.createdAt || 0).getTime())
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime())
     .slice(0, 4)
 
   const retailCount = pharmacies.filter((p) => p.category === 'Retail').length
@@ -61,7 +57,7 @@ export default function GovernmentDashboard() {
   const shortageItems = lowStock.slice(0, 4).map((item: any, index: number) => ({
     id: item.id || index + 1,
     drug: item.medicine?.name || item.medicineName || 'Medicine',
-    region: item.pharmacy?.address || item.pharmacy?.name || 'National',
+    region: item.pharmacy?.name || item.pharmacy?.address || 'National',
     stockLevel: `Low stock (${item.quantity ?? 0} units)`,
     severity: Number(item.quantity ?? 0) <= 0 ? 'HIGH' : 'MEDIUM',
   }))
@@ -103,7 +99,7 @@ export default function GovernmentDashboard() {
       {/* MoH Rwanda Regulatory Header Banner */}
       <div className="bg-white text-gray-900 rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-center border border-gray-200 shadow-xs relative overflow-hidden gap-6">
         <div className="absolute right-0 top-0 w-48 h-48 bg-emerald-50/40 rounded-full blur-2xl pointer-events-none" />
-        
+
         <div className="space-y-2 text-center sm:text-left flex-grow">
           <div className="flex justify-center sm:justify-start items-center space-x-2.5">
             <Landmark className="w-5 h-5 text-emerald-800" />
@@ -139,8 +135,8 @@ export default function GovernmentDashboard() {
             <FileText className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold">Pending Review</span>
-            <span className="text-lg font-black text-gray-950">{summary?.pendingReservations ?? pendingCount} requests</span>
+            <span className="text-[9px] text-gray-400 block uppercase font-bold">Pending Applications</span>
+            <span className="text-lg font-black text-gray-950">{pendingCount} pending</span>
           </div>
         </div>
 
@@ -155,22 +151,22 @@ export default function GovernmentDashboard() {
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-rose-50 text-rose-700 rounded-lg">
-            <AlertTriangle className="w-5 h-5" />
+          <div className="p-2.5 bg-slate-50 text-slate-700 rounded-lg">
+            <Users className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold">Suspended Stores</span>
-            <span className="text-lg font-black text-rose-650">{suspendedCount} suspended</span>
+            <span className="text-[9px] text-gray-400 block uppercase font-bold">Registered Patients</span>
+            <span className="text-lg font-black text-gray-950">{summary?.totalPatients ?? 0}</span>
           </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-gray-50 text-gray-700 rounded-lg">
-            <Clock className="w-5 h-5" />
+          <div className="p-2.5 bg-blue-50 text-blue-700 rounded-lg">
+            <Package className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold">Expiring Licences</span>
-            <span className="text-lg font-black text-gray-950">{expiringLicensesCount} expiring</span>
+            <span className="text-[9px] text-gray-400 block uppercase font-bold">Active Medicines</span>
+            <span className="text-lg font-black text-gray-950">{summary?.totalMedicines ?? 0}</span>
           </div>
         </div>
       </div>
@@ -198,19 +194,15 @@ export default function GovernmentDashboard() {
                 {recentRegistrations.map((lic) => (
                   <div key={lic.id} className="py-3 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                     <div className="space-y-1">
-                      <span className="font-bold text-gray-955 block">{lic.pharmacyName}</span>
-                      <span className="text-[10px] text-gray-500 block font-medium">Pharmacist: {lic.pharmacistName} &bull; Received on {lic.submissionDate}</span>
+                      <span className="font-bold text-gray-955 block">{lic.name || lic.pharmacyName}</span>
+                      <span className="text-[10px] text-gray-500 block font-medium">Pharmacist: {lic.managerName || 'Unknown'} • Registered on {new Date(lic.createdAt || lic.updatedAt || '').toLocaleDateString() || '—'}</span>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 self-end sm:self-center font-bold">
                       {lic.status === 'APPROVED' ? (
                         <span className="text-[9px] text-emerald-750 bg-emerald-50 border border-emerald-250 px-2 py-0.5 rounded uppercase">Approved</span>
-                      ) : lic.status === 'PENDING_VERIFICATION' ? (
+                      ) : lic.status === 'PENDING' ? (
                         <span className="text-[9px] text-amber-750 bg-amber-50 border border-amber-250 px-2 py-0.5 rounded uppercase">Pending MOH Review</span>
-                      ) : lic.status === 'MORE_INFO_REQUESTED' ? (
-                        <span className="text-[9px] text-blue-750 bg-blue-50 border border-blue-250 px-2 py-0.5 rounded uppercase">Info Requested</span>
-                      ) : lic.status === 'SUSPENDED' ? (
-                        <span className="text-[9px] text-rose-750 bg-rose-50 border border-rose-250 px-2 py-0.5 rounded uppercase">Suspended</span>
                       ) : (
                         <span className="text-[9px] text-red-750 bg-red-50 border border-red-250 px-2 py-0.5 rounded uppercase">Rejected</span>
                       )}
@@ -240,9 +232,8 @@ export default function GovernmentDashboard() {
                   </div>
                   <div className="text-right flex items-center space-x-2">
                     <span className="font-mono text-red-650 font-bold">{s.stockLevel}</span>
-                    <span className={`text-[9px] font-black px-1.5 py-0.25 rounded ${
-                      s.severity === 'HIGH' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}>
+                    <span className={`text-[9px] font-black px-1.5 py-0.25 rounded ${s.severity === 'HIGH' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}>
                       {s.severity}
                     </span>
                   </div>
@@ -262,7 +253,7 @@ export default function GovernmentDashboard() {
                 <span>Province Distribution</span>
               </h3>
             </div>
-            
+
             <div className="space-y-3 font-semibold text-gray-800">
               {['Kigali City', 'Eastern Province', 'Western Province', 'Northern Province', 'Southern Province'].map((prov) => {
                 const count = provinceCounts[prov] || 0
@@ -274,7 +265,7 @@ export default function GovernmentDashboard() {
                       <span>{count} store(s)</span>
                     </div>
                     <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="bg-health-primary h-full rounded-full transition-all duration-300"
                         style={{ width: `${percent}%` }}
                       />

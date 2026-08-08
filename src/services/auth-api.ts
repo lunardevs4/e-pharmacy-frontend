@@ -161,10 +161,59 @@ const getErrorMessage = (error: any): string => {
 }
 
 export const AuthApi = {
+  createStaff: async (pharmacyId: string, data: { firstName: string; lastName: string; email: string; phone: string; role: string; position: string }) => {
+    const response = await apiClient.post(`/auth/pharmacies/${pharmacyId}/staff`, data)
+    return response.data
+  },
+  createGovernmentUser: async (data: { firstName: string; lastName: string; email: string; phone: string; role: string; position?: string }) => {
+    try {
+      const response = await apiClient.post('/auth/managed-users/government', data)
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+  createInsuranceUser: async (data: { firstName: string; lastName: string; email: string; phone: string; role: string; position?: string }) => {
+    try {
+      const response = await apiClient.post('/auth/managed-users/insurance', data)
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+  createPatientUser: async (userData: {
+    fullName: string
+    phone: string
+    username: string
+    email: string
+    password: string
+  }): Promise<any> => {
+    try {
+      const response = await apiClient.post('/auth/register', {
+        email: userData.email,
+        phone: userData.phone,
+        password: userData.password,
+        firstName: userData.fullName.split(/\s+/)[0],
+        lastName: userData.fullName.split(/\s+/).slice(1).join(' ') || 'Patient',
+        username: userData.username,
+      })
+      return normalizeAuthResponse(response.data)
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+  listPendingPharmacies: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/auth/pharmacies/pending')
+      return Array.isArray(response.data) ? response.data : response.data?.data || []
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
   login: async (identifier: string, password: string): Promise<AuthResponse> => {
     try {
       const response = await apiClient.post('/auth/login', { email: identifier, password })
-      
+
       const normalized = normalizeAuthResponse(response.data)
       TokenStorage.setToken(normalized.accessToken)
       TokenStorage.setRefreshToken(normalized.refreshToken)
@@ -280,6 +329,18 @@ export const AuthApi = {
     }
   },
 
+  getGovernmentAuditLogs: async (page = 1, limit = 25, entityType?: string, action?: string): Promise<any> => {
+    try {
+      const params: Record<string, any> = { page, limit }
+      if (entityType) params.entityType = entityType
+      if (action) params.action = action
+      const response = await apiClient.get('/audit-logs', { params })
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
   getInsuranceReport: async (): Promise<any> => {
     try {
       const response = await apiClient.get('/reports/insurance')
@@ -298,16 +359,7 @@ export const AuthApi = {
     }
   },
 
-  rejectPharmacy: async (pharmacyId: string, notes?: string): Promise<any> => {
-    try {
-      const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'REJECTED' })
-      return response.data
-    } catch (error) {
-      throw new Error(getErrorMessage(error))
-    }
-  },
-
-  suspendPharmacy: async (pharmacyId: string, notes?: string): Promise<any> => {
+  rejectPharmacy: async (pharmacyId: string): Promise<any> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'REJECTED' })
       return response.data
@@ -319,6 +371,19 @@ export const AuthApi = {
   reactivatePharmacy: async (pharmacyId: string): Promise<any> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'APPROVED' })
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
+  getGovernmentReport: async (startDate?: string, endDate?: string): Promise<any> => {
+    try {
+      const query = []
+      if (startDate) query.push(`startDate=${encodeURIComponent(startDate)}`)
+      if (endDate) query.push(`endDate=${encodeURIComponent(endDate)}`)
+      const url = `/reports/government${query.length ? `?${query.join('&')}` : ''}`
+      const response = await apiClient.get(url)
       return response.data
     } catch (error) {
       throw new Error(getErrorMessage(error))

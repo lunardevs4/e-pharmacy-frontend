@@ -185,7 +185,7 @@ const normalizeReservation = (payload: any): Reservation => {
 }
 
 const normalizeNotification = (payload: any): Notification => ({
-  id: payload.id || payload.notificationId || `notification-${Math.random().toString(36).slice(2,8)}`,
+  id: payload.id || payload.notificationId || `notification-${Math.random().toString(36).slice(2, 8)}`,
   title: payload.title || payload.subject || 'Notification',
   message: payload.message || payload.body || 'You have a new update.',
   type: (payload.type || payload.notificationType || 'SYSTEM').toUpperCase() as Notification['type'],
@@ -196,53 +196,69 @@ const normalizeNotification = (payload: any): Notification => ({
 export const MedicineApi = {
   // Search catalog medicines (both national registry and dynamic custom-added ones)
   searchMedicines: async (
-    query: string, 
-    category: string, 
+    query: string,
+    category: string,
     inStockOnly: boolean
   ): Promise<Medicine[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 800)) // Simulate network latency
-
-    let list = [...MOCK_MEDICINES, ...getCustomMedicines()]
-
-    if (category) {
-      list = list.filter((m) => m.category.toLowerCase() === category.toLowerCase())
-    }
-
-    if (query.trim()) {
-      const q = query.toLowerCase().trim()
-      list = list.filter((m) => {
-        const matchesGeneric = m.genericName.toLowerCase().includes(q)
-        const matchesName = m.name.toLowerCase().includes(q)
-        const matchesManufacturer = m.manufacturer.toLowerCase().includes(q)
-        const matchesCategory = m.category.toLowerCase().includes(q)
-        const matchesTrade = m.tradeNames.some((t) => t.toLowerCase().includes(q))
-        return matchesGeneric || matchesName || matchesManufacturer || matchesCategory || matchesTrade
-      })
-    }
-
-    // Filter stock
-    if (inStockOnly) {
-      const allAvailabilities = await Promise.all(
-        list.map(async (m) => {
-          const avail = await MedicineApi.getMedicineAvailability(m.id)
-          return { id: m.id, hasStock: avail.some((a) => a.stock > 0 && a.isOpen) }
-        })
-      )
-      const allowedIds = new Set(allAvailabilities.filter(x => x.hasStock).map(x => x.id))
-      list = list.filter((m) => allowedIds.has(m.id))
-    }
-
-    return list
+    const response = await apiClient.get('/medicines', { params: { search: query || undefined, category: category || undefined } })
+    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    return payload.map((item: any) => ({ id: item.id, name: item.name, genericName: item.genericName || '', tradeNames: [], category: item.category?.name || item.category || '', manufacturer: item.manufacturer?.name || '', prescriptionRequired: false, uses: item.description || '', dosage: item.dosageForm || '', warnings: '', sideEffects: '', interactions: '', storage: '' }))
   },
 
   // Get medicine details by ID
   getMedicineDetails: async (id: string): Promise<Medicine> => {
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    const item = [...MOCK_MEDICINES, ...getCustomMedicines()].find((m) => m.id === id)
-    if (!item) {
-      throw new Error(`Medicine with ID ${id} not found in the national registry.`)
-    }
-    return item
+    const response = await apiClient.get(`/medicines/${id}`)
+    const item = response.data
+    return { id: item.id, name: item.name, genericName: item.genericName || '', tradeNames: [], category: item.category?.name || '', manufacturer: item.manufacturer?.name || '', prescriptionRequired: false, uses: item.description || '', dosage: item.dosageForm || '', warnings: '', sideEffects: '', interactions: '', storage: '' }
+  },
+
+  getMedicines: async (page = 1, limit = 100, includeArchived = false): Promise<any[]> => {
+    const response = await apiClient.get('/medicines', { params: { page, limit, includeArchived } })
+    return Array.isArray(response.data) ? response.data : response.data?.data || []
+  },
+
+  getCategories: async (): Promise<any[]> => {
+    const response = await apiClient.get('/categories')
+    return Array.isArray(response.data) ? response.data : response.data?.data || []
+  },
+
+  getManufacturers: async (): Promise<any[]> => {
+    const response = await apiClient.get('/manufacturers')
+    return Array.isArray(response.data) ? response.data : response.data?.data || []
+  },
+
+  createMedicine: async (data: {
+    name: string
+    genericName: string
+    categoryId: string
+    manufacturerId?: string
+    description?: string
+    dosageForm?: string
+    strength?: string
+    imageUrl?: string
+  }): Promise<any> => {
+    const response = await apiClient.post('/medicines', data)
+    return response.data
+  },
+
+  updateMedicine: async (id: string, data: {
+    name?: string
+    genericName?: string
+    categoryId?: string
+    manufacturerId?: string
+    description?: string
+    dosageForm?: string
+    strength?: string
+    imageUrl?: string
+    isActive?: boolean
+  }): Promise<any> => {
+    const response = await apiClient.patch(`/medicines/${id}`, data)
+    return response.data
+  },
+
+  deleteMedicine: async (id: string) => {
+    const response = await apiClient.delete(`/medicines/${id}`)
+    return response.data
   },
 
   // Add custom medication dynamic record (pharmacist catalog addition)
@@ -254,8 +270,19 @@ export const MedicineApi = {
   // Resolves pharmacy stock levels dynamically for any medicine ID
   // Merges custom local storage modifications with deterministic seeds
   getMedicineAvailability: async (medicineId: string): Promise<PharmacyStock[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    
+    const pharmaciesResponse = await apiClient.get('/pharmacies', { params: { limit: 100 } })
+    const pharmacies = Array.isArray(pharmaciesResponse.data) ? pharmaciesResponse.data : pharmaciesResponse.data?.data || []
+    const stocks = await Promise.all(pharmacies.map(async (pharm: any) => {
+      try {
+        const inventoryResponse = await apiClient.get(`/pharmacies/${pharm.id}/inventory`)
+        const inventory = Array.isArray(inventoryResponse.data) ? inventoryResponse.data : inventoryResponse.data?.data || []
+        const item = inventory.find((record: any) => record.medicineId === medicineId || record.medicine?.id === medicineId)
+        const stock = Number(item?.quantity || 0)
+        return { pharmacyId: pharm.id, pharmacyName: pharm.name, rating: 0, isOpen: pharm.isActive !== false, distance: 0, price: Number(item?.price || 0), stock, stockStatus: stock === 0 ? 'OUT_OF_STOCK' : stock < 10 ? 'ALMOST_OUT' : stock < 35 ? 'LIMITED' : 'HIGH', insuranceAccepted: [], lat: Number(pharm.latitude || 0), lng: Number(pharm.longitude || 0), locationText: pharm.address || '' }
+      } catch { return null }
+    }))
+    return stocks.filter(Boolean) as PharmacyStock[]
+
     const localInv = getSavedInventories()
     const isCustomMedicine = !MOCK_MEDICINES.some(m => m.id === medicineId)
 
@@ -308,7 +335,7 @@ export const MedicineApi = {
 
       // Fallback deterministic seed generation based on IDs
       const seed = getDeterministicHash(medicineId + pharm.id)
-      
+
       const priceOffset = (seed % 5) * 200 // Deterministic price variation
       const price = 1200 + priceOffset
 
@@ -343,26 +370,17 @@ export const MedicineApi = {
     stock: number,
     isOpen?: boolean
   ): Promise<boolean> => {
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    const list = getSavedInventories()
-    const index = list.findIndex(
-      (r) => r.pharmacyId === pharmacyId && r.medicineId === medicineId
-    )
-
-    const record = { pharmacyId, medicineId, price, stock, isOpen }
-    if (index !== -1) {
-      list[index] = record
-    } else {
-      list.push(record)
-    }
-
-    localStorage.setItem(PHARMACY_INVENTORIES_KEY, JSON.stringify(list))
+    const response = await apiClient.get(`/pharmacies/${pharmacyId}/inventory`)
+    const inventory = Array.isArray(response.data) ? response.data : response.data?.data || []
+    const existing = inventory.find((item: any) => item.medicineId === medicineId || item.medicine?.id === medicineId)
+    if (existing?.id) await apiClient.patch(`/pharmacies/${pharmacyId}/inventory/${existing.id}`, { quantity: stock, price })
+    else await apiClient.post(`/pharmacies/${pharmacyId}/inventory`, { medicineId, quantity: stock, price })
     return true
   },
 
   // Calculate dynamic insurance cost splits
   calculateInsuranceCoverage: async (
-    provider: string, 
+    provider: string,
     basePrice: number
   ): Promise<{ percent: number; insurancePays: number; patientPays: number }> => {
     await new Promise((resolve) => setTimeout(resolve, 200))
@@ -435,7 +453,7 @@ export const MedicineApi = {
 
     const refId = `RES-${Math.floor(100000 + Math.random() * 900000)}`
     const codeNum = Math.floor(100000 + Math.random() * 900000)
-    
+
     const newRes: Reservation = {
       id: refId,
       medicineId: med.id,
@@ -487,7 +505,7 @@ export const MedicineApi = {
       const res = list[index]
       if (res.status === 'PENDING' || res.status === 'CONFIRMED') {
         res.status = 'CANCELLED'
-        
+
         // Restore stock
         const availabilityList = await MedicineApi.getMedicineAvailability(res.medicineId)
         const stockInfo = availabilityList.find((s) => s.pharmacyId === res.pharmacyId)
@@ -541,39 +559,14 @@ export const MedicineApi = {
 
   // Fetch notifications log
   getNotifications: async (): Promise<Notification[]> => {
-    try {
-      const response = await apiClient.get('/notifications')
-      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
-      return (payload as any[]).map(normalizeNotification)
-    } catch (error) {
-      console.warn('Notifications fallback enabled', error)
-      const key = 'epharmacy_notifications_mock'
-      const data = localStorage.getItem(key)
-      if (data) return JSON.parse(data)
-
-      const seeded: Notification[] = [
-        { id: 'not-001', title: 'Reservation Confirmed', message: 'Your reservation for Artemether + Lumefantrine has been confirmed by Bralirwa Pharmacy.', type: 'RESERVATION', read: false, createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
-        { id: 'not-002', title: 'Medicine Ready for Pickup', message: 'Amoxicillin 500mg is packaged and ready for collection at CityMed Nyarugenge.', type: 'RESERVATION', read: false, createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
-        { id: 'not-003', title: 'Prescription Approved', message: 'MOH validation successfully approved your prescription for Insulin Glargine.', type: 'PRESCRIPTION', read: true, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
-        { id: 'not-004', title: 'Password Changed', message: 'Your patient portal access password was updated successfully.', type: 'SECURITY', read: true, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
-      ]
-      localStorage.setItem(key, JSON.stringify(seeded))
-      return seeded
-    }
+    const response = await apiClient.get('/notifications')
+    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    return (payload as any[]).map(normalizeNotification)
   },
 
   markNotificationRead: async (id: string): Promise<boolean> => {
-    try {
-      await apiClient.patch(`/notifications/${id}/read`)
-      return true
-    } catch (error) {
-      console.warn('Notification mark read fallback enabled', error)
-      const key = 'epharmacy_notifications_mock'
-      const list = await MedicineApi.getNotifications()
-      const updated = list.map((n) => n.id === id ? { ...n, read: true } : n)
-      localStorage.setItem(key, JSON.stringify(updated))
-      return true
-    }
+    await apiClient.patch(`/notifications/${id}/read`)
+    return true
   },
 
   markAllNotificationsRead: async (): Promise<boolean> => {
@@ -658,17 +651,17 @@ export const MedicineApi = {
     if (!query.trim()) return false
     const key = 'epharmacy_search_history_mock'
     const list = await MedicineApi.getSearchHistory()
-    
+
     // Filter duplicates of same query string
     const filtered = list.filter((item) => item.query.toLowerCase() !== query.toLowerCase())
-    
+
     const newItem = {
       id: `sh-${Math.random().toString(36).substring(2, 9)}`,
       query,
       category: category || 'All',
       timestamp: new Date().toISOString()
     }
-    
+
     const updated = [newItem, ...filtered].slice(0, 20)
     localStorage.setItem(key, JSON.stringify(updated))
     return true

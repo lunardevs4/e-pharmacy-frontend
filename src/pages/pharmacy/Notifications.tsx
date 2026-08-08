@@ -1,10 +1,3 @@
-import React from 'react'
-
-export default function PharmacyNotifications() {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-      <p className="text-gray-600">Track critical drug shortages, circulars from MoH, and reservation alerts.</p>
-    </div>
-  )
-}
+import React, { useEffect, useState } from 'react'
+import { MedicineApi } from '@/services/medicine-api'
+export default function PharmacyNotifications() { const [items, setItems] = useState<any[]>([]); const [error, setError] = useState<string | null>(null); useEffect(() => { MedicineApi.getNotifications().then(setItems).catch((err) => setError(err.message || 'Unable to load notifications.')) }, []); const markRead = async (id: string) => { await MedicineApi.markNotificationRead(id); setItems((current) => current.map((item) => item.id === id ? { ...item, read: true } : item)) }; return <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4"><h1 className="text-2xl font-bold text-gray-900">Notifications</h1>{error && <p className="text-red-600">{error}</p>}{items.map((item) => <button key={item.id} onClick={() => markRead(item.id)} className={`block w-full rounded-lg border p-4 text-left ${item.read ? 'bg-white' : 'bg-emerald-50'}`}><div className="flex justify-between"><strong>{item.title}</strong><span className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleString()}</span></div><p className="text-sm text-gray-600">{item.message}</p></button>)}{!items.length && <p className="text-gray-400">No notifications found.</p>}</div> }

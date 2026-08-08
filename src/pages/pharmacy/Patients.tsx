@@ -1,4 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useAuthStore } from '@/store/authStore'
+import { PharmacyApi } from '@/services/pharmacy-api'
 import { Users, Search, ChevronRight } from 'lucide-react'
 
 interface PatientRecord {
@@ -13,13 +15,34 @@ interface PatientRecord {
 
 export default function PharmacyPatients() {
   const [searchVal, setSearchVal] = useState('')
-  const [patients] = useState<PatientRecord[]>([
-    { id: 'PAT-001', name: 'Marie Uwimana', email: 'marie@gmail.com', phone: '+250 788 123 456', nationalId: '1199580048123984', activeReservations: 1, totalClaims: 12 },
-    { id: 'PAT-002', name: 'Jean-Pierre Nkurunziza', email: 'jp.nkurunziza@gmail.com', phone: '+250 788 234 567', nationalId: '1199380092384728', activeReservations: 1, totalClaims: 4 },
-    { id: 'PAT-003', name: 'Aline Mukamana', email: 'aline.m@yahoo.com', phone: '+250 788 345 678', nationalId: '1199680018374829', activeReservations: 0, totalClaims: 19 },
-    { id: 'PAT-004', name: 'Emmanuel Habimana', email: 'e.habimana@gmail.com', phone: '+250 788 456 789', nationalId: '1199080037284729', activeReservations: 0, totalClaims: 7 },
-    { id: 'PAT-005', name: 'Clarisse Ingabire', email: 'clarisse.i@hotmail.com', phone: '+250 788 567 890', nationalId: '1199880018374928', activeReservations: 0, totalClaims: 2 }
-  ])
+  const { user } = useAuthStore()
+  const [patients, setPatients] = useState<PatientRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
+    if (!pharmacyId) return
+    PharmacyApi.getReservations(pharmacyId).then((reservations: any[]) => {
+      const grouped = new Map<string, PatientRecord>()
+      reservations.forEach((reservation) => {
+        const patient = reservation.patient || {}
+        const account = patient.user || {}
+        const id = patient.id || account.id || reservation.patientId
+        if (!id) return
+        const current = grouped.get(id) || {
+          id, name: [account.firstName, account.lastName].filter(Boolean).join(' ') || 'Patient',
+          email: account.email || '—', phone: account.phone || '—', nationalId: account.nid || '—',
+          activeReservations: 0, totalClaims: 0,
+        }
+        current.totalClaims += 1
+        if (!['CANCELLED', 'COLLECTED', 'EXPIRED'].includes(String(reservation.status).toUpperCase())) current.activeReservations += 1
+        grouped.set(id, current)
+      })
+      setPatients([...grouped.values()])
+    }).catch((err) => setError(err.message || 'Unable to load patients.'))
+      .finally(() => setLoading(false))
+  }, [user?.pharmacy?.id, user?.pharmacyId])
 
   const filteredPatients = patients.filter((p) => 
     p.name.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -66,7 +89,7 @@ export default function PharmacyPatients() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-              {filteredPatients.map((p) => (
+              {loading ? <tr><td colSpan={7} className="py-8 text-center">Loading patients…</td></tr> : error ? <tr><td colSpan={7} className="py-8 text-center text-red-600">{error}</td></tr> : filteredPatients.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50/50">
                   <td className="py-3 font-semibold text-gray-900">{p.id}</td>
                   <td className="py-3 font-bold text-gray-950 flex items-center space-x-2">

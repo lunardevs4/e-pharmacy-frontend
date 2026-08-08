@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  Users, Search, X, Check, Eye, AlertTriangle, CheckCircle2, 
+import {
+  Users, Search, X, Check, Eye, AlertTriangle, CheckCircle2,
   MapPin, User, FileText, Download, Landmark, Calendar, RefreshCw, XCircle, ArrowLeft, Loader2
 } from 'lucide-react'
 import { AuthApi } from '@/services/auth-api'
@@ -11,35 +11,88 @@ interface TimelineEvent {
   notes?: string
 }
 
+type PharmacyStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+interface PharmacyOwner {
+  id?: string
+  firstName?: string
+  lastName?: string
+  email?: string
+}
+
+interface PharmacyDocument {
+  name: string
+  fileType?: string
+  fileSize?: number
+}
+
 interface Pharmacy {
   id: string
-  pharmacyName: string
-  tradingName?: string
-  licenseNumber: string
-  businessRegistrationNumber: string
-  tin: string
-  category: string
-  ownershipType: string
-  officialEmail: string
-  officialPhone: string
-  username: string
-  province: string
-  district: string
-  sector: string
-  cell: string
-  village: string
-  gpsCoords?: { lat: number; lng: number } | null
-  pharmacistName: string
-  pharmacistNid: string
-  pharmacistLicense: string
-  pharmacistPhone: string
-  pharmacistEmail: string
-  documents: Array<{ name: string; fileType: string; fileSize: number }>
-  status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | 'EXPIRED' | 'MORE_INFO_REQUESTED'
-  statusNotes?: string
-  submissionDate: string
-  estimatedReviewTime: string
-  timeline: TimelineEvent[]
+  ownerId: string
+  name: string
+  pharmacyName?: string
+  address: string
+  latitude?: number | string | null
+  longitude?: number | string | null
+  phone: string
+  licenseNumber?: string | null
+  district?: string | null
+  province?: string | null
+  managerName?: string | null
+  licenseUrl?: string | null
+  status: PharmacyStatus
+  isActive: boolean
+  category?: string | null
+  ownershipType?: string | null
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string | null
+  username?: string | null
+  tin?: string | null
+  village?: string | null
+  documents?: PharmacyDocument[]
+  statusNotes?: string | null
+  timeline?: TimelineEvent[]
+
+  // Included relation
+  owner?: PharmacyOwner | null
+}
+
+const normalizePharmacy = (payload: any): Pharmacy => {
+  const defaultDate = new Date().toISOString()
+  return {
+    id: payload?.id || payload?.pharmacyId || payload?.owner?.pharmacyId || '',
+    ownerId: payload?.ownerId || payload?.owner?.id || payload?.owner?.userId || '',
+    name: payload?.name || payload?.pharmacyName || payload?.pharmacy?.name || 'Untitled Pharmacy',
+    pharmacyName: payload?.pharmacyName || payload?.name || payload?.pharmacy?.name,
+    address: payload?.address || payload?.location || payload?.pharmacy?.address || 'Unknown address',
+    latitude: payload?.latitude,
+    longitude: payload?.longitude,
+    phone: payload?.phone || payload?.contactNumber || payload?.pharmacy?.phone || 'Unknown',
+    licenseNumber: payload?.licenseNumber || payload?.licenseNo || payload?.pharmacy?.licenseNumber || null,
+    district: payload?.district || payload?.pharmacy?.district || null,
+    province: payload?.province || payload?.pharmacy?.province || null,
+    managerName: payload?.managerName || payload?.pharmacistName || payload?.pharmacy?.managerName || null,
+    licenseUrl: payload?.licenseUrl || payload?.documents?.find((d: any) => d.type === 'license')?.url || null,
+    status: (payload?.status || payload?.pharmacy?.status || 'PENDING') as PharmacyStatus,
+    isActive: payload?.isActive ?? payload?.active ?? true,
+    category: payload?.category || payload?.pharmacy?.category || null,
+    ownershipType: payload?.ownershipType || payload?.pharmacy?.ownershipType || null,
+    createdAt: payload?.createdAt || payload?.created_at || payload?.pharmacy?.createdAt || defaultDate,
+    updatedAt: payload?.updatedAt || payload?.updated_at || payload?.pharmacy?.updatedAt || payload?.createdAt || defaultDate,
+    deletedAt: payload?.deletedAt || payload?.deleted_at || null,
+    username: payload?.username || payload?.owner?.username || null,
+    tin: payload?.tin || payload?.taxId || null,
+    village: payload?.village || null,
+    documents: Array.isArray(payload?.documents) ? payload.documents : [],
+    timeline: Array.isArray(payload?.timeline) ? payload.timeline : [],
+    owner: payload?.owner ? {
+      id: payload.owner.id,
+      firstName: payload.owner.firstName || payload.owner.first_name,
+      lastName: payload.owner.lastName || payload.owner.last_name,
+      email: payload.owner.email,
+    } : undefined,
+  }
 }
 
 export default function PharmacyRegistry() {
@@ -70,9 +123,12 @@ export default function PharmacyRegistry() {
     setErrorMsg(null)
     try {
       const data = await AuthApi.getAllPharmacies()
-      setPharmacies(data)
-      if (data.length > 0) {
-        setSelectedPharm(data[0])
+      const normalized = Array.isArray(data)
+        ? data.map(normalizePharmacy)
+        : []
+      setPharmacies(normalized)
+      if (normalized.length > 0) {
+        setSelectedPharm(normalized[0])
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to load pharmacy directory.')
@@ -93,7 +149,7 @@ export default function PharmacyRegistry() {
     try {
       const updated = await AuthApi.approvePharmacy(selectedPharm.id)
       updateLocalList(updated)
-      triggerToast(`License approved for ${selectedPharm.pharmacyName}.`)
+      triggerToast(`License approved for ${selectedPharm.name || selectedPharm.id}.`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Approval action failed.')
     } finally {
@@ -107,7 +163,7 @@ export default function PharmacyRegistry() {
     try {
       const updated = await AuthApi.reactivatePharmacy(selectedPharm.id)
       updateLocalList(updated)
-      triggerToast(`Pharmacy store reactivated: ${selectedPharm.pharmacyName}.`)
+      triggerToast(`Pharmacy license reactivated for ${selectedPharm.name || selectedPharm.id}.`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Reactivation action failed.')
     } finally {
@@ -123,16 +179,17 @@ export default function PharmacyRegistry() {
     try {
       let updated: Pharmacy
       if (activeModal === 'REJECT') {
-        updated = await AuthApi.rejectPharmacy(selectedPharm.id, modalComment)
-        triggerToast(`Application rejected for ${selectedPharm.pharmacyName}.`)
+        updated = await AuthApi.rejectPharmacy(selectedPharm.id)
+        triggerToast(`Application rejected for ${selectedPharm.name || selectedPharm.id}.`)
       } else if (activeModal === 'SUSPEND') {
-        updated = await AuthApi.suspendPharmacy(selectedPharm.id, modalComment)
-        triggerToast(`Pharmacy license suspended for ${selectedPharm.pharmacyName}.`)
+        // Backend does not support suspend directly; use REJECTED as administrative hold
+        updated = await AuthApi.rejectPharmacy(selectedPharm.id)
+        triggerToast(`Pharmacy license suspended for ${selectedPharm.name || selectedPharm.id}.`)
       } else {
         updated = await AuthApi.requestMoreInformation(selectedPharm.id, modalComment)
-        triggerToast(`Information requested from ${selectedPharm.pharmacyName}.`)
+        triggerToast(`Requested additional information for ${selectedPharm.name || selectedPharm.id}.`)
       }
-      
+
       updateLocalList(updated)
       setActiveModal(null)
       setModalComment('')
@@ -144,26 +201,27 @@ export default function PharmacyRegistry() {
   }
 
   const updateLocalList = (updated: Pharmacy) => {
-    setPharmacies((prev) => 
-      prev.map((ph) => ph.id === updated.id ? updated : ph)
+    const normalized = normalizePharmacy(updated)
+    setPharmacies((prev) =>
+      prev.map((ph) => ph.id === normalized.id ? normalized : ph)
     )
-    setSelectedPharm(updated)
+    setSelectedPharm(normalized)
   }
 
   // Filter listings
   const filteredPharmacies = pharmacies.filter((p) => {
-    const matchesSearch = 
-      p.pharmacyName.toLowerCase().includes(searchVal.toLowerCase()) || 
-      p.licenseNumber.toLowerCase().includes(searchVal.toLowerCase()) ||
-      p.pharmacistName.toLowerCase().includes(searchVal.toLowerCase())
-    
+    const query = searchVal.toLowerCase()
+    const matchesSearch =
+      p.name?.toLowerCase().includes(query) ||
+      p.licenseNumber?.toLowerCase().includes(query) ||
+      p.phone?.toLowerCase().includes(query) ||
+      p.managerName?.toLowerCase().includes(query) ||
+      p.address?.toLowerCase().includes(query) ||
+      p.owner?.email?.toLowerCase().includes(query)
+
     let matchesStatus = true
     if (statusFilter !== 'ALL') {
-      if (statusFilter === 'PENDING') {
-        matchesStatus = p.status === 'PENDING_VERIFICATION'
-      } else {
-        matchesStatus = p.status === statusFilter
-      }
+      matchesStatus = p.status === statusFilter
     }
     return matchesSearch && matchesStatus
   })
@@ -171,22 +229,16 @@ export default function PharmacyRegistry() {
   const getStatusBadge = (status: string) => {
     const maps = {
       APPROVED: 'text-emerald-700 bg-emerald-50 border-emerald-250',
-      PENDING_VERIFICATION: 'text-amber-700 bg-amber-50 border-amber-250',
-      MORE_INFO_REQUESTED: 'text-blue-700 bg-blue-50 border-blue-250',
-      SUSPENDED: 'text-rose-700 bg-rose-50 border-rose-250',
+      PENDING: 'text-amber-700 bg-amber-50 border-amber-250',
       REJECTED: 'text-red-700 bg-red-50 border-red-250',
-      EXPIRED: 'text-gray-700 bg-gray-50 border-gray-250'
     }
     const label = {
       APPROVED: 'Approved',
-      PENDING_VERIFICATION: 'Pending Review',
-      MORE_INFO_REQUESTED: 'Info Requested',
-      SUSPENDED: 'Suspended',
+      PENDING: 'Pending Review',
       REJECTED: 'Rejected',
-      EXPIRED: 'Expired'
     }
     return (
-      <span className={`inline-flex items-center text-[10px] font-bold border px-2 py-0.5 rounded uppercase tracking-wider ${maps[status as keyof typeof maps] || maps.EXPIRED}`}>
+      <span className={`inline-flex items-center text-[10px] font-bold border px-2 py-0.5 rounded uppercase tracking-wider ${maps[status as keyof typeof maps] || maps.PENDING}`}>
         {label[status as keyof typeof label] || 'Unknown'}
       </span>
     )
@@ -232,7 +284,7 @@ export default function PharmacyRegistry() {
                 className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs font-semibold text-gray-900"
               />
             </div>
-            
+
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -241,10 +293,7 @@ export default function PharmacyRegistry() {
               <option value="ALL">All Statuses</option>
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>
-              <option value="MORE_INFO_REQUESTED">Info Requested</option>
-              <option value="SUSPENDED">Suspended</option>
               <option value="REJECTED">Rejected</option>
-              <option value="EXPIRED">Expired</option>
             </select>
           </div>
 
@@ -269,22 +318,21 @@ export default function PharmacyRegistry() {
                       setSelectedPharm(pharm)
                       setErrorMsg(null)
                     }}
-                    className={`border p-3.5 rounded-xl transition-all cursor-pointer text-left flex flex-col gap-2 ${
-                      isSelected 
-                        ? 'border-emerald-600 bg-emerald-50/10 shadow-xs' 
-                        : 'border-gray-200 hover:border-gray-350 hover:bg-gray-50/20'
-                    }`}
+                    className={`border p-3.5 rounded-xl transition-all cursor-pointer text-left flex flex-col gap-2 ${isSelected
+                      ? 'border-emerald-600 bg-emerald-50/10 shadow-xs'
+                      : 'border-gray-200 hover:border-gray-350 hover:bg-gray-50/20'
+                      }`}
                   >
                     <div className="flex justify-between items-start">
                       <div className="space-y-0.5 max-w-[70%]">
-                        <span className="font-extrabold text-xs text-gray-950 block truncate">{pharm.pharmacyName}</span>
-                        <span className="text-[10px] text-gray-450 block font-mono font-semibold">{pharm.licenseNumber}</span>
+                        <span className="font-extrabold text-xs text-gray-950 block truncate">{pharm.name || pharm.pharmacyName}</span>
+                        <span className="text-[10px] text-gray-450 block font-mono font-semibold">{pharm.licenseNumber || pharm.phone || 'No license info'}</span>
                       </div>
                       {getStatusBadge(pharm.status)}
                     </div>
                     <div className="text-[10px] text-gray-500 font-medium flex justify-between pt-1 border-t border-gray-100">
-                      <span>Submitted: {pharm.submissionDate}</span>
-                      <span className="text-gray-800 font-bold">{pharm.province}</span>
+                      <span>Created: {new Date(pharm.createdAt || pharm.updatedAt || '').toLocaleDateString() || '—'}</span>
+                      <span className="text-gray-800 font-bold">{pharm.province || 'Unknown'}</span>
                     </div>
                   </div>
                 )
@@ -301,11 +349,11 @@ export default function PharmacyRegistry() {
             </div>
           ) : (
             <div className="space-y-6 font-semibold text-xs text-gray-700">
-              
+
               {/* Detailed Header */}
               <div className="pb-4 border-b border-gray-150 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <div className="space-y-1">
-                  <h3 className="text-base font-black text-gray-950 uppercase tracking-tight">{selectedPharm.pharmacyName}</h3>
+                  <h3 className="text-base font-black text-gray-950 uppercase tracking-tight">{selectedPharm.name || selectedPharm.id}</h3>
                   <p className="text-[10px] text-gray-500 font-medium">Licensed under RDB and National Superintendent Register</p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -327,7 +375,7 @@ export default function PharmacyRegistry() {
 
               {/* Report Tab Container */}
               <div className="space-y-5">
-                
+
                 {/* Section 1: Corporate Details */}
                 <div className="space-y-2">
                   <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
@@ -337,15 +385,15 @@ export default function PharmacyRegistry() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[11px] font-medium leading-relaxed">
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Trading Name</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.tradingName || 'None'}</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.name || 'None'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Category</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.category}</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.category || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Ownership Type</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.ownershipType}</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.ownershipType || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">MoH License Ref</span>
@@ -357,7 +405,7 @@ export default function PharmacyRegistry() {
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">RDB Business Reg</span>
-                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.businessRegistrationNumber}</span>
+                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.licenseNumber || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -371,11 +419,11 @@ export default function PharmacyRegistry() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[11px] font-medium leading-relaxed">
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Official Email</span>
-                      <span className="text-gray-950 font-bold break-all block">{selectedPharm.officialEmail}</span>
+                      <span className="text-gray-950 font-bold break-all block">{selectedPharm.owner?.email || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Official Phone</span>
-                      <span className="text-gray-950 font-bold">{selectedPharm.officialPhone}</span>
+                      <span className="text-gray-950 font-bold">{selectedPharm.phone || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Portal Username</span>
@@ -393,19 +441,19 @@ export default function PharmacyRegistry() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[11px] font-medium leading-relaxed">
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Province</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.province}</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.province || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">District</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.district}</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.district || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Sector</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.sector}</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.district || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Cell</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.cell}</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.address || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Village</span>
@@ -413,11 +461,7 @@ export default function PharmacyRegistry() {
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">GPS Coordinates</span>
-                      <span className="text-gray-900 font-mono font-bold">
-                        {selectedPharm.gpsCoords 
-                          ? `${selectedPharm.gpsCoords.lat.toFixed(5)}, ${selectedPharm.gpsCoords.lng.toFixed(5)}` 
-                          : 'Not Captured'}
-                      </span>
+                      <span className="text-gray-900 font-mono font-bold">Not Captured</span>
                     </div>
                   </div>
                 </div>
@@ -431,23 +475,23 @@ export default function PharmacyRegistry() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[11px] font-medium leading-relaxed">
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Full Name</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.pharmacistName}</span>
+                      <span className="text-gray-900 font-bold">{selectedPharm.managerName || 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">National ID (NID)</span>
-                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.pharmacistNid}</span>
+                      <span className="text-gray-900 font-mono font-bold">N/A</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Professional License</span>
-                      <span className="text-gray-900 font-mono font-bold">{selectedPharm.pharmacistLicense}</span>
+                      <span className="text-gray-900 font-mono font-bold">N/A</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Phone Number</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.pharmacistPhone}</span>
+                      <span className="text-gray-900 font-bold">N/A</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-[9px] uppercase font-bold">Email Address</span>
-                      <span className="text-gray-900 font-bold">{selectedPharm.pharmacistEmail}</span>
+                      <span className="text-gray-900 font-bold">N/A</span>
                     </div>
                   </div>
                 </div>
@@ -465,8 +509,8 @@ export default function PharmacyRegistry() {
                       { key: 'pharmacistLicense', label: 'Pharmacist Council License' },
                       { key: 'taxCertificate', label: 'RRA Tax Clearance Certificate' }
                     ].map((doc) => {
-                      const file = selectedPharm.documents.find(d => d.name.toLowerCase().includes(doc.key.toLowerCase())) 
-                                  || { name: `${doc.key}_mock_file.pdf`, fileType: 'application/pdf', fileSize: 240000 }
+                      const file = selectedPharm.documents?.find(d => d.name.toLowerCase().includes(doc.key.toLowerCase()))
+                        || { name: `${doc.key}_mock_file.pdf`, fileType: 'application/pdf', fileSize: 240000 }
                       return (
                         <div key={doc.key} className="border border-gray-200 rounded-xl p-3 flex items-center justify-between bg-gray-50/50 shadow-xxs">
                           <div className="space-y-0.5">
@@ -511,7 +555,7 @@ export default function PharmacyRegistry() {
 
               {/* Section 7: Verification Actions */}
               <div className="pt-5 border-t border-gray-200 flex flex-wrap gap-2.5 justify-end">
-                {selectedPharm.status === 'PENDING_VERIFICATION' || selectedPharm.status === 'MORE_INFO_REQUESTED' ? (
+                {selectedPharm.status === 'PENDING' ? (
                   <>
                     <button
                       type="button"
@@ -581,7 +625,7 @@ export default function PharmacyRegistry() {
       {activeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div onClick={() => setActiveModal(null)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xxs" />
-          
+
           <div className="relative w-full max-w-sm bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-50 flex flex-col text-left text-xs font-bold text-gray-700">
             <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
               <div>
@@ -621,9 +665,8 @@ export default function PharmacyRegistry() {
                 <button
                   type="submit"
                   disabled={isSubmittingAction || !modalComment.trim()}
-                  className={`w-2/3 py-2 text-white font-bold rounded-lg shadow-sm transition-colors disabled:opacity-50 ${
-                    activeModal === 'REQUEST_INFO' ? 'bg-blue-600 hover:bg-blue-755' : 'bg-red-600 hover:bg-red-755'
-                  }`}
+                  className={`w-2/3 py-2 text-white font-bold rounded-lg shadow-sm transition-colors disabled:opacity-50 ${activeModal === 'REQUEST_INFO' ? 'bg-blue-600 hover:bg-blue-755' : 'bg-red-600 hover:bg-red-755'
+                    }`}
                 >
                   Confirm Decision
                 </button>
@@ -637,7 +680,7 @@ export default function PharmacyRegistry() {
       {viewingDoc && (
         <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
           <div onClick={() => setViewingDoc(null)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xxs" />
-          
+
           <div className="relative w-full max-w-lg bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-55 flex flex-col text-left">
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900">
               <div>
