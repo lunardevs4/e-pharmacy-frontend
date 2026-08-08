@@ -138,12 +138,14 @@ export default function SidebarLayout() {
           {navLinks.map((link) => {
             const Icon = link.icon
             const isActive = location.pathname === link.path
+            const isPharmacyApproved = user?.role !== 'PHARMACY' || user?.pharmacy?.status === 'APPROVED'
+            const isDisabled = !isPharmacyApproved && link.path !== '/pharmacy'
+
             return (
               <Link
                 key={link.path}
                 to={link.path}
-                aria-current={isActive ? 'page' : undefined}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isActive 
                     ? 'bg-slate-800 text-white font-bold shadow-sm' 
                     : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'

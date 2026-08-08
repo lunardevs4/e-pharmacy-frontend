@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
 import { Reservation, Medicine, PharmacyStock, Notification, SearchHistoryItem } from '@/types'
-import { 
-  Search, ClipboardList, Clock, CheckCircle2, XCircle, AlertTriangle, 
-  MapPin, Bell, User, Star, StarOff, ShieldCheck, Heart, History, Trash2, ArrowRight 
+import {
+  Search, ClipboardList, Clock, CheckCircle2, XCircle, AlertTriangle,
+  ShieldCheck, History, ArrowRight, Trash2, Bell, Heart, MapPin
 } from 'lucide-react'
 
 export default function PatientDashboard() {
@@ -25,29 +25,35 @@ export default function PatientDashboard() {
   const loadDashboardData = async () => {
     setLoading(true)
     try {
-      // 1. Fetch Reservations
-      const resData = await MedicineApi.getReservationHistory()
+      const [resData, notData, histData, reportData] = await Promise.all([
+        MedicineApi.getReservationHistory(),
+        MedicineApi.getNotifications(),
+        MedicineApi.getSearchHistory(),
+        MedicineApi.getPatientDashboardReport().catch(() => null),
+      ])
+
       setReservations(resData)
-
-      // 2. Fetch Notifications
-      const notData = await MedicineApi.getNotifications()
       setNotifications(notData)
-
-      // 3. Fetch Search History
-      const histData = await MedicineApi.getSearchHistory()
       setSearchHistory(histData)
 
-      // 4. Fetch Favourites
-      const favMedIds = await MedicineApi.getFavouriteMedicines()
-      const favPharmIds = await MedicineApi.getFavouritePharmacies()
+      if (reportData?.reservations?.length) {
+        const reportReservations = reportData.reservations.map((item: any) => ({
+          ...item,
+          medicineName: item.medicine?.name || item.medicineName || 'Medication',
+          pharmacyName: item.pharmacy?.name || item.pharmacyName || 'Pharmacy',
+          patientPays: Number(item.patientPays ?? item.totalPrice ?? 0),
+          status: String(item.status || 'PENDING').toUpperCase(),
+        }))
+        setReservations(reportReservations)
+      }
 
-      // Resolve lists
-      const allMeds = await MedicineApi.searchMedicines('', '', false)
+      const favMedIds: string[] = await MedicineApi.getFavouriteMedicines().catch(() => [])
+      const favPharmIds: string[] = await MedicineApi.getFavouritePharmacies().catch(() => [])
+      const allMeds = await MedicineApi.searchMedicines('', '', false).catch(() => [])
       setFavMedicines(allMeds.filter((m) => favMedIds.includes(m.id)))
 
-      // Resolve pharmacies (mocking default availability lookup)
       if (allMeds.length > 0) {
-        const stocks = await MedicineApi.getMedicineAvailability(allMeds[0].id)
+        const stocks = await MedicineApi.getMedicineAvailability(allMeds[0].id).catch(() => [])
         setFavPharmacies(stocks.filter((s) => favPharmIds.includes(s.pharmacyId)))
       }
     } catch (err) {
@@ -131,6 +137,7 @@ export default function PatientDashboard() {
   const pendingCount = reservations.filter((r) => r.status === 'PENDING' || r.status === 'CONFIRMED').length
   const collectedCount = reservations.filter((r) => r.status === 'COLLECTED').length
   const cancelledCount = reservations.filter((r) => r.status === 'CANCELLED').length
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   // Profile completion meter computation
   const getProfileCompletion = () => {
@@ -261,8 +268,8 @@ export default function PatientDashboard() {
             <ClipboardList className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-gray-400 block uppercase font-bold">Total Reservations</span>
-            <span className="text-lg font-black text-gray-950">{reservations.length} records</span>
+            <span className="text-[10px] text-gray-400 block uppercase font-bold">Unread Updates</span>
+            <span className="text-lg font-black text-gray-950">{unreadCount} alerts</span>
           </div>
         </div>
 
@@ -314,10 +321,10 @@ export default function PatientDashboard() {
                         onClick={() => navigate('/patient/reservations')}
                         className="hover:bg-gray-50/50 cursor-pointer"
                       >
-                        <td className="py-3 font-mono text-gray-450">{res.id}</td>
+                        <td className="py-3 font-mono text-gray-450">{res.id.slice(0, 8)}</td>
                         <td className="py-3 text-gray-950">{res.medicineName}</td>
                         <td className="py-3 text-gray-550">{res.pharmacyName}</td>
-                        <td className="py-3 text-health-primary">{res.patientPays} RWF</td>
+                        <td className="py-3 text-health-primary">{res.patientPays || 0} RWF</td>
                         <td className="py-3 text-right">
                           <div className="inline-flex items-center space-x-1">
                             {getStatusIcon(res.status)}

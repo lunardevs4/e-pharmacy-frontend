@@ -1,11 +1,37 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { AuthApi } from '@/services/auth-api'
 
 export default function InsuranceDashboard() {
-  const claims = [
-    { id: 'CLM-001', pharmacy: 'Bralirwa Pharmacy', patientNid: '1199580123456789', drug: 'Paracetamol', total: 'RWF 300', insurancePay: 'RWF 270', patientPay: 'RWF 30', split: '90/10', status: 'Approved' },
-    { id: 'CLM-002', pharmacy: 'CityMed Nyarugenge', patientNid: '1199080987654321', drug: 'Artemether', total: 'RWF 1,200', insurancePay: 'RWF 1,080', patientPay: 'RWF 120', split: '90/10', status: 'Pending' },
-    { id: 'CLM-003', pharmacy: 'MedPlus Remera', patientNid: '1199880112233445', drug: 'Amoxicillin', total: 'RWF 950', insurancePay: 'RWF 855', patientPay: 'RWF 95', split: '90/10', status: 'Approved' },
-  ]
+  const [claims, setClaims] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      setErrorMsg(null)
+      try {
+        const report = await AuthApi.getInsuranceReport().catch(() => null)
+        if (report?.claims?.length) {
+          setClaims(report.claims)
+        } else {
+          setClaims([])
+        }
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Unable to load insurance claims data.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  const summary = useMemo(() => {
+    const approved = claims.filter((item) => String(item.status).toUpperCase() === 'APPROVED').length
+    const pending = claims.filter((item) => String(item.status).toUpperCase() === 'PENDING').length
+    return { approved, pending }
+  }, [claims])
 
   return (
     <div className="space-y-6">
@@ -13,23 +39,23 @@ export default function InsuranceDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
           <span className="text-xs text-gray-500 font-semibold block uppercase">Total Claims Processed</span>
-          <span className="text-2xl font-black text-gray-900 block mt-2">1,245</span>
-          <span className="text-xs text-emerald-700 mt-1 font-semibold block">↑ 12% from last month</span>
+          <span className="text-2xl font-black text-gray-900 block mt-2">{isLoading ? '—' : claims.length}</span>
+          <span className="text-xs text-emerald-700 mt-1 font-semibold block">Live claims count</span>
         </div>
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
           <span className="text-xs text-gray-500 font-semibold block uppercase">Average Approval Rate</span>
-          <span className="text-2xl font-black text-health-primary block mt-2">96.4%</span>
-          <span className="text-xs text-emerald-700 mt-1 font-semibold block">KPI Target &gt;95.0%</span>
+          <span className="text-2xl font-black text-health-primary block mt-2">{claims.length ? `${Math.round((summary.approved / claims.length) * 100)}%` : '—'}</span>
+          <span className="text-xs text-emerald-700 mt-1 font-semibold block">Approval ratio</span>
         </div>
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
           <span className="text-xs text-gray-500 font-semibold block uppercase">Pending Claims</span>
-          <span className="text-2xl font-black text-orange-600 block mt-2">18</span>
-          <span className="text-xs text-gray-500 mt-1 block">Awaiting standard audit</span>
+          <span className="text-2xl font-black text-orange-600 block mt-2">{summary.pending}</span>
+          <span className="text-xs text-gray-500 mt-1 block">Awaiting review</span>
         </div>
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
           <span className="text-xs text-gray-500 font-semibold block uppercase">Total Disbursed</span>
-          <span className="text-2xl font-black text-gray-900 block mt-2">RWF 3.8M</span>
-          <span className="text-xs text-gray-500 mt-1 block">Paid to 142 pharmacies</span>
+          <span className="text-2xl font-black text-gray-900 block mt-2">{claims.length ? `RWF ${claims.reduce((sum, item) => sum + Number(item.totalCost || item.total || 0), 0).toLocaleString()}` : '—'}</span>
+          <span className="text-xs text-gray-500 mt-1 block">Estimated claims value</span>
         </div>
       </div>
 
@@ -44,6 +70,8 @@ export default function InsuranceDashboard() {
             RSSB Co-Pay Active
           </span>
         </div>
+
+        {errorMsg && <div className="px-6 py-3 text-sm text-red-600">{errorMsg}</div>}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-700">
@@ -60,20 +88,26 @@ export default function InsuranceDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-150">
-              {claims.map((claim, idx) => (
+              {claims.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-sm text-gray-500">
+                    No insurance claims data is available yet from the backend.
+                  </td>
+                </tr>
+              ) : claims.map((claim, idx) => (
                 <tr key={idx} className="hover:bg-gray-50/50">
-                  <td className="px-6 py-4 font-bold text-gray-900">{claim.id}</td>
-                  <td className="px-6 py-4 font-semibold text-gray-800">{claim.pharmacy}</td>
-                  <td className="px-6 py-4 font-mono text-xs">{claim.patientNid}</td>
-                  <td className="px-6 py-4">{claim.drug}</td>
-                  <td className="px-6 py-4 font-bold">{claim.total}</td>
-                  <td className="px-6 py-4 text-emerald-800 font-semibold">{claim.insurancePay} <span className="text-[10px] text-gray-400">({claim.split.split('/')[0]}%)</span></td>
-                  <td className="px-6 py-4 text-gray-650 font-semibold">{claim.patientPay} <span className="text-[10px] text-gray-400">({claim.split.split('/')[1]}%)</span></td>
+                  <td className="px-6 py-4 font-bold text-gray-900">{claim.id || `CLM-${idx + 1}`}</td>
+                  <td className="px-6 py-4 font-semibold text-gray-800">{claim.pharmacy?.name || claim.pharmacy || 'Pharmacy'}</td>
+                  <td className="px-6 py-4 font-mono text-xs">{claim.patientNid || claim.patient?.nid || '—'}</td>
+                  <td className="px-6 py-4">{claim.drug || claim.medicine?.name || 'Medication'}</td>
+                  <td className="px-6 py-4 font-bold">{claim.total ? `RWF ${claim.total}` : '—'}</td>
+                  <td className="px-6 py-4 text-emerald-800 font-semibold">{claim.insurancePay ? `RWF ${claim.insurancePay}` : '—'}</td>
+                  <td className="px-6 py-4 text-gray-650 font-semibold">{claim.patientPay ? `RWF ${claim.patientPay}` : '—'}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
-                      claim.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-850'
+                      String(claim.status || '').toUpperCase() === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-850'
                     }`}>
-                      {claim.status}
+                      {claim.status || 'PENDING'}
                     </span>
                   </td>
                 </tr>

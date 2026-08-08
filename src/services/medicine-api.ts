@@ -1,5 +1,6 @@
-import { Medicine, PharmacyStock, Reservation } from '@/types'
+import { Medicine, PharmacyStock, Reservation, Notification } from '@/types'
 import { INSURANCE_COVERAGE_RATES } from '@/config/insurance-rates'
+import { apiClient } from '@/api/client'
 
 // Mock Medicines Registry Database (National Catalog)
 const MOCK_MEDICINES: Medicine[] = [
@@ -157,6 +158,40 @@ const getSavedInventories = (): LocalInventoryRecord[] => {
   const data = localStorage.getItem(PHARMACY_INVENTORIES_KEY)
   return data ? JSON.parse(data) : []
 }
+
+const normalizeReservation = (payload: any): Reservation => {
+  const medicine = payload.medicine || {}
+  const pharmacy = payload.pharmacy || {}
+  const status = String(payload.status || 'PENDING').toUpperCase()
+
+  return {
+    id: payload.id,
+    medicineId: medicine.id || payload.medicineId || '',
+    medicineName: medicine.name || payload.medicineName || 'Medication',
+    pharmacyId: pharmacy.id || payload.pharmacyId || '',
+    pharmacyName: pharmacy.name || payload.pharmacyName || 'Pharmacy',
+    quantity: payload.quantity ?? 1,
+    insuranceProvider: payload.insuranceProvider || '',
+    insuranceId: payload.insuranceId || '',
+    prescriptionFileName: payload.prescriptionFileName,
+    totalPrice: Number(payload.totalPrice ?? payload.price ?? 0),
+    insurancePays: Number(payload.insurancePays ?? 0),
+    patientPays: Number(payload.patientPays ?? payload.totalPrice ?? payload.price ?? 0),
+    pickupCode: payload.pickupCode || '',
+    pickupDeadline: payload.pickupDeadline || payload.expiresAt || '',
+    status: status as Reservation['status'],
+    createdAt: payload.createdAt || payload.created_at || '',
+  }
+}
+
+const normalizeNotification = (payload: any): Notification => ({
+  id: payload.id || payload.notificationId || `notification-${Math.random().toString(36).slice(2,8)}`,
+  title: payload.title || payload.subject || 'Notification',
+  message: payload.message || payload.body || 'You have a new update.',
+  type: (payload.type || payload.notificationType || 'SYSTEM').toUpperCase() as Notification['type'],
+  read: payload.read ?? payload.isRead ?? false,
+  createdAt: payload.createdAt || payload.created_at || new Date().toISOString(),
+})
 
 export const MedicineApi = {
   // Search catalog medicines (both national registry and dynamic custom-added ones)
@@ -475,42 +510,84 @@ export const MedicineApi = {
 
   // Fetch reservations history
   getReservationHistory: async (): Promise<Reservation[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    return getSavedReservations()
+    try {
+      const response = await apiClient.get('/reservations')
+      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return (payload as any[]).map(normalizeReservation)
+    } catch (error) {
+      console.warn('Reservation history fallback enabled', error)
+      return getSavedReservations()
+    }
+  },
+
+  getPatientDashboardReport: async (): Promise<any> => {
+    const response = await apiClient.get('/reports/patient/me')
+    return response.data
+  },
+
+  getPharmacyDashboardData: async (pharmacyId: string): Promise<any> => {
+    const [reservationsRes, inventoryRes, reportRes] = await Promise.all([
+      apiClient.get(`/pharmacies/${pharmacyId}/reservations`),
+      apiClient.get(`/pharmacies/${pharmacyId}/inventory`),
+      apiClient.get(`/reports/pharmacy/${pharmacyId}`),
+    ])
+
+    const reservations = (Array.isArray(reservationsRes.data) ? reservationsRes.data : reservationsRes.data?.data || []).map(normalizeReservation)
+    const inventory = Array.isArray(inventoryRes.data) ? inventoryRes.data : inventoryRes.data?.data || []
+    const report = reportRes.data || {}
+
+    return { reservations, inventory, report }
   },
 
   // Fetch notifications log
-  getNotifications: async (): Promise<any[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    const key = 'epharmacy_notifications_mock'
-    const data = localStorage.getItem(key)
-    if (data) return JSON.parse(data)
-    
-    // Seed initial notifications matching constraints
-    const seeded = [
-      { id: 'not-001', title: 'Reservation Confirmed', message: 'Your reservation for Artemether + Lumefantrine has been confirmed by Bralirwa Pharmacy.', type: 'RESERVATION', read: false, createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
-      { id: 'not-002', title: 'Medicine Ready for Pickup', message: 'Amoxicillin 500mg is packaged and ready for collection at CityMed Nyarugenge.', type: 'RESERVATION', read: false, createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
-      { id: 'not-003', title: 'Prescription Approved', message: 'MOH validation successfully approved your prescription for Insulin Glargine.', type: 'PRESCRIPTION', read: true, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
-      { id: 'not-004', title: 'Password Changed', message: 'Your patient portal access password was updated successfully.', type: 'SECURITY', read: true, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
-    ]
-    localStorage.setItem(key, JSON.stringify(seeded))
-    return seeded
+  getNotifications: async (): Promise<Notification[]> => {
+    try {
+      const response = await apiClient.get('/notifications')
+      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return (payload as any[]).map(normalizeNotification)
+    } catch (error) {
+      console.warn('Notifications fallback enabled', error)
+      const key = 'epharmacy_notifications_mock'
+      const data = localStorage.getItem(key)
+      if (data) return JSON.parse(data)
+
+      const seeded: Notification[] = [
+        { id: 'not-001', title: 'Reservation Confirmed', message: 'Your reservation for Artemether + Lumefantrine has been confirmed by Bralirwa Pharmacy.', type: 'RESERVATION', read: false, createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
+        { id: 'not-002', title: 'Medicine Ready for Pickup', message: 'Amoxicillin 500mg is packaged and ready for collection at CityMed Nyarugenge.', type: 'RESERVATION', read: false, createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+        { id: 'not-003', title: 'Prescription Approved', message: 'MOH validation successfully approved your prescription for Insulin Glargine.', type: 'PRESCRIPTION', read: true, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
+        { id: 'not-004', title: 'Password Changed', message: 'Your patient portal access password was updated successfully.', type: 'SECURITY', read: true, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
+      ]
+      localStorage.setItem(key, JSON.stringify(seeded))
+      return seeded
+    }
   },
 
   markNotificationRead: async (id: string): Promise<boolean> => {
-    const key = 'epharmacy_notifications_mock'
-    const list = await MedicineApi.getNotifications()
-    const updated = list.map((n) => n.id === id ? { ...n, read: true } : n)
-    localStorage.setItem(key, JSON.stringify(updated))
-    return true
+    try {
+      await apiClient.patch(`/notifications/${id}/read`)
+      return true
+    } catch (error) {
+      console.warn('Notification mark read fallback enabled', error)
+      const key = 'epharmacy_notifications_mock'
+      const list = await MedicineApi.getNotifications()
+      const updated = list.map((n) => n.id === id ? { ...n, read: true } : n)
+      localStorage.setItem(key, JSON.stringify(updated))
+      return true
+    }
   },
 
   markAllNotificationsRead: async (): Promise<boolean> => {
-    const key = 'epharmacy_notifications_mock'
-    const list = await MedicineApi.getNotifications()
-    const updated = list.map((n) => ({ ...n, read: true }))
-    localStorage.setItem(key, JSON.stringify(updated))
-    return true
+    try {
+      await apiClient.patch('/notifications/read-all')
+      return true
+    } catch (error) {
+      console.warn('Mark all notifications fallback enabled', error)
+      const key = 'epharmacy_notifications_mock'
+      const list = await MedicineApi.getNotifications()
+      const updated = list.map((n) => ({ ...n, read: true }))
+      localStorage.setItem(key, JSON.stringify(updated))
+      return true
+    }
   },
 
   deleteNotification: async (id: string): Promise<boolean> => {
