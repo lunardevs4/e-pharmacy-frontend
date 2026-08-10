@@ -14,110 +14,110 @@ export default function GovernmentDashboard() {
     fetchDashboardData()
   }, [])
 
-interface GovernmentSummary {
-  totalPharmacies: number
-  approvedPharmacies: number
-  totalMedicines: number
-  totalPatients: number
-  totalReservations: number
-  pendingReservations: number
-}
+  interface GovernmentSummary {
+    totalPharmacies: number
+    approvedPharmacies: number
+    totalMedicines: number
+    totalPatients: number
+    totalReservations: number
+    pendingReservations: number
+  }
 
   const fetchDashboardData = async () => {
-  setIsLoading(true)
-  setErrorMsg(null)
+    setIsLoading(true)
+    setErrorMsg(null)
 
-  try {
-    const results = await Promise.allSettled([
-      AuthApi.getAllPharmacies(),
-      AuthApi.getGovernmentSummary(),
-      AuthApi.getGovernmentLowStock(10),
-      AuthApi.getGovernmentReservationStats(),
-    ])
+    try {
+      const results = await Promise.allSettled([
+        AuthApi.getAllPharmacies(),
+        AuthApi.getGovernmentSummary(),
+        AuthApi.getGovernmentLowStock(10),
+        AuthApi.getGovernmentReservationStats(),
+      ])
 
-    const [
-      pharmacyResult,
-      summaryResult,
-      lowStockResult,
-      reservationResult,
-    ] = results
+      const [
+        pharmacyResult,
+        summaryResult,
+        lowStockResult,
+        reservationResult,
+      ] = results
 
-    // Pharmacies
-    if (pharmacyResult.status === 'fulfilled') {
-      setPharmacies(
-        Array.isArray(pharmacyResult.value)
-          ? pharmacyResult.value
-          : []
-      )
-    } else {
+      // Pharmacies
+      if (pharmacyResult.status === 'fulfilled') {
+        setPharmacies(
+          Array.isArray(pharmacyResult.value)
+            ? pharmacyResult.value
+            : []
+        )
+      } else {
+        console.error(
+          'Failed to load pharmacies:',
+          pharmacyResult.reason
+        )
+        setPharmacies([])
+      }
+
+      // Summary
+      if (summaryResult.status === 'fulfilled') {
+        console.log('SUMMARY:', summaryResult.value)
+        console.log(
+          'SUMMARY INNER DATA:',
+          summaryResult.value?.data
+        )
+
+        setSummary(
+          summaryResult.value?.data ?? null
+        )
+      } else {
+        console.error(
+          'Failed to load government summary:',
+          summaryResult.reason
+        )
+        setSummary(null)
+      }
+
+      // Low stock
+      if (lowStockResult.status === 'fulfilled') {
+        setLowStock(
+          Array.isArray(lowStockResult.value)
+            ? lowStockResult.value
+            : []
+        )
+      } else {
+        console.error(
+          'Failed to load low stock:',
+          lowStockResult.reason
+        )
+        setLowStock([])
+      }
+
+      // Reservation stats
+      if (reservationResult.status === 'fulfilled') {
+        console.log(
+          'RESERVATION STATS:',
+          reservationResult.value
+        )
+      } else {
+        console.error(
+          'Failed to load reservation stats:',
+          reservationResult.reason
+        )
+      }
+
+    } catch (err: any) {
       console.error(
-        'Failed to load pharmacies:',
-        pharmacyResult.reason
+        'Government dashboard error:',
+        err
       )
-      setPharmacies([])
+
+      setErrorMsg(
+        err.message ||
+        'Failed to load dashboard metrics.'
+      )
+    } finally {
+      setIsLoading(false)
     }
-
-    // Summary
-    if (summaryResult.status === 'fulfilled') {
-      console.log('SUMMARY:', summaryResult.value)
-      console.log(
-        'SUMMARY INNER DATA:',
-        summaryResult.value?.data
-      )
-
-      setSummary(
-        summaryResult.value?.data ?? null
-      )
-    } else {
-      console.error(
-        'Failed to load government summary:',
-        summaryResult.reason
-      )
-      setSummary(null)
-    }
-
-    // Low stock
-    if (lowStockResult.status === 'fulfilled') {
-      setLowStock(
-        Array.isArray(lowStockResult.value)
-          ? lowStockResult.value
-          : []
-      )
-    } else {
-      console.error(
-        'Failed to load low stock:',
-        lowStockResult.reason
-      )
-      setLowStock([])
-    }
-
-    // Reservation stats
-    if (reservationResult.status === 'fulfilled') {
-      console.log(
-        'RESERVATION STATS:',
-        reservationResult.value
-      )
-    } else {
-      console.error(
-        'Failed to load reservation stats:',
-        reservationResult.reason
-      )
-    }
-
-  } catch (err: any) {
-    console.error(
-      'Government dashboard error:',
-      err
-    )
-
-    setErrorMsg(
-      err.message ||
-      'Failed to load dashboard metrics.'
-    )
-  } finally {
-    setIsLoading(false)
   }
-}
 
   const totalCount = summary?.totalPharmacies ?? pharmacies.length
   const pendingCount = pharmacies.filter((p) => p.status === 'PENDING').length
@@ -138,19 +138,13 @@ interface GovernmentSummary {
     }
   })
 
-  const shortageItems = Array.isArray(lowStock)
-    ? lowStock.slice(0, 4).map((item: any, index: number) => ({
-      id: item.id || index + 1,
-      drug: item.medicine?.name || item.medicineName || 'Medicine',
-      region:
-        item.pharmacy?.name ||
-        item.pharmacy?.address ||
-        'National',
-      stockLevel: `Low stock (${item.quantity ?? 0} units)`,
-      severity:
-        Number(item.quantity ?? 0) <= 0 ? 'HIGH' : 'MEDIUM',
-    }))
-    : []
+  const shortageItems = lowStock.slice(0, 4).map((item: any, index: number) => ({
+    id: item.id || index + 1,
+    drug: item.medicine?.name || item.medicineName || 'Medicine',
+    region: item.pharmacy?.address || item.pharmacy?.name || 'National',
+    stockLevel: `Low stock (${item.quantity ?? 0} units)`,
+    severity: Number(item.quantity ?? 0) <= 0 ? 'HIGH' : 'MEDIUM',
+  }))
 
   const renderSkeleton = () => {
     return (

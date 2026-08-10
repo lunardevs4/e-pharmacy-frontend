@@ -8,7 +8,10 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, isInitialising, user } = useAuthStore()
+
+  // Session is still being restored from localStorage — don't redirect yet
+  if (isInitialising) return null
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
@@ -20,18 +23,12 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     switch (user.role) {
-      case 'PATIENT':
-        return <Navigate to="/patient" replace />
-      case 'PHARMACY':
-        return <Navigate to="/pharmacy" replace />
-      case 'INSURANCE':
-        return <Navigate to="/insurance" replace />
-      case 'GOVERNMENT':
-        return <Navigate to="/government" replace />
-      case 'ADMIN':
-        return <Navigate to="/admin" replace />
-      default:
-        return <Navigate to="/" replace />
+      case 'PATIENT':    return <Navigate to="/patient"     replace />
+      case 'PHARMACY':   return <Navigate to="/pharmacy"    replace />
+      case 'INSURANCE':  return <Navigate to="/insurance"   replace />
+      case 'GOVERNMENT': return <Navigate to="/government"  replace />
+      case 'ADMIN':      return <Navigate to="/admin"       replace />
+      default:           return <Navigate to="/"            replace />
     }
   }
 

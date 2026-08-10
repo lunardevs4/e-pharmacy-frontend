@@ -495,7 +495,7 @@ export default function LandingPage() {
             <div>
               <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">Platform</h4>
               <ul className="space-y-2 text-xs">
-                <li><Link to="/patient/search" className="hover:text-white transition-colors">Search Medicines</Link></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">Search Medicines</Link></li>
                 <li><a href="#home" className="hover:text-white transition-colors">Nearby Pharmacies</a></li>
                 <li><Link to="/login" className="hover:text-white transition-colors">Reservations</Link></li>
                 <li><Link to="/login" className="hover:text-white transition-colors">Upload Prescription</Link></li>

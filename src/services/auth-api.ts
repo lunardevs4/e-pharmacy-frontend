@@ -278,7 +278,7 @@ export const AuthApi = {
   },
   login: async (identifier: string, password: string): Promise<AuthResponse> => {
     try {
-      const response = await apiClient.post('/auth/login', { email: identifier, password })
+      const response = await apiClient.post('/auth/login', { identifier, password })
       const normalized = normalizeAuthResponse(response.data)
       TokenStorage.setToken(normalized.accessToken)
       TokenStorage.setRefreshToken(normalized.refreshToken)
@@ -442,6 +442,18 @@ export const AuthApi = {
     }
   },
 
+  getGovernmentAuditLogs: async (page = 1, limit = 25, entityType?: string, action?: string): Promise<any> => {
+    try {
+      const params: Record<string, any> = { page, limit }
+      if (entityType) params.entityType = entityType
+      if (action) params.action = action
+      const response = await apiClient.get('/audit-logs', { params })
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
   getInsuranceReport: async (): Promise<any> => {
     try {
       const response = await apiClient.get('/reports/insurance')
@@ -493,7 +505,7 @@ export const AuthApi = {
 
   requestMoreInformation: async (pharmacyId: string, details: string): Promise<any> => {
     try {
-      const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'PENDING' })
+      const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'MORE_INFO_REQUESTED' })
       return response.data
     } catch (error) {
       throw new Error(getErrorMessage(error))
