@@ -89,11 +89,6 @@ export default function StaffManagement() {
       prev.map((emp) => {
         if (emp.id === id) {
           const nextStatus = emp.status === 'Active' ? 'Inactive' : 'Active'
-<<<<<<< HEAD
-
-=======
-          
->>>>>>> f293ec9 (Improved Frontend)
           return { ...emp, status: nextStatus }
         }
         return emp

@@ -442,18 +442,6 @@ export const AuthApi = {
     }
   },
 
-  getGovernmentAuditLogs: async (page = 1, limit = 25, entityType?: string, action?: string): Promise<any> => {
-    try {
-      const params: Record<string, any> = { page, limit }
-      if (entityType) params.entityType = entityType
-      if (action) params.action = action
-      const response = await apiClient.get('/audit-logs', { params })
-      return response.data
-    } catch (error) {
-      throw new Error(getErrorMessage(error))
-    }
-  },
-
   getInsuranceReport: async (): Promise<any> => {
     try {
       const response = await apiClient.get('/reports/insurance')

@@ -1,25 +1,12 @@
 import { apiClient } from '@/api/client'
 
-const unwrap = (response: any) => response?.data?.data ?? response?.data ?? []
+const unwrap = (response: any) =>
+  response?.data?.data ?? response?.data ?? []
 
-<<<<<<< HEAD
-export const PharmacyApi = {
-  getDetails: async (pharmacyId: string) => unwrap(await apiClient.get(`/pharmacies/${pharmacyId}`)),
-
-  getReservations: async (pharmacyId: string) =>
-    unwrap(await apiClient.get(`/pharmacies/${pharmacyId}/reservations`)),
-
-  updateReservationStatus: async (pharmacyId: string, reservationId: string, status: string) =>
-    unwrap(await apiClient.patch(`/pharmacies/${pharmacyId}/reservations/${reservationId}`, { status })),
-
-  getReport: async (pharmacyId: string) =>
-    unwrap(await apiClient.get(`/reports/pharmacy/${pharmacyId}`)),
-
-  getAuditLogs: async (pharmacyId: string, limit = 100) =>
-    unwrap(await apiClient.get(`/audit-logs/pharmacy/${pharmacyId}?limit=${limit}`)),
-=======
 const isNetworkError = (err: any) =>
-  !err?.response || err?.code === 'ECONNABORTED' || err?.message?.toLowerCase().includes('unreachable')
+  !err?.response ||
+  err?.code === 'ECONNABORTED' ||
+  err?.message?.toLowerCase().includes('unreachable')
 
 export const PharmacyApi = {
   getDetails: async (pharmacyId: string) => {
@@ -27,7 +14,6 @@ export const PharmacyApi = {
       return unwrap(await apiClient.get(`/pharmacies/${pharmacyId}`))
     } catch (err) {
       if (isNetworkError(err)) {
-        // Return mock pharmacy details for offline/demo mode
         return {
           id: pharmacyId,
           name: 'Bralirwa Pharmacy',
@@ -47,38 +33,58 @@ export const PharmacyApi = {
 
   getReservations: async (pharmacyId: string) => {
     try {
-      return unwrap(await apiClient.get(`/pharmacies/${pharmacyId}/reservations`))
+      return unwrap(
+        await apiClient.get(`/pharmacies/${pharmacyId}/reservations`)
+      )
     } catch (err) {
       if (isNetworkError(err)) return []
       throw err
     }
   },
 
-  updateReservationStatus: async (pharmacyId: string, reservationId: string, status: string) => {
+  updateReservationStatus: async (
+    pharmacyId: string,
+    reservationId: string,
+    status: string
+  ) => {
     try {
-      return unwrap(await apiClient.patch(`/pharmacies/${pharmacyId}/reservations/${reservationId}`, { status }))
+      return unwrap(
+        await apiClient.patch(
+          `/pharmacies/${pharmacyId}/reservations/${reservationId}`,
+          { status }
+        )
+      )
     } catch (err) {
-      if (isNetworkError(err)) return { id: reservationId, status }
+      if (isNetworkError(err)) {
+        return { id: reservationId, status }
+      }
       throw err
     }
   },
 
   getReport: async (pharmacyId: string) => {
     try {
-      return unwrap(await apiClient.get(`/reports/pharmacy/${pharmacyId}`))
+      return unwrap(
+        await apiClient.get(`/reports/pharmacy/${pharmacyId}`)
+      )
     } catch (err) {
-      if (isNetworkError(err)) return { totalReservations: 0 }
+      if (isNetworkError(err)) {
+        return { totalReservations: 0 }
+      }
       throw err
     }
   },
 
   getAuditLogs: async (pharmacyId: string, limit = 100) => {
     try {
-      return unwrap(await apiClient.get(`/audit-logs/pharmacy/${pharmacyId}?limit=${limit}`))
+      return unwrap(
+        await apiClient.get(
+          `/audit-logs/pharmacy/${pharmacyId}?limit=${limit}`
+        )
+      )
     } catch (err) {
       if (isNetworkError(err)) return []
       throw err
     }
   },
->>>>>>> f293ec9 (Improved Frontend)
 }
