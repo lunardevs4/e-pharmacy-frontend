@@ -28,6 +28,13 @@ export default function SidebarLayout() {
     return () => document.removeEventListener('keydown', onKey)
   }, [sidebarOpen, toggleSidebar])
 
+  // Redirect unapproved pharmacies attempting to navigate away from dashboard
+  useEffect(() => {
+    if (user?.role === 'PHARMACY' && user?.pharmacy?.status !== 'APPROVED' && location.pathname !== '/pharmacy') {
+      navigate('/pharmacy')
+    }
+  }, [user, location.pathname, navigate])
+
   // Define sidebar links based on role
   const getLinks = () => {
     const role = user?.role || 'PATIENT'
@@ -52,14 +59,6 @@ export default function SidebarLayout() {
           { path: '/pharmacy/audit', label: 'Audit Trail', icon: FileLock2 },
           { path: '/pharmacy/reports', label: 'Reports', icon: BarChart2 },
           { path: '/pharmacy/settings', label: 'Settings', icon: Settings },
-        ]
-      case 'INSURANCE':
-        return [
-          { path: '/insurance', label: 'Dashboard', icon: LayoutDashboard },
-          { path: '/insurance/claims', label: 'Claims Reviews', icon: FileText },
-          { path: '/insurance/payments', label: 'Payments', icon: DollarSign },
-          { path: '/insurance/reports', label: 'Reports', icon: BarChart2 },
-          { path: '/insurance/patients', label: 'Insured Patients', icon: Users },
         ]
       case 'GOVERNMENT':
         return [
@@ -146,6 +145,21 @@ export default function SidebarLayout() {
             const isActive = location.pathname === link.path
             const isPharmacyApproved = user?.role !== 'PHARMACY' || user?.pharmacy?.status === 'APPROVED'
             const isDisabled = !isPharmacyApproved && link.path !== '/pharmacy'
+
+            if (isDisabled) {
+              return (
+                <div
+                  key={link.path}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium opacity-40 cursor-not-allowed text-slate-500 select-none"
+                  title="MOH Approval Required"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Icon className="w-4 h-4 text-slate-500" aria-hidden="true" />
+                    <span className="text-slate-400">{link.label}</span>
+                  </div>
+                </div>
+              )
+            }
 
             return (
               <Link

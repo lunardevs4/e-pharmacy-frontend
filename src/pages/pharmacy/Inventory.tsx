@@ -680,7 +680,7 @@ export default function PharmacyInventory() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-modal-title"
-          className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4"
           onKeyDown={(e) => { if (e.key === 'Escape') setShowEditModal(false) }}
         >
           <div className="bg-white rounded-xl border border-gray-200 w-full max-w-md shadow-xl overflow-hidden">
@@ -773,10 +773,11 @@ export default function PharmacyInventory() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-modal-title"
-          className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-sm flex items-center justify-end"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onKeyDown={(e) => { if (e.key === 'Escape') setShowAddModal(false) }}
         >
-          <div className="bg-white h-full w-full max-w-lg shadow-2xl flex flex-col border-l border-gray-200">
+          <div onClick={() => setShowAddModal(false)} className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" />
+          <div className="relative bg-white w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden animate-scaleIn z-10">
             {/* Header */}
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center space-x-2">
@@ -796,7 +797,7 @@ export default function PharmacyInventory() {
             </div>
 
             {/* Form Scroll Area */}
-            <form onSubmit={handleAddMedicineSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+            <form onSubmit={handleAddMedicineSubmit} className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5">
               
               {formError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">

@@ -623,10 +623,10 @@ export default function PharmacyRegistry() {
 
       {/* Decision comment dialog popup */}
       {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div onClick={() => setActiveModal(null)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xxs" />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div onClick={() => setActiveModal(null)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
 
-          <div className="relative w-full max-w-sm bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-50 flex flex-col text-left text-xs font-bold text-gray-700">
+          <div className="relative w-full max-w-sm bg-white rounded-2xl border border-gray-255 shadow-2xl overflow-hidden z-[9999] flex flex-col text-left text-xs font-bold text-gray-700">
             <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
               <div>
                 <h3 className="font-black text-sm">
@@ -678,10 +678,10 @@ export default function PharmacyRegistry() {
 
       {/* Simulated Document Viewer Modal */}
       {viewingDoc && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-          <div onClick={() => setViewingDoc(null)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-xxs" />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div onClick={() => setViewingDoc(null)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
 
-          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-55 flex flex-col text-left">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-gray-255 shadow-2xl overflow-hidden z-[9999] flex flex-col text-left">
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900">
               <div>
                 <h3 className="font-black text-sm">{viewingDoc.label}</h3>

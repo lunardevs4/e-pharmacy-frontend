@@ -17,15 +17,12 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />
   }
 
-  if (user.firstLogin) {
-    return <Navigate to="/change-password" replace />
-  }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     switch (user.role) {
       case 'PATIENT':    return <Navigate to="/patient"     replace />
       case 'PHARMACY':   return <Navigate to="/pharmacy"    replace />
-      case 'INSURANCE':  return <Navigate to="/insurance"   replace />
+
       case 'GOVERNMENT': return <Navigate to="/government"  replace />
       case 'ADMIN':      return <Navigate to="/admin"       replace />
       default:           return <Navigate to="/"            replace />

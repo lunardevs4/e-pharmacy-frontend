@@ -154,78 +154,6 @@ const getErrorMessage = (error: any): string => {
   return error?.message || 'Request failed.'
 }
 
-// ── Mock credentials for offline / demo mode ──────────────────────────────────
-const MOCK_ACCOUNTS: Record<string, { password: string; user: AuthUser }> = {
-  patient: {
-    password: 'PatientPass123!',
-    user: {
-      id: 'usr_pat_002', username: 'patient', email: 'patient@epharmacy.rw',
-      name: 'Marie Uwimana', role: 'PATIENT', firstLogin: false,
-      province: 'Kigali City', district: 'Gasabo',
-      permissions: ['SEARCH_MEDICINES', 'CREATE_RESERVATION'],
-    },
-  },
-  government: {
-    password: 'GovPass123!',
-    user: {
-      id: 'usr_gov_001', username: 'government', email: 'gov@moh.gov.rw',
-      name: 'Jean Bosco Gasana', role: 'GOVERNMENT', firstLogin: false,
-      position: 'Health Director', permissions: ['VIEW_NATIONAL_ANALYTICS'],
-    },
-  },
-  admin: {
-    password: 'AdminPass123!',
-    user: {
-      id: 'usr_adm_001', username: 'admin', email: 'admin@epharmacy.rw',
-      name: 'System Admin', role: 'ADMIN', firstLogin: false,
-      permissions: ['MANAGE_USERS', 'MANAGE_ROLES', 'VIEW_AUDIT_LOGS'],
-    },
-  },
-  staff: {
-    password: 'TempPass123!',
-    user: {
-      id: 'usr_pha_001', username: 'staff', email: 'staff@bralirwa.rw',
-      name: 'Alice Uwimana', role: 'PHARMACY', firstLogin: false,
-      pharmacyId: 'ph-001', pharmacyName: 'Bralirwa Pharmacy',
-      pharmacy: { id: 'ph-001', name: 'Bralirwa Pharmacy', status: 'APPROVED', licenseNumber: 'LIC-KIG-48293-2026' },
-    },
-  },
-  manager: {
-    password: 'ManagerPass123!',
-    user: {
-      id: 'usr_pha_002', username: 'manager', email: 'manager@bralirwa.rw',
-      name: 'Eric Mugisha', role: 'PHARMACY', firstLogin: false,
-      pharmacyId: 'ph-001', pharmacyName: 'Bralirwa Pharmacy',
-      pharmacy: { id: 'ph-001', name: 'Bralirwa Pharmacy', status: 'APPROVED', licenseNumber: 'LIC-KIG-48293-2026' },
-    },
-  },
-  insurance: {
-    password: 'InsurancePass123!',
-    user: {
-      id: 'usr_ins_001', username: 'insurance', email: 'insurance@rssb.rw',
-      name: 'Diane Mukamana', role: 'INSURANCE', firstLogin: false,
-      permissions: ['VIEW_CLAIMS', 'PROCESS_PAYMENTS'],
-    },
-  },
-}
-
-const mockLogin = (identifier: string, password: string): AuthResponse => {
-  const key = identifier.toLowerCase().trim()
-  const account =
-    MOCK_ACCOUNTS[key] ||
-    Object.values(MOCK_ACCOUNTS).find(
-      (a) => a.user.email?.toLowerCase() === key
-    )
-
-  if (!account || account.password !== password) {
-    throw new Error('Invalid username or password. Please check your credentials.')
-  }
-
-  const accessToken = `mock_jwt_${account.user.id}_${Date.now()}`
-  const refreshToken = `mock_refresh_${account.user.id}_${Date.now()}`
-  return { accessToken, refreshToken, user: account.user }
-}
-
 export const AuthApi = {
   createStaff: async (pharmacyId: string, data: { firstName: string; lastName: string; email: string; phone: string; role: string; position: string }) => {
     const response = await apiClient.post(`/auth/pharmacies/${pharmacyId}/staff`, data)
@@ -276,30 +204,16 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
-  login: async (identifier: string, password: string): Promise<AuthResponse> => {
+  login: async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const response = await apiClient.post('/auth/login', { identifier, password })
+      const response = await apiClient.post('/auth/login', { email, password })
       const normalized = normalizeAuthResponse(response.data)
       TokenStorage.setToken(normalized.accessToken)
       TokenStorage.setRefreshToken(normalized.refreshToken)
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalized))
       return normalized
     } catch (error: any) {
-      // If the backend is unreachable, fall back to mock credentials
-      const isNetworkError =
-        !error?.response ||
-        error?.message?.toLowerCase().includes('network') ||
-        error?.message?.toLowerCase().includes('unreachable') ||
-        error?.code === 'ECONNABORTED'
-
-      if (isNetworkError) {
-        const mocked = mockLogin(identifier, password)
-        TokenStorage.setToken(mocked.accessToken)
-        TokenStorage.setRefreshToken(mocked.refreshToken)
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mocked))
-        return mocked
-      }
-
+      console.error("Error logging in ",error)
       throw new Error(getErrorMessage(error))
     }
   },
@@ -372,18 +286,7 @@ export const AuthApi = {
       if (Array.isArray(payload?.data?.data)) return payload.data.data
       return []
     } catch (error: any) {
-      const isNetworkError = !error?.response || error?.code === 'ECONNABORTED'
-      // if (isNetworkError) {
-      //    Return mock pharmacy list for offline/demo mode
-      //   return [
-      //     { id: 'ph-001', pharmacyName: 'Bralirwa Pharmacy', pharmacistName: 'Alice Uwimana', status: 'APPROVED', submissionDate: '2026-01-15', province: 'Kigali City', category: 'Retail', licenseNumber: 'LIC-KIG-48293-2026' },
-      //     { id: 'ph-002', pharmacyName: 'CityMed Nyarugenge', pharmacistName: 'Eric Mugisha', status: 'APPROVED', submissionDate: '2026-02-01', province: 'Kigali City', category: 'Retail', licenseNumber: 'LIC-NYA-90238-2026' },
-      //     { id: 'ph-003', pharmacyName: 'Remera City Medical', pharmacistName: 'Diane Ineza', status: 'PENDING_VERIFICATION', submissionDate: '2026-07-20', province: 'Kigali City', category: 'Hospital', licenseNumber: 'LIC-GAS-72819-2026' },
-      //     { id: 'ph-004', pharmacyName: 'Musanze District Pharmacy', pharmacistName: 'Patrick Habimana', status: 'APPROVED', submissionDate: '2026-03-10', province: 'Northern Province', category: 'Retail', licenseNumber: 'LIC-MUS-19238-2026' },
-      //     { id: 'ph-005', pharmacyName: 'Rubavu Health Centre', pharmacistName: 'Grace Niyonzima', status: 'SUSPENDED', submissionDate: '2025-11-05', province: 'Western Province', category: 'Wholesale', licenseNumber: 'LIC-RUB-38291-2025' },
-      //     { id: 'ph-006', pharmacyName: 'Bugesera Community Pharmacy', pharmacistName: 'Jean Claude', status: 'MORE_INFO_REQUESTED', submissionDate: '2026-07-28', province: 'Eastern Province', category: 'Retail', licenseNumber: 'LIC-BUG-00192-2026' },
-      //   ]
-      // }
+      console.error("Error fetching pharmacies: ", error)
       throw new Error(getErrorMessage(error))
     }
   },
@@ -445,6 +348,19 @@ export const AuthApi = {
   getInsuranceReport: async (): Promise<any> => {
     try {
       const response = await apiClient.get('/reports/insurance')
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
+  getPlatformReport: async (startDate?: string, endDate?: string): Promise<any> => {
+    try {
+      const query = []
+      if (startDate) query.push(`startDate=${encodeURIComponent(startDate)}`)
+      if (endDate) query.push(`endDate=${encodeURIComponent(endDate)}`)
+      const url = `/reports/platform${query.length ? `?${query.join('&')}` : ''}`
+      const response = await apiClient.get(url)
       return response.data
     } catch (error) {
       throw new Error(getErrorMessage(error))

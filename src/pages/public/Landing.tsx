@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { apiClient } from '@/api/client'
 import { 
   Search, MapPin, Check, ChevronDown, ChevronUp, MessageSquare, 
   Upload, CreditCard, Bell, Bookmark, Shield, Sparkles, Bot, X, Send 
@@ -16,6 +17,7 @@ export default function LandingPage() {
   })
   const [showResults, setShowResults] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(1) // Item 1 (How do I find a medicine near me?) is expanded by default
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
 
   const [showChat, setShowChat] = useState(false)
   const [chatInput, setChatInput] = useState('')
@@ -48,12 +50,48 @@ export default function LandingPage() {
     }, 1000)
   }
 
-  const pharmacies = [
-    { name: 'Bralirwa Pharmacy', distance: '0.8 km', location: 'Gasabo', status: 'Available', price: 'RWF 300', insurance: true },
-    { name: 'CityMed Nyarugenge', distance: '1.4 km', location: 'Nyarugenge', status: 'Available', price: 'RWF 300', insurance: true },
-    { name: 'MedPlus Remera', distance: '2.1 km', location: 'Gasabo', status: 'Available', price: 'RWF 300', insurance: false },
-    { name: 'HealthPoint Kicukiro', distance: '3.6 km', location: 'Kicukiro', status: 'Low Stock', price: 'RWF 300', insurance: true },
-  ]
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return
+    setIsSearching(true)
+    setSearchError(null)
+    setShowResults(true)
+    try {
+      let lat: number | undefined
+      let lon: number | undefined
+      
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3500 })
+        })
+        lat = pos.coords.latitude
+        lon = pos.coords.longitude
+      } catch (e) {
+        console.warn('Geolocation failed or denied. Searching without coordinates.', e)
+      }
+      
+      const response = await apiClient.get('/search/medicines', {
+        params: {
+          query: searchTerm,
+          latitude: lat,
+          longitude: lon,
+          limit: 10
+        }
+      })
+      
+      const payload = response.data?.data || []
+      setSearchResults(payload)
+    } catch (err: any) {
+      console.error(err)
+      setSearchError(err.message || 'An error occurred while searching for medicines.')
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
 
   const features = [
     {
@@ -167,61 +205,62 @@ export default function LandingPage() {
             <Link to="/login" className="text-sm font-bold text-gray-800 hover:text-health-primary transition-colors">
               Log In
             </Link>
-            <div className="relative group">
-              <button className="bg-health-primary hover:bg-health-secondary text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer">
-                <span>Register</span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-250 rounded-xl shadow-xl py-2 hidden group-hover:block hover:block z-50">
-                <Link to="/register/patient" className="block px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-emerald-50 hover:text-health-primary transition-colors">
-                  Register as Patient
-                </Link>
-                <Link to="/register/pharmacy" className="block px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-emerald-50 hover:text-health-primary border-t border-gray-100 transition-colors">
-                  Register as Pharmacy
-                </Link>
-              </div>
-            </div>
+            <button 
+              onClick={() => setIsRegisterModalOpen(true)}
+              className="bg-health-primary hover:bg-health-secondary text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <span>Register</span>
+            </button>
           </div>
         </div>
-      </header>
-
-      {/* Hero Section */}
-      <section id="home" className="py-16 md:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+      </header>      {/* Hero Section */}
+      <section id="home" className="relative py-16 md:py-24 bg-slate-50/50 border-b border-gray-150 overflow-hidden">
+        {/* Mesh grid pattern background */}
+        <div className="absolute inset-0 bg-grid-mesh pointer-events-none opacity-75" aria-hidden="true" />
+        {/* Glow ambient background circles */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[35rem] h-[35rem] bg-emerald-100/40 rounded-full blur-[120px] pointer-events-none" aria-hidden="true" />
+        
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Copy */}
             <div className="lg:col-span-7 space-y-6">
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-health-light-text border border-emerald-100">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 inline-block"></span>
+              <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-[11px] font-black bg-emerald-50 text-health-light-text border border-emerald-100 tracking-wider uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 inline-block animate-pulse"></span>
                 GOVERNMENT OF RWANDA
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-black text-gray-950 leading-[1.1] tracking-tight">
                 Find medicines across <br />
                 Rwanda &mdash; instantly.
               </h1>
-              <p className="text-gray-500 text-base sm:text-lg leading-relaxed max-w-xl">
-                Search any medicine by name or manufacturer, see which nearby pharmacies have it in stock, check the price and insurance coverage, and reserve it for pickup &mdash; all in one place.
+              <p className="text-gray-600 text-base sm:text-lg leading-relaxed max-w-xl">
+                Enter your required medication. Instantly see verified pharmacy stock, compare co-pay costs with your insurance provider, and reserve for secure collection near your residence.
               </p>
 
               {/* Search Control */}
-              <div className="flex flex-col sm:flex-row gap-3 max-w-xl">
-                <div className="relative flex-grow">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleSearch()
+                }}
+                className="flex flex-col sm:flex-row gap-3 max-w-xl w-full"
+              >
+                <div className="relative flex-grow shadow-sm rounded-xl">
                   <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search a medicine, e.g. Paracetamol..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 shadow-sm text-sm"
+                    className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 text-sm font-semibold"
                   />
                 </div>
                 <button
-                  onClick={() => setShowResults(true)}
-                  className="bg-health-primary hover:bg-health-secondary text-white font-bold px-6 py-3.5 rounded-xl transition-colors text-sm flex items-center justify-center space-x-2 shadow-md"
+                  type="submit"
+                  className="bg-health-primary hover:bg-health-secondary text-white font-bold px-6 py-3.5 rounded-xl transition-colors text-sm flex items-center justify-center space-x-2 shadow-md hover:shadow-lg active:scale-[0.98] transition-transform duration-100 cursor-pointer"
                 >
-                  <span>Search</span>
+                  <span>Search Catalog</span>
                 </button>
-              </div>
+              </form>
 
               <div className="flex items-center space-x-4 text-xs font-bold text-gray-500">
                 <Link to="/register/patient" className="text-health-primary hover:underline">
@@ -234,65 +273,80 @@ export default function LandingPage() {
               </div>
             </div>
 
+            {/* Right Interactive Card */}
             <div className="lg:col-span-5">
               {showResults ? (
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden animate-fadeIn">
-                  <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-white/60 shadow-xl overflow-hidden animate-scaleIn">
+                  <div className="bg-slate-50/60 border-b border-gray-150 px-6 py-4 flex items-center justify-between">
                     <div>
                       <h3 className="font-bold text-gray-900 text-sm">Search Results &mdash; {searchTerm || 'Paracetamol'}</h3>
-                      <p className="text-xs text-gray-450 mt-0.5">4 pharmacies nearby</p>
+                      <p className="text-xs text-gray-400 mt-0.5 font-medium">
+                        {isSearching ? 'Searching...' : `${searchResults.length} pharmacies nearby`}
+                      </p>
                     </div>
                     <button 
                       onClick={() => {
                         setShowResults(false)
                         setSearchTerm('')
+                        setSearchResults([])
+                        setSearchError(null)
                       }} 
-                      className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-xs font-bold text-gray-400 hover:text-gray-650 transition-colors"
                     >
                       Clear
                     </button>
                   </div>
 
-                  <div className="divide-y divide-gray-150">
-                    {pharmacies.map((pharmacy, idx) => (
-                      <div key={idx} className="p-4 flex items-center justify-between hover:bg-gray-50/30 transition-colors">
-                        <div className="space-y-1">
-                          <h4 className="font-bold text-gray-900 text-sm">{pharmacy.name}</h4>
-                          <div className="flex items-center space-x-2 text-xs text-gray-500">
-                            <span>{pharmacy.distance}</span>
-                            <span>&middot;</span>
-                            <span>{pharmacy.location}</span>
-                            <span>&middot;</span>
-                            <span>{pharmacy.insurance ? 'Insurance' : 'No Insurance'}</span>
+                  <div className="divide-y divide-gray-150 max-h-[350px] overflow-y-auto custom-scrollbar">
+                    {isSearching ? (
+                      <div className="p-8 text-center text-sm text-gray-500 font-medium">
+                        <span className="inline-block animate-pulse">Searching national medicine database...</span>
+                      </div>
+                    ) : searchError ? (
+                      <div className="p-6 text-center text-xs text-red-500 font-medium leading-relaxed">
+                        {searchError}
+                      </div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="p-8 text-center text-sm text-gray-500">
+                        No active stock found for "{searchTerm}".
+                      </div>
+                    ) : (
+                      searchResults.map((item, idx) => (
+                        <div key={idx} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                          <div className="space-y-1">
+                            <h4 className="font-bold text-gray-900 text-sm">{item.pharmacy.name}</h4>
+                            <div className="flex items-center space-x-2 text-xs text-gray-450 font-medium">
+                              <span>{item.distance !== null ? `${item.distance.toFixed(1)} km` : 'N/A'}</span>
+                              <span>&middot;</span>
+                              <span>{item.pharmacy.address || 'Kigali, Rwanda'}</span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right flex flex-col items-end space-y-1">
-                          <span className="font-bold text-gray-900 text-sm">{pharmacy.price}</span>
-                          <div className="flex items-center space-x-2">
-                            <span className={`text-[10px] font-bold ${
-                              pharmacy.status === 'Available' ? 'text-emerald-600' : 'text-orange-550'
-                            }`}>
-                              {pharmacy.status}
-                            </span>
-                            {pharmacy.status !== 'MedPlus Remera' && (
-                              <Link to="/login" className="bg-health-primary hover:bg-health-secondary text-white text-[11px] font-bold px-3 py-1 rounded transition-colors">
+                          <div className="text-right flex flex-col items-end space-y-1">
+                            <span className="font-bold text-gray-900 text-sm">RWF {item.price}</span>
+                            <div className="flex items-center space-x-2">
+                              <span className={`text-[10px] font-bold ${
+                                item.quantity > 5 ? 'text-emerald-600' : 'text-orange-550'
+                              }`}>
+                                {item.quantity > 5 ? 'Available' : `Low Stock (${item.quantity})`}
+                              </span>
+                              <Link to="/login" className="bg-health-primary hover:bg-health-secondary text-white text-[11px] font-bold px-3 py-1 rounded transition-colors shadow-xs">
                                 Reserve
                               </Link>
-                            )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-xl p-8 text-center flex flex-col items-center justify-center min-h-[350px]">
-                  <div className="w-16 h-16 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mb-4">
+                <div className="backdrop-blur-md bg-white/80 border border-white/60 shadow-xl rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[350px] relative overflow-hidden">
+                  <div className="w-16 h-16 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mb-4 relative z-10">
                     <Search className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-black text-gray-900">National Medicine Search</h3>
-                  <p className="text-gray-500 text-xs mt-2 max-w-xs leading-relaxed mx-auto">
-                    Search by generic name (e.g. Paracetamol) or trade name to view real-time availability, copay insurance splits, and nearby locations.
+                  <h3 className="text-lg font-black text-gray-900 relative z-10">National Medicine Search</h3>
+                  <p className="text-gray-500 text-xs mt-2.5 max-w-xs leading-relaxed mx-auto relative z-10 font-medium">
+                    Search by generic name or manufacturer to locate verified nearby stock, calculate insurance coverage, and lock in your reservation for pickup.
                   </p>
                 </div>
               )}
@@ -323,15 +377,13 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Platform Features Section */}
-      <section id="features" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+      </section>      {/* Platform Features Section */}
+      <section id="features" className="relative py-20 bg-white border-b border-gray-150 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="space-y-4 max-w-3xl">
             <span className="text-xs font-bold uppercase tracking-widest text-health-primary">Platform Features</span>
-            <h2 className="text-3xl font-extrabold text-gray-900">Everything you need in one platform.</h2>
-            <p className="text-gray-500 text-base">
+            <h2 className="text-3xl font-serif font-black text-gray-950">Everything you need in one platform.</h2>
+            <p className="text-gray-600 text-base font-medium">
               From finding a medicine to confirming your insurance coverage and reserving for pickup.
             </p>
           </div>
@@ -340,12 +392,12 @@ export default function LandingPage() {
             {features.map((feat, idx) => {
               const Icon = feat.icon
               return (
-                <div key={idx} className="p-6 bg-white rounded-xl border border-gray-150 hover:shadow-md transition-shadow duration-150 space-y-4">
+                <div key={idx} className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow duration-150 space-y-4">
                   <div className="w-10 h-10 bg-emerald-50 text-health-primary rounded-lg flex items-center justify-center">
                     <Icon className="w-5 h-5" />
                   </div>
-                  <h3 className="text-base font-bold text-gray-900">{feat.title}</h3>
-                  <p className="text-gray-550 text-sm leading-relaxed">{feat.desc}</p>
+                  <h3 className="text-base font-serif font-bold text-gray-950">{feat.title}</h3>
+                  <p className="text-gray-550 text-sm leading-relaxed font-medium">{feat.desc}</p>
                 </div>
               )
             })}
@@ -354,16 +406,16 @@ export default function LandingPage() {
       </section>
 
       {/* About The Platform Section */}
-      <section id="about" className="py-20 bg-white border-t border-gray-150">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="about" className="relative py-20 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Left Column */}
             <div className="space-y-6">
               <span className="text-xs font-bold uppercase tracking-widest text-health-primary">About the Platform</span>
-              <h2 className="text-3xl font-extrabold text-gray-900 leading-tight">
+              <h2 className="text-3xl font-serif font-black text-gray-950 leading-tight">
                 A national healthcare infrastructure project.
               </h2>
-              <div className="space-y-4 text-gray-500 text-base leading-relaxed">
+              <div className="space-y-4 text-gray-600 text-base leading-relaxed font-medium">
                 <p>
                   Rwanda E-Pharmacy is an initiative of the Ministry of Health to digitise medicine access across all five provinces. The platform connects patients, pharmacies, insurance companies, and government health authorities into one centralised, real-time system.
                 </p>
@@ -387,13 +439,13 @@ export default function LandingPage() {
               {portalDetails.map((portal, idx) => {
                 const Icon = portal.icon
                 return (
-                  <div key={idx} className="p-5 rounded-xl border border-gray-150 flex items-start space-x-4 bg-white hover:bg-gray-50/30 transition-colors">
+                  <div key={idx} className="p-5 rounded-xl border border-gray-150 flex items-start space-x-4 bg-white/95 backdrop-blur-xs hover:bg-slate-50/50 transition-colors shadow-xs">
                     <div className="w-10 h-10 bg-emerald-50 text-health-primary rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 text-base">{portal.role}</h3>
-                      <p className="text-gray-500 text-sm mt-1 leading-relaxed">{portal.desc}</p>
+                      <h3 className="font-serif font-bold text-gray-955 text-base">{portal.role}</h3>
+                      <p className="text-gray-500 text-sm mt-1 leading-relaxed font-medium">{portal.desc}</p>
                     </div>
                   </div>
                 )
@@ -651,6 +703,92 @@ export default function LandingPage() {
           {showChat ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
         </button>
       </div>
+
+      {/* Registration Option Modal */}
+      {isRegisterModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white rounded-xl border border-gray-150 border-t-4 border-t-health-primary shadow-2xl w-full max-w-2xl overflow-hidden relative animate-scaleIn">
+            
+            <button 
+              onClick={() => setIsRegisterModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-all focus:outline-none"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-health-light-text border border-emerald-100 mb-2">
+                  Rwanda E-Pharmacy Portal
+                </span>
+                <h3 className="text-2xl font-black text-gray-900">Create an Account</h3>
+                <p className="text-gray-500 text-sm mt-1.5 max-w-md mx-auto">
+                  Select your role below to access the national medicine inventory, search, and reservation systems.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Patient / Citizen Card */}
+                <Link
+                  to="/register/patient"
+                  onClick={() => setIsRegisterModalOpen(false)}
+                  className="group p-6 bg-white rounded-lg border border-gray-250 hover:border-health-primary hover:shadow-xl transition-all duration-200 flex flex-col justify-between h-56 text-left relative overflow-hidden"
+                >
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-emerald-50 text-health-primary group-hover:bg-health-primary group-hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200">
+                      <UserIcon className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mt-4 group-hover:text-health-primary transition-colors">
+                      Register as Patient
+                    </h4>
+                    <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-[200px]">
+                      Search medicines, check local pharmacy stocks, and reserve items using your National ID.
+                    </p>
+                  </div>
+                  
+                  <div className="text-xs font-bold text-health-primary group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
+                    <span>Citizen Portal Setup</span>
+                    <span>&rarr;</span>
+                  </div>
+                </Link>
+
+                {/* Pharmacy / Pharmacist Card */}
+                <Link
+                  to="/register/pharmacy"
+                  onClick={() => setIsRegisterModalOpen(false)}
+                  className="group p-6 bg-white rounded-lg border border-gray-250 hover:border-health-primary hover:shadow-xl transition-all duration-200 flex flex-col justify-between h-56 text-left relative overflow-hidden"
+                >
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-teal-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200">
+                      <PharmacyIcon className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mt-4 group-hover:text-emerald-700 transition-colors">
+                      Register as Pharmacy
+                    </h4>
+                    <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-[200px]">
+                      Register a pharmacy store owner account to manage inventories, staff, and verify prescriptions.
+                    </p>
+                  </div>
+                  
+                  <div className="text-xs font-bold text-emerald-700 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
+                    <span>Store Portal Setup</span>
+                    <span>&rarr;</span>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Other Options / Footnote */}
+              <div className="mt-8 pt-6 border-t border-gray-150 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-sans">
+                <span className="text-gray-500 font-bold">Other roles (Insurance, MoH Inspector)?</span>
+                <span className="text-gray-450 font-medium">
+                  Created by administrators. Contact support at <a href="mailto:support@epharmacy.rw" className="text-health-primary hover:underline font-bold">support@epharmacy.rw</a>.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

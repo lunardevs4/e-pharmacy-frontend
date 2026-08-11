@@ -83,13 +83,7 @@ export default function Login() {
       // Save details to Zustand authStore
       login(res.user, res.accessToken)
 
-      // Direct roles to appropriate dashboards based STRICTLY on returned user role
       setTimeout(() => {
-        if (res.user.firstLogin) {
-          navigate('/change-password')
-          return
-        }
-
         switch (res.user.role) {
           case 'PATIENT':
             navigate('/patient')
@@ -97,9 +91,7 @@ export default function Login() {
           case 'PHARMACY':
             navigate('/pharmacy')
             break
-          case 'INSURANCE':
-            navigate('/insurance')
-            break
+
           case 'GOVERNMENT':
             navigate('/government')
             break
