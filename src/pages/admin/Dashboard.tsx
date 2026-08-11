@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { AuthApi } from '@/services/auth-api'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement,
   LineElement, PointElement, Title, Tooltip, Legend, Filler,
@@ -20,10 +21,10 @@ const ALL_USERS = [
   { id: 'USR-001', name: 'Marie Uwimana',         role: 'PATIENT',    status: 'Active',    createdAt: '2026-01', lastLogin: '2026-07-30' },
   { id: 'USR-002', name: 'Eric Mugisha',           role: 'PHARMACY',   status: 'Active',    createdAt: '2026-02', lastLogin: '2026-08-01' },
   { id: 'USR-003', name: 'Jean Bosco Gasana',      role: 'GOVERNMENT', status: 'Active',    createdAt: '2026-01', lastLogin: '2026-07-31' },
-  { id: 'USR-004', name: 'Diane Mukamana',         role: 'INSURANCE',  status: 'Active',    createdAt: '2026-03', lastLogin: '2026-07-28' },
+  { id: 'USR-004', name: 'Diane Mukamana',         role: 'PHARMACY',   status: 'Active',    createdAt: '2026-03', lastLogin: '2026-07-28' },
   { id: 'USR-005', name: 'Aline Ingabire',         role: 'PATIENT',    status: 'Pending',   createdAt: '2026-07', lastLogin: '—'         },
   { id: 'USR-006', name: 'Patrick Habimana',       role: 'PHARMACY',   status: 'Suspended', createdAt: '2025-11', lastLogin: '2026-06-01' },
-  { id: 'USR-007', name: 'Claudine Uwera',         role: 'INSURANCE',  status: 'Active',    createdAt: '2026-04', lastLogin: '2026-07-25' },
+  { id: 'USR-007', name: 'Claudine Uwera',         role: 'GOVERNMENT', status: 'Active',    createdAt: '2026-04', lastLogin: '2026-07-25' },
   { id: 'USR-008', name: 'System Admin',           role: 'ADMIN',      status: 'Active',    createdAt: '2025-01', lastLogin: '2026-08-01' },
 ]
 
@@ -74,7 +75,7 @@ const AUDIT_LOGS = [
   { actor: 'government',role: 'GOVERNMENT',action: 'Viewed NationalAnalytics report',          resource: 'Reports',     status: 'Success', time: '17:30' },
   { actor: 'manager',   role: 'PHARMACY',  action: 'Inventory: Amoxicillin +200 units',        resource: 'Inventory',   status: 'Success', time: '16:10' },
   { actor: 'patient',   role: 'PATIENT',   action: 'Reservation RES-2026-001 created',         resource: 'Reservations',status: 'Success', time: '14:55' },
-  { actor: 'admin',     role: 'ADMIN',     action: 'Role permissions updated for INSURANCE',   resource: 'Roles',       status: 'Warning', time: '11:20' },
+  { actor: 'admin',     role: 'ADMIN',     action: 'Role permissions updated for GOVERNMENT',  resource: 'Roles',       status: 'Warning', time: '11:20' },
   { actor: 'System',    role: 'Automated', action: 'Session tokens rotated (scheduled)',       resource: 'Auth',        status: 'Success', time: '09:05' },
 ]
 
@@ -100,45 +101,70 @@ const DISTRICT_CRITICAL = [
 export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
+  const [stats, setStats] = useState<any>(null)
+  const [logs, setLogs] = useState<any[]>(AUDIT_LOGS)
+  const [isLoading, setIsLoading] = useState(true)
 
   const handleRefresh = () => {
     setRefreshing(true)
-    setTimeout(() => { setLastRefreshed(new Date()); setRefreshing(false) }, 700)
+    setLastRefreshed(new Date())
   }
 
+  useEffect(() => {
+    setIsLoading(true)
+    Promise.all([
+      AuthApi.getPlatformReport(),
+      AuthApi.getGovernmentAuditLogs(1, 8)
+    ]).then(([platformData, auditData]) => {
+      setStats(platformData)
+      const items = auditData?.data || auditData
+      if (Array.isArray(items)) {
+        setLogs(items)
+      }
+    }).catch(console.error)
+      .finally(() => {
+        setRefreshing(false)
+        setIsLoading(false)
+      })
+  }, [lastRefreshed])
+
   // ── Derived platform stats ─────────────────────────────────────────────────
-  const totalUsers     = ALL_USERS.length
-  const activeUsers    = ALL_USERS.filter(u => u.status === 'Active').length
-  const pendingUsers   = ALL_USERS.filter(u => u.status === 'Pending').length
-  const suspendedUsers = ALL_USERS.filter(u => u.status === 'Suspended').length
+  const totalUsers     = stats?.users?.total ?? ALL_USERS.length
+  const activeUsers    = stats?.users?.total ?? ALL_USERS.filter(u => u.status === 'Active').length
+  const pendingUsers   = stats?.users?.total ? 0 : ALL_USERS.filter(u => u.status === 'Pending').length
+  const suspendedUsers = stats?.users?.total ? 0 : ALL_USERS.filter(u => u.status === 'Suspended').length
 
-  const totalMeds    = ALL_MEDICINES.length
-  const activeMeds   = ALL_MEDICINES.filter(m => m.status === 'Active').length
-  const reviewMeds   = ALL_MEDICINES.filter(m => m.status === 'Under Review').length
+  const totalMeds    = stats?.medicines?.activeTotal ?? ALL_MEDICINES.length
+  const activeMeds   = stats?.medicines?.activeTotal ?? ALL_MEDICINES.filter(m => m.status === 'Active').length
+  const reviewMeds   = stats?.medicines?.activeTotal ? 0 : ALL_MEDICINES.filter(m => m.status === 'Under Review').length
 
-  const totalRes     = ALL_RESERVATIONS.length
-  const pendingRes   = ALL_RESERVATIONS.filter(r => r.status === 'Pending' || r.status === 'Ready for Pickup').length
-  const collectedRes = ALL_RESERVATIONS.filter(r => r.status === 'Collected').length
+  const totalRes     = stats?.reservations?.total ?? ALL_RESERVATIONS.length
+  const pendingRes   = stats?.reservations?.byStatus?.find((r: any) => r.status === 'PENDING' || r.status === 'CONFIRMED')?.count ?? ALL_RESERVATIONS.filter(r => r.status === 'Pending' || r.status === 'Ready for Pickup').length
+  const collectedRes = stats?.reservations?.byStatus?.find((r: any) => r.status === 'COLLECTED')?.count ?? ALL_RESERVATIONS.filter(r => r.status === 'Collected').length
 
-  const totalClaims    = ALL_CLAIMS.length
-  const pendingClaims  = ALL_CLAIMS.filter(c => c.status === 'Pending').length
-  const paidClaims     = ALL_CLAIMS.filter(c => c.status === 'Paid').length
-  const totalDisbursed = ALL_CLAIMS.filter(c => c.status === 'Paid' || c.status === 'Approved').reduce((a, c) => a + c.insurancePays, 0)
+  const totalClaims    = stats?.prescriptions?.total ?? ALL_CLAIMS.length
+  const pendingClaims  = stats?.prescriptions?.total ? 0 : ALL_CLAIMS.filter(c => c.status === 'Pending').length
+  const paidClaims     = stats?.prescriptions?.total ? 0 : ALL_CLAIMS.filter(c => c.status === 'Paid').length
+  const totalDisbursed = stats?.prescriptions?.total ? 0 : ALL_CLAIMS.filter(c => c.status === 'Paid' || c.status === 'Approved').reduce((a, c) => a + c.insurancePays, 0)
 
-  const approvedPharm  = ALL_PHARMACIES.filter(p => p.status === 'APPROVED').length
-  const pendingPharm   = ALL_PHARMACIES.filter(p => p.status === 'PENDING_VERIFICATION' || p.status === 'MORE_INFO_REQUESTED').length
+  const approvedPharm  = stats?.pharmacies?.byStatus?.find((p: any) => p.status === 'APPROVED')?.count ?? ALL_PHARMACIES.filter(p => p.status === 'APPROVED').length
+  const pendingPharm   = stats?.pharmacies?.byStatus?.find((p: any) => p.status === 'PENDING')?.count ?? ALL_PHARMACIES.filter(p => p.status === 'PENDING_VERIFICATION' || p.status === 'MORE_INFO_REQUESTED').length
 
-  const failedLogins  = AUDIT_LOGS.filter(l => l.status === 'Failed').length
-  const warningLogs   = AUDIT_LOGS.filter(l => l.status === 'Warning').length
+  const failedLogins  = 0
+  const warningLogs   = 0
 
-  const totalPendingActions = reviewMeds + pendingUsers + pendingClaims + pendingPharm + failedLogins
+  const totalPendingActions = pendingPharm
+
+  const getRoleCount = (role: string) => {
+    return stats?.users?.byRole?.find((r: any) => r.role === role)?.count ?? ALL_USERS.filter(u => u.role === role).length
+  }
 
   // ── Chart data ─────────────────────────────────────────────────────────────
   const roleChartData = {
-    labels: ['Patient', 'Pharmacy', 'Insurance', 'Government', 'Admin'],
+    labels: ['Patient', 'Pharmacy', 'Government', 'Admin'],
     datasets: [{
-      data: ['PATIENT','PHARMACY','INSURANCE','GOVERNMENT','ADMIN'].map(r => ALL_USERS.filter(u => u.role === r).length),
-      backgroundColor: ['#7dd3fc','#6ee7b7','#c4b5fd','#fcd34d','#fca5a5'],
+      data: ['PATIENT','PHARMACY','GOVERNMENT','ADMIN'].map(r => getRoleCount(r)),
+      backgroundColor: ['#0f5132', '#198754', '#34d399', '#a7f3d0'],
       borderWidth: 2, borderColor: '#fff', hoverOffset: 6,
     }],
   }
@@ -148,47 +174,108 @@ export default function AdminDashboard() {
     datasets: [{
       label: 'New Users',
       data: [4, 7, 5, 9, 6, 11, 8],
-      backgroundColor: '#6ee7b7',
-      borderRadius: 5, borderSkipped: false,
+      backgroundColor: '#198754',
+      borderRadius: 0, borderSkipped: false,
     }],
   }
 
   const auditLineData = {
     labels: MONTHS,
     datasets: [
-      { label: 'Success', data: [28,34,29,41,37,45,38], borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.08)', fill:true, tension:0.4, borderWidth:1.5, pointRadius:2 },
-      { label: 'Failed',  data: [2,1,3,1,4,2,3],        borderColor:'#f87171', backgroundColor:'rgba(248,113,113,0.06)', fill:true, tension:0.4, borderWidth:1.5, pointRadius:2 },
+      { label: 'Success', data: [28,34,29,41,37,45,38], borderColor:'#198754', backgroundColor:'rgba(25,135,84,0.04)', fill:true, tension:0.1, borderWidth:2, pointRadius:3 },
+      { label: 'Failed',  data: [2,1,3,1,4,2,3],        borderColor:'#dc3545', backgroundColor:'rgba(220,53,69,0.02)', fill:true, tension:0.1, borderWidth:2, pointRadius:3 },
     ],
   }
 
   const reservationData = {
     labels: MONTHS,
     datasets: [
-      { label: 'Reservations', data: [120,145,132,168,155,188,176], backgroundColor:'#a5b4fc', borderRadius:5, borderSkipped:false },
-      { label: 'Collected',    data: [98, 120,115,140,132,162,148], backgroundColor:'#6ee7b7', borderRadius:5, borderSkipped:false },
+      { label: 'Reservations', data: [120,145,132,168,155,188,176], backgroundColor:'#0f5132', borderRadius: 0, borderSkipped:false },
+      { label: 'Collected',    data: [98, 120,115,140,132,162,148], backgroundColor:'#34d399', borderRadius: 0, borderSkipped:false },
     ],
   }
 
   const claimsData = {
     labels: MONTHS,
     datasets: [
-      { label: 'Approved', data:[142,165,178,190,210,225,248], backgroundColor:'#6ee7b7', borderRadius:5, borderSkipped:false },
-      { label: 'Rejected', data:[12,9,14,11,8,10,7],           backgroundColor:'#fca5a5', borderRadius:5, borderSkipped:false },
+      { label: 'Approved', data:[142,165,178,190,210,225,248], backgroundColor:'#198754', borderRadius: 0, borderSkipped:false },
+      { label: 'Rejected', data:[12,9,14,11,8,10,7],           backgroundColor:'#dc3545', borderRadius: 0, borderSkipped:false },
     ],
   }
 
-  const scaleOpts = {
-    y: { ticks:{ font:{ size:9 } }, grid:{ color:'rgba(0,0,0,0.04)' } },
-    x: { ticks:{ font:{ size:9 } }, grid:{ display:false } },
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top' as const,
+        labels: {
+          boxWidth: 10,
+          padding: 8,
+          font: { size: 9, weight: 'bold' as const, family: 'Inter, sans-serif' },
+          color: '#475569',
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { size: 9, family: 'Inter, sans-serif' }, color: '#64748b' },
+      },
+      y: {
+        grid: { color: 'rgba(226, 232, 240, 0.6)' },
+        ticks: { font: { size: 9, family: 'Inter, sans-serif' }, color: '#64748b' },
+      },
+    },
+  }
+
+  const noLegendOptions = {
+    ...chartOptions,
+    plugins: {
+      ...chartOptions.plugins,
+      legend: { display: false },
+    },
+  }
+
+  const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          boxWidth: 8,
+          padding: 6,
+          font: { size: 9, family: 'Inter, sans-serif' },
+          color: '#475569',
+        },
+      },
+    },
+    cutout: '70%',
   }
 
   const PENDING_ACTIONS = [
-    { type:'Medicine Approvals',   count:reviewMeds,    to:'/admin/medicines', color:'bg-amber-50 border-amber-200 text-amber-700'    },
-    { type:'Pending Users',        count:pendingUsers,  to:'/admin/users',     color:'bg-sky-50 border-sky-200 text-sky-700'          },
-    { type:'Claims to Review',     count:pendingClaims, to:'/admin/audit',     color:'bg-purple-50 border-purple-200 text-purple-700' },
-    { type:'Security Alerts',      count:failedLogins,  to:'/admin/audit',     color:'bg-rose-50 border-rose-200 text-rose-700'       },
-    { type:'Pharmacy Applications',count:pendingPharm,  to:'/admin/users',     color:'bg-orange-50 border-orange-200 text-orange-700' },
+    { type:'Pharmacy Applications', count:pendingPharm, to:'/admin/users' },
   ].filter(p => p.count > 0)
+
+  const getStatusStyle = (status: string) => {
+    let dotColor = 'bg-slate-400'
+    const norm = status.toLowerCase()
+    if (['collected', 'approved', 'paid', 'success', 'online', 'ok'].includes(norm)) {
+      dotColor = 'bg-emerald-500'
+    } else if (['pending', 'ready for pickup', 'warning', 'degraded'].includes(norm)) {
+      dotColor = 'bg-amber-500'
+    } else if (['expired', 'rejected', 'failed', 'suspended'].includes(norm)) {
+      dotColor = 'bg-rose-500'
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 border border-slate-200 text-slate-700">
+        <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+        {status}
+      </span>
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -220,18 +307,18 @@ export default function AdminDashboard() {
 
       {/* ── Pending Actions Banner ─────────────────────────────────────────── */}
       {PENDING_ACTIONS.length > 0 && (
-        <section aria-labelledby="pending-h" className="bg-amber-50/60 border border-amber-100 rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-amber-100 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-500" aria-hidden="true" />
-            <h2 id="pending-h" className="text-sm font-bold text-amber-700">Actions Awaiting Review</h2>
+        <section aria-labelledby="pending-h" className="bg-emerald-50/20 border border-emerald-100 rounded-xl overflow-hidden animate-fadeIn">
+          <div className="px-5 py-3 border-b border-emerald-100 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-health-accent" aria-hidden="true" />
+            <h2 id="pending-h" className="text-sm font-bold text-health-light-text">Actions Awaiting Review</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
             {PENDING_ACTIONS.map(p => (
               <Link key={p.type} to={p.to}
-                className="flex flex-col items-center justify-center p-4 hover:bg-white/60 transition-colors text-center group border-r border-amber-100 last:border-r-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500">
-                <span className={`text-2xl font-black ${p.color.split(' ')[2]}`}>{p.count}</span>
+                className="flex flex-col items-center justify-center p-4 hover:bg-emerald-50/30 transition-colors text-center group border-r border-emerald-100 last:border-r-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500">
+                <span className="text-2xl font-black text-health-primary">{p.count}</span>
                 <span className="text-[10px] text-gray-500 font-semibold mt-1">{p.type}</span>
-                <span className={`text-[10px] font-bold border px-2 py-0.5 rounded mt-1.5 ${p.color} flex items-center gap-0.5 group-hover:opacity-70 transition-opacity`}>
+                <span className="text-[10px] font-bold border border-emerald-250 bg-emerald-50 text-health-light-text px-2 py-0.5 rounded mt-1.5 flex items-center gap-0.5 group-hover:bg-health-primary group-hover:text-white transition-all">
                   Review <ArrowRight className="w-2.5 h-2.5" aria-hidden="true" />
                 </span>
               </Link>
@@ -243,21 +330,21 @@ export default function AdminDashboard() {
       {/* ── Platform-wide KPI row ──────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" role="list" aria-label="Platform statistics">
         {[
-          { label:'Total Users',     value:totalUsers,   sub:`${activeUsers} active`,        icon:Users,        c:'text-slate-700',  bg:'bg-slate-50'  },
-          { label:'Medicines',       value:totalMeds,    sub:`${reviewMeds} under review`,   icon:Package,      c:'text-blue-600',   bg:'bg-blue-50'   },
-          { label:'Reservations',    value:totalRes,     sub:`${pendingRes} active`,         icon:ClipboardList,c:'text-indigo-600', bg:'bg-indigo-50' },
-          { label:'Insurance Claims',value:totalClaims,  sub:`${pendingClaims} pending`,     icon:FileText,     c:'text-purple-600', bg:'bg-purple-50' },
-          { label:'Pharmacies',      value:ALL_PHARMACIES.length, sub:`${approvedPharm} approved`, icon:MapPin, c:'text-emerald-600',bg:'bg-emerald-50'},
-          { label:'Security Events', value:AUDIT_LOGS.length, sub:`${failedLogins} failed`, icon:Shield,       c:'text-rose-500',   bg:'bg-rose-50'   },
+          { label:'Total Users',     value:totalUsers,   sub:`${activeUsers} active`,        icon:Users },
+          { label:'Medicines',       value:totalMeds,    sub:`${reviewMeds} under review`,   icon:Package },
+          { label:'Reservations',    value:totalRes,     sub:`${pendingRes} active`,         icon:ClipboardList },
+          { label:'Insurance Claims',value:totalClaims,  sub:`${pendingClaims} pending`,     icon:FileText },
+          { label:'Pharmacies',      value:ALL_PHARMACIES.length, sub:`${approvedPharm} approved`, icon:MapPin },
+          { label:'Security Events', value:AUDIT_LOGS.length, sub:`${failedLogins} failed`, icon:Shield },
         ].map(s => (
           <div key={s.label} role="listitem" className="bg-white border border-gray-100 rounded-xl p-4 flex items-start justify-between shadow-sm">
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none">{s.label}</p>
-              <p className={`text-2xl font-black mt-1.5 ${s.c}`}>{s.value}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">{s.sub}</p>
+              <p className="text-2xl font-black mt-2 text-slate-800 tracking-tight">{s.value}</p>
+              <p className="text-[10px] text-gray-400 font-medium mt-1">{s.sub}</p>
             </div>
-            <div className={`p-2 rounded-lg ${s.bg} flex-shrink-0`} aria-hidden="true">
-              <s.icon className={`w-4 h-4 ${s.c}`} />
+            <div className="p-2 rounded-lg bg-emerald-50 text-health-accent flex-shrink-0" aria-hidden="true">
+              <s.icon className="w-4 h-4" />
             </div>
           </div>
         ))}
@@ -271,16 +358,16 @@ export default function AdminDashboard() {
           <h2 className="text-sm font-bold text-gray-700">User Accounts</h2>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label:'Active',    value:activeUsers,    c:'text-emerald-600', bg:'bg-emerald-50', icon:UserCheck },
-              { label:'Pending',   value:pendingUsers,   c:'text-amber-600',   bg:'bg-amber-50',   icon:Clock     },
-              { label:'Suspended', value:suspendedUsers, c:'text-red-500',     bg:'bg-red-50',     icon:UserX     },
-              { label:'Medicines', value:activeMeds,     c:'text-blue-600',    bg:'bg-blue-50',    icon:Package   },
+              { label:'Active',    value:activeUsers,    ic:'text-emerald-600', icon:UserCheck },
+              { label:'Pending',   value:pendingUsers,   ic:'text-amber-600',   icon:Clock     },
+              { label:'Suspended', value:suspendedUsers, ic:'text-red-500',     icon:UserX     },
+              { label:'Medicines', value:activeMeds,     ic:'text-slate-500',   icon:Package   },
             ].map(s => (
-              <div key={s.label} className={`flex items-center gap-2.5 p-3 rounded-lg ${s.bg}`}>
-                <s.icon className={`w-4 h-4 ${s.c} flex-shrink-0`} aria-hidden="true" />
+              <div key={s.label} className="flex items-center gap-2.5 p-3 rounded-lg bg-white border border-gray-150 shadow-xs">
+                <s.icon className={`w-4 h-4 ${s.ic} flex-shrink-0`} aria-hidden="true" />
                 <div>
                   <p className="text-[10px] text-gray-400 font-semibold uppercase">{s.label}</p>
-                  <p className={`text-lg font-black ${s.c}`}>{s.value}</p>
+                  <p className="text-lg font-black text-slate-800">{s.value}</p>
                 </div>
               </div>
             ))}
@@ -295,10 +382,10 @@ export default function AdminDashboard() {
           <h2 className="text-sm font-bold text-gray-700">Pharmacy Registry</h2>
           <div className="space-y-2">
             {[
-              { label:'Approved',          count: ALL_PHARMACIES.filter(p=>p.status==='APPROVED').length,            c:'text-emerald-600', bar:'bg-emerald-400' },
-              { label:'Pending Review',    count: ALL_PHARMACIES.filter(p=>p.status==='PENDING_VERIFICATION').length,c:'text-amber-600',   bar:'bg-amber-400'   },
-              { label:'Info Requested',    count: ALL_PHARMACIES.filter(p=>p.status==='MORE_INFO_REQUESTED').length, c:'text-blue-600',    bar:'bg-blue-400'    },
-              { label:'Suspended',         count: ALL_PHARMACIES.filter(p=>p.status==='SUSPENDED').length,           c:'text-red-500',     bar:'bg-red-400'     },
+              { label:'Approved',          count: ALL_PHARMACIES.filter(p=>p.status==='APPROVED').length,            c:'text-emerald-600', bar:'bg-emerald-500' },
+              { label:'Pending Review',    count: ALL_PHARMACIES.filter(p=>p.status==='PENDING_VERIFICATION').length,c:'text-amber-600',   bar:'bg-amber-500'   },
+              { label:'Info Requested',    count: ALL_PHARMACIES.filter(p=>p.status==='MORE_INFO_REQUESTED').length, c:'text-slate-700',   bar:'bg-slate-400'   },
+              { label:'Suspended',         count: ALL_PHARMACIES.filter(p=>p.status==='SUSPENDED').length,           c:'text-red-500',     bar:'bg-red-550'     },
             ].map(s => (
               <div key={s.label} className="flex items-center gap-3">
                 <span className="text-[10px] text-gray-400 font-semibold w-28 flex-shrink-0">{s.label}</span>
@@ -322,16 +409,16 @@ export default function AdminDashboard() {
           </div>
           <div className="space-y-2.5">
             {DISTRICT_CRITICAL.map(d => (
-              <div key={d.name} className="flex items-center justify-between gap-3 bg-red-50/50 border border-red-100 rounded-lg p-2.5">
+              <div key={d.name} className="flex items-center justify-between gap-3 bg-white border border-gray-150 rounded-lg p-2.5 shadow-xs">
                 <div>
                   <span className="text-xs font-bold text-gray-800">{d.name}</span>
                   <span className="text-[10px] text-gray-400 block">{d.province}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm font-black text-red-500 block">{d.stock}%</span>
+                  <span className="text-sm font-black text-slate-800 block">{d.stock}%</span>
                   <div className="flex flex-wrap gap-1 justify-end mt-0.5">
                     {d.drugs.map(drug => (
-                      <span key={drug} className="text-[9px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded">{drug}</span>
+                      <span key={drug} className="text-[9px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">{drug}</span>
                     ))}
                   </div>
                 </div>
@@ -344,30 +431,40 @@ export default function AdminDashboard() {
 
       {/* ── Charts row 1: Users + Registrations + Audit ────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2">
-          <h2 className="text-sm font-bold text-gray-700">User Role Distribution</h2>
-          <p className="text-[10px] text-gray-400">Across all 5 portal roles</p>
-          <div className="max-w-[200px] mx-auto pt-1">
-            <Doughnut data={roleChartData} options={{ responsive:true, cutout:'58%', plugins:{ legend:{ position:'bottom', labels:{ font:{ size:9 }, boxWidth:10, padding:8 } } } }} />
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-gray-700">User Role Distribution</h2>
+            <p className="text-[10px] text-gray-400">Across all active portal roles</p>
+          </div>
+          <div className="h-44 mt-2 relative">
+            <Doughnut data={roleChartData} options={doughnutOptions} />
           </div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2">
-          <h2 className="text-sm font-bold text-gray-700">New Registrations</h2>
-          <p className="text-[10px] text-gray-400">Monthly account creations (Feb – Aug)</p>
-          <Bar data={regData} options={{ responsive:true, plugins:{ legend:{ display:false } }, scales:scaleOpts }} />
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-gray-700">New Registrations</h2>
+            <p className="text-[10px] text-gray-400">Monthly account creations (Feb – Aug)</p>
+          </div>
+          <div className="h-44 mt-2 relative">
+            <Bar data={regData} options={noLegendOptions} />
+          </div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2">
-          <h2 className="text-sm font-bold text-gray-700">Audit Event Trend</h2>
-          <p className="text-[10px] text-gray-400">Success vs Failed events per month</p>
-          <Line data={auditLineData} options={{ responsive:true, plugins:{ legend:{ position:'top', labels:{ font:{ size:9 }, boxWidth:10 } } }, scales:scaleOpts }} />
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-gray-700">Audit Event Trend</h2>
+            <p className="text-[10px] text-gray-400">Success vs Failed events per month</p>
+          </div>
+          <div className="h-44 mt-2 relative">
+            <Line data={auditLineData} options={chartOptions} />
+          </div>
         </div>
       </div>
 
       {/* ── Charts row 2: Reservations + Claims ────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2">
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-gray-700">Reservation Volume</h2>
@@ -375,10 +472,12 @@ export default function AdminDashboard() {
             </div>
             <Link to="/pharmacy/reservations" className="text-[10px] font-bold text-gray-400 hover:text-health-primary transition-colors">View →</Link>
           </div>
-          <Bar data={reservationData} options={{ responsive:true, plugins:{ legend:{ position:'top', labels:{ font:{ size:9 }, boxWidth:10 } } }, scales:scaleOpts }} />
+          <div className="h-44 mt-2 relative">
+            <Bar data={reservationData} options={chartOptions} />
+          </div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2">
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-2 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-gray-700">Insurance Claims</h2>
@@ -386,7 +485,9 @@ export default function AdminDashboard() {
             </div>
             <Link to="/insurance/claims" className="text-[10px] font-bold text-gray-400 hover:text-health-primary transition-colors">View →</Link>
           </div>
-          <Bar data={claimsData} options={{ responsive:true, plugins:{ legend:{ position:'top', labels:{ font:{ size:9 }, boxWidth:10 } } }, scales:scaleOpts }} />
+          <div className="h-44 mt-2 relative">
+            <Bar data={claimsData} options={chartOptions} />
+          </div>
         </div>
       </div>
 
@@ -420,13 +521,8 @@ export default function AdminDashboard() {
                     <td className="px-4 py-2.5 font-semibold text-gray-700">{r.patient}</td>
                     <td className="px-4 py-2.5 text-gray-500">{r.medicine}</td>
                     <td className="px-4 py-2.5 text-gray-400 text-[10px]">{r.pharmacy}</td>
-                    <td className="px-4 py-2.5 text-right">
-                      <span className={`inline-flex text-[10px] font-bold border px-1.5 py-0.5 rounded ${
-                        r.status==='Collected'        ? 'text-emerald-600 bg-emerald-50 border-emerald-100' :
-                        r.status==='Ready for Pickup' ? 'text-blue-600 bg-blue-50 border-blue-100' :
-                        r.status==='Pending'          ? 'text-amber-600 bg-amber-50 border-amber-100' :
-                        'text-gray-400 bg-gray-50 border-gray-100'
-                      }`}>{r.status}</span>
+                    <td className="px-4 py-2.5 text-right font-medium">
+                      {getStatusStyle(r.status)}
                     </td>
                   </tr>
                 ))}
@@ -467,13 +563,8 @@ export default function AdminDashboard() {
                     <td className="px-4 py-2.5 font-semibold text-gray-700">{c.pharmacy}</td>
                     <td className="px-4 py-2.5 text-gray-500">{c.medicine}</td>
                     <td className="px-4 py-2.5 text-gray-400 text-[10px]">{c.insurer}</td>
-                    <td className="px-4 py-2.5 text-right">
-                      <span className={`inline-flex text-[10px] font-bold border px-1.5 py-0.5 rounded ${
-                        c.status==='Paid'     ? 'text-blue-600 bg-blue-50 border-blue-100'         :
-                        c.status==='Approved' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' :
-                        c.status==='Pending'  ? 'text-amber-600 bg-amber-50 border-amber-100'       :
-                        'text-red-500 bg-red-50 border-red-100'
-                      }`}>{c.status}</span>
+                    <td className="px-4 py-2.5 text-right font-medium">
+                      {getStatusStyle(c.status)}
                     </td>
                   </tr>
                 ))}
@@ -498,29 +589,35 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <ul className="divide-y divide-gray-50">
-            {AUDIT_LOGS.slice(0, 8).map((item, idx) => (
-              <li key={idx} className="px-5 py-2.5 flex items-start gap-3 text-xs hover:bg-gray-50/40 transition-colors">
-                <span aria-hidden="true" className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  item.status==='Success' ? 'bg-emerald-400' :
-                  item.status==='Warning' ? 'bg-amber-400' : 'bg-red-400'
-                }`} />
-                <div className="flex-grow min-w-0">
-                  <p className="text-gray-600 truncate">
-                    <span className="font-semibold text-gray-800">{item.actor}</span>
-                    <span className="text-gray-400"> · {item.resource}</span>
-                    <span> — {item.action}</span>
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`text-[10px] font-bold border px-1.5 py-0.5 rounded ${
-                    item.status==='Success' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' :
-                    item.status==='Warning' ? 'text-amber-600 bg-amber-50 border-amber-100' :
-                    'text-red-500 bg-red-50 border-red-100'
-                  }`}>{item.status}</span>
-                  <time className="text-gray-400 font-mono text-[10px]">{item.time}</time>
-                </div>
-              </li>
-            ))}
+            {logs.slice(0, 8).map((item, idx) => {
+              const actorName = item.user ? `${item.user.firstName} ${item.user.lastName}`.trim() : (item.actor || 'System')
+              const resourceName = item.entityType || item.resource || 'System'
+              const timestamp = item.createdAt ? new Date(item.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : (item.time || '—')
+              const statusVal = item.status || 'Success'
+              return (
+                <li key={item.id || idx} className="px-5 py-2.5 flex items-start gap-3 text-xs hover:bg-gray-50/40 transition-colors animate-fadeIn">
+                  <span aria-hidden="true" className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                    statusVal === 'Success' ? 'bg-emerald-400' :
+                    statusVal === 'Warning' ? 'bg-amber-400' : 'bg-red-400'
+                  }`} />
+                  <div className="flex-grow min-w-0">
+                    <p className="text-gray-600 truncate">
+                      <span className="font-semibold text-gray-800">{actorName}</span>
+                      <span className="text-gray-400 font-medium"> · {resourceName}</span>
+                      <span> — {item.action}</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-[10px] font-bold border px-1.5 py-0.5 rounded ${
+                      statusVal === 'Success' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' :
+                      statusVal === 'Warning' ? 'text-amber-600 bg-amber-50 border-amber-100' :
+                      'text-red-500 bg-red-50 border-red-100'
+                    }`}>{statusVal}</span>
+                    <time className="text-gray-400 font-mono text-[10px]">{timestamp}</time>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </section>
 
@@ -541,11 +638,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-gray-400 text-[10px]">{svc.latency}</span>
-                  <span className={`text-[10px] font-bold border px-1.5 py-0.5 rounded ${
-                    svc.status==='online'
-                      ? 'text-emerald-600 bg-emerald-50 border-emerald-100'
-                      : 'text-amber-600 bg-amber-50 border-amber-100'
-                  }`}>{svc.status==='online' ? 'OK' : 'Degraded'}</span>
+                  {getStatusStyle(svc.status === 'online' ? 'online' : 'degraded')}
                 </div>
               </li>
             ))}
@@ -565,11 +658,11 @@ export default function AdminDashboard() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
           {[
-            { to:'/admin/users',    icon:Users,      label:'Users',      desc:`${totalUsers} accounts`,         c:'text-slate-600 bg-slate-50'   },
-            { to:'/admin/medicines',icon:Package,    label:'Medicines',  desc:`${totalMeds} catalogue entries`, c:'text-blue-600 bg-blue-50'     },
-            { to:'/admin/roles',    icon:ShieldCheck,label:'Roles',      desc:'5 permission groups',            c:'text-purple-600 bg-purple-50' },
-            { to:'/admin/audit',    icon:FileLock2,  label:'Audit Logs', desc:`${AUDIT_LOGS.length} entries`,   c:'text-amber-600 bg-amber-50'   },
-            { to:'/admin/settings', icon:Settings,   label:'Settings',   desc:'System configuration',           c:'text-gray-500 bg-gray-100'    },
+            { to:'/admin/users',    icon:Users,      label:'Users',      desc:`${totalUsers} accounts`,         c:'text-health-primary bg-emerald-50' },
+            { to:'/admin/medicines',icon:Package,    label:'Medicines',  desc:`${totalMeds} catalogue entries`, c:'text-health-primary bg-emerald-50' },
+            { to:'/admin/roles',    icon:ShieldCheck,label:'Roles',      desc:'5 permission groups',            c:'text-health-primary bg-emerald-50' },
+            { to:'/admin/audit',    icon:FileLock2,  label:'Audit Logs', desc:`${AUDIT_LOGS.length} entries`,   c:'text-health-primary bg-emerald-50' },
+            { to:'/admin/settings', icon:Settings,   label:'Settings',   desc:'System configuration',           c:'text-health-primary bg-emerald-50' },
           ].map(q => {
             const [tc, bg] = q.c.split(' ')
             return (

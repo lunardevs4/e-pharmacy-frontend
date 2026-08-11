@@ -9,11 +9,9 @@ export default function PublicRoute() {
   if (isInitialising) return null
 
   if (isAuthenticated && user) {
-    if (user.firstLogin) return <Navigate to="/change-password" replace />
     switch (user.role) {
       case 'PATIENT':    return <Navigate to="/patient"    replace />
       case 'PHARMACY':   return <Navigate to="/pharmacy"   replace />
-      case 'INSURANCE':  return <Navigate to="/insurance"  replace />
       case 'GOVERNMENT': return <Navigate to="/government" replace />
       case 'ADMIN':      return <Navigate to="/admin"      replace />
       default:           return <Navigate to="/"           replace />

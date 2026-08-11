@@ -39,6 +39,10 @@ export default {
           900: '#052e16',
         },
       },
+      fontFamily: {
+        serif: ['Merriweather', 'Georgia', 'serif'],
+        sans: ['"Source Sans 3"', 'Inter', 'sans-serif'],
+      },
     },
   },
   plugins: [],

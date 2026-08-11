@@ -286,9 +286,9 @@ export default function AdminMedicines() {
 
       {/* Add / Edit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div onClick={() => setShowAddModal(false)} className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-50">
+          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[9999]">
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 className="font-black text-sm">{editTarget ? 'Edit Medicine' : 'Add Medicine to Catalogue'}</h3>

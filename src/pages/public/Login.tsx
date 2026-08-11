@@ -111,9 +111,7 @@ export default function Login() {
           case 'PHARMACY':
             navigate('/pharmacy')
             break
-          case 'INSURANCE':
-            navigate('/insurance')
-            break
+
           case 'GOVERNMENT':
             navigate('/government')
             break

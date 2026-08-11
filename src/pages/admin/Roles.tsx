@@ -32,19 +32,7 @@ const ROLES = [
       'Update pharmacy profile & settings',
     ],
   },
-  {
-    role: 'INSURANCE',
-    color: 'bg-purple-50 border-purple-200 text-purple-800',
-    dot: 'bg-purple-500',
-    description: 'Insurance company staff reviewing claims and processing reimbursements.',
-    permissions: [
-      'View and approve/reject insurance claims',
-      'Process payments to pharmacies',
-      'View insured patient records',
-      'Generate claims and payment reports',
-      'Configure co-payment rates (read-only on platform)',
-    ],
-  },
+
   {
     role: 'GOVERNMENT',
     color: 'bg-amber-50 border-amber-200 text-amber-800',

@@ -13,6 +13,17 @@ body {
   padding: 0;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Merriweather', Georgia, serif;
+}
+
+.bg-grid-mesh {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(15, 81, 50, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 81, 50, 0.12) 1px, transparent 1px);
+}
+
 /* Modular custom helper utilities to avoid inline overrides and keep style DRY */
 .btn-primary {
   background-color: var(--color-health-primary);
@@ -38,3 +49,60 @@ body {
 .input-field:focus {
   border-color: var(--color-health-accent);
 }
+
+/* Modal and Element Fade/Scale Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom elegant theme-oriented scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 81, 50, 0.05); /* very light health-primary */
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-health-accent, #198754);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-health-primary, #0f5132);
+}
+
+/* Firefox scrollbar support */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-health-accent, #198754) rgba(15, 81, 50, 0.05);
+}
+
+

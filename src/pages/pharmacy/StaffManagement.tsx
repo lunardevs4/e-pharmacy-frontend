@@ -264,10 +264,10 @@ export default function StaffManagement() {
 
       {/* Add Staff Modals component */}
       {showAddModal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center px-4 py-6">
-          <div onClick={handleCloseAddModal} className="absolute inset-0 bg-gray-900/50 backdrop-blur-xs" />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
+          <div onClick={handleCloseAddModal} className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
 
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-55 flex flex-col">
+          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-[9999] flex flex-col">
 
             {/* Modal Header */}
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900">

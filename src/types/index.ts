@@ -1,4 +1,4 @@
-export type UserRole = 'PATIENT' | 'PHARMACY' | 'PHARMACY_OWNER' | 'PHARMACIST' | 'INSURANCE' | 'GOVERNMENT' | 'ADMIN'
+export type UserRole = 'PATIENT' | 'PHARMACY' | 'PHARMACY_OWNER' | 'PHARMACIST' | 'GOVERNMENT' | 'ADMIN'
 
 export interface PatientProfile {
   id?: string

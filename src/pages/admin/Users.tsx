@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import { UserApi } from '@/services/user-api'
 
-type UserRole = 'PATIENT' | 'PHARMACY' | 'INSURANCE' | 'GOVERNMENT' | 'ADMIN'
+type UserRole = 'PATIENT' | 'PHARMACY' | 'GOVERNMENT' | 'ADMIN'
 type UserStatus = 'Active' | 'Suspended' | 'Pending'
 
 interface SystemUser {
@@ -25,7 +25,6 @@ interface SystemUser {
 const ROLE_COLORS: Record<UserRole, string> = {
   PATIENT: 'bg-sky-50 text-sky-800 border-sky-200',
   PHARMACY: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-  INSURANCE: 'bg-purple-50 text-purple-800 border-purple-200',
   GOVERNMENT: 'bg-amber-50 text-amber-800 border-amber-200',
   ADMIN: 'bg-red-50 text-red-800 border-red-200',
 }
@@ -225,7 +224,7 @@ export default function AdminUsers() {
               className="bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-xs text-gray-700 font-bold focus:outline-none"
             >
               <option value="">All Roles</option>
-              {(['PATIENT', 'PHARMACY', 'INSURANCE', 'GOVERNMENT', 'ADMIN'] as UserRole[]).map((r) => (
+              {(['PATIENT', 'PHARMACY', 'GOVERNMENT', 'ADMIN'] as UserRole[]).map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
             </select>
@@ -343,11 +342,11 @@ export default function AdminUsers() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-user-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onKeyDown={(e) => { if (e.key === 'Escape') setShowAddModal(false) }}
         >
           <div onClick={() => setShowAddModal(false)} aria-hidden="true" className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-50">
+          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[9999]">
             <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 id="add-user-title" className="font-black text-sm">Add System User</h3>
@@ -385,7 +384,7 @@ export default function AdminUsers() {
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">System Role *</label>
                   <select value={role} onChange={(e) => setRole(e.target.value as UserRole)}
                     className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none font-semibold">
-                    {(['PATIENT', 'PHARMACY', 'INSURANCE', 'GOVERNMENT', 'ADMIN'] as UserRole[]).map((r) => (
+                    {(['PATIENT', 'PHARMACY', 'GOVERNMENT', 'ADMIN'] as UserRole[]).map((r) => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>
@@ -406,11 +405,11 @@ export default function AdminUsers() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="view-user-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onKeyDown={(e) => { if (e.key === 'Escape') setShowViewModal(null) }}
         >
           <div onClick={() => setShowViewModal(null)} aria-hidden="true" className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-50">
+          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[9999]">
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 id="view-user-title" className="font-black text-sm">User Profile</h3>

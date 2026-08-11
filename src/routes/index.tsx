@@ -34,12 +34,7 @@ import PharmacySettings from '@/pages/pharmacy/Settings'
 import PharmacyNotifications from '@/pages/pharmacy/Notifications'
 import PharmacyProfile from '@/pages/pharmacy/Profile'
 
-// Insurance Pages
-import InsuranceDashboard from '@/pages/insurance/Dashboard'
-import InsuranceClaims from '@/pages/insurance/Claims'
-import InsurancePayments from '@/pages/insurance/Payments'
-import InsuranceReports from '@/pages/insurance/Reports'
-import InsurancePatients from '@/pages/insurance/Patients'
+
 
 // Government Pages
 import GovernmentDashboard from '@/pages/government/Dashboard'
@@ -110,16 +105,7 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Insurance Portal */}
-      <Route element={<ProtectedRoute allowedRoles={['INSURANCE']} />}>
-        <Route path="/insurance" element={<SidebarLayout />}>
-          <Route index element={<InsuranceDashboard />} />
-          <Route path="claims" element={<InsuranceClaims />} />
-          <Route path="payments" element={<InsurancePayments />} />
-          <Route path="reports" element={<InsuranceReports />} />
-          <Route path="patients" element={<InsurancePatients />} />
-        </Route>
-      </Route>
+
 
       {/* Government Portal */}
       <Route element={<ProtectedRoute allowedRoles={['GOVERNMENT']} />}>
