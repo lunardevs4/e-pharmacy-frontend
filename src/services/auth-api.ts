@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios'
 import { UserRole } from '@/types'
 import { apiClient } from '@/api/client'
 import { TokenStorage } from '@/services/token-storage'
@@ -70,95 +71,127 @@ export interface AuthResponse {
   user: AuthUser
 }
 
+type ApiObject = Record<string, unknown>
+
+type UpdateProfileFields = {
+  firstName?: string
+  lastName?: string
+  phone?: string
+}
 
 const CURRENT_USER_KEY = 'epharmacy_current_session_user'
 
 
-const normalizeUser = (payload: any): AuthUser => {
-  const userObj = payload?.user || payload?.data || payload || {}
-  const firstName = userObj.firstName || userObj.first_name || ''
-  const lastName = userObj.lastName || userObj.last_name || ''
-  const displayName = userObj.name || [firstName, lastName].filter(Boolean).join(' ') || userObj.email || 'User'
-  const role = (userObj.role || 'PATIENT') as UserRole
-  const username = userObj.username || userObj.email || [firstName, lastName].filter(Boolean).join('.').toLowerCase() || 'user'
+const toString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined)
 
+const toStringArray = (value: unknown): string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string') ? value : []
+
+const getObject = (value: unknown): ApiObject =>
+  typeof value === 'object' && value !== null ? (value as ApiObject) : {}
+
+const normalizeUser = (payload: unknown): AuthUser => {
+  const raw = getObject(payload)
+  const userObj = getObject(raw.user ?? raw.data ?? raw)
+  const firstName = toString(userObj.firstName) || toString(userObj.first_name) || ''
+  const lastName = toString(userObj.lastName) || toString(userObj.last_name) || ''
+  const displayName =
+    toString(userObj.name) || [firstName, lastName].filter(Boolean).join(' ') || toString(userObj.email) || 'User'
+  const role = typeof userObj.role === 'string' ? (userObj.role.toUpperCase() as UserRole) : 'PATIENT'
+  const username =
+    toString(userObj.username) || toString(userObj.email) || [firstName, lastName].filter(Boolean).join('.').toLowerCase() || 'user'
+  const patientObj = getObject(userObj.patient)
+  const pharmacyObj = getObject(userObj.pharmacy)
 
   return {
-    id: userObj.id || '',
+    id: toString(userObj.id) || '',
     username,
-    email: userObj.email,
+    email: toString(userObj.email),
     name: displayName,
     firstName,
     lastName,
     role,
-    phone: userObj.phone,
-    position: userObj.position,
-    permissions: userObj.permissions || [],
-    pharmacyId: userObj.pharmacyId,
-    pharmacyName: userObj.pharmacyName,
-    firstLogin: userObj.firstLogin ?? false,
-    isActive: userObj.isActive ?? true,
-    createdAt: userObj.createdAt,
-    updatedAt: userObj.updatedAt,
-    deletedAt: userObj.deletedAt ?? null,
-    nid: userObj.nid,
-    licenseNumber: userObj.licenseNumber,
-    insuranceProvider: userObj.insuranceProvider,
-    dob: userObj.dob || userObj.dateOfBirth,
-    gender: userObj.gender,
-    province: userObj.province,
-    district: userObj.district,
-    sector: userObj.sector,
-    cell: userObj.cell,
-    village: userObj.village,
-    emergencyContact: userObj.emergencyContact,
-    preferredPharmacy: userObj.preferredPharmacy,
-    medicalNotes: userObj.medicalNotes,
-    profilePhoto: userObj.profilePhoto,
-    patient: userObj.patient ? {
-      id: userObj.patient.id,
-      userId: userObj.patient.userId,
-      medicalProfile: userObj.patient.medicalProfile,
-      address: userObj.patient.address,
-      dateOfBirth: userObj.patient.dateOfBirth,
-      gender: userObj.patient.gender,
-      createdAt: userObj.patient.createdAt,
-      updatedAt: userObj.patient.updatedAt,
-    } : undefined,
-    pharmacy: userObj.pharmacy ? {
-      id: userObj.pharmacy.id,
-      name: userObj.pharmacy.name,
-      address: userObj.pharmacy.address,
-      phone: userObj.pharmacy.phone,
-      licenseNumber: userObj.pharmacy.licenseNumber,
-      district: userObj.pharmacy.district,
-      province: userObj.pharmacy.province,
-      managerName: userObj.pharmacy.managerName,
-      status: userObj.pharmacy.status,
-      isActive: userObj.pharmacy.isActive,
-      category: userObj.pharmacy.category,
-      ownershipType: userObj.pharmacy.ownershipType,
-      createdAt: userObj.pharmacy.createdAt,
-      updatedAt: userObj.pharmacy.updatedAt,
-    } : undefined,
+    phone: toString(userObj.phone),
+    position: toString(userObj.position),
+    permissions: toStringArray(userObj.permissions),
+    pharmacyId: toString(userObj.pharmacyId),
+    pharmacyName: toString(userObj.pharmacyName),
+    firstLogin: typeof userObj.firstLogin === 'boolean' ? userObj.firstLogin : false,
+    isActive: typeof userObj.isActive === 'boolean' ? userObj.isActive : true,
+    createdAt: toString(userObj.createdAt),
+    updatedAt: toString(userObj.updatedAt),
+    deletedAt: userObj.deletedAt === null ? null : toString(userObj.deletedAt),
+    nid: toString(userObj.nid),
+    licenseNumber: toString(userObj.licenseNumber),
+    insuranceProvider: toString(userObj.insuranceProvider),
+    dob: toString(userObj.dob) || toString(userObj.dateOfBirth),
+    gender: toString(userObj.gender),
+    province: toString(userObj.province),
+    district: toString(userObj.district),
+    sector: toString(userObj.sector),
+    cell: toString(userObj.cell),
+    village: toString(userObj.village),
+    emergencyContact: toString(userObj.emergencyContact),
+    preferredPharmacy: toString(userObj.preferredPharmacy),
+    medicalNotes: toString(userObj.medicalNotes),
+    profilePhoto: toString(userObj.profilePhoto),
+    patient:
+      Object.keys(patientObj).length > 0
+        ? {
+            id: toString(patientObj.id),
+            userId: toString(patientObj.userId),
+            medicalProfile:
+              patientObj.medicalProfile === null ? null : toString(patientObj.medicalProfile),
+            address: patientObj.address === null ? null : toString(patientObj.address),
+            dateOfBirth: patientObj.dateOfBirth === null ? null : toString(patientObj.dateOfBirth),
+            gender: patientObj.gender === null ? null : toString(patientObj.gender),
+            createdAt: toString(patientObj.createdAt),
+            updatedAt: toString(patientObj.updatedAt),
+          }
+        : undefined,
+    pharmacy:
+      Object.keys(pharmacyObj).length > 0
+        ? {
+            id: toString(pharmacyObj.id),
+            name: toString(pharmacyObj.name),
+            address: toString(pharmacyObj.address),
+            phone: toString(pharmacyObj.phone),
+            licenseNumber: toString(pharmacyObj.licenseNumber),
+            district: toString(pharmacyObj.district),
+            province: toString(pharmacyObj.province),
+            managerName: toString(pharmacyObj.managerName),
+            status: toString(pharmacyObj.status),
+            isActive: typeof pharmacyObj.isActive === 'boolean' ? pharmacyObj.isActive : undefined,
+            category: toString(pharmacyObj.category),
+            ownershipType: toString(pharmacyObj.ownershipType),
+            createdAt: toString(pharmacyObj.createdAt),
+            updatedAt: toString(pharmacyObj.updatedAt),
+          }
+        : undefined,
   }
 }
 
+const normalizeAuthResponse = (payload: unknown): AuthResponse => {
+  const raw = getObject(payload)
+  const data = getObject(raw.data ?? payload)
 
-const normalizeAuthResponse = (payload: any): AuthResponse => {
-  const data = payload?.data || payload
   return {
-    accessToken: data?.accessToken || payload?.accessToken,
-    refreshToken: data?.refreshToken || payload?.refreshToken,
-    user: normalizeUser(data?.user || data),
+    accessToken: toString(data.accessToken) || '',
+    refreshToken: toString(data.refreshToken) || '',
+    user: normalizeUser(data.user ?? data),
   }
 }
 
+const getErrorMessage = (error: unknown): string => {
+  if (typeof error === 'object' && error !== null) {
+    const axiosError = error as AxiosError
+    const responseData = axiosError.response?.data as ApiObject | undefined
+    if (responseData?.message && typeof responseData.message === 'string') return responseData.message
+    if (responseData?.error && typeof responseData.error === 'string') return responseData.error
+  }
 
-const getErrorMessage = (error: any): string => {
-  if (error?.response?.data?.message) return error.response.data.message
-  if (error?.response?.data?.error) return error.response.data.error
-  return error?.message || 'Request failed.'
+  if (error instanceof Error) return error.message
+  return 'Request failed.'
 }
 
 
@@ -189,7 +222,7 @@ export const AuthApi = {
     username: string
     email: string
     password: string
-  }): Promise<any> => {
+  }): Promise<AuthResponse> => {
     try {
       const response = await apiClient.post('/auth/register', {
         email: userData.email,
@@ -200,11 +233,11 @@ export const AuthApi = {
         username: userData.username,
       })
       return normalizeAuthResponse(response.data)
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
-  listPendingPharmacies: async (): Promise<any[]> => {
+  listPendingPharmacies: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/auth/pharmacies/pending')
       return Array.isArray(response.data) ? response.data : response.data?.data || []
@@ -220,8 +253,8 @@ export const AuthApi = {
       TokenStorage.setRefreshToken(normalized.refreshToken)
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalized))
       return normalized
-    } catch (error: any) {
-      console.log("Error ",error)
+    } catch (error: unknown) {
+      console.log("Error ", error)
       throw new Error(getErrorMessage(error))
     }
   },
@@ -272,7 +305,7 @@ export const AuthApi = {
     email: string
     phone: string
     passwordHash: string
-  }): Promise<any> => {
+  }): Promise<unknown> => {
     try {
       const response = await apiClient.post('/auth/register-pharmacy', {
         fullname: pharmacyData.fullname,
@@ -287,7 +320,7 @@ export const AuthApi = {
   },
 
 
-  getAllPharmacies: async (): Promise<any[]> => {
+  getAllPharmacies: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/pharmacies')
       console.log("PHARMACIES API RESPONSE: ",response.data)
@@ -298,14 +331,14 @@ export const AuthApi = {
       if (Array.isArray(payload?.data)) return payload.data
       if (Array.isArray(payload?.data?.data)) return payload.data.data
       return []
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching pharmacies: ", error)
       throw new Error(getErrorMessage(error))
     }
   },
 
 
-  getGovernmentSummary: async (): Promise<any> => {
+  getGovernmentSummary: async (): Promise<unknown> => {
     try {
       const response = await apiClient.get('/government/summary')
       return response.data
@@ -315,17 +348,17 @@ export const AuthApi = {
   },
 
 
-  getGovernmentMedicineAvailability: async (): Promise<any[]> => {
+  getGovernmentMedicineAvailability: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/government/medicine-availability')
-      return response.data
-    } catch (error) {
+      return Array.isArray(response.data) ? response.data : []
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
 
 
-  getGovernmentLowStock: async (threshold = 10): Promise<any[]> => {
+  getGovernmentLowStock: async (threshold = 10): Promise<unknown[]> => {
     try {
       const response = await apiClient.get(`/government/low-stock?threshold=${threshold}`)
       const payload= response.data
@@ -337,22 +370,22 @@ export const AuthApi = {
     }
   },
 
-  getGovernmentReservationStats: async (): Promise<any[]> => {
+  getGovernmentReservationStats: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/government/reservation-stats')
       const payload= response.data
       if(Array.isArray(payload)) return payload;
       if(Array.isArray(payload?.data)) return payload.data;
       return []
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
 
 
-  getGovernmentAuditLogs: async (page = 1, limit = 25, entityType?: string, action?: string): Promise<any> => {
+  getGovernmentAuditLogs: async (page = 1, limit = 25, entityType?: string, action?: string): Promise<unknown> => {
     try {
-      const params: Record<string, any> = { page, limit }
+      const params: Record<string, unknown> = { page, limit }
       if (entityType) params.entityType = entityType
       if (action) params.action = action
       const response = await apiClient.get('/audit-logs', { params })
@@ -363,17 +396,17 @@ export const AuthApi = {
   },
 
 
-  getInsuranceReport: async (): Promise<any> => {
+  getInsuranceReport: async (): Promise<unknown> => {
     try {
       const response = await apiClient.get('/reports/insurance')
       return response.data
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
 
 
-  approvePharmacy: async (pharmacyId: string): Promise<any> => {
+  approvePharmacy: async (pharmacyId: string): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'APPROVED' })
       return response.data
@@ -383,17 +416,17 @@ export const AuthApi = {
   },
 
 
-  rejectPharmacy: async (pharmacyId: string): Promise<any> => {
+  rejectPharmacy: async (pharmacyId: string): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'REJECTED' })
       return response.data
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
 
 
-  reactivatePharmacy: async (pharmacyId: string): Promise<any> => {
+  reactivatePharmacy: async (pharmacyId: string): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'APPROVED' })
       return response.data
@@ -403,36 +436,55 @@ export const AuthApi = {
   },
 
 
-  getGovernmentReport: async (startDate?: string, endDate?: string): Promise<any> => {
+  getGovernmentReport: async (startDate?: string, endDate?: string): Promise<unknown> => {
     try {
-      const query = []
+      const query: string[] = []
       if (startDate) query.push(`startDate=${encodeURIComponent(startDate)}`)
       if (endDate) query.push(`endDate=${encodeURIComponent(endDate)}`)
       const url = `/reports/government${query.length ? `?${query.join('&')}` : ''}`
       const response = await apiClient.get(url)
       return response.data
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
 
 
-  requestMoreInformation: async (pharmacyId: string, details: string): Promise<any> => {
+  requestMoreInformation: async (pharmacyId: string, details: string): Promise<unknown> => {
     try {
-      const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'MORE_INFO_REQUESTED' })
+      const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, {
+        status: 'MORE_INFO_REQUESTED',
+        details,
+      })
       return response.data
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
 
 
-  getRegistrationStatus: async (identifier: string): Promise<any> => {
+  getRegistrationStatus: async (identifier: string): Promise<unknown> => {
     try {
       const response = await apiClient.get('/pharmacies')
-      const list = Array.isArray(response.data) ? response.data : response.data?.data || []
-      return list.find((item: any) => item.name?.toLowerCase().includes(identifier.toLowerCase()) || item.owner?.email?.toLowerCase().includes(identifier.toLowerCase())) || null
-    } catch (error) {
+      const list: unknown[] = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data?.data)
+        ? response.data.data
+        : []
+
+      return (
+        list.find((item) => {
+          const candidate = getObject(item)
+          const name = toString(candidate.name)
+          const owner = getObject(candidate.owner)
+          const ownerEmail = toString(owner.email)
+          return (
+            name?.toLowerCase().includes(identifier.toLowerCase()) ||
+            ownerEmail?.toLowerCase().includes(identifier.toLowerCase())
+          )
+        }) || null
+      )
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
@@ -484,29 +536,35 @@ export const AuthApi = {
   },
 
 
-  requestPasswordReset: async (_identifier: string): Promise<void> => {
+  requestPasswordReset: async (identifier: string): Promise<void> => {
+    void identifier
     return Promise.resolve()
   },
 
 
-  verifyResetOTP: async (_identifier: string, _otp: string): Promise<void> => {
+  verifyResetOTP: async (identifier: string, otp: string): Promise<void> => {
+    void identifier
+    void otp
     return Promise.resolve()
   },
 
 
-  resetPassword: async (_identifier: string, _newPass: string): Promise<void> => {
+  resetPassword: async (identifier: string, newPass: string): Promise<void> => {
+    void identifier
+    void newPass
     return Promise.resolve()
   },
 
 
-  getCurrentUser: async (): Promise<any> => {
+  getCurrentUser: async (): Promise<AuthUser> => {
     const session = localStorage.getItem(CURRENT_USER_KEY)
     if (!session) throw new Error('No active session.')
-    return JSON.parse(session).user
+    const payload = JSON.parse(session) as AuthResponse
+    return payload.user
   },
 
 
-  updateProfile: async (_emailOrUsername: string, updatedFields: any): Promise<any> => {
+  updateProfile: async (_emailOrUsername: string, updatedFields: UpdateProfileFields): Promise<AuthUser> => {
     try {
       const response = await apiClient.put('/users/profile', {
         firstName: updatedFields.firstName,
@@ -540,7 +598,7 @@ export const AuthApi = {
     ownershipType: string
     province: string
     district: string
-  }): Promise<any> => {
+  }): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}`, data)
       return response.data
@@ -550,11 +608,12 @@ export const AuthApi = {
   },
 
 
-  getProfile: async (_emailOrUsername: string): Promise<any> => {
+  getProfile: async (_emailOrUsername: string): Promise<AuthUser> => {
+    void _emailOrUsername
     try {
       const response = await apiClient.get('/users/profile')
       return normalizeUser(response.data)
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
   },
