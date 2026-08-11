@@ -367,8 +367,8 @@ export default function PharmacyInventory() {
       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <HeartPulse className="w-6 h-6 text-health-accent" />
-            <h1 className="text-2xl font-black text-gray-900">Inventory Management</h1>
+            <Package className="w-6 h-6 text-health-primary" />
+            <h1 className="text-2xl font-black text-gray-900">Stock Management</h1>
           </div>
           <p className="text-xs text-gray-500 font-medium">
             Active Storefront: <span className="font-bold text-health-primary">{pharmacyName}</span> (ID: {pharmacyId})
@@ -780,7 +780,7 @@ export default function PharmacyInventory() {
             {/* Header */}
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center space-x-2">
-                <HeartPulse className="w-5 h-5 text-health-accent" aria-hidden="true" />
+                <Package className="w-5 h-5 text-health-primary" aria-hidden="true" />
                 <div>
                   <h3 id="add-modal-title" className="font-black text-gray-900 text-base">Add Medication to Catalog</h3>
                   <p className="text-[10px] text-gray-400 font-semibold">Store-specific dynamic stock definition</p>

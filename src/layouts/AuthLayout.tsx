@@ -9,12 +9,6 @@ interface AuthLayoutProps {
 export default function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {/* Government Badge above Card */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 uppercase tracking-widest">
-          Government of Rwanda
-        </span>
-      </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-10 px-6 sm:px-10 border border-gray-200 shadow-lg rounded-2xl space-y-6">

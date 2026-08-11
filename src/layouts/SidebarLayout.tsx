@@ -1,86 +1,146 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
-import { useEffect } from 'react'
-import { 
+import { useNotificationStore } from '@/store/notificationStore'
+import { useEffect, useRef, useState } from 'react'
+import {
   Menu, X, LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
-  ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2, MapPin
+  ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2, MapPin,
+  CheckSquare, Trash2, Clock
 } from 'lucide-react'
 
 export default function SidebarLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
-  const { sidebarOpen, toggleSidebar } = useUIStore()
+  const { sidebarOpen, setSidebarOpen, toggleSidebar } = useUIStore()
+  const { items: notifs, unreadCount, load, markRead, markAllRead, remove } = useNotificationStore()
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  // Load notifications for this role on mount / role change
+  useEffect(() => {
+    if (user?.role) load(user.role)
+  }, [user?.role, load])
+
+  // Close notification dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Notification page path per role
+  const notifPath = () => {
+    switch (user?.role) {
+      case 'PATIENT':    return '/patient/notifications'
+      case 'PHARMACY':   return '/pharmacy/notifications'
+      default:           return null
+    }
+  }
+
+  // Track whether we've done the initial size-based open so resize doesn't override user choice
+  const initialised = useRef(false)
+
+  // On first mount: open sidebar if desktop, close if mobile
+  useEffect(() => {
+    if (!initialised.current) {
+      setSidebarOpen(window.innerWidth >= 768)
+      initialised.current = true
+    }
+  }, [setSidebarOpen])
+
+  // On resize: only auto-adjust when crossing the breakpoint boundary
+  useEffect(() => {
+    let wasDesktop = window.innerWidth >= 768
+    const onResize = () => {
+      const isDesktop = window.innerWidth >= 768
+      if (isDesktop !== wasDesktop) {
+        // Switched breakpoints — snap to expected default
+        setSidebarOpen(isDesktop)
+        wasDesktop = isDesktop
+      }
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [setSidebarOpen])
+
+  // Close on Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && sidebarOpen) setSidebarOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [sidebarOpen, setSidebarOpen])
+
+  // Close sidebar when navigating on mobile
+  useEffect(() => {
+    if (window.innerWidth < 768) setSidebarOpen(false)
+  }, [location.pathname, setSidebarOpen])
 
   const handleLogout = () => {
     logout()
     navigate('/')
   }
 
-  // Close sidebar on Escape key
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && sidebarOpen) toggleSidebar()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [sidebarOpen, toggleSidebar])
-
-  // Define sidebar links based on role
   const getLinks = () => {
     const role = user?.role || 'PATIENT'
     switch (role) {
       case 'PATIENT':
         return [
-          { path: '/patient', label: 'Dashboard', icon: LayoutDashboard },
-          { path: '/patient/search', label: 'Search Medicine', icon: Search },
-          { path: '/patient/reservations', label: 'My Reservations', icon: ClipboardList },
-          { path: '/patient/history', label: 'History', icon: History },
-          { path: '/patient/notifications', label: 'Notifications', icon: Bell },
-          { path: '/patient/profile', label: 'Profile', icon: User },
+          { path: '/patient',               label: 'Dashboard',      icon: LayoutDashboard },
+          { path: '/patient/search',         label: 'Search Medicine',icon: Search          },
+          { path: '/patient/reservations',   label: 'My Reservations',icon: ClipboardList   },
+          { path: '/patient/history',        label: 'History',        icon: History         },
+          { path: '/patient/notifications',  label: 'Notifications',  icon: Bell            },
+          { path: '/patient/profile',        label: 'Profile',        icon: User            },
         ]
       case 'PHARMACY':
         return [
-          { path: '/pharmacy', label: 'Dashboard', icon: LayoutDashboard },
-          { path: '/pharmacy/inventory', label: 'Inventory', icon: Package },
-          { path: '/pharmacy/reservations', label: 'Reservations', icon: ClipboardList },
-          { path: '/pharmacy/patients', label: 'Patients', icon: Users },
-          { path: '/pharmacy/claims', label: 'Billing', icon: DollarSign },
-          { path: '/pharmacy/staff', label: 'Staff Management', icon: Users },
-          { path: '/pharmacy/audit', label: 'Audit Trail', icon: FileLock2 },
-          { path: '/pharmacy/reports', label: 'Reports', icon: BarChart2 },
-          { path: '/pharmacy/settings', label: 'Settings', icon: Settings },
+          { path: '/pharmacy',               label: 'Dashboard',      icon: LayoutDashboard },
+          { path: '/pharmacy/inventory',     label: 'Inventory',      icon: Package         },
+          { path: '/pharmacy/reservations',  label: 'Reservations',   icon: ClipboardList   },
+          { path: '/pharmacy/patients',      label: 'Patients',       icon: Users           },
+          { path: '/pharmacy/claims',        label: 'Billing',        icon: DollarSign      },
+          { path: '/pharmacy/staff',         label: 'Staff',          icon: Users           },
+          { path: '/pharmacy/audit',         label: 'Audit Trail',    icon: FileLock2       },
+          { path: '/pharmacy/reports',       label: 'Reports',        icon: BarChart2       },
+          { path: '/pharmacy/settings',      label: 'Settings',       icon: Settings        },
         ]
       case 'INSURANCE':
         return [
-          { path: '/insurance', label: 'Dashboard', icon: LayoutDashboard },
-          { path: '/insurance/claims', label: 'Claims Reviews', icon: FileText },
-          { path: '/insurance/payments', label: 'Payments', icon: DollarSign },
-          { path: '/insurance/reports', label: 'Reports', icon: BarChart2 },
-          { path: '/insurance/patients', label: 'Insured Patients', icon: Users },
+          { path: '/insurance',              label: 'Dashboard',      icon: LayoutDashboard },
+          { path: '/insurance/claims',       label: 'Claims',         icon: FileText        },
+          { path: '/insurance/payments',     label: 'Payments',       icon: DollarSign      },
+          { path: '/insurance/reports',      label: 'Reports',        icon: BarChart2       },
+          { path: '/insurance/patients',     label: 'Insured Patients',icon: Users          },
         ]
       case 'GOVERNMENT':
         return [
-          { path: '/government', label: 'Dashboard', icon: LayoutDashboard },
-          { path: '/government/pharmacies', label: 'Pharmacy Registry', icon: Users },
-          { path: '/government/medicines', label: 'Medicine Registry', icon: Package },
-          { path: '/government/analytics', label: 'National Analytics', icon: BarChart2 },
-          { path: '/government/districts', label: 'District Heatmap', icon: MapPin },
-          { path: '/government/province-analytics', label: 'Province Analytics', icon: TrendingUp },
-          { path: '/government/medicine-analytics', label: 'Drug Analytics', icon: Package },
-          { path: '/government/compliance', label: 'Compliance Audits', icon: FileLock2 },
-          { path: '/government/reports', label: 'MOH Reports', icon: FileText },
+          { path: '/government',                    label: 'Dashboard',        icon: LayoutDashboard },
+          { path: '/government/pharmacies',         label: 'Pharmacy Registry',icon: Users           },
+          { path: '/government/medicines',          label: 'Medicine Registry',icon: Package         },
+          { path: '/government/analytics',         label: 'National Analytics',icon: BarChart2       },
+          { path: '/government/districts',         label: 'District Heatmap', icon: MapPin          },
+          { path: '/government/province-analytics',label: 'Province Analytics',icon: TrendingUp      },
+          { path: '/government/medicine-analytics',label: 'Drug Analytics',   icon: Package         },
+          { path: '/government/compliance',        label: 'Compliance Audits',icon: FileLock2       },
+          { path: '/government/reports',           label: 'MOH Reports',      icon: FileText        },
         ]
       case 'ADMIN':
         return [
-          { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-          { path: '/admin/users', label: 'Users', icon: Users },
-          { path: '/admin/medicines', label: 'Medicines', icon: Package },
-          { path: '/admin/roles', label: 'Roles & Access', icon: ShieldAlert },
-          { path: '/admin/settings', label: 'Settings', icon: Settings },
-          { path: '/admin/audit', label: 'Audit Logs', icon: FileLock2 },
+          { path: '/admin',          label: 'Dashboard',   icon: LayoutDashboard },
+          { path: '/admin/users',    label: 'Users',       icon: Users           },
+          { path: '/admin/medicines',label: 'Medicines',   icon: Package         },
+          { path: '/admin/roles',    label: 'Roles',       icon: ShieldAlert     },
+          { path: '/admin/settings', label: 'Settings',    icon: Settings        },
+          { path: '/admin/audit',    label: 'Audit Logs',  icon: FileLock2       },
         ]
       default:
         return []
@@ -88,102 +148,101 @@ export default function SidebarLayout() {
   }
 
   const navLinks = getLinks()
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Mobile Drawer Backdrop */}
-      {sidebarOpen && (
-        <div 
-          onClick={toggleSidebar}
+
+      {/* Dark backdrop — only on mobile when sidebar is open */}
+      {sidebarOpen && !isDesktop && (
+        <div
+          onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
-          className="fixed inset-0 z-30 bg-gray-900/40 md:hidden transition-opacity"
+          className="fixed inset-0 z-30 bg-gray-900/50 transition-opacity md:hidden"
         />
       )}
 
-      {/* Sidebar Panel — always fixed, never scrolls with page */}
+      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <aside
         id="main-sidebar"
         aria-label="Main navigation"
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col transform transition-transform duration-200 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col
+          transform transition-transform duration-200 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        {/* Brand header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800">
-          <div className="flex items-center space-x-2.5">
+        {/* Brand */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 flex-shrink-0">
+          <div className="flex items-center space-x-2.5 min-w-0">
             <div className="bg-white rounded-lg p-1.5 flex-shrink-0">
-              <img
-                src="/logo1.png"
-                alt="Rwanda E-Pharmacy"
-                className="h-8 w-auto object-contain"
-              />
+              <img src="/logo1.png" alt="Rwanda E-Pharmacy" className="h-8 w-auto object-contain" />
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="font-black text-sm leading-none block text-white tracking-wide">Rwanda</span>
               <span className="block text-[9px] text-emerald-400 tracking-widest font-bold uppercase mt-0.5">
                 E-Pharmacy
               </span>
             </div>
           </div>
+          {/* X button — visible on all sizes so user can close from inside */}
           <button
-            onClick={toggleSidebar}
-            aria-label="Close navigation menu"
-            aria-expanded={sidebarOpen}
-            aria-controls="main-sidebar"
-            className="md:hidden text-white hover:text-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 rounded"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation"
+            className="text-slate-400 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 rounded p-1 flex-shrink-0"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
-        {/* Navigation list */}
-        <nav aria-label={`${user?.role} portal navigation`} className="flex-grow py-6 px-4 space-y-1 overflow-y-auto">
-          <span className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase px-3 mb-2">
+        {/* Nav links */}
+        <nav
+          aria-label={`${user?.role ?? ''} portal navigation`}
+          className="flex-grow py-5 px-3 space-y-0.5 overflow-y-auto"
+        >
+          <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-3 mb-3">
             {user?.role} Portal
-          </span>
+          </p>
           {navLinks.map((link) => {
             const Icon = link.icon
             const isActive = location.pathname === link.path
-            const isPharmacyApproved = user?.role !== 'PHARMACY' || user?.pharmacy?.status === 'APPROVED'
-            const isDisabled = !isPharmacyApproved && link.path !== '/pharmacy'
-
             return (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  isActive 
-                    ? 'bg-slate-800 text-white font-bold shadow-sm' 
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                  focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 ${
+                  isActive
+                    ? 'bg-slate-800 text-white font-bold'
+                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} aria-hidden="true" />
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} aria-hidden="true" />
                   <span>{link.label}</span>
                 </div>
-                {isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />}
+                {isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" aria-hidden="true" />}
               </Link>
             )
           })}
         </nav>
 
-        {/* Footer profile & logout */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
+        {/* User footer */}
+        <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center space-x-3 overflow-hidden">
             <div
               aria-hidden="true"
               className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 flex-shrink-0"
             >
-              {user?.name ? user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() : 'MU'}
+              {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
             </div>
             <div className="overflow-hidden">
               <span className="block font-bold text-xs text-white truncate">{user?.name || 'User'}</span>
-              <span className="block text-[10px] text-slate-400 truncate">v2.4.1</span>
+              <span className="block text-[10px] text-slate-400 truncate">{user?.role}</span>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            aria-label="Sign out of your account"
+            aria-label="Sign out"
             className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
           >
             <LogOut className="w-4 h-4" aria-hidden="true" />
@@ -191,52 +250,175 @@ export default function SidebarLayout() {
         </div>
       </aside>
 
-      {/* Main Container — offset by sidebar width on desktop */}
-      <div className="flex-grow flex flex-col min-w-0 md:ml-64">
-        {/* Top Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">
-          <div className="flex items-center space-x-4">
-            <button 
+      {/* ── Main content ─────────────────────────────────────────────────── */}
+      <div
+        className={`flex-grow flex flex-col min-w-0 transition-all duration-200 ${
+          sidebarOpen ? 'md:ml-64' : 'ml-0'
+        }`}
+      >
+        {/* Top header */}
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
+          <div className="flex items-center space-x-3">
+            {/* Hamburger — always three lines, never animates to X */}
+            <button
               onClick={toggleSidebar}
-              aria-label="Toggle navigation menu"
+              aria-label={sidebarOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={sidebarOpen}
               aria-controls="main-sidebar"
-              className="text-gray-500 hover:text-health-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
+              className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-health-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
             >
               <Menu className="w-6 h-6" aria-hidden="true" />
             </button>
-            <div className="hidden sm:block text-sm text-gray-500 font-medium">
-              Republic of Rwanda &bull; Integrated Healthcare Platform
-            </div>
+
+            <span className="hidden sm:block text-sm text-gray-500 font-medium">
+              Rwanda E-Pharmacy &bull; {user?.role} Portal
+            </span>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button
-              className="relative w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 hover:text-health-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
-              aria-label="Notifications — 1 unread"
-            >
-              <Bell className="w-5 h-5" aria-hidden="true" />
-              <span aria-hidden="true" className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
-            </button>
+          <div className="flex items-center space-x-3">
+            {/* ── Notification bell + dropdown ─────────────────────── */}
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setNotifOpen(v => !v)}
+                aria-label={`Notifications${unreadCount > 0 ? ` — ${unreadCount} unread` : ''}`}
+                aria-expanded={notifOpen}
+                className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-health-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+              >
+                <Bell className="w-5 h-5" aria-hidden="true" />
+                {unreadCount > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5 border-2 border-white"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
 
-            {/* Profile widget */}
-            <div className="flex items-center space-x-2 border-l border-gray-200 pl-4">
-              <span className="text-xs font-bold text-gray-800 hidden md:block">
-                {user?.name}
-              </span>
+              {/* Dropdown panel */}
+              {notifOpen && (
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                      <span className="text-sm font-black text-gray-900">Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={() => markAllRead(user?.role ?? '')}
+                          className="text-[10px] font-bold text-emerald-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Notification list */}
+                  <ul className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                    {notifs.length === 0 ? (
+                      <li className="py-10 text-center text-gray-400">
+                        <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" aria-hidden="true" />
+                        <p className="text-xs font-semibold">No notifications</p>
+                      </li>
+                    ) : (
+                      notifs.slice(0, 8).map(n => (
+                        <li
+                          key={n.id}
+                          className={`flex items-start gap-3 px-4 py-3 transition-colors relative ${!n.read ? 'bg-emerald-50/30' : 'hover:bg-gray-50/60'}`}
+                        >
+                          {/* Unread indicator */}
+                          {!n.read && (
+                            <span aria-hidden="true" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-r-full" />
+                          )}
+                          <div className="flex-grow min-w-0">
+                            <p className={`text-xs leading-snug ${!n.read ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
+                              {n.title}
+                            </p>
+                            <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed line-clamp-2">{n.message}</p>
+                            <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
+                              <Clock className="w-3 h-3" aria-hidden="true" />
+                              <time dateTime={n.createdAt}>
+                                {(() => {
+                                  const diff = Math.floor((Date.now() - new Date(n.createdAt).getTime()) / 1000)
+                                  if (diff < 60) return `${diff}s ago`
+                                  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+                                  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+                                  return `${Math.floor(diff / 86400)}d ago`
+                                })()}
+                              </time>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                            {!n.read && (
+                              <button
+                                onClick={() => markRead(n.id, user?.role ?? '')}
+                                aria-label="Mark as read"
+                                className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-emerald-600 transition-colors"
+                              >
+                                <CheckSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => remove(n.id, user?.role ?? '')}
+                              aria-label="Dismiss notification"
+                              className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                            </button>
+                          </div>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+
+                  {/* Footer — link to full notifications page */}
+                  <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
+                    {notifPath() ? (
+                      <Link
+                        to={notifPath()!}
+                        onClick={() => setNotifOpen(false)}
+                        className="block text-center text-xs font-bold text-health-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
+                      >
+                        View all notifications →
+                      </Link>
+                    ) : (
+                      <p className="text-center text-[11px] text-gray-400">
+                        {notifs.length} notification{notifs.length !== 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Profile */}
+            <div className="flex items-center space-x-2 border-l border-gray-200 pl-3">
               <div
                 aria-hidden="true"
-                className="w-8 h-8 rounded-full bg-emerald-100 text-health-primary flex items-center justify-center font-bold text-sm"
+                className="w-8 h-8 rounded-full bg-emerald-100 text-health-primary flex items-center justify-center font-bold text-sm flex-shrink-0"
               >
-                {user?.name?.[0]}
+                {user?.name?.[0] ?? 'U'}
               </div>
+              <span className="text-xs font-bold text-gray-800 hidden md:block truncate max-w-[120px]">
+                {user?.name}
+              </span>
             </div>
           </div>
         </header>
 
-        {/* Content Page Container */}
-        <main id="main-content" className="flex-grow p-6 overflow-y-auto max-w-7xl w-full mx-auto">
-          <Outlet />
+        {/* Page content */}
+        <main id="main-content" className="flex-grow p-4 sm:p-6 overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

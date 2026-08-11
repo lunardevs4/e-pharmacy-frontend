@@ -2,6 +2,7 @@ import { UserRole } from '@/types'
 import { apiClient } from '@/api/client'
 import { TokenStorage } from '@/services/token-storage'
 
+
 export interface AuthUser {
   id: string
   username: string
@@ -62,13 +63,16 @@ export interface AuthUser {
   }
 }
 
+
 export interface AuthResponse {
   accessToken: string
   refreshToken: string
   user: AuthUser
 }
 
+
 const CURRENT_USER_KEY = 'epharmacy_current_session_user'
+
 
 const normalizeUser = (payload: any): AuthUser => {
   const userObj = payload?.user || payload?.data || payload || {}
@@ -77,6 +81,7 @@ const normalizeUser = (payload: any): AuthUser => {
   const displayName = userObj.name || [firstName, lastName].filter(Boolean).join(' ') || userObj.email || 'User'
   const role = (userObj.role || 'PATIENT') as UserRole
   const username = userObj.username || userObj.email || [firstName, lastName].filter(Boolean).join('.').toLowerCase() || 'user'
+
 
   return {
     id: userObj.id || '',
@@ -139,6 +144,7 @@ const normalizeUser = (payload: any): AuthUser => {
   }
 }
 
+
 const normalizeAuthResponse = (payload: any): AuthResponse => {
   const data = payload?.data || payload
   return {
@@ -148,83 +154,13 @@ const normalizeAuthResponse = (payload: any): AuthResponse => {
   }
 }
 
+
 const getErrorMessage = (error: any): string => {
   if (error?.response?.data?.message) return error.response.data.message
   if (error?.response?.data?.error) return error.response.data.error
   return error?.message || 'Request failed.'
 }
 
-// ── Mock credentials for offline / demo mode ──────────────────────────────────
-const MOCK_ACCOUNTS: Record<string, { password: string; user: AuthUser }> = {
-  patient: {
-    password: 'PatientPass123!',
-    user: {
-      id: 'usr_pat_002', username: 'patient', email: 'patient@epharmacy.rw',
-      name: 'Marie Uwimana', role: 'PATIENT', firstLogin: false,
-      province: 'Kigali City', district: 'Gasabo',
-      permissions: ['SEARCH_MEDICINES', 'CREATE_RESERVATION'],
-    },
-  },
-  government: {
-    password: 'GovPass123!',
-    user: {
-      id: 'usr_gov_001', username: 'government', email: 'gov@moh.gov.rw',
-      name: 'Jean Bosco Gasana', role: 'GOVERNMENT', firstLogin: false,
-      position: 'Health Director', permissions: ['VIEW_NATIONAL_ANALYTICS'],
-    },
-  },
-  admin: {
-    password: 'AdminPass123!',
-    user: {
-      id: 'usr_adm_001', username: 'admin', email: 'admin@epharmacy.rw',
-      name: 'System Admin', role: 'ADMIN', firstLogin: false,
-      permissions: ['MANAGE_USERS', 'MANAGE_ROLES', 'VIEW_AUDIT_LOGS'],
-    },
-  },
-  staff: {
-    password: 'TempPass123!',
-    user: {
-      id: 'usr_pha_001', username: 'staff', email: 'staff@bralirwa.rw',
-      name: 'Alice Uwimana', role: 'PHARMACY', firstLogin: false,
-      pharmacyId: 'ph-001', pharmacyName: 'Bralirwa Pharmacy',
-      pharmacy: { id: 'ph-001', name: 'Bralirwa Pharmacy', status: 'APPROVED', licenseNumber: 'LIC-KIG-48293-2026' },
-    },
-  },
-  manager: {
-    password: 'ManagerPass123!',
-    user: {
-      id: 'usr_pha_002', username: 'manager', email: 'manager@bralirwa.rw',
-      name: 'Eric Mugisha', role: 'PHARMACY', firstLogin: false,
-      pharmacyId: 'ph-001', pharmacyName: 'Bralirwa Pharmacy',
-      pharmacy: { id: 'ph-001', name: 'Bralirwa Pharmacy', status: 'APPROVED', licenseNumber: 'LIC-KIG-48293-2026' },
-    },
-  },
-  insurance: {
-    password: 'InsurancePass123!',
-    user: {
-      id: 'usr_ins_001', username: 'insurance', email: 'insurance@rssb.rw',
-      name: 'Diane Mukamana', role: 'INSURANCE', firstLogin: false,
-      permissions: ['VIEW_CLAIMS', 'PROCESS_PAYMENTS'],
-    },
-  },
-}
-
-const mockLogin = (identifier: string, password: string): AuthResponse => {
-  const key = identifier.toLowerCase().trim()
-  const account =
-    MOCK_ACCOUNTS[key] ||
-    Object.values(MOCK_ACCOUNTS).find(
-      (a) => a.user.email?.toLowerCase() === key
-    )
-
-  if (!account || account.password !== password) {
-    throw new Error('Invalid username or password. Please check your credentials.')
-  }
-
-  const accessToken = `mock_jwt_${account.user.id}_${Date.now()}`
-  const refreshToken = `mock_refresh_${account.user.id}_${Date.now()}`
-  return { accessToken, refreshToken, user: account.user }
-}
 
 export const AuthApi = {
   createStaff: async (pharmacyId: string, data: { firstName: string; lastName: string; email: string; phone: string; role: string; position: string }) => {
@@ -285,24 +221,11 @@ export const AuthApi = {
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalized))
       return normalized
     } catch (error: any) {
-      // If the backend is unreachable, fall back to mock credentials
-      const isNetworkError =
-        !error?.response ||
-        error?.message?.toLowerCase().includes('network') ||
-        error?.message?.toLowerCase().includes('unreachable') ||
-        error?.code === 'ECONNABORTED'
-
-      if (isNetworkError) {
-        const mocked = mockLogin(identifier, password)
-        TokenStorage.setToken(mocked.accessToken)
-        TokenStorage.setRefreshToken(mocked.refreshToken)
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mocked))
-        return mocked
-      }
-
+      console.log("Error ",error)
       throw new Error(getErrorMessage(error))
     }
   },
+
 
   registerPatient: async (userData: {
     fullName: string
@@ -324,6 +247,7 @@ export const AuthApi = {
     const lastName = rest.join(' ') || 'User'
     const email = userData.email?.trim() || `${userData.username.toLowerCase()}@epharmacy.local`
 
+
     try {
       const response = await apiClient.post('/auth/register', {
         email,
@@ -341,6 +265,7 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
+
 
   registerPharmacy: async (pharmacyData: {
     fullname: string
@@ -361,11 +286,13 @@ export const AuthApi = {
     }
   },
 
+
   getAllPharmacies: async (): Promise<any[]> => {
     try {
       const response = await apiClient.get('/pharmacies')
       console.log("PHARMACIES API RESPONSE: ",response.data)
       const payload = response.data
+
 
       if (Array.isArray(payload)) return payload
       if (Array.isArray(payload?.data)) return payload.data
@@ -388,6 +315,7 @@ export const AuthApi = {
     }
   },
 
+
   getGovernmentSummary: async (): Promise<any> => {
     try {
       const response = await apiClient.get('/government/summary')
@@ -397,6 +325,7 @@ export const AuthApi = {
     }
   },
 
+
   getGovernmentMedicineAvailability: async (): Promise<any[]> => {
     try {
       const response = await apiClient.get('/government/medicine-availability')
@@ -405,6 +334,7 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
+
 
   getGovernmentLowStock: async (threshold = 10): Promise<any[]> => {
     try {
@@ -430,6 +360,7 @@ export const AuthApi = {
     }
   },
 
+
   getGovernmentAuditLogs: async (page = 1, limit = 25, entityType?: string, action?: string): Promise<any> => {
     try {
       const params: Record<string, any> = { page, limit }
@@ -442,6 +373,7 @@ export const AuthApi = {
     }
   },
 
+
   getInsuranceReport: async (): Promise<any> => {
     try {
       const response = await apiClient.get('/reports/insurance')
@@ -450,6 +382,7 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
+
 
   approvePharmacy: async (pharmacyId: string): Promise<any> => {
     try {
@@ -460,6 +393,7 @@ export const AuthApi = {
     }
   },
 
+
   rejectPharmacy: async (pharmacyId: string): Promise<any> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'REJECTED' })
@@ -469,6 +403,7 @@ export const AuthApi = {
     }
   },
 
+
   reactivatePharmacy: async (pharmacyId: string): Promise<any> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'APPROVED' })
@@ -477,6 +412,7 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
+
 
   getGovernmentReport: async (startDate?: string, endDate?: string): Promise<any> => {
     try {
@@ -491,6 +427,7 @@ export const AuthApi = {
     }
   },
 
+
   requestMoreInformation: async (pharmacyId: string, details: string): Promise<any> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'MORE_INFO_REQUESTED' })
@@ -499,6 +436,7 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
+
 
   getRegistrationStatus: async (identifier: string): Promise<any> => {
     try {
@@ -510,6 +448,7 @@ export const AuthApi = {
     }
   },
 
+
   restoreSession: async (): Promise<AuthResponse | null> => {
     const session = localStorage.getItem(CURRENT_USER_KEY)
     if (!session) return null
@@ -520,6 +459,7 @@ export const AuthApi = {
     }
   },
 
+
   refreshToken: async (token: string): Promise<{ accessToken: string }> => {
     try {
       const response = await apiClient.post('/auth/refresh', { refreshToken: token })
@@ -528,6 +468,7 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
+
 
   logout: async (): Promise<void> => {
     try {
@@ -541,6 +482,7 @@ export const AuthApi = {
     }
   },
 
+
   changePassword: async (emailOrUsername: string, currentPass: string, newPass: string): Promise<void> => {
     try {
       await apiClient.post('/auth/change-password', {
@@ -552,23 +494,28 @@ export const AuthApi = {
     }
   },
 
+
   requestPasswordReset: async (_identifier: string): Promise<void> => {
     return Promise.resolve()
   },
+
 
   verifyResetOTP: async (_identifier: string, _otp: string): Promise<void> => {
     return Promise.resolve()
   },
 
+
   resetPassword: async (_identifier: string, _newPass: string): Promise<void> => {
     return Promise.resolve()
   },
+
 
   getCurrentUser: async (): Promise<any> => {
     const session = localStorage.getItem(CURRENT_USER_KEY)
     if (!session) throw new Error('No active session.')
     return JSON.parse(session).user
   },
+
 
   updateProfile: async (_emailOrUsername: string, updatedFields: any): Promise<any> => {
     try {
@@ -590,9 +537,11 @@ export const AuthApi = {
     }
   },
 
+
   uploadProfilePhoto: async (file: File): Promise<{ profilePhoto: string }> => {
     return { profilePhoto: URL.createObjectURL(file) }
   },
+
 
   updatePharmacy: async (pharmacyId: string, data: {
     name: string
@@ -611,6 +560,7 @@ export const AuthApi = {
     }
   },
 
+
   getProfile: async (_emailOrUsername: string): Promise<any> => {
     try {
       const response = await apiClient.get('/users/profile')
@@ -620,3 +570,6 @@ export const AuthApi = {
     }
   },
 }
+
+
+

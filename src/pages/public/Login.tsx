@@ -8,12 +8,15 @@ import { AuthApi } from '@/services/auth-api'
 import AuthLayout from '@/layouts/AuthLayout'
 import { Lock, User, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff, Clock, ArrowLeft, RefreshCw, XCircle, ShieldAlert } from 'lucide-react'
 
+
 const loginSchema = z.object({
-  identifier: z.string().min(1, 'Username or Email is required'),
+  email: z.string().min(1, 'Username or Email is required'),
   password: z.string().min(1, 'Password is required'),
 })
 
+
 type LoginFormValues = z.infer<typeof loginSchema>
+
 
 interface PharmacyStatusData {
   status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | 'EXPIRED' | 'MORE_INFO_REQUESTED'
@@ -23,30 +26,36 @@ interface PharmacyStatusData {
   statusNotes?: string
 }
 
+
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuthStore()
+
 
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
+
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+
 
   // Status view for unapproved pharmacies
   const [pharmacyStatusData, setPharmacyStatusData] = useState<PharmacyStatusData | null>(null)
   const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
   const [lastCheckedIdentifier, setLastCheckedIdentifier] = useState('')
 
+
   // Load remembered identifier on mount
   useEffect(() => {
     const savedIdentifier = localStorage.getItem('epharmacy_remembered_identifier')
     if (savedIdentifier) {
-      setValue('identifier', savedIdentifier)
+      setValue('email', savedIdentifier)
       setRememberMe(true)
     }
   }, [])
+
 
   const {
     register,
@@ -56,32 +65,36 @@ export default function Login() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: '',
+      email: '',
       password: '',
     },
   })
+
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true)
     setErrorMsg(null)
     setSuccessMsg(null)
-    setLastCheckedIdentifier(data.identifier)
+    setLastCheckedIdentifier(data.email)
+
 
     try {
       // Authenticate via NestJS-compatible auth service
-      const res = await AuthApi.login(data.identifier, data.password)
-      
+      const res = await AuthApi.login(data.email, data.password)
+     
       // Save identifier if rememberMe is enabled
       if (rememberMe) {
-        localStorage.setItem('epharmacy_remembered_identifier', data.identifier)
+        localStorage.setItem('epharmacy_remembered_identifier', data.email)
       } else {
         localStorage.removeItem('epharmacy_remembered_identifier')
       }
+
 
       setSuccessMsg('Authentication successful! Redirecting...')
       console.log('Login successful:', res)
       // Save details to Zustand authStore
       login(res.user, res.accessToken)
+
 
       // Direct roles to appropriate dashboards based STRICTLY on returned user role
       setTimeout(() => {
@@ -89,6 +102,7 @@ export default function Login() {
           navigate('/change-password')
           return
         }
+
 
         switch (res.user.role) {
           case 'PATIENT':
@@ -127,6 +141,7 @@ export default function Login() {
     }
   }
 
+
   // Reload status to check if MOH has updated it
   const handleRefreshStatus = async () => {
     setIsRefreshingStatus(true)
@@ -150,6 +165,7 @@ export default function Login() {
       setIsRefreshingStatus(false)
     }
   }
+
 
   const renderStatusCard = (data: PharmacyStatusData) => {
     const statusMap = {
@@ -197,8 +213,10 @@ export default function Login() {
       }
     }
 
+
     const current = statusMap[data.status] || statusMap.PENDING_VERIFICATION
     const IconComponent = current.icon
+
 
     return (
       <div className="space-y-6 animate-fadeIn font-semibold text-xs text-gray-700">
@@ -207,11 +225,12 @@ export default function Login() {
           <h3 className="text-base font-black text-gray-900">{data.pharmacyName}</h3>
         </div>
 
+
         <div className="flex flex-col items-center bg-gray-50 border border-gray-200 rounded-2xl p-5 text-center gap-3">
           <div className={`p-3.5 rounded-full ${current.color.split(' ')[0]} ${current.color.split(' ')[1]}`}>
             <IconComponent className="w-7 h-7" />
           </div>
-          
+         
           <div className="space-y-1">
             <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider ${current.color}`}>
               {current.label}
@@ -220,6 +239,7 @@ export default function Login() {
             <p className="text-gray-550 text-[11px] font-medium leading-relaxed px-2 pt-1">{current.desc}</p>
           </div>
 
+
           {data.statusNotes && (
             <div className="w-full bg-white border border-gray-200 rounded-xl p-3.5 mt-2 text-left space-y-1">
               <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Auditor Board Comments:</span>
@@ -227,6 +247,7 @@ export default function Login() {
             </div>
           )}
         </div>
+
 
         {/* Timelines and metadata */}
         <div className="grid grid-cols-2 gap-4 bg-gray-50/50 border border-gray-150 p-4 rounded-xl text-left text-[11px] leading-relaxed">
@@ -240,6 +261,7 @@ export default function Login() {
           </div>
         </div>
 
+
         <div className="flex space-x-3 pt-2">
           <button
             type="button"
@@ -249,7 +271,7 @@ export default function Login() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             <span>Back to Sign In</span>
           </button>
-          
+         
           <button
             type="button"
             disabled={isRefreshingStatus}
@@ -273,6 +295,7 @@ export default function Login() {
     )
   }
 
+
   return (
     <AuthLayout title={pharmacyStatusData ? "Registration Status" : "Sign In"} subtitle={pharmacyStatusData ? undefined : "Access your secure Rwanda National E-Pharmacy account."}>
       {errorMsg && (
@@ -282,12 +305,14 @@ export default function Login() {
         </div>
       )}
 
+
       {successMsg && (
         <div className="bg-emerald-50 border border-emerald-250 rounded-lg p-3 flex items-start space-x-2 text-emerald-805 text-xs mb-4">
           <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span>{successMsg}</span>
         </div>
       )}
+
 
       {pharmacyStatusData ? (
         renderStatusCard(pharmacyStatusData)
@@ -306,17 +331,18 @@ export default function Login() {
                 id="identifier"
                 type="text"
                 disabled={isLoading}
-                {...register('identifier')}
+                {...register('email')}
                 className={`block w-full pl-10 pr-3 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold ${
-                  errors.identifier ? 'border-red-300' : 'border-gray-300'
+                  errors.email ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="Email address or phone number"
               />
             </div>
-            {errors.identifier && (
-              <p className="mt-1 text-xs text-red-655 font-bold">{errors.identifier.message}</p>
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-655 font-bold">{errors.email.message}</p>
             )}
           </div>
+
 
           {/* Password */}
           <div>
@@ -355,6 +381,7 @@ export default function Login() {
             )}
           </div>
 
+
           {/* Remember Me */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -372,6 +399,7 @@ export default function Login() {
             </div>
           </div>
 
+
           {/* Submit Button */}
           <button
             type="submit"
@@ -387,6 +415,7 @@ export default function Login() {
               <span>Sign In</span>
             )}
           </button>
+
 
           {/* Registration Link */}
           <div className="text-center text-xs mt-4 pt-4 border-t border-gray-150 flex flex-col gap-2">
@@ -409,6 +438,7 @@ export default function Login() {
   )
 }
 
+
 function MailIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7" {...props}>
@@ -417,3 +447,6 @@ function MailIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+
+
