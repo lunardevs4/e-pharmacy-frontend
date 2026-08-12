@@ -87,4 +87,16 @@ export const PharmacyApi = {
       throw err
     }
   },
+
+  updateReservationStatusSimple: async (reservationId: string, status: string) => {
+    try {
+      const response = await apiClient.patch(`/reservations/${reservationId}`, { status })
+      return response.data
+    } catch (err) {
+      if (isNetworkError(err)) {
+        return { id: reservationId, status }
+      }
+      throw err
+    }
+  },
 }

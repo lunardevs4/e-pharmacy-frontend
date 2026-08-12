@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { Users, Search, Shield } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Users, Search, Shield, Loader2, RefreshCw, AlertTriangle } from 'lucide-react'
+import { AuthApi } from '@/services/auth-api'
 
 interface PolicyHolder {
   id: string
@@ -13,7 +14,7 @@ interface PolicyHolder {
   status: 'Active' | 'Inactive' | 'Suspended'
 }
 
-const MOCK: PolicyHolder[] = [
+const FALLBACK: PolicyHolder[] = [
   { id: 'POL-001', name: 'Marie Uwimana',         nid: '1199580048123984', phone: '+250 788 123 456', insurer: 'RSSB',    policyId: 'RSSB-2024-00112', coverage: 85, activeClaims: 1, status: 'Active'    },
   { id: 'POL-002', name: 'Jean-Pierre Nkurunziza', nid: '1199380092384728', phone: '+250 788 234 567', insurer: 'MMI',     policyId: 'MMI-2025-00892',  coverage: 90, activeClaims: 0, status: 'Active'    },
   { id: 'POL-003', name: 'Aline Mukamana',         nid: '1199680018374829', phone: '+250 788 345 678', insurer: 'RSSB',    policyId: 'RSSB-2023-00784', coverage: 85, activeClaims: 2, status: 'Active'    },
@@ -28,11 +29,49 @@ const STATUS_STYLE: Record<string, string> = {
   Suspended: 'text-red-700 bg-red-50 border-red-200',
 }
 
+const normalizePolicyHolder = (item: any): PolicyHolder => {
+  const user = item.user || item.patient?.user || {}
+  return {
+    id: item.id || item.policyId || `POL-${Math.random().toString(36).substr(2, 8)}`,
+    name: [user.firstName, user.lastName].filter(Boolean).join(' ') || item.name || 'Policyholder',
+    nid: user.nid || item.nid || '—',
+    phone: user.phone || item.phone || '—',
+    insurer: item.insurer || item.insuranceProvider || 'Unknown',
+    policyId: item.policyId || item.id || '—',
+    coverage: Number(item.coverage || 0),
+    activeClaims: Number(item.activeClaims || 0),
+    status: user.isActive === false ? 'Inactive' : item.status === 'SUSPENDED' ? 'Suspended' : 'Active',
+  }
+}
+
 export default function InsurancePatients() {
+  const [patients, setPatients] = useState<PolicyHolder[]>(FALLBACK)
   const [search, setSearch] = useState('')
   const [insurerFilter, setInsurerFilter] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const filtered = MOCK.filter(p => {
+  const loadPatients = async () => {
+    setIsLoading(true)
+    setErrorMsg(null)
+    try {
+      const data = await AuthApi.getInsurancePatients()
+      if (data.length > 0) {
+        setPatients(data.map(normalizePolicyHolder))
+      }
+    } catch (error: any) {
+      console.warn('Using fallback patients data due to error:', error)
+      setErrorMsg(error?.message || 'Unable to load patients from backend. Using fallback data.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadPatients()
+  }, [])
+
+  const filtered = patients.filter(p => {
     const q = search.toLowerCase()
     return (p.name.toLowerCase().includes(q) || p.nid.includes(q) || p.policyId.toLowerCase().includes(q)) &&
       (insurerFilter ? p.insurer === insurerFilter : true)
@@ -41,12 +80,23 @@ export default function InsurancePatients() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
 
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center space-x-2">
         <Users className="w-5 h-5 text-emerald-700" aria-hidden="true" />
         <div>
           <h1 className="text-xl font-black text-gray-900">Patients & Policyholders</h1>
           <p className="text-xs text-gray-500">List of insured citizens. Manage policies and verify health insurance ID status.</p>
         </div>
+        <button onClick={loadPatients} disabled={isLoading} className="ml-auto flex items-center space-x-1.5 border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 font-bold px-3 py-2 rounded-lg text-xs transition-colors disabled:opacity-50">
+          {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+        </button>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
@@ -82,7 +132,9 @@ export default function InsurancePatients() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-              {filtered.map(p => (
+              {isLoading ? (
+                <tr><td colSpan={8} className="text-center py-10 text-gray-400 text-xs">Loading patients...</td></tr>
+              ) : filtered.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3">
                     <div className="flex items-center space-x-2">
@@ -108,7 +160,7 @@ export default function InsurancePatients() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {!isLoading && filtered.length === 0 && (
                 <tr><td colSpan={8} className="text-center py-10 text-gray-400 text-xs">No policyholders match the current filters.</td></tr>
               )}
             </tbody>

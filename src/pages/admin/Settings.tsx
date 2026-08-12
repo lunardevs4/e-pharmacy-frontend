@@ -1,5 +1,13 @@
-import React, { useState } from 'react'
-import { Settings, Save, CheckCircle2, Globe, Clock, Shield, Server } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Settings, Save, CheckCircle2, Globe, Clock, Shield, Server, Loader2, ShieldAlert } from 'lucide-react'
+import { apiClient } from '@/api/client'
+
+interface SystemSettings {
+  apiUrl: string
+  sessionTimeout: number
+  maintenanceMode: boolean
+  twoFactorEnabled: boolean
+}
 
 export default function AdminSettings() {
   const [apiUrl, setApiUrl] = useState('https://api.epharmacy.gov.rw/v1')
@@ -7,11 +15,59 @@ export default function AdminSettings() {
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [twoFactor, setTwoFactor] = useState(true)
   const [saved, setSaved] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const handleSave = (e: React.FormEvent) => {
+  const loadSettings = async () => {
+    setIsLoading(true)
+    setErrorMsg(null)
+    try {
+      const response = await apiClient.get('/admin/settings')
+      const settings = response.data || {}
+      if (settings.apiUrl) setApiUrl(settings.apiUrl)
+      if (settings.sessionTimeout) setSessionTimeout(String(settings.sessionTimeout))
+      if (typeof settings.maintenanceMode === 'boolean') setMaintenanceMode(settings.maintenanceMode)
+      if (typeof settings.twoFactorEnabled === 'boolean') setTwoFactor(settings.twoFactorEnabled)
+    } catch (error: any) {
+      console.warn('Could not load settings, using defaults:', error)
+      setErrorMsg('Could not load settings from backend. Using default values.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    setIsSaving(true)
+    setErrorMsg(null)
+    try {
+      await apiClient.put('/admin/settings', {
+        apiUrl,
+        sessionTimeout: parseInt(sessionTimeout, 10),
+        maintenanceMode,
+        twoFactorEnabled: twoFactor,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (error: any) {
+      setErrorMsg(error?.message || 'Failed to save settings. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  useEffect(() => {
+    loadSettings()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto pb-16">
+        <div className="h-10 bg-gray-200 rounded-xl animate-pulse" />
+        <div className="h-32 bg-gray-200 rounded-xl animate-pulse" />
+      </div>
+    )
   }
 
   return (
@@ -24,6 +80,13 @@ export default function AdminSettings() {
           <p className="text-xs text-gray-500">Platform-wide configuration. Changes take effect immediately.</p>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-3 flex items-center space-x-2 text-xs font-bold">
+          <Shield className="w-4 h-4" aria-hidden="true" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       {saved && (
         <div role="status" aria-live="polite" className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3 flex items-center space-x-2 text-xs font-bold">
@@ -124,10 +187,11 @@ export default function AdminSettings() {
 
         <button
           type="submit"
-          className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm flex items-center justify-center space-x-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
+          disabled={isSaving}
+          className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm flex items-center justify-center space-x-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Save className="w-4 h-4" aria-hidden="true" />
-          <span>Save Settings</span>
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}
+          <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
         </button>
       </form>
     </div>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { FileText, Search, CheckCircle2, XCircle, Clock, AlertTriangle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { FileText, Search, CheckCircle2, XCircle, Clock, AlertTriangle, Loader2, RefreshCw } from 'lucide-react'
+import { AuthApi } from '@/services/auth-api'
 
 type ClaimStatus = 'Pending' | 'Approved' | 'Rejected' | 'Paid'
 
@@ -17,13 +18,13 @@ interface Claim {
   status: ClaimStatus
 }
 
-const MOCK: Claim[] = [
+const FALLBACK: Claim[] = [
   { id: 'CLM-2026-001', pharmacy: 'Bralirwa Pharmacy',      patientNid: '1199580048123984', medicine: 'Artemether + Lumefantrine', qty: 1, total: 3500,  insurancePays: 2975, patientPays: 525,  insurer: 'RSSB',   submittedAt: '2026-08-01', status: 'Pending'  },
   { id: 'CLM-2026-002', pharmacy: 'CityMed Nyarugenge',     patientNid: '1199080037284729', medicine: 'Metformin 850mg',           qty: 2, total: 1920,  insurancePays: 1728, patientPays: 192,  insurer: 'RSSB',   submittedAt: '2026-08-01', status: 'Approved' },
   { id: 'CLM-2026-003', pharmacy: 'MedPlus Remera',         patientNid: '1199680018374829', medicine: 'Insulin Glargine',          qty: 1, total: 27000, insurancePays: 24300,patientPays: 2700, insurer: 'MMI',    submittedAt: '2026-07-31', status: 'Paid'     },
   { id: 'CLM-2026-004', pharmacy: 'HealthPoint Kicukiro',   patientNid: '1199380092384728', medicine: 'Amoxicillin 500mg',         qty: 2, total: 1600,  insurancePays: 1200, patientPays: 400,  insurer: 'SANLAM', submittedAt: '2026-07-31', status: 'Rejected' },
   { id: 'CLM-2026-005', pharmacy: 'Bralirwa Pharmacy',      patientNid: '1199880018374928', medicine: 'Atenolol 50mg',             qty: 1, total: 950,   insurancePays: 665,  patientPays: 285,  insurer: 'Radiant',submittedAt: '2026-07-30', status: 'Approved' },
-  { id: 'CLM-2026-006', pharmacy: 'Gasabo Health Pharmacy', patientNid: '1198980028384920', medicine: 'Paracetamol 500mg',         qty: 4, total: 1200,  insurancePays: 1020, patientPays: 180,  insurer: 'RSSB',   submittedAt: '2026-07-30', status: 'Paid'     },
+  { id: 'CLM-2026-006', pharmacy: 'Gasabo Health Pharmacy', patientNid: '1198980028384920', medicine: 'Paracetamol 500mg',         qty: 4, total: 1200, insurancePays: 1020, patientPays: 180, insurer: 'RSSB',   submittedAt: '2026-07-30', status: 'Paid'     },
 ]
 
 const STATUS_STYLE: Record<ClaimStatus, string> = {
@@ -33,13 +34,70 @@ const STATUS_STYLE: Record<ClaimStatus, string> = {
   Paid:     'text-blue-700 bg-blue-50 border-blue-200',
 }
 
+const normalizeClaim = (item: any): Claim => {
+  const statusStr = String(item.status || item.claimStatus || 'PENDING').toUpperCase()
+  let status: ClaimStatus = 'Pending'
+  if (statusStr.includes('APPROVE')) status = 'Approved'
+  else if (statusStr.includes('REJECT')) status = 'Rejected'
+  else if (statusStr.includes('PAID')) status = 'Paid'
+
+  return {
+    id: item.id || item.claimId || `CLM-${Math.random().toString(36).substr(2, 8)}`,
+    pharmacy: item.pharmacy?.name || item.pharmacyName || item.pharmacy || 'Unknown Pharmacy',
+    patientNid: item.patientNid || item.patient?.nid || item.patientId || '—',
+    medicine: item.medicine?.name || item.medicineName || item.medicine || 'Unknown Medicine',
+    qty: item.quantity || item.qty || 1,
+    total: Number(item.total || item.totalCost || item.amount || 0),
+    insurancePays: Number(item.insurancePays || item.insurancePay || 0),
+    patientPays: Number(item.patientPays || item.patientPay || 0),
+    insurer: item.insurer || item.insuranceProvider || 'Unknown',
+    submittedAt: item.submittedAt || item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : '—',
+    status,
+  }
+}
+
 export default function InsuranceClaims() {
-  const [claims, setClaims] = useState<Claim[]>(MOCK)
+  const [claims, setClaims] = useState<Claim[]>(FALLBACK)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ClaimStatus | ''>('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
 
-  const update = (id: string, status: ClaimStatus) =>
-    setClaims(prev => prev.map(c => c.id === id ? { ...c, status } : c))
+  const loadClaims = async () => {
+    setIsLoading(true)
+    setErrorMsg(null)
+    try {
+      const data = await AuthApi.getInsuranceClaims()
+      if (data.length > 0) {
+        setClaims(data.map(normalizeClaim))
+      }
+    } catch (error: any) {
+      console.warn('Using fallback claims data due to error:', error)
+      setErrorMsg(error?.message || 'Unable to load claims from backend. Using fallback data.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadClaims()
+  }, [])
+
+  const triggerToast = (msg: string) => {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(null), 3000)
+  }
+
+  const update = async (id: string, status: ClaimStatus) => {
+    try {
+      await AuthApi.updateInsuranceClaimStatus(id, status)
+      triggerToast(`Claim ${id} status updated to ${status}`)
+      await loadClaims()
+    } catch (error: any) {
+      setErrorMsg(error?.message || 'Failed to update claim status')
+    }
+  }
 
   const filtered = claims.filter(c => {
     const q = search.toLowerCase()
@@ -48,7 +106,7 @@ export default function InsuranceClaims() {
   })
 
   const totals = {
-    pending:  claims.filter(c => c.status === 'Pending').length,
+    pending: claims.filter(c => c.status === 'Pending').length,
     approved: claims.filter(c => c.status === 'Approved').length,
     paid:     claims.filter(c => c.status === 'Paid').length,
     rejected: claims.filter(c => c.status === 'Rejected').length,
@@ -56,6 +114,20 @@ export default function InsuranceClaims() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
+
+      {toastMsg && (
+        <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4" role="list" aria-label="Claims statistics">
         {[
@@ -90,6 +162,10 @@ export default function InsuranceClaims() {
             <option value="Paid">Paid</option>
             <option value="Rejected">Rejected</option>
           </select>
+          <button onClick={loadClaims} disabled={isLoading} className="flex items-center space-x-1.5 border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 font-bold px-3 py-2 rounded-lg text-xs transition-colors disabled:opacity-50">
+            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -109,7 +185,9 @@ export default function InsuranceClaims() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-              {filtered.map(c => (
+              {isLoading ? (
+                <tr><td colSpan={10} className="text-center py-10 text-gray-400 text-xs">Loading claims...</td></tr>
+              ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3 font-mono font-bold text-gray-900">{c.id}</td>
                   <td className="px-5 py-3 font-semibold text-gray-800">{c.pharmacy}</td>
@@ -146,7 +224,7 @@ export default function InsuranceClaims() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {!isLoading && filtered.length === 0 && (
                 <tr><td colSpan={10} className="text-center py-10 text-gray-400 text-xs">No claims match the current filters.</td></tr>
               )}
             </tbody>

@@ -5,7 +5,7 @@ import { Medicine, PharmacyStock } from '@/types'
 import { 
   Plus, Search, Filter, ArrowUpDown, Box, AlertTriangle, 
   Edit, Check, X, Calendar, DollarSign, RefreshCw, ShieldAlert,
-  ArrowRight, HeartPulse, ChevronDown, Percent, Info, Loader2
+  ArrowRight, HeartPulse, ChevronDown, Percent, Info, Loader2, Package
 } from 'lucide-react'
 
 interface InventoryItem {

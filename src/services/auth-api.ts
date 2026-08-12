@@ -449,6 +449,15 @@ export const AuthApi = {
     }
   },
 
+  getPlatformReport: async (): Promise<unknown> => {
+    try {
+      const response = await apiClient.get('/reports/platform')
+      return response.data
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
 
   requestMoreInformation: async (pharmacyId: string, details: string): Promise<unknown> => {
     try {
@@ -613,6 +622,55 @@ export const AuthApi = {
     try {
       const response = await apiClient.get('/users/profile')
       return normalizeUser(response.data)
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
+  // Insurance-specific API functions
+  getInsuranceClaims: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/insurance/claims')
+      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return payload
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
+  getInsurancePatients: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/insurance/patients')
+      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return payload
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
+  getInsurancePayments: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/insurance/payments')
+      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return payload
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
+  updateInsuranceClaimStatus: async (claimId: string, status: string): Promise<any> => {
+    try {
+      const response = await apiClient.patch(`/insurance/claims/${claimId}`, { status })
+      return response.data
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
+  processInsurancePayment: async (paymentId: string): Promise<any> => {
+    try {
+      const response = await apiClient.post(`/insurance/payments/${paymentId}/process`)
+      return response.data
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }

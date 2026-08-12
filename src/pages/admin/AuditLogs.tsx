@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { FileLock2, Search, ShieldAlert, RefreshCw, Download } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { FileLock2, Search, ShieldAlert, RefreshCw, Download, Loader2 } from 'lucide-react'
+import { AuthApi } from '@/services/auth-api'
 
 type LogStatus = 'Success' | 'Failed' | 'Warning'
 
@@ -14,7 +15,13 @@ interface AuditEntry {
   status: LogStatus
 }
 
-const MOCK_LOGS: AuditEntry[] = [
+const STATUS_STYLE: Record<LogStatus, string> = {
+  Success: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  Failed:  'text-red-700 bg-red-50 border-red-200',
+  Warning: 'text-amber-700 bg-amber-50 border-amber-200',
+}
+
+const FALLBACK_LOGS: AuditEntry[] = [
   { id: 'LOG-001', timestamp: '2026-08-01 10:42', actor: 'System',       role: 'Automated',       action: 'Automated backup completed',                     resource: 'Database',    ip: '127.0.0.1',      status: 'Success' },
   { id: 'LOG-002', timestamp: '2026-08-01 10:15', actor: 'admin',        role: 'ADMIN',           action: 'User USR-006 suspended',                          resource: 'Users',       ip: '41.217.204.12',  status: 'Success' },
   { id: 'LOG-003', timestamp: '2026-08-01 09:50', actor: 'MoH API',      role: 'System',          action: 'Pharmacy LIC-KIG-48293 status → APPROVED',        resource: 'Pharmacies',  ip: '196.12.10.5',    status: 'Success' },
@@ -27,16 +34,51 @@ const MOCK_LOGS: AuditEntry[] = [
   { id: 'LOG-010', timestamp: '2026-07-31 09:05', actor: 'System',       role: 'Automated',       action: 'Session tokens rotated (scheduled)',              resource: 'Auth',        ip: '127.0.0.1',      status: 'Success' },
 ]
 
-const STATUS_STYLE: Record<LogStatus, string> = {
-  Success: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-  Failed:  'text-red-700 bg-red-50 border-red-200',
-  Warning: 'text-amber-700 bg-amber-50 border-amber-200',
+const normalizeAuditLog = (item: any): AuditEntry => {
+  const statusStr = String(item.status || item.outcome || 'SUCCESS').toUpperCase()
+  let status: LogStatus = 'Success'
+  if (statusStr.includes('FAIL') || statusStr.includes('ERROR')) status = 'Failed'
+  else if (statusStr.includes('WARN') || statusStr.includes('ALERT')) status = 'Warning'
+
+  return {
+    id: item.id || item.logId || `LOG-${Math.random().toString(36).substr(2, 8)}`,
+    timestamp: item.timestamp || item.createdAt || new Date().toISOString().split('T')[0],
+    actor: item.actor || item.performedBy || item.user?.name || 'System',
+    role: item.role || item.user?.role || 'Automated',
+    action: item.action || item.description || 'System action',
+    resource: item.resource || item.entityType || 'System',
+    ip: item.ip || item.ipAddress || '—',
+    status,
+  }
 }
 
 export default function AdminAuditLogs() {
-  const [logs, setLogs] = useState<AuditEntry[]>(MOCK_LOGS)
+  const [logs, setLogs] = useState<AuditEntry[]>(FALLBACK_LOGS)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<LogStatus | ''>('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const loadAuditLogs = async () => {
+    setIsLoading(true)
+    setErrorMsg(null)
+    try {
+      const response = await AuthApi.getGovernmentAuditLogs(1, 100)
+      const items = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : []
+      if (items.length > 0) {
+        setLogs(items.map(normalizeAuditLog))
+      }
+    } catch (error: any) {
+      console.warn('Using fallback audit logs due to error:', error)
+      setErrorMsg(error?.message || 'Unable to load audit logs from backend. Using fallback data.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAuditLogs()
+  }, [])
 
   const filtered = logs.filter(l => {
     const q = search.toLowerCase()
@@ -48,6 +90,13 @@ export default function AdminAuditLogs() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
+
+      {errorMsg && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start space-x-3 text-xs">
+          <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <p>{errorMsg}</p>
+        </div>
+      )}
 
       <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-start space-x-3 text-xs">
         <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -81,12 +130,13 @@ export default function AdminAuditLogs() {
             </select>
           </div>
           <button
-            onClick={() => setLogs(MOCK_LOGS)}
+            onClick={loadAuditLogs}
+            disabled={isLoading}
             aria-label="Refresh audit logs"
-            className="flex items-center space-x-1.5 border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 font-bold px-3 py-2 rounded-lg text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+            className="flex items-center space-x-1.5 border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 font-bold px-3 py-2 rounded-lg text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Refresh</span>
+            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />}
+            <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
           </button>
         </div>
 
