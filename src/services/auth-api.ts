@@ -186,12 +186,19 @@ const getErrorMessage = (error: unknown): string => {
   if (typeof error === 'object' && error !== null) {
     const axiosError = error as AxiosError
     const responseData = axiosError.response?.data as ApiObject | undefined
-    if (responseData?.message && typeof responseData.message === 'string') return responseData.message
+    if (responseData?.message) {
+      // NestJS returns message as string or string[]
+      if (typeof responseData.message === 'string') return responseData.message
+      if (Array.isArray(responseData.message)) return (responseData.message as string[]).join(' · ')
+    }
     if (responseData?.error && typeof responseData.error === 'string') return responseData.error
+    if (axiosError.response?.status === 400) return 'Invalid credentials or request. Please check your input.'
+    if (axiosError.response?.status === 401) return 'Incorrect username or password.'
+    if (axiosError.response?.status === 403) return 'Access denied.'
+    if (axiosError.response?.status === 404) return 'Account not found.'
   }
-
   if (error instanceof Error) return error.message
-  return 'Request failed.'
+  return 'Request failed. Please try again.'
 }
 
 
@@ -245,17 +252,18 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
-  login: async (email: string, password: string): Promise<AuthResponse> => {
+  login: async (identifier: string, password: string): Promise<AuthResponse> => {
     try {
-      const response = await apiClient.post('/auth/login', { email, password })
+      const response = await apiClient.post('/auth/login', { identifier, password })
       const normalized = normalizeAuthResponse(response.data)
       TokenStorage.setToken(normalized.accessToken)
       TokenStorage.setRefreshToken(normalized.refreshToken)
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalized))
       return normalized
     } catch (error: unknown) {
-      console.log("Error ", error)
-      throw new Error(getErrorMessage(error))
+      // Surface the actual backend message (400 body) clearly
+      const msg = getErrorMessage(error)
+      throw new Error(msg)
     }
   },
 
