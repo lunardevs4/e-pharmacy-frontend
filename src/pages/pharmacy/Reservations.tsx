@@ -4,6 +4,28 @@ import { useAuthStore } from '@/store/authStore'
 import { PharmacyApi } from '@/services/pharmacy-api'
 type ResStatus = 'PENDING' | 'READY' | 'COLLECTED' | 'EXPIRED' | 'CANCELLED'
 
+type ReservationApiItem = {
+  id?: string
+  status?: string
+  quantity?: number
+  createdAt?: string
+  pickupDeadline?: string
+  insuranceProvider?: string
+  insuranceId?: string
+  patientPays?: number
+  patient?: {
+    user?: {
+      firstName?: string
+      lastName?: string
+      nid?: string
+    }
+  }
+  medicine?: {
+    name?: string
+    prescriptionRequired?: boolean
+  }
+}
+
 interface Reservation {
   id: string
   patient: string
@@ -36,7 +58,7 @@ const STATUS_STYLES: Record<ResStatus, string> = {
   'CANCELLED':  'text-gray-500 bg-gray-100 border-gray-200',
 }
 
-const normalizeReservation = (item: any): Reservation => {
+const normalizeReservation = (item: ReservationApiItem): Reservation => {
   const statusStr = String(item.status || 'PENDING').toUpperCase()
   let status: ResStatus = 'PENDING'
   if (statusStr.includes('READY')) status = 'READY'
@@ -49,7 +71,7 @@ const normalizeReservation = (item: any): Reservation => {
   const medicine = item.medicine || {}
 
   return {
-    id: item.id || `RES-${Math.random().toString(36).substr(2, 8)}`,
+    id: item.id || `RES-${Math.random().toString(36).slice(2, 10)}`,
     patient: [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Patient',
     nationalId: user.nid || '—',
     medicine: medicine.name || 'Medication',
@@ -78,7 +100,7 @@ export default function PharmacyReservations() {
     setTimeout(() => setToastMsg(null), 3000)
   }
 
-  const loadReservations = async () => {
+  const loadReservations = React.useCallback(async () => {
     const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
     if (!pharmacyId) return
 
@@ -86,28 +108,30 @@ export default function PharmacyReservations() {
     setErrorMsg(null)
     try {
       const data = await PharmacyApi.getReservations(pharmacyId)
-      if (data.length > 0) {
-        setReservations(data.map(normalizeReservation))
+      if (Array.isArray(data) && data.length > 0) {
+        setReservations(data.map((item) => normalizeReservation(item as ReservationApiItem)))
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unable to load reservations from backend. Using fallback data.'
       console.warn('Using fallback reservations data due to error:', error)
-      setErrorMsg(error?.message || 'Unable to load reservations from backend. Using fallback data.')
+      setErrorMsg(message)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user?.pharmacy?.id, user?.pharmacyId])
 
   useEffect(() => {
-    loadReservations()
-  }, [user?.pharmacy?.id, user?.pharmacyId])
+    void loadReservations()
+  }, [loadReservations])
 
   const markReady = async (id: string) => {
     try {
       await PharmacyApi.updateReservationStatusSimple(id, 'READY')
       triggerToast(`Reservation ${id} marked as ready for pickup`)
       await loadReservations()
-    } catch (error: any) {
-      setErrorMsg(error?.message || 'Failed to update reservation status')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update reservation status'
+      setErrorMsg(message)
     }
   }
 
@@ -116,8 +140,9 @@ export default function PharmacyReservations() {
       await PharmacyApi.updateReservationStatusSimple(id, 'COLLECTED')
       triggerToast(`Reservation ${id} confirmed as collected`)
       await loadReservations()
-    } catch (error: any) {
-      setErrorMsg(error?.message || 'Failed to update reservation status')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update reservation status'
+      setErrorMsg(message)
     }
   }
 
@@ -126,8 +151,9 @@ export default function PharmacyReservations() {
       await PharmacyApi.updateReservationStatusSimple(id, 'CANCELLED')
       triggerToast(`Reservation ${id} cancelled`)
       await loadReservations()
-    } catch (error: any) {
-      setErrorMsg(error?.message || 'Failed to cancel reservation')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to cancel reservation'
+      setErrorMsg(message)
     }
   }
 
