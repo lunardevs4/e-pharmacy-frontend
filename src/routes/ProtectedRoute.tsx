@@ -21,7 +21,9 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     switch (user.role) {
       case 'PATIENT':    return <Navigate to="/patient"     replace />
-      case 'PHARMACY':   return <Navigate to="/pharmacy"    replace />
+      case 'PHARMACY':
+      case 'PHARMACY_OWNER':
+      case 'PHARMACIST': return <Navigate to="/pharmacy"    replace />
 
       case 'GOVERNMENT': return <Navigate to="/government"  replace />
       case 'ADMIN':      return <Navigate to="/admin"       replace />
