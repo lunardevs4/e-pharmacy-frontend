@@ -89,15 +89,20 @@ export default function AppRoutes() {
       </Route>
 
       {/* Pharmacy Portal */}
-      <Route element={<ProtectedRoute allowedRoles={['PHARMACY']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST']} />}>
         <Route path="/pharmacy" element={<SidebarLayout />}>
           <Route index element={<PharmacyDashboard />} />
           <Route path="inventory" element={<PharmacyInventory />} />
           <Route path="reservations" element={<PharmacyReservations />} />
           <Route path="patients" element={<PharmacyPatients />} />
           <Route path="claims" element={<PharmacyInsuranceClaims />} />
-          <Route path="staff" element={<PharmacyStaff />} />
-          <Route path="audit" element={<PharmacyAudit />} />
+          
+          {/* Owner Only Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['PHARMACY']} />}>
+            <Route path="staff" element={<PharmacyStaff />} />
+            <Route path="audit" element={<PharmacyAudit />} />
+          </Route>
+
           <Route path="reports" element={<PharmacyReports />} />
           <Route path="settings" element={<PharmacySettings />} />
           <Route path="notifications" element={<PharmacyNotifications />} />

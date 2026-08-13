@@ -24,6 +24,112 @@ interface ManufacturerOption {
 
 const CATEGORIES = ['Analgesics', 'Antibiotics', 'Antidiabetics', 'Antihypertensives', 'Electrolytes', 'Vaccines', 'Other']
 
+interface AutocompleteInputProps {
+  label: string
+  placeholder: string
+  options: { id: string; name: string }[]
+  selectedId: string
+  selectedName: string
+  onChange: (id: string, name: string) => void
+  required?: boolean
+}
+
+function AutocompleteInput({
+  label,
+  placeholder,
+  options,
+  selectedId,
+  selectedName,
+  onChange,
+  required,
+}: AutocompleteInputProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [inputValue, setInputValue] = useState(selectedName)
+  const containerRef = React.useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setInputValue(selectedName)
+  }, [selectedName])
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setInputValue(val)
+    setIsOpen(true)
+
+    const exactMatch = options.find((opt) => opt.name.trim().toLowerCase() === val.trim().toLowerCase())
+    if (exactMatch) {
+      onChange(exactMatch.id, exactMatch.name)
+    } else {
+      onChange('', val)
+    }
+  }
+
+  const handleSelectOption = (id: string, name: string) => {
+    onChange(id, name)
+    setInputValue(name)
+    setIsOpen(false)
+  }
+
+  const filteredOptions = options.filter((opt) =>
+    opt.name.toLowerCase().includes(inputValue.toLowerCase())
+  )
+
+  const showCreateOption =
+    inputValue.trim() !== '' &&
+    !options.some((opt) => opt.name.toLowerCase() === inputValue.trim().toLowerCase())
+
+  return (
+    <div ref={containerRef} className="space-y-1 relative">
+      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+        {label}
+      </label>
+      <input
+        required={required}
+        value={inputValue}
+        onChange={handleInputChange}
+        onFocus={() => setIsOpen(true)}
+        placeholder={placeholder}
+        className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold"
+      />
+      {isOpen && (
+        <div className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50 divide-y divide-gray-50 font-semibold text-xs">
+          {filteredOptions.map((opt) => (
+            <div
+              key={opt.id}
+              onClick={() => handleSelectOption(opt.id, opt.name)}
+              className="px-3 py-2 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer transition-colors flex items-center justify-between"
+            >
+              <span>{opt.name}</span>
+              {selectedId === opt.id && <Check className="w-3.5 h-3.5 text-emerald-600" />}
+            </div>
+          ))}
+          {showCreateOption && (
+            <div
+              onClick={() => handleSelectOption('', inputValue.trim())}
+              className="px-3 py-2 text-emerald-700 hover:bg-emerald-50 cursor-pointer font-bold transition-colors"
+            >
+              Create new: "{inputValue.trim()}"
+            </div>
+          )}
+          {filteredOptions.length === 0 && !showCreateOption && (
+            <div className="px-3 py-2 text-gray-400 text-[11px] italic">No options found</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AdminMedicines() {
   const [medicines, setMedicines] = useState<MedicineEntry[]>([])
   const [search, setSearch] = useState('')
@@ -42,7 +148,9 @@ export default function AdminMedicines() {
   const [fName, setFName] = useState('')
   const [fGeneric, setFGeneric] = useState('')
   const [fCategoryId, setFCategoryId] = useState('')
+  const [fCategoryName, setFCategoryName] = useState('')
   const [fManufacturerId, setFManufacturerId] = useState('')
+  const [fManufacturerName, setFManufacturerName] = useState('')
 
   const triggerToast = (msg: string) => {
     setToastMsg(msg)
@@ -77,9 +185,11 @@ export default function AdminMedicines() {
       setManufacturers(manufacturerItems.map((m: any) => ({ id: m.id, name: m.name })))
       if (!fCategoryId && categoryItems.length) {
         setFCategoryId(categoryItems[0].id)
+        setFCategoryName(categoryItems[0].name)
       }
       if (!fManufacturerId && manufacturerItems.length) {
         setFManufacturerId(manufacturerItems[0].id)
+        setFManufacturerName(manufacturerItems[0].name)
       }
     } catch (error: any) {
       setErrorMsg(error?.message || 'Unable to load medicines data from the backend.')
@@ -97,7 +207,9 @@ export default function AdminMedicines() {
     setFName('')
     setFGeneric('')
     setFCategoryId(categories[0]?.id || '')
+    setFCategoryName(categories[0]?.name || '')
     setFManufacturerId(manufacturers[0]?.id || '')
+    setFManufacturerName(manufacturers[0]?.name || '')
     setShowAddModal(true)
   }
 
@@ -107,30 +219,58 @@ export default function AdminMedicines() {
     setFGeneric(m.genericName)
     const matchedCategory = categories.find((c) => c.name === m.category)
     const matchedManufacturer = manufacturers.find((mfr) => mfr.name === m.manufacturer)
-    setFCategoryId(matchedCategory?.id || categories[0]?.id || '')
-    setFManufacturerId(matchedManufacturer?.id || manufacturers[0]?.id || '')
+    setFCategoryId(matchedCategory?.id || '')
+    setFCategoryName(m.category)
+    setFManufacturerId(matchedManufacturer?.id || '')
+    setFManufacturerName(m.manufacturer)
     setShowAddModal(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!fName || !fGeneric || !fCategoryId) return
+    if (!fName || !fGeneric || !fCategoryName) return
 
     try {
+      let categoryId = fCategoryId
+      if (!categoryId && fCategoryName) {
+        const match = categories.find(
+          (c) => c.name.toLowerCase() === fCategoryName.trim().toLowerCase()
+        )
+        if (match) {
+          categoryId = match.id
+        } else {
+          const newCat = await MedicineApi.createCategory(fCategoryName.trim())
+          categoryId = newCat.id
+        }
+      }
+
+      let manufacturerId = fManufacturerId
+      if (!manufacturerId && fManufacturerName) {
+        const match = manufacturers.find(
+          (m) => m.name.toLowerCase() === fManufacturerName.trim().toLowerCase()
+        )
+        if (match) {
+          manufacturerId = match.id
+        } else if (fManufacturerName.trim() !== '') {
+          const newMfr = await MedicineApi.createManufacturer(fManufacturerName.trim())
+          manufacturerId = newMfr.id
+        }
+      }
+
       if (editTarget) {
         await MedicineApi.updateMedicine(editTarget.id, {
           name: fName,
           genericName: fGeneric,
-          categoryId: fCategoryId,
-          manufacturerId: fManufacturerId || undefined,
+          categoryId: categoryId,
+          manufacturerId: manufacturerId || undefined,
         })
         triggerToast(`${fName} updated successfully.`)
       } else {
         await MedicineApi.createMedicine({
           name: fName,
           genericName: fGeneric,
-          categoryId: fCategoryId,
-          manufacturerId: fManufacturerId || undefined,
+          categoryId: categoryId,
+          manufacturerId: manufacturerId || undefined,
         })
         triggerToast(`${fName} added to the catalogue.`)
       }
@@ -308,24 +448,34 @@ export default function AdminMedicines() {
                   <input required value={fGeneric} onChange={(e) => setFGeneric(e.target.value)} placeholder="e.g. Paracetamol"
                     className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold" />
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Category *</label>
-                  <select value={fCategoryId} onChange={(e) => setFCategoryId(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none font-semibold">
-                    {categories.length > 0 ? categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>) : CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Manufacturer *</label>
-                  <select value={fManufacturerId} onChange={(e) => setFManufacturerId(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none font-semibold">
-                    {manufacturers.length > 0 ? manufacturers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>) : <option value="">Select manufacturer</option>}
-                  </select>
-                </div>
+                <AutocompleteInput
+                  label="Category *"
+                  placeholder="Search or type new category..."
+                  options={categories}
+                  selectedId={fCategoryId}
+                  selectedName={fCategoryName}
+                  onChange={(id, name) => {
+                    setFCategoryId(id)
+                    setFCategoryName(name)
+                  }}
+                  required
+                />
+                <AutocompleteInput
+                  label="Manufacturer *"
+                  placeholder="Search or type new manufacturer..."
+                  options={manufacturers}
+                  selectedId={fManufacturerId}
+                  selectedName={fManufacturerName}
+                  onChange={(id, name) => {
+                    setFManufacturerId(id)
+                    setFManufacturerName(name)
+                  }}
+                  required
+                />
               </div>
               <button type="submit"
                 className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-lg text-xs transition-colors shadow-sm"
-                disabled={!fCategoryId || !fManufacturerId}
+                disabled={!fCategoryName || !fManufacturerName}
               >
                 {editTarget ? 'Save Changes' : 'Register Medicine'}
               </button>

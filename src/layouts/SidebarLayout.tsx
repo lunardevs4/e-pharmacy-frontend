@@ -21,7 +21,10 @@ export default function SidebarLayout() {
 
   // Load notifications for this role on mount / role change
   useEffect(() => {
-    if (user?.role) load(user.role)
+    if (user?.role) {
+      const normalizedRole = ['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user.role) ? 'PHARMACY' : user.role
+      load(normalizedRole)
+    }
   }, [user?.role, load])
 
   // Close notification dropdown when clicking outside
@@ -39,7 +42,9 @@ export default function SidebarLayout() {
   const notifPath = () => {
     switch (user?.role) {
       case 'PATIENT':    return '/patient/notifications'
-      case 'PHARMACY':   return '/pharmacy/notifications'
+      case 'PHARMACY':
+      case 'PHARMACY_OWNER':
+      case 'PHARMACIST': return '/pharmacy/notifications'
       default:           return null
     }
   }
@@ -102,17 +107,28 @@ export default function SidebarLayout() {
           { path: '/patient/profile',        label: 'Profile',        icon: User            },
         ]
       case 'PHARMACY':
-        return [
+      case 'PHARMACY_OWNER':
+      case 'PHARMACIST': {
+        const isOwner = user?.role === 'PHARMACY' || user?.position === 'Owner'
+        const links = [
           { path: '/pharmacy',               label: 'Dashboard',      icon: LayoutDashboard },
           { path: '/pharmacy/inventory',     label: 'Inventory',      icon: Package         },
           { path: '/pharmacy/reservations',  label: 'Reservations',   icon: ClipboardList   },
           { path: '/pharmacy/patients',      label: 'Patients',       icon: Users           },
           { path: '/pharmacy/claims',        label: 'Billing',        icon: DollarSign      },
-          { path: '/pharmacy/staff',         label: 'Staff',          icon: Users           },
-          { path: '/pharmacy/audit',         label: 'Audit Trail',    icon: FileLock2       },
+        ]
+        if (isOwner) {
+          links.push(
+            { path: '/pharmacy/staff',         label: 'Staff',          icon: Users           },
+            { path: '/pharmacy/audit',         label: 'Audit Trail',    icon: FileLock2       },
+          )
+        }
+        links.push(
           { path: '/pharmacy/reports',       label: 'Reports',        icon: BarChart2       },
           { path: '/pharmacy/settings',      label: 'Settings',       icon: Settings        },
-        ]
+        )
+        return links
+      }
       case 'INSURANCE':
         return [
           { path: '/insurance',              label: 'Dashboard',      icon: LayoutDashboard },
@@ -149,6 +165,7 @@ export default function SidebarLayout() {
 
   const navLinks = getLinks()
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
+  const currentRole = user?.role ? (['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user.role) ? 'PHARMACY' : user.role) : ''
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -312,7 +329,7 @@ export default function SidebarLayout() {
                     <div className="flex items-center gap-2">
                       {unreadCount > 0 && (
                         <button
-                          onClick={() => markAllRead(user?.role ?? '')}
+                          onClick={() => markAllRead(currentRole)}
                           className="text-[10px] font-bold text-emerald-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
                         >
                           Mark all read
@@ -359,7 +376,7 @@ export default function SidebarLayout() {
                           <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
                             {!n.read && (
                               <button
-                                onClick={() => markRead(n.id, user?.role ?? '')}
+                                onClick={() => markRead(n.id, currentRole)}
                                 aria-label="Mark as read"
                                 className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-emerald-600 transition-colors"
                               >
@@ -367,7 +384,7 @@ export default function SidebarLayout() {
                               </button>
                             )}
                             <button
-                              onClick={() => remove(n.id, user?.role ?? '')}
+                              onClick={() => remove(n.id, currentRole)}
                               aria-label="Dismiss notification"
                               className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-500 transition-colors"
                             >
