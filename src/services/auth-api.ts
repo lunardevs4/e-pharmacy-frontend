@@ -636,7 +636,7 @@ export const AuthApi = {
   },
 
   // Insurance-specific API functions
-  getInsuranceClaims: async (): Promise<any[]> => {
+  getInsuranceClaims: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/insurance/claims')
       const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
@@ -646,7 +646,7 @@ export const AuthApi = {
     }
   },
 
-  getInsurancePatients: async (): Promise<any[]> => {
+  getInsurancePatients: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/insurance/patients')
       const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
@@ -656,7 +656,7 @@ export const AuthApi = {
     }
   },
 
-  getInsurancePayments: async (): Promise<any[]> => {
+  getInsurancePayments: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/insurance/payments')
       const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
@@ -666,7 +666,7 @@ export const AuthApi = {
     }
   },
 
-  updateInsuranceClaimStatus: async (claimId: string, status: string): Promise<any> => {
+  updateInsuranceClaimStatus: async (claimId: string, status: string): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/insurance/claims/${claimId}`, { status })
       return response.data
@@ -675,7 +675,7 @@ export const AuthApi = {
     }
   },
 
-  processInsurancePayment: async (paymentId: string): Promise<any> => {
+  processInsurancePayment: async (paymentId: string): Promise<unknown> => {
     try {
       const response = await apiClient.post(`/insurance/payments/${paymentId}/process`)
       return response.data

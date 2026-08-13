@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { ClipboardList, Search, CheckCircle2, XCircle, Clock, Shield, RefreshCw, AlertTriangle } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { PharmacyApi } from '@/services/pharmacy-api'
-
 type ResStatus = 'PENDING' | 'READY' | 'COLLECTED' | 'EXPIRED' | 'CANCELLED'
 
 interface Reservation {
