@@ -252,9 +252,9 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
-  login: async (identifier: string, password: string): Promise<AuthResponse> => {
+  login: async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const response = await apiClient.post('/auth/login', { identifier, password })
+      const response = await apiClient.post('/auth/login', { email, password })
       const normalized = normalizeAuthResponse(response.data)
       TokenStorage.setToken(normalized.accessToken)
       TokenStorage.setRefreshToken(normalized.refreshToken)
