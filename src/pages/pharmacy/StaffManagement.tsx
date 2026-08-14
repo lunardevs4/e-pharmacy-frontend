@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Search, Shield, X, Check, Key, ClipboardList, Info, HelpCircle } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
+import { validateEmail } from '@/utils/validation'
 import { AuthApi } from '@/services/auth-api'
 import { PharmacyApi } from '@/services/pharmacy-api'
 
@@ -59,6 +60,13 @@ export default function StaffManagement() {
   const handleSaveStaff = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !email || !phone) return
+
+    // Validate email
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || 'Please provide a valid email address.')
+      return
+    }
 
     const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
     if (!pharmacyId) return

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthLayout from '@/layouts/AuthLayout'
+import { validateEmail, getEmailErrorMessage } from '@/utils/validation'
 import { AuthApi } from '@/services/auth-api'
 import { 
   AlertCircle, CheckCircle2, Loader2, Eye, EyeOff, User, Mail, Lock, Smartphone
@@ -41,8 +42,9 @@ export default function PharmacyRegister() {
       return
     }
 
-    if (!email.trim() || !email.includes('@')) {
-      setErrorMsg('A valid email address is required.')
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      setErrorMsg(emailValidation.error || 'A valid real email address is required.')
       return
     }
 

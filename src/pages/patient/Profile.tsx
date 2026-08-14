@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
+import { validateEmail } from '@/utils/validation'
 import PasswordStrengthMeter from '@/components/patient/PasswordStrengthMeter'
 import { RWANDA_LOCATIONS } from '@/utils/rwanda-locations'
 import { User, Shield, Key, Eye, EyeOff, Save, RefreshCw, CheckCircle, AlertCircle, Camera } from 'lucide-react'
@@ -98,6 +99,14 @@ export default function PatientProfile() {
   // Handle saving demographic profile changes
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate email
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      triggerToast('error', emailValidation.error || 'Please enter a valid email address.')
+      return
+    }
+    
     setProfileLoading(true)
     try {
       const updated = await AuthApi.updateProfile(user?.username || 'patient', {

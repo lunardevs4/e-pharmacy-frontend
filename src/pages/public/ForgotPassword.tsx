@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '@/layouts/AuthLayout'
 import { AuthApi } from '@/services/auth-api'
+import { validateEmail } from '@/utils/validation'
 import { Mail, ShieldCheck, CheckCircle2, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react'
 
 type ForgotStep = 'EMAIL' | 'OTP' | 'RESET' | 'SUCCESS'
@@ -31,8 +32,9 @@ export default function ForgotPassword() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !email.includes('@')) {
-      setErrorMsg('Please enter a valid email address.')
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      setErrorMsg(emailValidation.error || 'Please enter a valid email address.')
       return
     }
 
