@@ -226,7 +226,6 @@ export const AuthApi = {
   createPatientUser: async (userData: {
     fullName: string
     phone: string
-    username: string
     email: string
     password: string
   }): Promise<AuthResponse> => {
@@ -237,7 +236,6 @@ export const AuthApi = {
         password: userData.password,
         firstName: userData.fullName.split(/\s+/)[0],
         lastName: userData.fullName.split(/\s+/).slice(1).join(' ') || 'Patient',
-        username: userData.username,
       })
       return normalizeAuthResponse(response.data)
     } catch (error: unknown) {
@@ -252,9 +250,9 @@ export const AuthApi = {
       throw new Error(getErrorMessage(error))
     }
   },
-  login: async (identifier: string, password: string): Promise<AuthResponse> => {
+  login: async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const response = await apiClient.post('/auth/login', { identifier, password })
+      const response = await apiClient.post('/auth/login', { email, password })
       const normalized = normalizeAuthResponse(response.data)
       TokenStorage.setToken(normalized.accessToken)
       TokenStorage.setRefreshToken(normalized.refreshToken)
@@ -271,7 +269,6 @@ export const AuthApi = {
   registerPatient: async (userData: {
     fullName: string
     phone: string
-    username: string
     email?: string
     password: string
     nid?: string
@@ -286,7 +283,7 @@ export const AuthApi = {
   }): Promise<AuthResponse> => {
     const [firstName, ...rest] = userData.fullName.trim().split(/\s+/)
     const lastName = rest.join(' ') || 'User'
-    const email = userData.email?.trim() || `${userData.username.toLowerCase()}@epharmacy.local`
+    const email = userData.email?.trim() || `${firstName.toLowerCase()}.${lastName.toLowerCase().replace(/\s+/g, '.')}@epharmacy.local`
 
 
     try {
@@ -480,7 +477,7 @@ export const AuthApi = {
   },
 
 
-  getRegistrationStatus: async (identifier: string): Promise<unknown> => {
+  getRegistrationStatus: async (email: string): Promise<unknown> => {
     try {
       const response = await apiClient.get('/pharmacies')
       const list: unknown[] = Array.isArray(response.data)
@@ -496,8 +493,8 @@ export const AuthApi = {
           const owner = getObject(candidate.owner)
           const ownerEmail = toString(owner.email)
           return (
-            name?.toLowerCase().includes(identifier.toLowerCase()) ||
-            ownerEmail?.toLowerCase().includes(identifier.toLowerCase())
+            name?.toLowerCase().includes(email.toLowerCase()) ||
+            ownerEmail?.toLowerCase().includes(email.toLowerCase())
           )
         }) || null
       )
@@ -553,21 +550,21 @@ export const AuthApi = {
   },
 
 
-  requestPasswordReset: async (identifier: string): Promise<void> => {
-    void identifier
+  requestPasswordReset: async (email: string): Promise<void> => {
+    void email
     return Promise.resolve()
   },
 
 
-  verifyResetOTP: async (identifier: string, otp: string): Promise<void> => {
-    void identifier
+  verifyResetOTP: async (email: string, otp: string): Promise<void> => {
+    void email
     void otp
     return Promise.resolve()
   },
 
 
-  resetPassword: async (identifier: string, newPass: string): Promise<void> => {
-    void identifier
+  resetPassword: async (email: string, newPass: string): Promise<void> => {
+    void email
     void newPass
     return Promise.resolve()
   },

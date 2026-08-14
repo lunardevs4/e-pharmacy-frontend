@@ -12,14 +12,8 @@ import { Lock, User, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff, Clock, Arr
 
 const loginSchema = z.object({
   email: z.string()
-    .min(1, 'Username or Email is required')
-    .refine((value) => {
-      // If contains @, validate as email; otherwise allow as username
-      if (value.includes('@')) {
-        return isValidRealEmail(value)
-      }
-      return true
-    }, 'Please enter a valid email address or username'),
+    .min(1, 'Email is required')
+    .refine((value) => isValidRealEmail(value), 'Please enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
 })
 
@@ -53,14 +47,14 @@ export default function Login() {
   // Status view for unapproved pharmacies
   const [pharmacyStatusData, setPharmacyStatusData] = useState<PharmacyStatusData | null>(null)
   const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
-  const [lastCheckedIdentifier, setLastCheckedIdentifier] = useState('')
+  const [lastCheckedEmail, setLastCheckedEmail] = useState('')
 
 
-  // Load remembered identifier on mount
+  // Load remembered email on mount
   useEffect(() => {
-    const savedIdentifier = localStorage.getItem('epharmacy_remembered_identifier')
-    if (savedIdentifier) {
-      setValue('email', savedIdentifier)
+    const savedEmail = localStorage.getItem('epharmacy_remembered_email')
+    if (savedEmail) {
+      setValue('email', savedEmail)
       setRememberMe(true)
     }
   }, [])
@@ -84,26 +78,23 @@ export default function Login() {
     setIsLoading(true)
     setErrorMsg(null)
     setSuccessMsg(null)
-    setLastCheckedIdentifier(data.email)
-
+    setLastCheckedEmail(data.email)
 
     try {
       // Authenticate via NestJS-compatible auth service
       const res = await AuthApi.login(data.email, data.password)
-     
-      // Save identifier if rememberMe is enabled
-      if (rememberMe) {
-        localStorage.setItem('epharmacy_remembered_identifier', data.email)
-      } else {
-        localStorage.removeItem('epharmacy_remembered_identifier')
-      }
 
+      // Save email if rememberMe is enabled
+      if (rememberMe) {
+        localStorage.setItem('epharmacy_remembered_email', data.email)
+      } else {
+        localStorage.removeItem('epharmacy_remembered_email')
+      }
 
       setSuccessMsg('Authentication successful! Redirecting...')
       console.log('Login successful:', res)
       // Save details to Zustand authStore
       login(res.user, res.accessToken)
-
 
       // Direct roles to appropriate dashboards based STRICTLY on returned user role
       setTimeout(() => {
@@ -111,7 +102,6 @@ export default function Login() {
           navigate('/change-password')
           return
         }
-
 
         switch (res.user.role) {
           case 'PATIENT':
@@ -133,9 +123,10 @@ export default function Login() {
             navigate('/')
         }
       }, 1200)
-    } catch (err: any) {
-      if (err.message && err.message.startsWith('PHARMACY_STATUS_ERROR:')) {
-        const statusJson = err.message.substring('PHARMACY_STATUS_ERROR:'.length)
+    } catch (err: unknown) {
+      const error = err as Error & { message?: string }
+      if (error.message && error.message.startsWith('PHARMACY_STATUS_ERROR:')) {
+        const statusJson = error.message.substring('PHARMACY_STATUS_ERROR:'.length)
         try {
           const parsed = JSON.parse(statusJson)
           setPharmacyStatusData(parsed)
@@ -143,7 +134,7 @@ export default function Login() {
           setErrorMsg('Failed to parse pharmacy registration details.')
         }
       } else {
-        setErrorMsg(err.message || 'Authentication failed. Please check your credentials.')
+        setErrorMsg(error.message || 'Authentication failed. Please check your credentials.')
       }
     } finally {
       setIsLoading(false)
@@ -156,20 +147,22 @@ export default function Login() {
     setIsRefreshingStatus(true)
     setErrorMsg(null)
     try {
-      const updated = await AuthApi.getRegistrationStatus(lastCheckedIdentifier)
+      const updated = await AuthApi.getRegistrationStatus(lastCheckedEmail)
+      const statusData = updated as PharmacyStatusData
       setPharmacyStatusData({
-        status: updated.status,
-        pharmacyName: updated.pharmacyName,
-        submissionDate: updated.submissionDate,
-        estimatedReviewTime: updated.estimatedReviewTime,
-        statusNotes: updated.statusNotes
+        status: statusData.status,
+        pharmacyName: statusData.pharmacyName,
+        submissionDate: statusData.submissionDate,
+        estimatedReviewTime: statusData.estimatedReviewTime,
+        statusNotes: statusData.statusNotes
       })
-      if (updated.status === 'APPROVED') {
+      if (statusData.status === 'APPROVED') {
         setSuccessMsg('Your pharmacy registration has been approved! You can now sign in.')
         setPharmacyStatusData(null)
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Could not verify updated status.')
+    } catch (err: unknown) {
+      const error = err as Error & { message?: string }
+      setErrorMsg(error.message || 'Could not verify updated status.')
     } finally {
       setIsRefreshingStatus(false)
     }
@@ -327,24 +320,24 @@ export default function Login() {
         renderStatusCard(pharmacyStatusData)
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 font-semibold text-xs text-gray-700">
-          {/* Username or Email Address */}
+          {/* Email Address */}
           <div>
-            <label htmlFor="identifier" className="block text-sm font-semibold text-gray-700">
-              Email or Phone Number
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
+              Email Address
             </label>
             <div className="mt-1 relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <User className="h-4 w-4 text-gray-400" />
               </div>
               <input
-                id="identifier"
-                type="text"
+                id="email"
+                type="email"
                 disabled={isLoading}
                 {...register('email')}
                 className={`block w-full pl-10 pr-3 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Email address or phone number"
+                placeholder="name@example.com"
               />
             </div>
             {errors.email && (

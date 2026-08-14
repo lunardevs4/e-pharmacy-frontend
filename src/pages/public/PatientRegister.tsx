@@ -36,7 +36,6 @@ export default function PatientRegister() {
   const [phone, setPhone] = useState('')
 
   // Step 2 States (Account Security)
-  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -112,14 +111,6 @@ export default function PatientRegister() {
   // Step 2 Validation
   const validateStep2 = (): boolean => {
     setErrorMsg(null)
-    if (!username.trim() || username.trim().length < 4 || username.trim().length > 30) {
-      setErrorMsg('Username must be between 4 and 30 characters long.')
-      return false
-    }
-    if (!/^[a-zA-Z0-9._]+$/.test(username)) {
-      setErrorMsg('Username can only contain letters, numbers, underscores, and periods.')
-      return false
-    }
     if (!email.trim()) {
       setErrorMsg('Email address is required.')
       return false
@@ -153,7 +144,6 @@ export default function PatientRegister() {
         dob,
         gender,
         phone,
-        username,
         email: email.trim() || undefined,
         password,
       })
@@ -239,16 +229,6 @@ export default function PatientRegister() {
         {/* Step 1: Personal Details */}
         {currentStep === 1 && (
           <div className="space-y-4 font-semibold text-xs text-gray-700">
-            {/* Information Notice */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start space-x-2 text-blue-800 text-[11px] leading-normal font-medium">
-              <ShieldAlert className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold block">Government Identity Linking</span>
-                Your National ID (NID) will be verified against Rwanda NIDA records in a future
-                phase. Only format validation is checked during this mock phase.
-              </div>
-            </div>
-
             {/* Full Name */}
             <div>
               <label
@@ -382,30 +362,6 @@ export default function PatientRegister() {
         {/* Step 2: Account Security */}
         {currentStep === 2 && (
           <div className="space-y-4 font-semibold text-xs text-gray-700">
-            {/* Username */}
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
-              >
-                Username (Required)
-              </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-4 w-4 text-gray-400" />
-                </div>
-                <input
-                  id="username"
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
-                  placeholder="e.g. jean_paul"
-                />
-              </div>
-            </div>
-
             {/* Email Address */}
             <div>
               <label
