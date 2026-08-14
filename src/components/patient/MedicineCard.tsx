@@ -1,19 +1,21 @@
 import React from 'react'
-import { Star } from 'lucide-react'
+import { CalendarCheck, Star } from 'lucide-react'
 import { Medicine } from '@/types'
 
 interface MedicineCardProps {
   medicine: Medicine
   onViewAvailability: (med: Medicine) => void
+  onReserve?: (med: Medicine) => void
   isBookmarked?: boolean
   onToggleBookmark?: (medId: string) => void
 }
 
-export default function MedicineCard({ 
-  medicine, 
+export default function MedicineCard({
+  medicine,
   onViewAvailability,
+  onReserve,
   isBookmarked = false,
-  onToggleBookmark
+  onToggleBookmark,
 }: MedicineCardProps) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:border-emerald-350 transition-colors flex flex-col justify-between space-y-4">
@@ -21,7 +23,7 @@ export default function MedicineCard({
         <div className="space-y-2 flex-grow">
           <div className="flex items-center flex-wrap gap-2">
             <h3 className="font-black text-gray-900 text-lg leading-tight">{medicine.name}</h3>
-            
+
             {/* Bookmarking toggler icon button */}
             {onToggleBookmark && (
               <button
@@ -47,40 +49,61 @@ export default function MedicineCard({
               </span>
             )}
           </div>
-          
+
           <p className="text-xs text-gray-500 font-semibold">
-            Generic Name: <span className="text-gray-800 font-bold underline">{medicine.genericName}</span>
+            Generic Name:{' '}
+            <span className="text-gray-800 font-bold underline">{medicine.genericName}</span>
           </p>
           <p className="text-xs text-gray-500 font-semibold">
             Manufacturer: <span className="text-gray-800 font-bold">{medicine.manufacturer}</span>
           </p>
           {medicine.tradeNames.length > 0 && (
             <p className="text-xs text-gray-400 font-medium">
-              Trade Brands: <span className="text-gray-600 font-bold">{medicine.tradeNames.join(', ')}</span>
+              Trade Brands:{' '}
+              <span className="text-gray-600 font-bold">{medicine.tradeNames.join(', ')}</span>
             </p>
           )}
         </div>
 
         {/* Nearby preview snippet */}
         <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-2.5 w-full sm:w-64 flex-shrink-0">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Nearby Availability</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
+            Nearby Availability
+          </span>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between items-center text-gray-700">
-              <span className="font-semibold text-gray-900 truncate max-w-[130px]">Kigali National</span>
+              <span className="font-semibold text-gray-900 truncate max-w-[130px]">
+                Kigali National
+              </span>
               <span className="text-gray-400 font-medium">1.2 km</span>
             </div>
             <div className="flex justify-between items-center text-gray-700">
-              <span className="font-semibold text-gray-900 truncate max-w-[130px]">MedPlus Heights</span>
+              <span className="font-semibold text-gray-900 truncate max-w-[130px]">
+                MedPlus Heights
+              </span>
               <span className="text-gray-400 font-medium">0.8 km</span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => onViewAvailability(medicine)}
-            className="w-full text-center text-xs font-bold text-white bg-health-primary hover:bg-health-secondary py-2 rounded-lg transition-colors mt-2"
-          >
-            Check Inventory &amp; Map
-          </button>
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => onViewAvailability(medicine)}
+              className="flex-1 text-center text-xs font-bold text-white bg-health-primary hover:bg-health-secondary py-2 rounded-lg transition-colors"
+            >
+              Check Inventory &amp; Map
+            </button>
+            {onReserve && (
+              <button
+                type="button"
+                onClick={() => onReserve(medicine)}
+                className="p-2 text-health-primary hover:text-white hover:bg-health-primary border border-health-primary rounded-lg transition-colors"
+                title="Reserve this medicine"
+                aria-label={`Reserve ${medicine.name}`}
+              >
+                <CalendarCheck className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -2,9 +2,22 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { apiClient } from '@/api/client'
-import { 
-  Search, MapPin, Check, ChevronDown, ChevronUp, MessageSquare, 
-  Upload, CreditCard, Bell, Bookmark, Shield, Sparkles, Bot, X, Send 
+import {
+  Search,
+  MapPin,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+  Upload,
+  CreditCard,
+  Bell,
+  Bookmark,
+  Shield,
+  Sparkles,
+  Bot,
+  X,
+  Send,
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -13,7 +26,7 @@ export default function LandingPage() {
     registeredPharmacies: '1,847',
     patientsRegistered: '2.4M+',
     provincesCovered: '5',
-    nationalAvailability: '94.2%'
+    nationalAvailability: '94.2%',
   })
   const [showResults, setShowResults] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(1) // Item 1 (How do I find a medicine near me?) is expanded by default
@@ -22,7 +35,10 @@ export default function LandingPage() {
   const [showChat, setShowChat] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'assistant'; text: string }>>([
-    { sender: 'assistant', text: 'Hello! I can answer educational questions about medicines — what they are, what they treat, and common side effects. I do not replace professional medical advice. How can I help?' }
+    {
+      sender: 'assistant',
+      text: 'Hello! I can answer educational questions about medicines — what they are, what they treat, and common side effects. I do not replace professional medical advice. How can I help?',
+    },
   ])
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -30,7 +46,7 @@ export default function LandingPage() {
     if (!chatInput.trim()) return
 
     const userMsg = chatInput.trim()
-    setMessages(prev => [...prev, { sender: 'user', text: userMsg }])
+    setMessages((prev) => [...prev, { sender: 'user', text: userMsg }])
     setChatInput('')
 
     // Simulate AI assistant typing latency
@@ -38,31 +54,37 @@ export default function LandingPage() {
       let replyText = ''
       const lower = userMsg.toLowerCase()
       if (lower.includes('paracetamol')) {
-        replyText = 'Paracetamol (Acetaminophen) is a common pain reliever and fever reducer. It is used to treat mild to moderate pain (headaches, muscle aches, toothaches) and reduce fever. Normal adult dose is 500mg-1000mg every 4-6 hours, not exceeding 4000mg per day to avoid potential liver damage.'
+        replyText =
+          'Paracetamol (Acetaminophen) is a common pain reliever and fever reducer. It is used to treat mild to moderate pain (headaches, muscle aches, toothaches) and reduce fever. Normal adult dose is 500mg-1000mg every 4-6 hours, not exceeding 4000mg per day to avoid potential liver damage.'
       } else if (lower.includes('amoxicillin')) {
-        replyText = 'Amoxicillin is a penicillin-type antibiotic used to treat bacterial infections (e.g. pneumonia, strep throat, ear infections). It will not work for viral infections (cold, flu). Please make sure to complete the entire course prescribed by your physician.'
+        replyText =
+          'Amoxicillin is a penicillin-type antibiotic used to treat bacterial infections (e.g. pneumonia, strep throat, ear infections). It will not work for viral infections (cold, flu). Please make sure to complete the entire course prescribed by your physician.'
       } else if (lower.includes('ibuprofen')) {
-        replyText = 'Ibuprofen is a Nonsteroidal Anti-inflammatory Drug (NSAID) used to treat fever, pain, and swelling. It is recommended to take it with food or milk to minimize potential stomach irritation.'
+        replyText =
+          'Ibuprofen is a Nonsteroidal Anti-inflammatory Drug (NSAID) used to treat fever, pain, and swelling. It is recommended to take it with food or milk to minimize potential stomach irritation.'
       } else {
-        replyText = 'I can provide educational details on standard medications like Paracetamol, Amoxicillin, or Ibuprofen. Please consult a licensed professional medical provider for specific diagnosis, prescriptions, or medical decisions.'
+        replyText =
+          'I can provide educational details on standard medications like Paracetamol, Amoxicillin, or Ibuprofen. Please consult a licensed professional medical provider for specific diagnosis, prescriptions, or medical decisions.'
       }
-      setMessages(prev => [...prev, { sender: 'assistant', text: replyText }])
+      setMessages((prev) => [...prev, { sender: 'assistant', text: replyText }])
     }, 1000)
   }
 
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [searchUsedFallback, setSearchUsedFallback] = useState(false)
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return
     setIsSearching(true)
     setSearchError(null)
+    setSearchUsedFallback(false)
     setShowResults(true)
     try {
       let lat: number | undefined
       let lon: number | undefined
-      
+
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3500 })
@@ -72,21 +94,24 @@ export default function LandingPage() {
       } catch (e) {
         console.warn('Geolocation failed or denied. Searching without coordinates.', e)
       }
-      
+
       const response = await apiClient.get('/search/medicines', {
         params: {
           query: searchTerm,
           latitude: lat,
           longitude: lon,
-          limit: 10
-        }
+          limit: 10,
+        },
       })
-      
-      const payload = response.data?.data || []
-      setSearchResults(payload)
+
+      const payload = response.data?.data?.data ?? response.data?.data ?? response.data ?? []
+      const meta = response.data?.data?.meta ?? response.data?.meta
+      setSearchUsedFallback(Boolean(meta?.usedFallback))
+      setSearchResults(Array.isArray(payload) ? payload : [])
     } catch (err: any) {
       console.error(err)
       setSearchError(err.message || 'An error occurred while searching for medicines.')
+      setSearchUsedFallback(false)
       setSearchResults([])
     } finally {
       setIsSearching(false)
@@ -187,25 +212,44 @@ export default function LandingPage() {
               className="h-12 w-auto object-contain flex-shrink-0"
             />
             <div>
-              <span className="text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">Rwanda</span>
-              <span className="text-xs font-black text-health-primary tracking-wider block uppercase leading-none mt-0.5">E-Pharmacy</span>
-              <span className="text-[8px] text-gray-400 font-bold block mt-0.5 leading-none uppercase tracking-wide">Government</span>
+              <span className="text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">
+                Rwanda
+              </span>
+              <span className="text-xs font-black text-health-primary tracking-wider block uppercase leading-none mt-0.5">
+                E-Pharmacy
+              </span>
+              <span className="text-[8px] text-gray-400 font-bold block mt-0.5 leading-none uppercase tracking-wide">
+                Government
+              </span>
             </div>
           </div>
 
           <nav className="hidden md:flex space-x-8 text-sm font-bold text-gray-500">
-            <a href="#home" className="hover:text-health-primary transition-colors">Home</a>
-            <a href="#features" className="hover:text-health-primary transition-colors">Features</a>
-            <a href="#about" className="hover:text-health-primary transition-colors">About</a>
-            <a href="#faq" className="hover:text-health-primary transition-colors">FAQ</a>
-            <a href="#contact" className="hover:text-health-primary transition-colors">Contact</a>
+            <a href="#home" className="hover:text-health-primary transition-colors">
+              Home
+            </a>
+            <a href="#features" className="hover:text-health-primary transition-colors">
+              Features
+            </a>
+            <a href="#about" className="hover:text-health-primary transition-colors">
+              About
+            </a>
+            <a href="#faq" className="hover:text-health-primary transition-colors">
+              FAQ
+            </a>
+            <a href="#contact" className="hover:text-health-primary transition-colors">
+              Contact
+            </a>
           </nav>
 
           <div className="flex items-center space-x-6">
-            <Link to="/login" className="text-sm font-bold text-gray-800 hover:text-health-primary transition-colors">
+            <Link
+              to="/login"
+              className="text-sm font-bold text-gray-800 hover:text-health-primary transition-colors"
+            >
               Log In
             </Link>
-            <button 
+            <button
               onClick={() => setIsRegisterModalOpen(true)}
               className="bg-health-primary hover:bg-health-secondary text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
             >
@@ -213,13 +257,23 @@ export default function LandingPage() {
             </button>
           </div>
         </div>
-      </header>      {/* Hero Section */}
-      <section id="home" className="relative py-16 md:py-24 bg-slate-50/50 border-b border-gray-150 overflow-hidden">
+      </header>{' '}
+      {/* Hero Section */}
+      <section
+        id="home"
+        className="relative py-16 md:py-24 bg-slate-50/50 border-b border-gray-150 overflow-hidden"
+      >
         {/* Mesh grid pattern background */}
-        <div className="absolute inset-0 bg-grid-mesh pointer-events-none opacity-75" aria-hidden="true" />
+        <div
+          className="absolute inset-0 bg-grid-mesh pointer-events-none opacity-75"
+          aria-hidden="true"
+        />
         {/* Glow ambient background circles */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[35rem] h-[35rem] bg-emerald-100/40 rounded-full blur-[120px] pointer-events-none" aria-hidden="true" />
-        
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[35rem] h-[35rem] bg-emerald-100/40 rounded-full blur-[120px] pointer-events-none"
+          aria-hidden="true"
+        />
+
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Copy */}
@@ -233,11 +287,13 @@ export default function LandingPage() {
                 Rwanda &mdash; instantly.
               </h1>
               <p className="text-gray-600 text-base sm:text-lg leading-relaxed max-w-xl">
-                Enter your required medication. Instantly see verified pharmacy stock, compare co-pay costs with your insurance provider, and reserve for secure collection near your residence.
+                Enter your required medication. Instantly see verified pharmacy stock, compare
+                co-pay costs with your insurance provider, and reserve for secure collection near
+                your residence.
               </p>
 
               {/* Search Control */}
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault()
                   handleSearch()
@@ -279,18 +335,25 @@ export default function LandingPage() {
                 <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-white/60 shadow-xl overflow-hidden animate-scaleIn">
                   <div className="bg-slate-50/60 border-b border-gray-150 px-6 py-4 flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-gray-900 text-sm">Search Results &mdash; {searchTerm || 'Paracetamol'}</h3>
+                      <h3 className="font-bold text-gray-900 text-sm">
+                        Search Results &mdash; {searchTerm || 'Paracetamol'}
+                      </h3>
                       <p className="text-xs text-gray-400 mt-0.5 font-medium">
-                        {isSearching ? 'Searching...' : `${searchResults.length} pharmacies nearby`}
+                        {isSearching
+                          ? 'Searching...'
+                          : searchUsedFallback
+                            ? 'No nearby pharmacies found; showing other pharmacies with stock'
+                            : `${searchResults.length} pharmacies nearby`}
                       </p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => {
                         setShowResults(false)
                         setSearchTerm('')
                         setSearchResults([])
                         setSearchError(null)
-                      }} 
+                        setSearchUsedFallback(false)
+                      }}
                       className="text-xs font-bold text-gray-400 hover:text-gray-650 transition-colors"
                     >
                       Clear
@@ -300,7 +363,9 @@ export default function LandingPage() {
                   <div className="divide-y divide-gray-150 max-h-[350px] overflow-y-auto custom-scrollbar">
                     {isSearching ? (
                       <div className="p-8 text-center text-sm text-gray-500 font-medium">
-                        <span className="inline-block animate-pulse">Searching national medicine database...</span>
+                        <span className="inline-block animate-pulse">
+                          Searching national medicine database...
+                        </span>
                       </div>
                     ) : searchError ? (
                       <div className="p-6 text-center text-xs text-red-500 font-medium leading-relaxed">
@@ -312,24 +377,51 @@ export default function LandingPage() {
                       </div>
                     ) : (
                       searchResults.map((item, idx) => (
-                        <div key={idx} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                        <div
+                          key={idx}
+                          className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors"
+                        >
                           <div className="space-y-1">
-                            <h4 className="font-bold text-gray-900 text-sm">{item.pharmacy.name}</h4>
+                            <h4 className="font-bold text-gray-900 text-sm">
+                              {item.medicine?.tradeName || item.medicine?.genericName || searchTerm}
+                            </h4>
+                            <p className="text-xs text-gray-600">
+                              {item.medicine?.genericName &&
+                              item.medicine.genericName !== item.medicine.tradeName
+                                ? item.medicine.genericName
+                                : item.pharmacy.name}
+                            </p>
                             <div className="flex items-center space-x-2 text-xs text-gray-450 font-medium">
-                              <span>{item.distance !== null ? `${item.distance.toFixed(1)} km` : 'N/A'}</span>
+                              {item.medicine?.genericName &&
+                                item.medicine.genericName !== item.medicine.tradeName && (
+                                  <>
+                                    <span>{item.pharmacy.name}</span>
+                                    <span>&middot;</span>
+                                  </>
+                                )}
+                              <span>
+                                {item.distance !== null ? `${item.distance.toFixed(1)} km` : 'N/A'}
+                              </span>
                               <span>&middot;</span>
                               <span>{item.pharmacy.address || 'Kigali, Rwanda'}</span>
                             </div>
                           </div>
                           <div className="text-right flex flex-col items-end space-y-1">
-                            <span className="font-bold text-gray-900 text-sm">RWF {item.price}</span>
+                            <span className="font-bold text-gray-900 text-sm">
+                              RWF {item.price}
+                            </span>
                             <div className="flex items-center space-x-2">
-                              <span className={`text-[10px] font-bold ${
-                                item.quantity > 5 ? 'text-emerald-600' : 'text-orange-550'
-                              }`}>
+                              <span
+                                className={`text-[10px] font-bold ${
+                                  item.quantity > 5 ? 'text-emerald-600' : 'text-orange-550'
+                                }`}
+                              >
                                 {item.quantity > 5 ? 'Available' : `Low Stock (${item.quantity})`}
                               </span>
-                              <Link to="/login" className="bg-health-primary hover:bg-health-secondary text-white text-[11px] font-bold px-3 py-1 rounded transition-colors shadow-xs">
+                              <Link
+                                to="/login"
+                                className="bg-health-primary hover:bg-health-secondary text-white text-[11px] font-bold px-3 py-1 rounded transition-colors shadow-xs"
+                              >
                                 Reserve
                               </Link>
                             </div>
@@ -344,9 +436,12 @@ export default function LandingPage() {
                   <div className="w-16 h-16 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mb-4 relative z-10">
                     <Search className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-black text-gray-900 relative z-10">National Medicine Search</h3>
+                  <h3 className="text-lg font-black text-gray-900 relative z-10">
+                    National Medicine Search
+                  </h3>
                   <p className="text-gray-500 text-xs mt-2.5 max-w-xs leading-relaxed mx-auto relative z-10 font-medium">
-                    Search by generic name or manufacturer to locate verified nearby stock, calculate insurance coverage, and lock in your reservation for pickup.
+                    Search by generic name or manufacturer to locate verified nearby stock,
+                    calculate insurance coverage, and lock in your reservation for pickup.
                   </p>
                 </div>
               )}
@@ -354,37 +449,61 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
       {/* Stats Bar */}
       <section className="bg-white border-y border-gray-200 py-10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-200 text-center">
             <div className="space-y-1">
-              <span className="block text-3xl font-extrabold text-gray-900">{stats.registeredPharmacies}</span>
-              <span className="block text-xs text-gray-500 font-bold uppercase tracking-wider">Registered Pharmacies</span>
+              <span className="block text-3xl font-extrabold text-gray-900">
+                {stats.registeredPharmacies}
+              </span>
+              <span className="block text-xs text-gray-500 font-bold uppercase tracking-wider">
+                Registered Pharmacies
+              </span>
             </div>
             <div className="space-y-1 pl-4">
-              <span className="block text-3xl font-extrabold text-gray-900">{stats.patientsRegistered}</span>
-              <span className="block text-xs text-gray-500 font-bold uppercase tracking-wider">Patients Registered</span>
+              <span className="block text-3xl font-extrabold text-gray-900">
+                {stats.patientsRegistered}
+              </span>
+              <span className="block text-xs text-gray-500 font-bold uppercase tracking-wider">
+                Patients Registered
+              </span>
             </div>
             <div className="space-y-1 pl-4">
-              <span className="block text-3xl font-extrabold text-gray-900">{stats.provincesCovered}</span>
-              <span className="block text-xs text-gray-500 font-bold uppercase tracking-wider">Provinces Covered</span>
+              <span className="block text-3xl font-extrabold text-gray-900">
+                {stats.provincesCovered}
+              </span>
+              <span className="block text-xs text-gray-500 font-bold uppercase tracking-wider">
+                Provinces Covered
+              </span>
             </div>
             <div className="space-y-1 pl-4">
-              <span className="block text-3xl font-extrabold text-gray-900">{stats.nationalAvailability}</span>
-              <span className="block text-xs text-gray-500 font-bold uppercase tracking-wider">National Availability</span>
+              <span className="block text-3xl font-extrabold text-gray-900">
+                {stats.nationalAvailability}
+              </span>
+              <span className="block text-xs text-gray-500 font-bold uppercase tracking-wider">
+                National Availability
+              </span>
             </div>
           </div>
         </div>
-      </section>      {/* Platform Features Section */}
-      <section id="features" className="relative py-20 bg-white border-b border-gray-150 overflow-hidden">
+      </section>{' '}
+      {/* Platform Features Section */}
+      <section
+        id="features"
+        className="relative py-20 bg-white border-b border-gray-150 overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="space-y-4 max-w-3xl">
-            <span className="text-xs font-bold uppercase tracking-widest text-health-primary">Platform Features</span>
-            <h2 className="text-3xl font-serif font-black text-gray-950">Everything you need in one platform.</h2>
+            <span className="text-xs font-bold uppercase tracking-widest text-health-primary">
+              Platform Features
+            </span>
+            <h2 className="text-3xl font-serif font-black text-gray-950">
+              Everything you need in one platform.
+            </h2>
             <p className="text-gray-600 text-base font-medium">
-              From finding a medicine to confirming your insurance coverage and reserving for pickup.
+              From finding a medicine to confirming your insurance coverage and reserving for
+              pickup.
             </p>
           </div>
 
@@ -392,7 +511,10 @@ export default function LandingPage() {
             {features.map((feat, idx) => {
               const Icon = feat.icon
               return (
-                <div key={idx} className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow duration-150 space-y-4">
+                <div
+                  key={idx}
+                  className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow duration-150 space-y-4"
+                >
                   <div className="w-10 h-10 bg-emerald-50 text-health-primary rounded-lg flex items-center justify-center">
                     <Icon className="w-5 h-5" />
                   </div>
@@ -404,30 +526,45 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
       {/* About The Platform Section */}
       <section id="about" className="relative py-20 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Left Column */}
             <div className="space-y-6">
-              <span className="text-xs font-bold uppercase tracking-widest text-health-primary">About the Platform</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-health-primary">
+                About the Platform
+              </span>
               <h2 className="text-3xl font-serif font-black text-gray-950 leading-tight">
                 A national healthcare infrastructure project.
               </h2>
               <div className="space-y-4 text-gray-600 text-base leading-relaxed font-medium">
                 <p>
-                  Rwanda E-Pharmacy is an initiative of the Ministry of Health to digitise medicine access across all five provinces. The platform connects patients, pharmacies, insurance companies, and government health authorities into one centralised, real-time system.
+                  Rwanda E-Pharmacy is an initiative of the Ministry of Health to digitise medicine
+                  access across all five provinces. The platform connects patients, pharmacies,
+                  insurance companies, and government health authorities into one centralised,
+                  real-time system.
                 </p>
                 <p>
-                  The platform does not deliver medicines. Its purpose is to ensure that every Rwandan can quickly locate a medicine, confirm it is available, verify their insurance coverage, and reserve it for in-person collection.
+                  The platform does not deliver medicines. Its purpose is to ensure that every
+                  Rwandan can quickly locate a medicine, confirm it is available, verify their
+                  insurance coverage, and reserve it for in-person collection.
                 </p>
               </div>
 
               {/* Compliance Badges */}
               <div className="flex flex-wrap gap-2 pt-4">
-                {['ISO 27001 Certified', 'GDPR Compliant', 'WCAG 2.1 AA', 'MOH Regulated', '24/7 Availability'].map((badge) => (
-                  <span key={badge} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-health-light-text border border-emerald-100">
+                {[
+                  'ISO 27001 Certified',
+                  'GDPR Compliant',
+                  'WCAG 2.1 AA',
+                  'MOH Regulated',
+                  '24/7 Availability',
+                ].map((badge) => (
+                  <span
+                    key={badge}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-health-light-text border border-emerald-100"
+                  >
                     <Check className="w-3.5 h-3.5 mr-1" /> {badge}
                   </span>
                 ))}
@@ -439,13 +576,20 @@ export default function LandingPage() {
               {portalDetails.map((portal, idx) => {
                 const Icon = portal.icon
                 return (
-                  <div key={idx} className="p-5 rounded-xl border border-gray-150 flex items-start space-x-4 bg-white/95 backdrop-blur-xs hover:bg-slate-50/50 transition-colors shadow-xs">
+                  <div
+                    key={idx}
+                    className="p-5 rounded-xl border border-gray-150 flex items-start space-x-4 bg-white/95 backdrop-blur-xs hover:bg-slate-50/50 transition-colors shadow-xs"
+                  >
                     <div className="w-10 h-10 bg-emerald-50 text-health-primary rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-serif font-bold text-gray-955 text-base">{portal.role}</h3>
-                      <p className="text-gray-500 text-sm mt-1 leading-relaxed font-medium">{portal.desc}</p>
+                      <h3 className="font-serif font-bold text-gray-955 text-base">
+                        {portal.role}
+                      </h3>
+                      <p className="text-gray-500 text-sm mt-1 leading-relaxed font-medium">
+                        {portal.desc}
+                      </p>
                     </div>
                   </div>
                 )
@@ -454,26 +598,38 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
       {/* Partner Organisations */}
       <section className="py-16 bg-white border-t border-gray-150">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-8">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Partner Organisations</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+            Partner Organisations
+          </span>
           <div className="flex flex-wrap justify-center items-center gap-4">
-            {['Ministry of Health', 'RSSB', 'MMI Rwanda', 'WHO Rwanda', 'UNICEF Rwanda', 'Rwanda Biomedical Centre'].map((partner) => (
-              <span key={partner} className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-colors cursor-default">
+            {[
+              'Ministry of Health',
+              'RSSB',
+              'MMI Rwanda',
+              'WHO Rwanda',
+              'UNICEF Rwanda',
+              'Rwanda Biomedical Centre',
+            ].map((partner) => (
+              <span
+                key={partner}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-colors cursor-default"
+              >
                 {partner}
               </span>
             ))}
           </div>
         </div>
       </section>
-
       {/* FAQ Section */}
       <section id="faq" className="py-20 bg-white border-t border-gray-150">
         <div className="max-w-4xl mx-auto px-6 space-y-10">
           <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-health-primary">FAQ</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-health-primary">
+              FAQ
+            </span>
             <h2 className="text-3xl font-extrabold text-gray-900">Frequently Asked Questions</h2>
           </div>
 
@@ -481,13 +637,20 @@ export default function LandingPage() {
             {faqs.map((faq, idx) => {
               const isExpanded = expandedFaq === idx
               return (
-                <div key={idx} className="border border-gray-250 rounded-lg overflow-hidden bg-white">
+                <div
+                  key={idx}
+                  className="border border-gray-250 rounded-lg overflow-hidden bg-white"
+                >
                   <button
                     onClick={() => toggleFaq(idx)}
                     className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors text-left focus:outline-none"
                   >
                     <span className="font-bold text-gray-900 text-sm sm:text-base">{faq.q}</span>
-                    {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                    {isExpanded ? (
+                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    )}
                   </button>
                   {isExpanded && (
                     <div className="px-6 pb-5 pt-1 text-gray-500 text-sm leading-relaxed border-t border-gray-100">
@@ -500,30 +663,42 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="bg-health-primary text-white py-16">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Ready to find your medicine?</h2>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+            Ready to find your medicine?
+          </h2>
           <p className="text-emerald-100 text-base max-w-md mx-auto">
             Join 2.4 million Rwandans already registered. Free for all patients.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2">
-            <Link to="/register/patient" className="w-full sm:w-auto bg-white text-health-primary hover:bg-emerald-50 px-6 py-3 rounded-lg text-sm font-bold shadow-md transition-colors text-center">
+            <Link
+              to="/register/patient"
+              className="w-full sm:w-auto bg-white text-health-primary hover:bg-emerald-50 px-6 py-3 rounded-lg text-sm font-bold shadow-md transition-colors text-center"
+            >
               Register as Patient
             </Link>
-            <Link to="/register/pharmacy" className="w-full sm:w-auto border border-white hover:bg-white/10 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center font-sans">
+            <Link
+              to="/register/pharmacy"
+              className="w-full sm:w-auto border border-white hover:bg-white/10 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center font-sans"
+            >
               Register as Pharmacy
             </Link>
-            <Link to="/login" className="w-full sm:w-auto bg-emerald-950/40 border border-white/20 hover:bg-emerald-950/60 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center">
+            <Link
+              to="/login"
+              className="w-full sm:w-auto bg-emerald-950/40 border border-white/20 hover:bg-emerald-950/60 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center"
+            >
               Sign In
             </Link>
           </div>
         </div>
       </section>
-
       {/* Footer */}
-      <footer id="contact" className="bg-[#111827] text-gray-400 pt-16 pb-8 border-t border-gray-800">
+      <footer
+        id="contact"
+        className="bg-[#111827] text-gray-400 pt-16 pb-8 border-t border-gray-800"
+      >
         <div className="max-w-7xl mx-auto px-6 space-y-12">
           {/* Main columns */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -535,8 +710,12 @@ export default function LandingPage() {
                   className="h-10 w-auto object-contain flex-shrink-0"
                 />
                 <div>
-                  <span className="text-xs font-black text-white tracking-wider block uppercase leading-none">Rwanda</span>
-                  <span className="text-xs font-black text-emerald-450 tracking-wider block uppercase leading-none mt-0.5">E-Pharmacy</span>
+                  <span className="text-xs font-black text-white tracking-wider block uppercase leading-none">
+                    Rwanda
+                  </span>
+                  <span className="text-xs font-black text-emerald-450 tracking-wider block uppercase leading-none mt-0.5">
+                    E-Pharmacy
+                  </span>
                 </div>
               </div>
               <p className="text-xs text-gray-500 leading-relaxed">
@@ -545,33 +724,91 @@ export default function LandingPage() {
             </div>
 
             <div>
-              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">Platform</h4>
+              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
+                Platform
+              </h4>
               <ul className="space-y-2 text-xs">
-                <li><Link to="/login" className="hover:text-white transition-colors">Search Medicines</Link></li>
-                <li><a href="#home" className="hover:text-white transition-colors">Nearby Pharmacies</a></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Reservations</Link></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Upload Prescription</Link></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Medicine Reminders</Link></li>
+                <li>
+                  <Link to="/login" className="hover:text-white transition-colors">
+                    Search Medicines
+                  </Link>
+                </li>
+                <li>
+                  <a href="#home" className="hover:text-white transition-colors">
+                    Nearby Pharmacies
+                  </a>
+                </li>
+                <li>
+                  <Link to="/login" className="hover:text-white transition-colors">
+                    Reservations
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/login" className="hover:text-white transition-colors">
+                    Upload Prescription
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/login" className="hover:text-white transition-colors">
+                    Medicine Reminders
+                  </Link>
+                </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">Portals</h4>
+              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
+                Portals
+              </h4>
               <ul className="space-y-2 text-xs">
-                <li><Link to="/login" className="hover:text-white transition-colors">Patient Portal</Link></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Pharmacy Portal</Link></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Insurance Portal</Link></li>
+                <li>
+                  <Link to="/login" className="hover:text-white transition-colors">
+                    Patient Portal
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/login" className="hover:text-white transition-colors">
+                    Pharmacy Portal
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/login" className="hover:text-white transition-colors">
+                    Insurance Portal
+                  </Link>
+                </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">Support</h4>
+              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
+                Support
+              </h4>
               <ul className="space-y-2 text-xs">
-                <li><a href="#contact" className="hover:text-white transition-colors">Help Centre</a></li>
-                <li><a href="#contact" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#contact" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#contact" className="hover:text-white transition-colors">Report an Issue</a></li>
-                <li><a href="#contact" className="hover:text-white transition-colors">Contact Us</a></li>
+                <li>
+                  <a href="#contact" className="hover:text-white transition-colors">
+                    Help Centre
+                  </a>
+                </li>
+                <li>
+                  <a href="#contact" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#contact" className="hover:text-white transition-colors">
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a href="#contact" className="hover:text-white transition-colors">
+                    Report an Issue
+                  </a>
+                </li>
+                <li>
+                  <a href="#contact" className="hover:text-white transition-colors">
+                    Contact Us
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
@@ -580,37 +817,81 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-gray-800">
             <div className="flex items-center space-x-3 bg-gray-900/40 p-4 rounded-xl border border-gray-800">
               <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                  />
                 </svg>
               </div>
               <div>
-                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">Hotline</span>
+                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                  Hotline
+                </span>
                 <span className="text-white text-sm font-bold">+250 788 000 000</span>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 bg-gray-900/40 p-4 rounded-xl border border-gray-800">
               <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
               <div>
-                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">Email</span>
+                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                  Email
+                </span>
                 <span className="text-white text-sm font-bold">support@epharmacy.rw</span>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 bg-gray-900/40 p-4 rounded-xl border border-gray-800">
               <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
               </div>
               <div>
-                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">Address</span>
+                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                  Address
+                </span>
                 <span className="text-white text-sm font-bold">KG 7 Ave, Kigali, Rwanda</span>
               </div>
             </div>
@@ -634,7 +915,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-
       {/* Floating AI Assistant Chat Widget (Bottom Right) */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
         {showChat && (
@@ -647,8 +927,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className="font-bold text-sm">Medicine Assistant</h3>
               </div>
-              <button 
-                onClick={() => setShowChat(false)} 
+              <button
+                onClick={() => setShowChat(false)}
                 className="text-white/80 hover:text-white transition-colors focus:outline-none"
               >
                 <X className="w-5 h-5" />
@@ -663,12 +943,17 @@ export default function LandingPage() {
             {/* Message Area */}
             <div className="flex-grow p-4 overflow-y-auto space-y-4 bg-gray-50/50 flex flex-col">
               {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
-                    msg.sender === 'user' 
-                      ? 'bg-health-primary text-white rounded-tr-none' 
-                      : 'bg-white text-gray-800 border border-gray-150 rounded-tl-none'
-                  }`}>
+                <div
+                  key={i}
+                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
+                      msg.sender === 'user'
+                        ? 'bg-health-primary text-white rounded-tr-none'
+                        : 'bg-white text-gray-800 border border-gray-150 rounded-tl-none'
+                    }`}
+                  >
                     {msg.text}
                   </div>
                 </div>
@@ -676,7 +961,10 @@ export default function LandingPage() {
             </div>
 
             {/* Input Form */}
-            <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-gray-150 flex items-center space-x-2 flex-shrink-0">
+            <form
+              onSubmit={handleSendMessage}
+              className="p-3 bg-white border-t border-gray-150 flex items-center space-x-2 flex-shrink-0"
+            >
               <input
                 type="text"
                 value={chatInput}
@@ -684,8 +972,8 @@ export default function LandingPage() {
                 placeholder="Ask about a medicine..."
                 className="flex-grow bg-gray-50 border border-gray-250 rounded-lg px-3 py-2 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white"
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="bg-health-primary hover:bg-health-secondary text-white p-2 rounded-lg transition-colors flex-shrink-0 focus:outline-none"
               >
                 <Send className="w-4 h-4" />
@@ -703,13 +991,11 @@ export default function LandingPage() {
           {showChat ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
         </button>
       </div>
-
       {/* Registration Option Modal */}
       {isRegisterModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
           <div className="bg-white rounded-xl border border-gray-150 border-t-4 border-t-health-primary shadow-2xl w-full max-w-2xl overflow-hidden relative animate-scaleIn">
-            
-            <button 
+            <button
               onClick={() => setIsRegisterModalOpen(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-all focus:outline-none"
               aria-label="Close modal"
@@ -724,7 +1010,8 @@ export default function LandingPage() {
                 </span>
                 <h3 className="text-2xl font-black text-gray-900">Create an Account</h3>
                 <p className="text-gray-500 text-sm mt-1.5 max-w-md mx-auto">
-                  Select your role below to access the national medicine inventory, search, and reservation systems.
+                  Select your role below to access the national medicine inventory, search, and
+                  reservation systems.
                 </p>
               </div>
 
@@ -743,10 +1030,11 @@ export default function LandingPage() {
                       Register as Patient
                     </h4>
                     <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-[200px]">
-                      Search medicines, check local pharmacy stocks, and reserve items using your National ID.
+                      Search medicines, check local pharmacy stocks, and reserve items using your
+                      National ID.
                     </p>
                   </div>
-                  
+
                   <div className="text-xs font-bold text-health-primary group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
                     <span>Citizen Portal Setup</span>
                     <span>&rarr;</span>
@@ -767,10 +1055,11 @@ export default function LandingPage() {
                       Register as Pharmacy
                     </h4>
                     <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-[200px]">
-                      Register a pharmacy store owner account to manage inventories, staff, and verify prescriptions.
+                      Register a pharmacy store owner account to manage inventories, staff, and
+                      verify prescriptions.
                     </p>
                   </div>
-                  
+
                   <div className="text-xs font-bold text-emerald-700 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
                     <span>Store Portal Setup</span>
                     <span>&rarr;</span>
@@ -780,9 +1069,18 @@ export default function LandingPage() {
 
               {/* Other Options / Footnote */}
               <div className="mt-8 pt-6 border-t border-gray-150 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-sans">
-                <span className="text-gray-500 font-bold">Other roles (Insurance, MoH Inspector)?</span>
+                <span className="text-gray-500 font-bold">
+                  Other roles (Insurance, MoH Inspector)?
+                </span>
                 <span className="text-gray-450 font-medium">
-                  Created by administrators. Contact support at <a href="mailto:support@epharmacy.rw" className="text-health-primary hover:underline font-bold">support@epharmacy.rw</a>.
+                  Created by administrators. Contact support at{' '}
+                  <a
+                    href="mailto:support@epharmacy.rw"
+                    className="text-health-primary hover:underline font-bold"
+                  >
+                    support@epharmacy.rw
+                  </a>
+                  .
                 </span>
               </div>
             </div>
@@ -796,7 +1094,15 @@ export default function LandingPage() {
 // Inline SVGs/components for portal details to avoid additional dependencies
 function UserIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -805,7 +1111,15 @@ function UserIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function PharmacyIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
@@ -814,7 +1128,15 @@ function PharmacyIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function MoHIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M4.8 20h14.4M12 4v12M8 8h8M10 12h4" />
     </svg>
   )

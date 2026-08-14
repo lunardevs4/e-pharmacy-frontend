@@ -2,6 +2,13 @@ import { Medicine, PharmacyStock, Reservation, Notification } from '@/types'
 import { INSURANCE_COVERAGE_RATES } from '@/config/insurance-rates'
 import { apiClient } from '@/api/client'
 
+const extractArrayPayload = (payload: any): any[] => {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.data?.data)) return payload.data.data
+  return []
+}
+
 const normalizeReservation = (payload: any): Reservation => {
   const medicine = payload.medicine || {}
   const pharmacy = payload.pharmacy || {}
@@ -20,7 +27,6 @@ const normalizeReservation = (payload: any): Reservation => {
     totalPrice: Number(payload.totalPrice ?? payload.price ?? 0),
     insurancePays: Number(payload.insurancePays ?? 0),
     patientPays: Number(payload.patientPays ?? payload.totalPrice ?? payload.price ?? 0),
-    pickupCode: payload.pickupCode || '',
     pickupDeadline: payload.pickupDeadline || payload.expiresAt || '',
     status: status as Reservation['status'],
     createdAt: payload.createdAt || payload.created_at || '',
@@ -51,7 +57,12 @@ export const MedicineApi = {
     inStockOnly: boolean,
   ): Promise<Medicine[]> => {
     const response = await apiClient.get('/medicines', {
-      params: { search: query || undefined, category: category || undefined },
+      params: {
+        page: 1,
+        limit: 100,
+        search: query || undefined,
+        category: category || undefined,
+      },
     })
     const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
     return payload.map((item: any) => ({
@@ -184,17 +195,17 @@ export const MedicineApi = {
 
   // Resolves pharmacy stock levels dynamically for any medicine ID
   getMedicineAvailability: async (medicineId: string): Promise<PharmacyStock[]> => {
-    const pharmaciesResponse = await apiClient.get('/pharmacies', { params: { limit: 100 } })
-    const pharmacies = Array.isArray(pharmaciesResponse.data)
-      ? pharmaciesResponse.data
-      : pharmaciesResponse.data?.data || []
+    const pharmaciesResponse = await apiClient.get('/pharmacies', {
+      params: { limit: 100, status: 'APPROVED' },
+    })
+    const pharmacies = extractArrayPayload(pharmaciesResponse.data).filter(
+      (pharm: any) => pharm.isActive !== false,
+    )
     const stocks = await Promise.all(
       pharmacies.map(async (pharm: any) => {
         try {
           const inventoryResponse = await apiClient.get(`/pharmacies/${pharm.id}/inventory`)
-          const inventory = Array.isArray(inventoryResponse.data)
-            ? inventoryResponse.data
-            : inventoryResponse.data?.data || []
+          const inventory = extractArrayPayload(inventoryResponse.data)
           const item = inventory.find(
             (record: any) => record.medicineId === medicineId || record.medicine?.id === medicineId,
           )
@@ -300,9 +311,6 @@ export const MedicineApi = {
     medicineId: string
     pharmacyId: string
     quantity: number
-    insuranceProvider: string
-    insuranceId: string
-    prescriptionFileName?: string
   }): Promise<Reservation> => {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     const response = await apiClient.post('/reservations', {

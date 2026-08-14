@@ -116,7 +116,6 @@ export interface Reservation {
   totalPrice: number
   insurancePays: number
   patientPays: number
-  pickupCode: string
   pickupDeadline: string
   status: 'PENDING' | 'RESERVED' | 'CONFIRMED' | 'COLLECTED' | 'CANCELLED' | 'EXPIRED'
   createdAt: string

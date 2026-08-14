@@ -190,16 +190,9 @@ export default function Reservations() {
                       <span className="text-sm font-black text-health-primary">{res.patientPays} RWF</span>
                     </div>
                     
-                    <div className="bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg flex items-center space-x-2.5 text-xs w-full md:w-auto justify-between font-bold">
-                      <div>
-                        <span className="text-[9px] font-bold text-gray-400 block uppercase leading-none">Pickup Code</span>
-                        <span className="font-mono font-black text-emerald-800 text-sm">{res.pickupCode}</span>
-                      </div>
-                      <div className="h-6 w-px bg-gray-200" />
-                      <div>
-                        <span className="text-[9px] font-bold text-gray-400 block uppercase leading-none">Deadline</span>
-                        <span className="text-gray-800">{res.pickupDeadline.split(',')[0]}</span>
-                      </div>
+                    <div className="bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold">
+                      <span className="text-[9px] font-bold text-gray-400 block uppercase leading-none">Collection deadline</span>
+                      <span className="text-gray-800">{res.pickupDeadline.split(',')[0]}</span>
                     </div>
                   </div>
                 </div>
@@ -301,7 +294,7 @@ export default function Reservations() {
                 </p>
                 <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded p-2.5 text-[11px] font-semibold flex items-start space-x-1.5 leading-normal">
                   <Info className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-                  <span>Provide pickup code <span className="font-mono font-black text-amber-950">{selectedRes.pickupCode}</span> to the pharmacist. Collection deadline expires on {selectedRes.pickupDeadline}.</span>
+                  <span>Collect this reservation from the pharmacy before {selectedRes.pickupDeadline}.</span>
                 </div>
               </div>
 
@@ -328,40 +321,16 @@ export default function Reservations() {
 
             </div>
 
-            {/* Right side: SVG QR Code card */}
+            {/* Right side: reservation reference card */}
             <div className="border border-gray-250 rounded-xl p-5 bg-gray-50/50 flex flex-col items-center text-center space-y-4">
-              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Validator QR Code</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Reservation reference</span>
               
-              {/* Custom SVG QR Code wrapper */}
-              <div className="w-36 h-36 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center justify-center">
-                <svg viewBox="0 0 100 100" className="w-full h-full text-emerald-950">
-                  {/* Outer corner squares */}
-                  <rect x="10" y="10" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="5" />
-                  <rect x="15" y="15" width="15" height="15" fill="currentColor" />
-                  
-                  <rect x="65" y="10" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="5" />
-                  <rect x="70" y="15" width="15" height="15" fill="currentColor" />
-                  
-                  <rect x="10" y="65" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="5" />
-                  <rect x="15" y="70" width="15" height="15" fill="currentColor" />
-                  
-                  {/* Center noise blocks */}
-                  <rect x="45" y="20" width="10" height="10" fill="currentColor" />
-                  <rect x="50" y="45" width="15" height="10" fill="currentColor" />
-                  <rect x="25" y="45" width="15" height="15" fill="currentColor" />
-                  <rect x="45" y="65" width="10" height="20" fill="currentColor" />
-                  <rect x="70" y="65" width="15" height="15" fill="currentColor" />
-                  <rect x="65" y="45" width="10" height="10" fill="currentColor" />
-                </svg>
-              </div>
-
               <div className="space-y-1">
-                <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Pickup PIN Code</span>
-                <span className="font-mono text-base font-black text-emerald-800">{selectedRes.pickupCode}</span>
+                <span className="font-mono text-base font-black text-emerald-800">{selectedRes.id}</span>
               </div>
 
               <p className="text-[10px] text-gray-400 leading-normal max-w-xs font-semibold">
-                Show this barcode verification frame to the cashier to scan and validate.
+                Use this reservation reference when speaking with the pharmacy.
               </p>
             </div>
 
