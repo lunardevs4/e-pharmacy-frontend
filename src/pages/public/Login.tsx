@@ -5,12 +5,21 @@ import { z } from 'zod'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
+import { isValidRealEmail } from '@/utils/validation'
 import AuthLayout from '@/layouts/AuthLayout'
 import { Lock, User, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff, Clock, ArrowLeft, RefreshCw, XCircle, ShieldAlert } from 'lucide-react'
 
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'Username or Email is required'),
+  email: z.string()
+    .min(1, 'Username or Email is required')
+    .refine((value) => {
+      // If contains @, validate as email; otherwise allow as username
+      if (value.includes('@')) {
+        return isValidRealEmail(value)
+      }
+      return true
+    }, 'Please enter a valid email address or username'),
   password: z.string().min(1, 'Password is required'),
 })
 

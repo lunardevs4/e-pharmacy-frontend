@@ -3,6 +3,7 @@ import {
   Users, Search, Plus, X, Check, AlertTriangle,
   UserCheck, UserX, Eye, EyeOff
 } from 'lucide-react'
+import { validateEmail } from '@/utils/validation'
 import { UserApi } from '@/services/user-api'
 
 type UserRole = 'PATIENT' | 'PHARMACY' | 'GOVERNMENT' | 'ADMIN'
@@ -81,6 +82,13 @@ export default function AdminUsers() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !email || !phone) return
+
+    // Validate email
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      triggerToast(emailValidation.error || 'Please provide a valid email address.')
+      return
+    }
 
     const [firstName, ...rest] = name.trim().split(/\s+/)
     const lastName = rest.join(' ') || ''

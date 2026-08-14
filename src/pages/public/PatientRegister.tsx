@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthLayout from '@/layouts/AuthLayout'
-
+import { validateEmail, getEmailErrorMessage } from '@/utils/validation'
 import { AuthApi } from '@/services/auth-api'
 import {
   AlertCircle,
@@ -120,8 +120,13 @@ export default function PatientRegister() {
       setErrorMsg('Username can only contain letters, numbers, underscores, and periods.')
       return false
     }
-    if (email.trim() && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-      setErrorMsg('Please enter a valid email address.')
+    if (!email.trim()) {
+      setErrorMsg('Email address is required.')
+      return false
+    }
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      setErrorMsg(emailValidation.error || 'Please enter a valid email address.')
       return false
     }
     if (!meetsAllCriteria) {
@@ -407,7 +412,7 @@ export default function PatientRegister() {
                 htmlFor="email"
                 className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
               >
-                Email Address (Optional)
+                Email Address (Required)
               </label>
               <div className="relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -416,6 +421,7 @@ export default function PatientRegister() {
                 <input
                   id="email"
                   type="email"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
