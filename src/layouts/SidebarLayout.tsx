@@ -190,8 +190,8 @@ export default function SidebarLayout() {
         {/* Brand */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 flex-shrink-0">
           <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="bg-white rounded-lg p-1.5 flex-shrink-0">
-              <img src="/logo1.png" alt="Rwanda E-Pharmacy" className="h-8 w-auto object-contain" />
+            <div className="flex-shrink-0 rounded-lg overflow-hidden">
+              <img src="/browsersvg.png" alt="Rwanda E-Pharmacy" className="h-8 w-8 object-contain" />
             </div>
             <div className="min-w-0">
               <span className="font-black text-sm leading-none block text-white tracking-wide">Rwanda</span>
