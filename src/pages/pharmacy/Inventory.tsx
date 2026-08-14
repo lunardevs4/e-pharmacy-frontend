@@ -3,9 +3,26 @@ import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
 import { Medicine, PharmacyStock } from '@/types'
 import {
-  Plus, Search, Filter, ArrowUpDown, Box, AlertTriangle,
-  Edit, Check, X, Calendar, DollarSign, RefreshCw, ShieldAlert,
-  ArrowRight, HeartPulse, ChevronDown, Percent, Info, Loader2, Package
+  Plus,
+  Search,
+  Filter,
+  ArrowUpDown,
+  Box,
+  AlertTriangle,
+  Edit,
+  Check,
+  X,
+  Calendar,
+  DollarSign,
+  RefreshCw,
+  ShieldAlert,
+  ArrowRight,
+  HeartPulse,
+  ChevronDown,
+  Percent,
+  Info,
+  Loader2,
+  Package,
 } from 'lucide-react'
 
 interface InventoryItem {
@@ -16,6 +33,29 @@ interface InventoryItem {
   customSupplier?: string
   customCostPrice?: number
   customStorage?: string
+}
+
+export interface CreateMedicinePayload {
+  tradeName: string
+  genericName: string
+
+  categoryId?: string
+  categoryName?: string
+
+  manufacturerId?: string
+  manufacturerName?: string
+
+  initialBatch: {
+    batchNumber: string
+    lotNumber: string
+    expiryDate: string
+    unitCost: number
+    unitSellingPrice: number
+    initialStock: number
+    storageConditions?: string
+    minTemperature?: number
+    maxTemperature?: number
+  }
 }
 
 export default function PharmacyInventory() {
@@ -51,15 +91,24 @@ export default function PharmacyInventory() {
   // Add medicine form states
   const [medName, setMedName] = useState('')
   const [medGenericName, setMedGenericName] = useState('')
-  const [medCategory, setMedCategory] = useState('Analgesics')
+
+  const [medCategory, setMedCategory] = useState('')
+  const [medCategoryId, setMedCategoryId] = useState<string | undefined>()
+
   const [medManufacturer, setMedManufacturer] = useState('')
-  const [medBatch, setMedBatch] = useState('')
+  const [medManufacturerId, setMedManufacturerId] = useState<string | undefined>()
+
+  const [medBatchNumber, setMedBatchNumber] = useState('')
+  const [medLotNumber, setMedLotNumber] = useState('')
   const [medExpiry, setMedExpiry] = useState('')
+
   const [medCost, setMedCost] = useState('')
   const [medPrice, setMedPrice] = useState('')
   const [medStock, setMedStock] = useState('')
-  const [medPrescription, setMedPrescription] = useState(false)
-  const [medStorage, setMedStorage] = useState('Room Temperature (<30°C)')
+
+  const [medStorageConditions, setMedStorageConditions] = useState('')
+  const [medMinTemperature, setMedMinTemperature] = useState('')
+  const [medMaxTemperature, setMedMaxTemperature] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
 
@@ -78,34 +127,40 @@ export default function PharmacyInventory() {
 
   // Filter categories according to what the user types
   const filteredCategories = categories.filter((category) =>
-    category.name
-      ?.toLowerCase()
-      .includes(medCategory.trim().toLowerCase())
+    category.name?.toLowerCase().includes(medCategory.trim().toLowerCase()),
   )
 
   // Filter manufacturers according to what the user types
   const filteredManufacturers = manufacturers.filter((manufacturer) =>
-    manufacturer.name
-      ?.toLowerCase()
-      .includes(medManufacturer.trim().toLowerCase())
+    manufacturer.name?.toLowerCase().includes(medManufacturer.trim().toLowerCase()),
   )
+
+  useEffect(() => {
+    const timer = window.setTimeout(async () => {
+      try {
+        const [catList, mfrList] = await Promise.all([
+          MedicineApi.getCategories(medCategory),
+          MedicineApi.getManufacturers(medManufacturer),
+        ])
+        setCategories(catList)
+        setManufacturers(mfrList)
+      } catch {
+        // The submit request reports the authoritative backend error.
+      }
+    }, 250)
+    return () => window.clearTimeout(timer)
+  }, [medCategory, medManufacturer])
 
   // Close autocomplete suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node
 
-      if (
-        categoryRef.current &&
-        !categoryRef.current.contains(target)
-      ) {
+      if (categoryRef.current && !categoryRef.current.contains(target)) {
         setShowCategorySuggestions(false)
       }
 
-      if (
-        manufacturerRef.current &&
-        !manufacturerRef.current.contains(target)
-      ) {
+      if (manufacturerRef.current && !manufacturerRef.current.contains(target)) {
         setShowManufacturerSuggestions(false)
       }
     }
@@ -127,7 +182,7 @@ export default function PharmacyInventory() {
 
       const [catList, mfrList] = await Promise.all([
         MedicineApi.getCategories(),
-        MedicineApi.getManufacturers()
+        MedicineApi.getManufacturers(),
       ])
 
       setCategories(catList)
@@ -140,30 +195,31 @@ export default function PharmacyInventory() {
       const items: InventoryItem[] = rawItems.map((item: any) => {
         const med = item.medicine || {}
 
-        const categoryName =
-          med.category?.name ||
-          med.category ||
-          'Uncategorized'
+        const categoryName = med.category?.name || med.category || 'Uncategorized'
 
-        const manufacturerName =
-          med.manufacturer?.name ||
-          med.manufacturer ||
-          'Unknown'
+        const manufacturerName = med.manufacturer?.name || med.manufacturer || 'Unknown'
+
+        const batch =
+          (med.batches || []).find(
+            (candidate: any) =>
+              candidate.batchNumber === item.batchNumber ||
+              candidate.lotNumber === item.batchNumber,
+          ) || med.batches?.[0]
 
         const medicine: Medicine = {
           id: med.id,
-          name: med.name,
+          name: med.tradeName,
           genericName: med.genericName || '',
-          tradeNames: [med.name],
+          tradeNames: [med.tradeName],
           category: categoryName,
           manufacturer: manufacturerName,
           prescriptionRequired: med.prescriptionRequired || false,
-          uses: med.description || '',
-          dosage: med.dosageForm || '',
+          uses: '',
+          dosage: '',
           warnings: '',
           sideEffects: '',
           interactions: '',
-          storage: med.storage || 'Room Temperature (<30°C)'
+          storage: med.storage || 'Room Temperature (<30°C)',
         }
 
         const stock = item.quantity ?? 0
@@ -190,19 +246,20 @@ export default function PharmacyInventory() {
           insuranceAccepted: ['RSSB', 'MMI'],
           lat: -1.94,
           lng: 30.06,
-          locationText: 'Kigali City'
+          locationText: 'Kigali City',
         }
 
         return {
           medicine,
           stockInfo,
-          customBatch: item.batchNumber || 'N/A',
-          customExpiry: item.expiryDate
-            ? new Date(item.expiryDate).toISOString().split('T')[0]
-            : 'N/A',
+          customBatch: item.batchNumber || batch?.batchNumber || batch?.lotNumber || 'N/A',
+          customExpiry:
+            item.expiryDate || batch?.expiryDate
+              ? new Date(item.expiryDate || batch.expiryDate).toISOString().split('T')[0]
+              : 'N/A',
           customSupplier: manufacturerName,
           customCostPrice: Math.round(Number(item.price) * 0.75),
-          customStorage: med.storage || 'Room Temperature (<30°C)'
+          customStorage: batch?.storageConditions || med.storage || 'Room Temperature (<30°C)',
         }
       })
 
@@ -230,11 +287,11 @@ export default function PharmacyInventory() {
         selectedItem.medicine.id,
         editPrice,
         editStock,
-        editStatus
+        editStatus,
       )
 
       const savedExtras = localStorage.getItem(
-        `epharmacy_extras_${pharmacyId}_${selectedItem.medicine.id}`
+        `epharmacy_extras_${pharmacyId}_${selectedItem.medicine.id}`,
       )
 
       const extras = savedExtras ? JSON.parse(savedExtras) : {}
@@ -243,7 +300,7 @@ export default function PharmacyInventory() {
 
       localStorage.setItem(
         `epharmacy_extras_${pharmacyId}_${selectedItem.medicine.id}`,
-        JSON.stringify(extras)
+        JSON.stringify(extras),
       )
 
       setShowEditModal(false)
@@ -266,11 +323,13 @@ export default function PharmacyInventory() {
       !medGenericName ||
       !medCategory ||
       !medManufacturer ||
-      !medBatch ||
+      !medBatchNumber ||
+      !medLotNumber ||
       !medExpiry ||
       !medCost ||
       !medPrice ||
-      !medStock
+      medStock === '' ||
+      !medStorageConditions
     ) {
       setFormError('Please fill in all required fields.')
       return
@@ -278,7 +337,9 @@ export default function PharmacyInventory() {
 
     const costNum = parseFloat(medCost)
     const priceNum = parseFloat(medPrice)
-    const stockNum = parseInt(medStock)
+    const stockNum = parseInt(medStock, 10)
+    const minTemperature = medMinTemperature.trim() ? parseFloat(medMinTemperature) : undefined
+    const maxTemperature = medMaxTemperature.trim() ? parseFloat(medMaxTemperature) : undefined
 
     if (isNaN(costNum) || costNum <= 0) {
       setFormError('Cost price must be a valid positive number.')
@@ -300,6 +361,23 @@ export default function PharmacyInventory() {
       return
     }
 
+    if (
+      (minTemperature !== undefined && isNaN(minTemperature)) ||
+      (maxTemperature !== undefined && isNaN(maxTemperature))
+    ) {
+      setFormError('Temperature limits must be valid numbers.')
+      return
+    }
+
+    if (
+      minTemperature !== undefined &&
+      maxTemperature !== undefined &&
+      minTemperature > maxTemperature
+    ) {
+      setFormError('Minimum temperature cannot exceed maximum temperature.')
+      return
+    }
+
     const expiryDate = new Date(medExpiry)
 
     if (expiryDate <= new Date()) {
@@ -308,94 +386,43 @@ export default function PharmacyInventory() {
     }
 
     try {
-      // ============================================================
-      // CATEGORY
-      // ============================================================
-
-      let categoryId = ''
-
       const matchedCat = categories.find(
-        c =>
-          c.name.trim().toLowerCase() ===
-          medCategory.trim().toLowerCase()
+        (c) => c.name.trim().toLowerCase() === medCategory.trim().toLowerCase(),
       )
-
-      if (matchedCat) {
-        // Existing category
-        categoryId = matchedCat.id
-      } else {
-        // New category
-        const newCat = await MedicineApi.createCategory(
-          medCategory.trim()
-        )
-
-        categoryId = newCat.id
-      }
-
-      // ============================================================
-      // MANUFACTURER
-      // ============================================================
-
-      let manufacturerId = ''
 
       const matchedMfr = manufacturers.find(
-        m =>
-          m.name.trim().toLowerCase() ===
-          medManufacturer.trim().toLowerCase()
+        (m) => m.name.trim().toLowerCase() === medManufacturer.trim().toLowerCase(),
       )
 
-      if (matchedMfr) {
-        // Existing manufacturer
-        manufacturerId = matchedMfr.id
-      } else {
-        // New manufacturer
-        const newMfr = await MedicineApi.createManufacturer(
-          medManufacturer.trim()
-        )
-
-        manufacturerId = newMfr.id
-      }
-
-      // 1. Add to catalog
       const createdMedicine = await MedicineApi.createMedicine({
-        name: medName.trim(),
+        tradeName: medName.trim(),
         genericName: medGenericName.trim(),
-        categoryId,
-        manufacturerId,
-        description:
-          'Added manually by pharmacist. Approved local inventory.',
-        dosageForm:
-          'As prescribed by clinical protocols.',
-        strength: 'Standard'
+        ...(matchedCat?.id || medCategoryId
+          ? { categoryId: matchedCat?.id || medCategoryId }
+          : { categoryName: medCategory.trim() }),
+        ...(matchedMfr?.id || medManufacturerId
+          ? { manufacturerId: matchedMfr?.id || medManufacturerId }
+          : { manufacturerName: medManufacturer.trim() }),
+        initialBatch: {
+          batchNumber: medBatchNumber.trim(),
+          lotNumber: medLotNumber.trim(),
+          expiryDate: medExpiry,
+          unitCost: costNum,
+          unitSellingPrice: priceNum,
+          initialStock: stockNum,
+          storageConditions: medStorageConditions.trim(),
+          minTemperature,
+          maxTemperature,
+        },
       })
 
       const newMedId = createdMedicine.id
 
-      // 2. Set stock levels in inventory
-      await MedicineApi.updatePharmacyInventory(
-        pharmacyId,
-        newMedId,
-        priceNum,
-        stockNum,
-        true
-      )
-
-      // 3. Save extra metadata properties to localStorage
-      localStorage.setItem(
-        `epharmacy_extras_${pharmacyId}_${newMedId}`,
-        JSON.stringify({
-          batch: medBatch.trim(),
-          expiry: medExpiry,
-          costPrice: costNum,
-          storage: medStorage,
-          supplier: 'Custom Pharmacy Entry'
-        })
-      )
+      // Keep the pharmacy-specific stock record linked to the new medicine.
+      await MedicineApi.updatePharmacyInventory(pharmacyId, newMedId, priceNum, stockNum, true)
 
       // Audit Log
-      const logs = JSON.parse(
-        localStorage.getItem('pharmacy_audit_logs') || '[]'
-      )
+      const logs = JSON.parse(localStorage.getItem('pharmacy_audit_logs') || '[]')
 
       logs.unshift({
         time: new Date().toLocaleString(),
@@ -403,17 +430,12 @@ export default function PharmacyInventory() {
         role: user?.role || 'Pharmacy Manager',
         action: `Added medicine ${medName} to inventory (${stockNum} units at RWF ${priceNum})`,
         ip: '197.243.12.90',
-        status: 'Success'
+        status: 'Success',
       })
 
-      localStorage.setItem(
-        'pharmacy_audit_logs',
-        JSON.stringify(logs)
-      )
+      localStorage.setItem('pharmacy_audit_logs', JSON.stringify(logs))
 
-      setFormSuccess(
-        'Medicine successfully registered and stocked!'
-      )
+      setFormSuccess('Medicine successfully registered and stocked!')
 
       setTimeout(() => {
         setShowAddModal(false)
@@ -421,9 +443,7 @@ export default function PharmacyInventory() {
         loadInventory()
       }, 1500)
     } catch (err: any) {
-      setFormError(
-        err.message || 'Failed to add medicine.'
-      )
+      setFormError(err.message || 'Failed to add medicine.')
     }
   }
 
@@ -431,14 +451,18 @@ export default function PharmacyInventory() {
     setMedName('')
     setMedGenericName('')
     setMedCategory('')
+    setMedCategoryId(undefined)
     setMedManufacturer('')
-    setMedBatch('')
+    setMedManufacturerId(undefined)
+    setMedBatchNumber('')
+    setMedLotNumber('')
     setMedExpiry('')
     setMedCost('')
     setMedPrice('')
     setMedStock('')
-    setMedPrescription(false)
-    setMedStorage('Room Temperature (<30°C)')
+    setMedStorageConditions('')
+    setMedMinTemperature('')
+    setMedMaxTemperature('')
     setFormError(null)
     setFormSuccess(null)
 
@@ -466,35 +490,25 @@ export default function PharmacyInventory() {
         (item) =>
           item.medicine.name.toLowerCase().includes(q) ||
           item.medicine.genericName.toLowerCase().includes(q) ||
-          item.customBatch?.toLowerCase().includes(q)
+          item.customBatch?.toLowerCase().includes(q),
       )
     }
 
     // 2. Category Filter
     if (categoryFilter) {
       list = list.filter(
-        (item) =>
-          item.medicine.category.toLowerCase() ===
-          categoryFilter.toLowerCase()
+        (item) => item.medicine.category.toLowerCase() === categoryFilter.toLowerCase(),
       )
     }
 
     // 3. Stock Level Filter
     if (stockFilter) {
       if (stockFilter === 'out') {
-        list = list.filter(
-          (item) => item.stockInfo.stock === 0
-        )
+        list = list.filter((item) => item.stockInfo.stock === 0)
       } else if (stockFilter === 'low') {
-        list = list.filter(
-          (item) =>
-            item.stockInfo.stock > 0 &&
-            item.stockInfo.stock < 20
-        )
+        list = list.filter((item) => item.stockInfo.stock > 0 && item.stockInfo.stock < 20)
       } else if (stockFilter === 'high') {
-        list = list.filter(
-          (item) => item.stockInfo.stock >= 20
-        )
+        list = list.filter((item) => item.stockInfo.stock >= 20)
       }
     }
 
@@ -530,9 +544,7 @@ export default function PharmacyInventory() {
 
   const toggleSort = (field: string) => {
     if (sortBy === field) {
-      setSortOrder(
-        sortOrder === 'ASC' ? 'DESC' : 'ASC'
-      )
+      setSortOrder(sortOrder === 'ASC' ? 'DESC' : 'ASC')
     } else {
       setSortBy(field)
       setSortOrder('ASC')
@@ -541,34 +553,25 @@ export default function PharmacyInventory() {
 
   const filteredItems = getFilteredInventory()
 
-  const totalPages = Math.ceil(
-    filteredItems.length / itemsPerPage
-  )
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
 
   const paginatedItems = filteredItems.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   )
 
   // Metrics summary computations
   const totalSKUs = inventoryList.length
 
   const lowStockCount = inventoryList.filter(
-    i =>
-      i.stockInfo.stock > 0 &&
-      i.stockInfo.stock < 20
+    (i) => i.stockInfo.stock > 0 && i.stockInfo.stock < 20,
   ).length
 
-  const outOfStockCount = inventoryList.filter(
-    i => i.stockInfo.stock === 0
-  ).length
+  const outOfStockCount = inventoryList.filter((i) => i.stockInfo.stock === 0).length
 
   const totalValue = inventoryList.reduce(
-    (acc, item) =>
-      acc +
-      item.stockInfo.stock *
-      item.stockInfo.price,
-    0
+    (acc, item) => acc + item.stockInfo.stock * item.stockInfo.price,
+    0,
   )
 
   // Expiry check
@@ -577,61 +580,39 @@ export default function PharmacyInventory() {
 
     const expDate = new Date(dateStr)
 
-    const diff =
-      expDate.getTime() -
-      Date.now()
+    const diff = expDate.getTime() - Date.now()
 
-    const days =
-      diff /
-      (1000 * 60 * 60 * 24)
+    const days = diff / (1000 * 60 * 60 * 24)
 
     return days > 0 && days <= 90
   }
 
-  const expiringSoonCount =
-    inventoryList.filter(
-      i => isExpiringSoon(i.customExpiry)
-    ).length
+  const expiringSoonCount = inventoryList.filter((i) => isExpiringSoon(i.customExpiry)).length
 
   // Calculate dynamic profit margin helper
   const getProfitMargin = () => {
     const cost = parseFloat(medCost)
     const sell = parseFloat(medPrice)
 
-    if (
-      isNaN(cost) ||
-      isNaN(sell) ||
-      sell <= 0
-    ) {
+    if (isNaN(cost) || isNaN(sell) || sell <= 0) {
       return 0
     }
 
-    return (
-      ((sell - cost) /
-        sell *
-        100)
-        .toFixed(1)
-    )
+    return (((sell - cost) / sell) * 100).toFixed(1)
   }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-
       {/* Header Banner */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <Package className="w-6 h-6 text-health-primary" />
-            <h1 className="text-2xl font-black text-gray-900">
-              Stock Management
-            </h1>
+            <h1 className="text-2xl font-black text-gray-900">Stock Management</h1>
           </div>
 
           <p className="text-xs text-gray-500 font-medium">
-            Active Storefront:{' '}
-            <span className="font-bold text-health-primary">
-              {pharmacyName}
-            </span>{' '}
+            Active Storefront: <span className="font-bold text-health-primary">{pharmacyName}</span>{' '}
             (ID: {pharmacyId})
           </p>
         </div>
@@ -650,7 +631,6 @@ export default function PharmacyInventory() {
 
       {/* Analytics Summaries */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
         {/* SKUs */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
           <div>
@@ -658,9 +638,7 @@ export default function PharmacyInventory() {
               Total SKUs stocked
             </span>
 
-            <p className="text-3xl font-black text-gray-900 mt-1">
-              {loading ? '...' : totalSKUs}
-            </p>
+            <p className="text-3xl font-black text-gray-900 mt-1">{loading ? '...' : totalSKUs}</p>
 
             <span className="text-[10px] text-red-500 font-semibold mt-1 block">
               {outOfStockCount} out of stock
@@ -722,9 +700,7 @@ export default function PharmacyInventory() {
             </span>
 
             <p className="text-2xl font-black text-gray-900 mt-1.5">
-              {loading
-                ? '...'
-                : `RWF ${totalValue.toLocaleString()}`}
+              {loading ? '...' : `RWF ${totalValue.toLocaleString()}`}
             </p>
 
             <span className="text-[10px] text-health-accent font-semibold mt-1 block">
@@ -740,10 +716,8 @@ export default function PharmacyInventory() {
 
       {/* Table & Filtering */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-
         {/* Filters control bar */}
         <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-
           {/* Search */}
           <div className="relative rounded-md max-w-sm w-full">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -763,7 +737,6 @@ export default function PharmacyInventory() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-
             {/* Category selection */}
             <div className="flex items-center space-x-1.5">
               <Filter className="w-3.5 h-3.5 text-gray-400" />
@@ -780,9 +753,7 @@ export default function PharmacyInventory() {
                 <option value="Analgesics">Analgesics</option>
                 <option value="Antibiotics">Antibiotics</option>
                 <option value="Antidiabetics">Antidiabetics</option>
-                <option value="Antihypertensives">
-                  Antihypertensives
-                </option>
+                <option value="Antihypertensives">Antihypertensives</option>
               </select>
             </div>
 
@@ -796,15 +767,9 @@ export default function PharmacyInventory() {
               className="bg-white border border-gray-300 rounded-lg py-1.5 px-3 text-xs text-gray-700 focus:outline-none"
             >
               <option value="">All Stock Levels</option>
-              <option value="high">
-                High Stock (&gt;= 20)
-              </option>
-              <option value="low">
-                Low Stock (&lt; 20)
-              </option>
-              <option value="out">
-                Out of Stock
-              </option>
+              <option value="high">High Stock (&gt;= 20)</option>
+              <option value="low">Low Stock (&lt; 20)</option>
+              <option value="out">Out of Stock</option>
             </select>
 
             {/* Refresh btn */}
@@ -813,10 +778,7 @@ export default function PharmacyInventory() {
               aria-label="Refresh inventory"
               className="p-1.5 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 text-gray-600 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
             >
-              <RefreshCw
-                className="w-4 h-4"
-                aria-hidden="true"
-              />
+              <RefreshCw className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -825,9 +787,7 @@ export default function PharmacyInventory() {
         {loading ? (
           <div className="p-12 text-center text-gray-500">
             <Loader2 className="w-8 h-8 animate-spin text-health-primary mx-auto mb-2" />
-            <p className="text-xs">
-              Loading local inventory catalog...
-            </p>
+            <p className="text-xs">Loading local inventory catalog...</p>
           </div>
         ) : error ? (
           <div className="p-12 text-center text-red-700 space-y-2">
@@ -845,9 +805,7 @@ export default function PharmacyInventory() {
           <div className="p-16 text-center text-gray-500">
             <Box className="w-10 h-10 mx-auto text-gray-300 mb-2" />
 
-            <p className="text-sm font-bold text-gray-700">
-              No inventory records found
-            </p>
+            <p className="text-sm font-bold text-gray-700">No inventory records found</p>
 
             <p className="text-xs text-gray-400 mt-1">
               Try expanding your search query or filters.
@@ -855,11 +813,8 @@ export default function PharmacyInventory() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-
             <table className="min-w-full divide-y divide-gray-200 text-left text-xs">
-
               <thead className="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[10px] border-b border-gray-200">
-
                 <tr>
                   <th
                     scope="col"
@@ -868,24 +823,15 @@ export default function PharmacyInventory() {
                   >
                     <div className="flex items-center space-x-1">
                       <span>Drug Name (Generic)</span>
-                      <ArrowUpDown
-                        className="w-3 h-3"
-                        aria-hidden="true"
-                      />
+                      <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
                     </div>
                   </th>
 
-                  <th
-                    scope="col"
-                    className="px-6 py-3"
-                  >
+                  <th scope="col" className="px-6 py-3">
                     Category
                   </th>
 
-                  <th
-                    scope="col"
-                    className="px-6 py-3"
-                  >
+                  <th scope="col" className="px-6 py-3">
                     Batch Number
                   </th>
 
@@ -896,10 +842,7 @@ export default function PharmacyInventory() {
                   >
                     <div className="flex items-center space-x-1">
                       <span>Expiry Date</span>
-                      <ArrowUpDown
-                        className="w-3 h-3"
-                        aria-hidden="true"
-                      />
+                      <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
                     </div>
                   </th>
 
@@ -910,10 +853,7 @@ export default function PharmacyInventory() {
                   >
                     <div className="flex items-center space-x-1 justify-center">
                       <span>Stock Qty</span>
-                      <ArrowUpDown
-                        className="w-3 h-3"
-                        aria-hidden="true"
-                      />
+                      <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
                     </div>
                   </th>
 
@@ -924,50 +864,30 @@ export default function PharmacyInventory() {
                   >
                     <div className="flex items-center space-x-1">
                       <span>Unit Price</span>
-                      <ArrowUpDown
-                        className="w-3 h-3"
-                        aria-hidden="true"
-                      />
+                      <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
                     </div>
                   </th>
 
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-center"
-                  >
+                  <th scope="col" className="px-6 py-3 text-center">
                     Status
                   </th>
 
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right"
-                  >
+                  <th scope="col" className="px-6 py-3 text-right">
                     Actions
                   </th>
                 </tr>
-
               </thead>
 
               <tbody className="bg-white divide-y divide-gray-150">
-
                 {paginatedItems.map((item) => {
-                  const hasExpired =
-                    new Date(item.customExpiry || '') <=
-                    new Date()
+                  const hasExpired = new Date(item.customExpiry || '') <= new Date()
 
-                  const isExpSoon =
-                    isExpiringSoon(item.customExpiry)
+                  const isExpSoon = isExpiringSoon(item.customExpiry)
 
                   return (
-                    <tr
-                      key={item.medicine.id}
-                      className="hover:bg-gray-50/50 transition-colors"
-                    >
-
+                    <tr key={item.medicine.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-bold text-gray-900">
-                          {item.medicine.name}
-                        </div>
+                        <div className="font-bold text-gray-900">{item.medicine.name}</div>
 
                         <div className="text-[10px] text-gray-400 font-semibold font-mono mt-0.5">
                           {item.medicine.genericName}
@@ -990,8 +910,8 @@ export default function PharmacyInventory() {
                             hasExpired
                               ? 'text-red-650 font-bold bg-red-50 px-2 py-0.5 rounded'
                               : isExpSoon
-                              ? 'text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded'
-                              : 'text-gray-600'
+                                ? 'text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded'
+                                : 'text-gray-600'
                           }`}
                         >
                           {item.customExpiry}
@@ -1004,7 +924,6 @@ export default function PharmacyInventory() {
                         </div>
 
                         <div className="mt-1">
-
                           {item.stockInfo.stock === 0 ? (
                             <span className="text-[9px] bg-red-100 text-red-800 font-bold px-1.5 py-0.5 rounded-full">
                               Out of Stock
@@ -1018,7 +937,6 @@ export default function PharmacyInventory() {
                               High
                             </span>
                           )}
-
                         </div>
                       </td>
 
@@ -1034,14 +952,11 @@ export default function PharmacyInventory() {
                               : 'bg-red-50 text-red-800 border border-red-100'
                           }`}
                         >
-                          {item.stockInfo.isOpen
-                            ? 'ACTIVE/SELLABLE'
-                            : 'SUSPENDED'}
+                          {item.stockInfo.isOpen ? 'ACTIVE/SELLABLE' : 'SUSPENDED'}
                         </span>
                       </td>
 
                       <td className="px-6 py-4 text-right space-x-1.5">
-
                         <button
                           onClick={() => openEditModal(item)}
                           className="inline-flex items-center justify-center p-1.5 text-slate-500 hover:text-health-primary hover:bg-slate-100 rounded-lg transition-colors border border-gray-150 bg-white"
@@ -1049,64 +964,40 @@ export default function PharmacyInventory() {
                         >
                           <Edit className="w-3.5 h-3.5" />
                         </button>
-
                       </td>
-
                     </tr>
                   )
                 })}
-
               </tbody>
-
             </table>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-
                 <span className="text-xs text-gray-500">
-                  Page{' '}
-                  <span className="font-bold text-gray-900">
-                    {currentPage}
-                  </span>{' '}
-                  of {totalPages}
+                  Page <span className="font-bold text-gray-900">{currentPage}</span> of{' '}
+                  {totalPages}
                 </span>
 
                 <div className="flex space-x-2">
-
                   <button
                     disabled={currentPage === 1}
-                    onClick={() =>
-                      setCurrentPage(prev =>
-                        Math.max(1, prev - 1)
-                      )
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                     className="p-1 px-3 border border-gray-300 rounded bg-white text-xs hover:bg-gray-50 disabled:opacity-50 transition-all font-semibold"
                   >
                     Previous
                   </button>
 
                   <button
-                    disabled={
-                      currentPage === totalPages
-                    }
-                    onClick={() =>
-                      setCurrentPage(prev =>
-                        Math.min(
-                          totalPages,
-                          prev + 1
-                        )
-                      )
-                    }
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                     className="p-1 px-3 border border-gray-300 rounded bg-white text-xs hover:bg-gray-50 disabled:opacity-50 transition-all font-semibold"
                   >
                     Next
                   </button>
-
                 </div>
               </div>
             )}
-
           </div>
         )}
       </div>
@@ -1124,16 +1015,10 @@ export default function PharmacyInventory() {
             }
           }}
         >
-
           <div className="bg-white rounded-xl border border-gray-200 w-full max-w-md shadow-xl overflow-hidden">
-
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-
               <div>
-                <h3
-                  id="edit-modal-title"
-                  className="font-black text-gray-900 text-sm"
-                >
+                <h3 id="edit-modal-title" className="font-black text-gray-900 text-sm">
                   Adjust Pharmacy Inventory
                 </h3>
 
@@ -1143,63 +1028,38 @@ export default function PharmacyInventory() {
               </div>
 
               <button
-                onClick={() =>
-                  setShowEditModal(false)
-                }
+                onClick={() => setShowEditModal(false)}
                 aria-label="Close edit modal"
                 className="text-gray-400 hover:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
               >
-                <X
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
-
             </div>
 
-            <form
-              onSubmit={handleUpdateStock}
-              className="p-5 space-y-4"
-            >
-
+            <form onSubmit={handleUpdateStock} className="p-5 space-y-4">
               {/* Price */}
               <div>
-
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                   Selling Price (RWF)
                 </label>
 
                 <div className="relative rounded-md shadow-sm">
-
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-400 text-xs">
-                      RWF
-                    </span>
+                    <span className="text-gray-400 text-xs">RWF</span>
                   </div>
 
                   <input
                     type="number"
                     required
                     value={editPrice}
-                    onChange={(e) =>
-                      setEditPrice(
-                        Math.max(
-                          0,
-                          parseFloat(
-                            e.target.value
-                          ) || 0
-                        )
-                      )
-                    }
+                    onChange={(e) => setEditPrice(Math.max(0, parseFloat(e.target.value) || 0))}
                     className="block w-full pl-12 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
-
                 </div>
               </div>
 
               {/* Stock */}
               <div>
-
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                   Active Stock Level
                 </label>
@@ -1208,24 +1068,13 @@ export default function PharmacyInventory() {
                   type="number"
                   required
                   value={editStock}
-                  onChange={(e) =>
-                    setEditStock(
-                      Math.max(
-                        0,
-                        parseInt(
-                          e.target.value
-                        ) || 0
-                      )
-                    )
-                  }
+                  onChange={(e) => setEditStock(Math.max(0, parseInt(e.target.value) || 0))}
                   className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
-
               </div>
 
               {/* Status Toggle */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-150">
-
                 <div>
                   <span className="text-xs font-bold text-gray-700 block">
                     Sellable Store Status
@@ -1239,24 +1088,16 @@ export default function PharmacyInventory() {
                 <input
                   type="checkbox"
                   checked={editStatus}
-                  onChange={(e) =>
-                    setEditStatus(
-                      e.target.checked
-                    )
-                  }
+                  onChange={(e) => setEditStatus(e.target.checked)}
                   className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded cursor-pointer"
                 />
-
               </div>
 
               {/* Submit */}
               <div className="flex justify-end space-x-3 pt-2">
-
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowEditModal(false)
-                  }
+                  onClick={() => setShowEditModal(false)}
                   className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-50"
                 >
                   Cancel
@@ -1268,9 +1109,7 @@ export default function PharmacyInventory() {
                 >
                   Save Changes
                 </button>
-
               </div>
-
             </form>
           </div>
         </div>
@@ -1289,548 +1128,500 @@ export default function PharmacyInventory() {
             }
           }}
         >
-
           <div
             onClick={() => setShowAddModal(false)}
             className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
           />
 
           <div className="relative bg-white w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden animate-scaleIn z-10">
-
             {/* Header */}
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-
               <div className="flex items-center space-x-2">
-
-                <Package
-                  className="w-5 h-5 text-health-primary"
-                  aria-hidden="true"
-                />
+                <Package className="w-5 h-5 text-health-primary" aria-hidden="true" />
 
                 <div>
-
-                  <h3
-                    id="add-modal-title"
-                    className="font-black text-gray-900 text-base"
-                  >
+                  <h3 id="add-modal-title" className="font-black text-gray-900 text-base">
                     Add Medication to Catalog
                   </h3>
 
                   <p className="text-[10px] text-gray-400 font-semibold">
                     Store-specific dynamic stock definition
                   </p>
-
                 </div>
-
               </div>
 
               <button
-                onClick={() =>
-                  setShowAddModal(false)
-                }
+                onClick={() => setShowAddModal(false)}
                 aria-label="Close add medicine panel"
                 className="text-gray-400 hover:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
               >
-                <X
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
-
             </div>
 
             {/* Form Scroll Area */}
             <form
               onSubmit={handleAddMedicineSubmit}
-              className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5"
+              className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6"
             >
-
+              {/* Error */}
               {formError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
-
-                  <ShieldAlert className="w-5 h-5 flex-shrink-0 text-red-650" />
-
+                  <ShieldAlert className="w-5 h-5 flex-shrink-0 text-red-600" />
                   <span>{formError}</span>
-
                 </div>
               )}
 
+              {/* Success */}
               {formSuccess && (
-                <div className="bg-emerald-50 border border-emerald-250 rounded-lg p-3 flex items-start space-x-2 text-emerald-800 text-xs">
-
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start space-x-2 text-emerald-800 text-xs">
                   <Check className="w-5 h-5 flex-shrink-0 text-emerald-700" />
-
                   <span>{formSuccess}</span>
-
                 </div>
               )}
 
-              {/* Name & Generic */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* ============================================================
+      MEDICINE INFORMATION
+      ============================================================ */}
+              <section>
+                <div className="mb-3">
+                  <h4 className="text-sm font-black text-gray-900">Medicine Information</h4>
 
-                <div>
-
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Trade / Brand Name *
-                  </label>
-
-                  <input
-                    type="text"
-                    required
-                    value={medName}
-                    onChange={(e) =>
-                      setMedName(e.target.value)
-                    }
-                    placeholder="e.g. Panadol Forte"
-                    className="block w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    Enter the basic information that identifies the medicine.
+                  </p>
                 </div>
 
-                <div>
+                <div className="space-y-4">
+                  {/* Trade & Generic Name */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Trade Name */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Trade Name *
+                      </label>
 
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Generic Name *
-                  </label>
+                      <input
+                        type="text"
+                        required
+                        value={medName}
+                        onChange={(e) => setMedName(e.target.value)}
+                        placeholder="e.g. Panadol Forte"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
 
-                  <input
-                    type="text"
-                    required
-                    value={medGenericName}
-                    onChange={(e) =>
-                      setMedGenericName(
-                        e.target.value
-                      )
-                    }
-                    placeholder="e.g. Paracetamol"
-                    className="block w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
+                    {/* Generic Name */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Generic Name *
+                      </label>
 
-                </div>
-
-              </div>
-
-              {/* ========================================================
-                  CATEGORY & MANUFACTURER AUTOCOMPLETE
-                  ======================================================== */}
-
-              <div className="grid grid-cols-2 gap-4">
-
-                {/* CATEGORY */}
-                <div
-                  ref={categoryRef}
-                  className="relative"
-                >
-
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Therapeutic Category *
-                  </label>
-
-                  <div className="relative">
-
-                    <input
-                      type="text"
-                      required
-                      value={medCategory}
-                      onChange={(e) => {
-                        setMedCategory(e.target.value)
-                        setShowCategorySuggestions(true)
-                      }}
-                      onFocus={() =>
-                        setShowCategorySuggestions(true)
-                      }
-                      placeholder="e.g. Analgesics"
-                      autoComplete="off"
-                      className="block w-full px-3 py-1.5 pr-8 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-
-                    <ChevronDown
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 transition-transform ${
-                        showCategorySuggestions
-                          ? 'rotate-180'
-                          : ''
-                      }`}
-                    />
-
+                      <input
+                        type="text"
+                        required
+                        value={medGenericName}
+                        onChange={(e) => setMedGenericName(e.target.value)}
+                        placeholder="e.g. Paracetamol"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
                   </div>
 
-                  {showCategorySuggestions && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {/* Category & Manufacturer */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* CATEGORY */}
+                    <div ref={categoryRef} className="relative">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Category *
+                      </label>
 
-                      {filteredCategories.length > 0 ? (
+                      <input
+                        type="text"
+                        required
+                        value={medCategory}
+                        onChange={(e) => {
+                          setMedCategory(e.target.value)
+                          setMedCategoryId(undefined)
+                          setShowCategorySuggestions(true)
+                        }}
+                        onFocus={() => {
+                          setShowCategorySuggestions(true)
+                        }}
+                        placeholder="Type category..."
+                        autoComplete="off"
+                        className="block w-full px-3 py-2 pr-8 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
 
-                        filteredCategories.map((category) => (
+                      <ChevronDown
+                        className={`absolute right-2 top-[30px] w-3.5 h-3.5 text-gray-400 transition-transform ${
+                          showCategorySuggestions ? 'rotate-180' : ''
+                        }`}
+                      />
 
-                          <button
-                            key={category.id}
-                            type="button"
-                            onClick={() => {
-                              setMedCategory(category.name)
-                              setShowCategorySuggestions(false)
-                            }}
-                            className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
-                          >
-                            {category.name}
-                          </button>
+                      {showCategorySuggestions && (
+                        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {filteredCategories.length > 0 ? (
+                            filteredCategories.map((category) => (
+                              <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => {
+                                  setMedCategory(category.name)
+                                  setMedCategoryId(category.id)
+                                  setShowCategorySuggestions(false)
+                                }}
+                                className="w-full text-left px-3 py-2.5 text-xs text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                              >
+                                {category.name}
+                              </button>
+                            ))
+                          ) : medCategory.trim() ? (
+                            <div className="px-3 py-3 text-xs">
+                              <div className="text-gray-500">No matching category found.</div>
 
-                        ))
-
-                      ) : (
-
-                        <div className="px-3 py-2 text-xs text-gray-500">
-                          {medCategory.trim()
-                            ? (
-                              <>
-                                <span className="block">
-                                  No matching category found.
-                                </span>
-
-                                <span className="block mt-0.5 text-emerald-600 font-semibold">
-                                  "{medCategory}" will be created when you register the medicine.
-                                </span>
-                              </>
-                            )
-                            : (
-                              'No categories available.'
-                            )}
+                              <div className="mt-1 text-emerald-600 font-semibold">
+                                "{medCategory}" will be created when you register the medicine.
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="px-3 py-3 text-xs text-gray-500">
+                              Start typing to search categories.
+                            </div>
+                          )}
                         </div>
-
                       )}
-
                     </div>
-                  )}
 
-                </div>
+                    {/* MANUFACTURER */}
+                    <div ref={manufacturerRef} className="relative">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Manufacturer *
+                      </label>
 
-                {/* MANUFACTURER */}
-                <div
-                  ref={manufacturerRef}
-                  className="relative"
-                >
+                      <input
+                        type="text"
+                        required
+                        value={medManufacturer}
+                        onChange={(e) => {
+                          setMedManufacturer(e.target.value)
+                          setMedManufacturerId(undefined)
+                          setShowManufacturerSuggestions(true)
+                        }}
+                        onFocus={() => {
+                          setShowManufacturerSuggestions(true)
+                        }}
+                        placeholder="Type manufacturer..."
+                        autoComplete="off"
+                        className="block w-full px-3 py-2 pr-8 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
 
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Manufacturer / Supplier *
-                  </label>
+                      <ChevronDown
+                        className={`absolute right-2 top-[30px] w-3.5 h-3.5 text-gray-400 transition-transform ${
+                          showManufacturerSuggestions ? 'rotate-180' : ''
+                        }`}
+                      />
 
-                  <div className="relative">
+                      {showManufacturerSuggestions && (
+                        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {filteredManufacturers.length > 0 ? (
+                            filteredManufacturers.map((manufacturer) => (
+                              <button
+                                key={manufacturer.id}
+                                type="button"
+                                onClick={() => {
+                                  setMedManufacturer(manufacturer.name)
+                                  setMedManufacturerId(manufacturer.id)
+                                  setShowManufacturerSuggestions(false)
+                                }}
+                                className="w-full text-left px-3 py-2.5 text-xs text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                              >
+                                {manufacturer.name}
+                              </button>
+                            ))
+                          ) : medManufacturer.trim() ? (
+                            <div className="px-3 py-3 text-xs">
+                              <div className="text-gray-500">No matching manufacturer found.</div>
 
-                    <input
-                      type="text"
-                      required
-                      value={medManufacturer}
-                      onChange={(e) => {
-                        setMedManufacturer(e.target.value)
-                        setShowManufacturerSuggestions(true)
-                      }}
-                      onFocus={() =>
-                        setShowManufacturerSuggestions(true)
-                      }
-                      placeholder="e.g. GSK Rwanda"
-                      autoComplete="off"
-                      className="block w-full px-3 py-1.5 pr-8 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-
-                    <ChevronDown
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 transition-transform ${
-                        showManufacturerSuggestions
-                          ? 'rotate-180'
-                          : ''
-                      }`}
-                    />
-
-                  </div>
-
-                  {showManufacturerSuggestions && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-
-                      {filteredManufacturers.length > 0 ? (
-
-                        filteredManufacturers.map((manufacturer) => (
-
-                          <button
-                            key={manufacturer.id}
-                            type="button"
-                            onClick={() => {
-                              setMedManufacturer(
-                                manufacturer.name
-                              )
-
-                              setShowManufacturerSuggestions(
-                                false
-                              )
-                            }}
-                            className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
-                          >
-                            {manufacturer.name}
-                          </button>
-
-                        ))
-
-                      ) : (
-
-                        <div className="px-3 py-2 text-xs text-gray-500">
-
-                          {medManufacturer.trim()
-                            ? (
-                              <>
-                                <span className="block">
-                                  No matching manufacturer found.
-                                </span>
-
-                                <span className="block mt-0.5 text-emerald-600 font-semibold">
-                                  "{medManufacturer}" will be created when you register the medicine.
-                                </span>
-                              </>
-                            )
-                            : (
-                              'No manufacturers available.'
-                            )}
-
+                              <div className="mt-1 text-emerald-600 font-semibold">
+                                "{medManufacturer}" will be created when you register the medicine.
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="px-3 py-3 text-xs text-gray-500">
+                              Start typing to search manufacturers.
+                            </div>
+                          )}
                         </div>
-
                       )}
-
                     </div>
-                  )}
-
-                </div>
-
-              </div>
-
-              {/* Batch & Expiry */}
-              <div className="grid grid-cols-2 gap-4">
-
-                <div>
-
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Batch / LOT Number *
-                  </label>
-
-                  <input
-                    type="text"
-                    required
-                    value={medBatch}
-                    onChange={(e) =>
-                      setMedBatch(e.target.value)
-                    }
-                    placeholder="e.g. B-7032-GSK"
-                    className="block w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
-                  />
-
-                </div>
-
-                <div>
-
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Expiry Date *
-                  </label>
-
-                  <input
-                    type="date"
-                    required
-                    value={medExpiry}
-                    onChange={(e) =>
-                      setMedExpiry(e.target.value)
-                    }
-                    className="block w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
-                  />
-
-                </div>
-
-              </div>
-
-              {/* Cost & Selling price */}
-              <div className="grid grid-cols-2 gap-4">
-
-                <div>
-
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Unit Cost Price (RWF) *
-                  </label>
-
-                  <input
-                    type="number"
-                    required
-                    value={medCost}
-                    onChange={(e) =>
-                      setMedCost(e.target.value)
-                    }
-                    placeholder="Cost price in RWF"
-                    className="block w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-
-                </div>
-
-                <div>
-
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Unit Selling Price (RWF) *
-                  </label>
-
-                  <input
-                    type="number"
-                    required
-                    value={medPrice}
-                    onChange={(e) =>
-                      setMedPrice(e.target.value)
-                    }
-                    placeholder="Selling price in RWF"
-                    className="block w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-
-                </div>
-
-              </div>
-
-              {/* Cost Margin Display */}
-              {medCost &&
-                medPrice &&
-                parseFloat(medPrice) >=
-                  parseFloat(medCost) && (
-                  <div className="p-3 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-100 flex items-center justify-between text-xs font-semibold">
-
-                    <div className="flex items-center space-x-1.5">
-
-                      <Percent className="w-4 h-4 text-emerald-600" />
-
-                      <span>
-                        Estimated Gross Profit Margin:
-                      </span>
-
-                    </div>
-
-                    <span className="font-black text-sm">
-                      {getProfitMargin()}%
-                    </span>
-
                   </div>
-                )}
+                </div>
+              </section>
 
-              {/* Stock Quantity */}
-              <div>
+              {/* ============================================================
+      BATCH INFORMATION
+      ============================================================ */}
+              <section className="pt-5 border-t border-gray-200">
+                <div className="mb-3">
+                  <h4 className="text-sm font-black text-gray-900">Batch Information</h4>
 
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Initial Stock Quantity (Units) *
-                </label>
-
-                <input
-                  type="number"
-                  required
-                  value={medStock}
-                  onChange={(e) =>
-                    setMedStock(e.target.value)
-                  }
-                  placeholder="e.g. 500"
-                  className="block w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-
-              </div>
-
-              {/* Storage Conditions */}
-              <div>
-
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Storage Conditions & Temperature *
-                </label>
-
-                <select
-                  value={medStorage}
-                  onChange={(e) =>
-                    setMedStorage(e.target.value)
-                  }
-                  className="block w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                >
-
-                  <option value="Room Temperature (<30°C)">
-                    Room Temperature (&lt;30°C)
-                  </option>
-
-                  <option value="Cold Chain (2°C - 8°C)">
-                    Cold Chain (2°C - 8°C)
-                  </option>
-
-                  <option value="Protect from Light / Moisture">
-                    Protect from Light / Moisture
-                  </option>
-
-                  <option value="Controlled Substance Locker">
-                    Controlled Substance Locker
-                  </option>
-
-                </select>
-
-              </div>
-
-              {/* Prescription Required & Clinical Placeholders */}
-              <div className="space-y-3 pt-3 border-t border-gray-200">
-
-                <div className="flex items-start">
-
-                  <input
-                    id="prescriptionReq"
-                    type="checkbox"
-                    checked={medPrescription}
-                    onChange={(e) =>
-                      setMedPrescription(
-                        e.target.checked
-                      )
-                    }
-                    className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded mt-0.5 cursor-pointer"
-                  />
-
-                  <label
-                    htmlFor="prescriptionReq"
-                    className="ml-2 block text-xs text-gray-700 font-semibold cursor-pointer"
-                  >
-                    Dispensation requires a valid medical prescription (MOH Regulated)
-                  </label>
-
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    Enter the batch information provided by the manufacturer.
+                  </p>
                 </div>
 
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-start space-x-2 text-[10px] text-gray-500 leading-normal">
+                <div className="space-y-4">
+                  {/* Batch Number & Lot Number */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Batch Number */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Batch Number *
+                      </label>
 
-                  <Info className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <input
+                        type="text"
+                        required
+                        value={medBatchNumber}
+                        onChange={(e) => setMedBatchNumber(e.target.value)}
+                        placeholder="e.g. BTH-2026-001"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
 
+                      <p className="text-[9px] text-gray-400 mt-1">
+                        Enter the batch number printed by the manufacturer.
+                      </p>
+                    </div>
+
+                    {/* Lot Number */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Lot Number *
+                      </label>
+
+                      <input
+                        type="text"
+                        required
+                        value={medLotNumber}
+                        onChange={(e) => setMedLotNumber(e.target.value)}
+                        placeholder="e.g. LOT-2026-001"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Expiry */}
                   <div>
-                    Clinical uses, storage directives, barcodes, and medicine catalog images will be generated automatically matching MoH drug catalogs on final registration.
-                  </div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Expiry Date *
+                    </label>
 
+                    <input
+                      type="date"
+                      required
+                      value={medExpiry}
+                      onChange={(e) => setMedExpiry(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+
+                    <p className="text-[9px] text-gray-400 mt-1">
+                      The expiry date must be in the future.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* ============================================================
+      PRICING & STOCK
+      ============================================================ */}
+              <section className="pt-5 border-t border-gray-200">
+                <div className="mb-3">
+                  <h4 className="text-sm font-black text-gray-900">Pricing & Stock</h4>
+
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    Enter the purchase price, selling price and initial stock.
+                  </p>
                 </div>
 
-              </div>
+                <div className="space-y-4">
+                  {/* Cost & Selling Price */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Unit Cost */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Unit Cost (RWF) *
+                      </label>
 
-              {/* Submit Buttons */}
-              <div className="flex space-x-3 pt-4 border-t border-gray-200">
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.01"
+                        value={medCost}
+                        onChange={(e) => setMedCost(e.target.value)}
+                        placeholder="e.g. 100"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
 
+                    {/* Selling Price */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Unit Selling Price (RWF) *
+                      </label>
+
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.01"
+                        value={medPrice}
+                        onChange={(e) => setMedPrice(e.target.value)}
+                        placeholder="e.g. 150"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Profit Margin */}
+                  {medCost && medPrice && parseFloat(medPrice) >= parseFloat(medCost) && (
+                    <div className="p-3 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-100 flex items-center justify-between text-xs font-semibold">
+                      <div className="flex items-center space-x-1.5">
+                        <Percent className="w-4 h-4 text-emerald-600" />
+
+                        <span>Estimated Gross Profit Margin:</span>
+                      </div>
+
+                      <span className="font-black text-sm">{getProfitMargin()}%</span>
+                    </div>
+                  )}
+
+                  {/* Initial Stock */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Initial Stock Quantity (Units) *
+                    </label>
+
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="1"
+                      value={medStock}
+                      onChange={(e) => setMedStock(e.target.value)}
+                      placeholder="e.g. 500"
+                      className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* ============================================================
+      STORAGE
+      ============================================================ */}
+              <section className="pt-5 border-t border-gray-200">
+                <div className="mb-3">
+                  <h4 className="text-sm font-black text-gray-900">Storage Requirements</h4>
+
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    Enter the storage requirements provided for this medicine.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Storage Conditions */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Storage Conditions *
+                    </label>
+
+                    <textarea
+                      required
+                      rows={2}
+                      value={medStorageConditions}
+                      onChange={(e) => setMedStorageConditions(e.target.value)}
+                      placeholder="e.g. Store in a cool, dry place away from direct sunlight."
+                      className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  {/* Temperature */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Minimum */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Minimum Temperature (°C)
+                      </label>
+
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={medMinTemperature}
+                        onChange={(e) => setMedMinTemperature(e.target.value)}
+                        placeholder="e.g. 2"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    {/* Maximum */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Maximum Temperature (°C)
+                      </label>
+
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={medMaxTemperature}
+                        onChange={(e) => setMedMaxTemperature(e.target.value)}
+                        placeholder="e.g. 25"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start space-x-2">
+                    <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+
+                    <p className="text-[10px] text-blue-700 leading-relaxed">
+                      Enter the storage temperature range according to the manufacturer's
+                      instructions. Leave the temperature fields empty if the medicine does not have
+                      a specific temperature range.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* ============================================================
+      SUBMIT
+      ============================================================ */}
+              <div className="flex space-x-3 pt-5 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
+                    resetForm()
                     setShowAddModal(false)
-                  }
-                  className="w-1/3 py-2 border border-gray-300 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-50"
+                  }}
+                  className="w-1/3 py-2.5 border border-gray-300 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="w-2/3 py-2 bg-health-primary hover:bg-health-secondary text-white font-bold rounded-lg text-xs shadow-sm flex items-center justify-center space-x-2"
+                  className="w-2/3 py-2.5 bg-health-primary hover:bg-health-secondary text-white font-bold rounded-lg text-xs shadow-sm flex items-center justify-center space-x-2 transition-colors"
                 >
-                  <span>
-                    Register Medicine
-                  </span>
+                  <span>Register Medicine</span>
 
-                  <ArrowRight className="w-3.5 h-3.5" />
-
+                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
-
               </div>
-
             </form>
           </div>
         </div>
       )}
-
     </div>
   )
 }

@@ -407,49 +407,77 @@ export default function LandingPage() {
 
       {/* About The Platform Section */}
       <section id="about" className="relative py-20 bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Left Column */}
-            <div className="space-y-6">
-              <span className="text-xs font-bold uppercase tracking-widest text-health-primary">About the Platform</span>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            {/* Left Column - Text Content */}
+            <div className="space-y-8 pt-6">
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-50 text-health-primary border border-emerald-100 tracking-wider uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-health-primary mr-2 inline-block"></span>
+                ABOUT RWANDA E-PHARMACY
+              </span>
+              
               <h2 className="text-3xl font-serif font-black text-gray-950 leading-tight">
-                A national healthcare infrastructure project.
+                Making medicine access simpler for every Rwandan
               </h2>
-              <div className="space-y-4 text-gray-600 text-base leading-relaxed font-medium">
+              
+              <div className="space-y-4 text-gray-600 text-sm leading-relaxed font-medium">
                 <p>
                   Rwanda E-Pharmacy is an initiative of the Ministry of Health to digitise medicine access across all five provinces. The platform connects patients, pharmacies, insurance companies, and government health authorities into one centralised, real-time system.
                 </p>
                 <p>
-                  The platform does not deliver medicines. Its purpose is to ensure that every Rwandan can quickly locate a medicine, confirm it is available, verify their insurance coverage, and reserve it for in-person collection.
+                  We are building a healthier Rwanda where every person can easily find, verify and access the medicines they need.
                 </p>
               </div>
 
-              {/* Compliance Badges */}
-              <div className="flex flex-wrap gap-2 pt-4">
-                {['ISO 27001 Certified', 'GDPR Compliant', 'WCAG 2.1 AA', 'MOH Regulated', '24/7 Availability'].map((badge) => (
-                  <span key={badge} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-health-light-text border border-emerald-100">
-                    <Check className="w-3.5 h-3.5 mr-1" /> {badge}
-                  </span>
-                ))}
+              {/* Portal Details - 3 Column Grid */}
+              <div className="grid grid-cols-3 gap-6 pt-6">
+                {portalDetails.map((portal, idx) => {
+                  const Icon = portal.icon
+                  return (
+                    <div key={idx} className="text-center space-y-2">
+                      <div className="w-12 h-12 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mx-auto">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="font-bold text-gray-950 text-sm">{portal.role}</h3>
+                      <p className="text-gray-500 text-[11px] leading-relaxed font-medium">{portal.desc}</p>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-4">
-              {portalDetails.map((portal, idx) => {
-                const Icon = portal.icon
-                return (
-                  <div key={idx} className="p-5 rounded-xl border border-gray-150 flex items-start space-x-4 bg-white/95 backdrop-blur-xs hover:bg-slate-50/50 transition-colors shadow-xs">
-                    <div className="w-10 h-10 bg-emerald-50 text-health-primary rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-serif font-bold text-gray-955 text-base">{portal.role}</h3>
-                      <p className="text-gray-500 text-sm mt-1 leading-relaxed font-medium">{portal.desc}</p>
+            {/* Right Column - Circular Image with Decorative Ring */}
+            <div className="relative flex justify-center items-center overflow-visible">
+              {/* Decorative Curved Ring Background */}
+              <div className="absolute -inset-8 rounded-full bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 opacity-25 blur-xl" />
+              
+              {/* Outer Ring - Dark Green gradient (Logo colors) */}
+              <div className="absolute inset-0 rounded-full border-8 border-transparent bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-700 p-1 rounded-full">
+                <div className="w-full h-full rounded-full bg-white" />
+              </div>
+
+              {/* Main Circular Image Container */}
+              <div className="image-container relative z-10 shadow-2xl border-4 border-white">
+                <img 
+                  src="/pharmacy.png" 
+                  alt="Healthcare Workers" 
+                />
+              </div>
+
+              {/* Connected Healthcare Card - Overlay positioned bottom right */}
+              <div className="absolute -bottom-6 right-0 w-72 z-20">
+                <div className="bg-emerald-900 rounded-2xl p-6 shadow-2xl text-white space-y-3">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
                     </div>
                   </div>
-                )
-              })}
+                  <h3 className="font-bold text-lg">Connected healthcare across Rwanda</h3>
+                  <p className="text-sm leading-relaxed text-emerald-100">
+                    One platform. Many partners. Better health for all.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
