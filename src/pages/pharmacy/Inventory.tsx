@@ -252,7 +252,7 @@ export default function PharmacyInventory() {
         return {
           medicine,
           stockInfo,
-          customBatch: item.batchNumber || 'N/A',
+          customBatch: item.batchNumber || batch?.batchNumber || batch?.lotNumber || 'N/A',
           customExpiry:
             item.expiryDate || batch?.expiryDate
               ? new Date(item.expiryDate || batch.expiryDate).toISOString().split('T')[0]
