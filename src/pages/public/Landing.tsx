@@ -13,11 +13,11 @@ import {
   CreditCard,
   Bell,
   Bookmark,
-  Shield,
   Sparkles,
   Bot,
   X,
   Send,
+  Landmark,
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -163,9 +163,9 @@ export default function LandingPage() {
       icon: PharmacyIcon,
     },
     {
-      role: 'Insurance Companies',
-      desc: 'Track claims, monitor patient usage, process reimbursements to pharmacies.',
-      icon: Shield,
+      role: 'Government',
+      desc: 'Monitor national medicine availability, pharmacy compliance, and district health coverage.',
+      icon: Landmark,
     },
   ]
 
@@ -184,7 +184,7 @@ export default function LandingPage() {
     },
     {
       q: 'Who can use this platform?',
-      a: 'All citizens and residents of Rwanda with a valid National ID or passport can register as patients. Licensed pharmacies and insurance companies have dedicated portals.',
+      a: 'All citizens and residents of Rwanda with a valid National ID or passport can register as patients. Licensed pharmacies and government health authorities have dedicated portals.',
     },
     {
       q: 'Is my medical data secure?',
@@ -545,7 +545,7 @@ export default function LandingPage() {
                 <p>
                   Rwanda E-Pharmacy is an initiative of the Ministry of Health to digitise medicine
                   access across all five provinces. The platform connects patients, pharmacies,
-                  insurance companies, and government health authorities into one centralised,
+                  and government health authorities into one centralised,
                   real-time system.
                 </p>
                 <p>
@@ -781,7 +781,7 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Insurance Portal
+                    Government Portal
                   </Link>
                 </li>
               </ul>
@@ -1078,7 +1078,7 @@ export default function LandingPage() {
               {/* Other Options / Footnote */}
               <div className="mt-8 pt-6 border-t border-gray-150 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-sans">
                 <span className="text-gray-500 font-bold">
-                  Other roles (Insurance, MoH Inspector)?
+                  Other roles (Government, MoH Inspector)?
                 </span>
                 <span className="text-gray-450 font-medium">
                   Created by administrators. Contact support at{' '}

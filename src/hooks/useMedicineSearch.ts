@@ -50,6 +50,7 @@ export function useMedicineSearch() {
     getMedicineAvailability: MedicineApi.getMedicineAvailability,
     calculateInsuranceCoverage: MedicineApi.calculateInsuranceCoverage,
     uploadPrescription: MedicineApi.uploadPrescription,
+    createPrescription: MedicineApi.createPrescription,
     createReservation: MedicineApi.createReservation,
     cancelReservation: MedicineApi.cancelReservation,
     getReservationHistory: MedicineApi.getReservationHistory,

@@ -311,6 +311,31 @@ export const MedicineApi = {
     }
   },
 
+  createPrescription: async (data: {
+    documentUrl: string
+    pharmacyId: string
+    medicineId: string
+    quantity: number
+    dosage?: string
+    frequency?: string
+    duration?: string
+    notes?: string
+  }): Promise<any> => {
+    const response = await apiClient.post('/prescriptions', {
+      documentUrl: data.documentUrl,
+      pharmacyId: data.pharmacyId,
+      notes: data.notes,
+      medicines: [{
+        medicineId: data.medicineId,
+        dosage: data.dosage || 'As directed by prescriber',
+        frequency: data.frequency || 'As directed by prescriber',
+        duration: data.duration || 'As directed by prescriber',
+        quantity: data.quantity,
+      }],
+    })
+    return response.data
+  },
+
   // Create pickup reservation
   createReservation: async (data: {
     medicineId: string

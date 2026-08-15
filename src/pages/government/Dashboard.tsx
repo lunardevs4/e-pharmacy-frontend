@@ -2,6 +2,43 @@ import React, { useState, useEffect } from 'react'
 import { Landmark, Users, Package, AlertTriangle, FileText, CheckCircle2, ChevronRight, Activity, TrendingUp, XCircle, MapPin, Clock } from 'lucide-react'
 import { AuthApi } from '@/services/auth-api'
 
+function SemiCircularGauge({ value }: { value: number }) {
+  const percentage = Math.max(0, Math.min(100, Math.round(value)))
+
+  return (
+    <div
+      className="relative w-32 h-20 mx-auto"
+      role="img"
+      aria-label={`${percentage}% approved pharmacy coverage`}
+    >
+      <svg viewBox="0 0 120 72" className="w-full h-full overflow-visible" aria-hidden="true">
+        <path
+          d="M 14 62 A 46 46 0 0 1 106 62"
+          pathLength="100"
+          fill="none"
+          stroke="#d1d5db"
+          strokeWidth="12"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 14 62 A 46 46 0 0 1 106 62"
+          pathLength="100"
+          fill="none"
+          stroke="var(--color-health-primary)"
+          strokeWidth="12"
+          strokeLinecap="round"
+          strokeDasharray="100"
+          strokeDashoffset={100 - percentage}
+          className="transition-all duration-500"
+        />
+      </svg>
+      <span className="absolute inset-x-0 bottom-0 text-center text-2xl font-black tracking-tight text-gray-900">
+        {percentage}%
+      </span>
+    </div>
+  )
+}
+
 export default function GovernmentDashboard() {
   const [pharmacies, setPharmacies] = useState<any[]>([])
   const [summary, setSummary] = useState<GovernmentSummary | null>(null)
@@ -122,6 +159,7 @@ export default function GovernmentDashboard() {
   const totalCount = summary?.totalPharmacies ?? pharmacies.length
   const pendingCount = pharmacies.filter((p) => p.status === 'PENDING').length
   const approvedCount = summary?.approvedPharmacies ?? pharmacies.filter((p) => p.status === 'APPROVED').length
+  const approvedCoverage = Math.round((approvedCount / Math.max(totalCount, 1)) * 100)
   const rejectedCount = pharmacies.filter((p) => p.status === 'REJECTED').length
   const recentRegistrations = [...pharmacies]
     .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime())
@@ -195,9 +233,9 @@ export default function GovernmentDashboard() {
           </p>
         </div>
 
-        <div className="flex-shrink-0 bg-emerald-50 border border-emerald-200/60 px-5 py-3.5 rounded-xl text-center">
+        <div className="flex-shrink-0 bg-emerald-50 border border-emerald-200/60 px-5 py-4 rounded-xl text-center min-w-[180px]">
           <span className="text-[9px] uppercase text-emerald-800 block font-black">Approved pharmacy coverage</span>
-          <span className="text-2xl font-black block mt-0.5 text-emerald-955">{summary ? `${Math.round((summary.approvedPharmacies / Math.max(summary.totalPharmacies, 1)) * 100)}%` : '—'}</span>
+          <SemiCircularGauge value={approvedCoverage} />
           <span className="text-[9px] text-gray-450 block font-semibold">of registered pharmacies</span>
         </div>
       </div>

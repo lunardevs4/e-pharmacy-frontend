@@ -43,6 +43,43 @@ function heatTextClass(stock: number): string {
   return 'text-red-700 bg-red-50 border-red-200'
 }
 
+function CoverageGauge({ value, compact = false }: { value: number; compact?: boolean }) {
+  const percentage = Math.max(0, Math.min(100, Math.round(value)))
+
+  return (
+    <div
+      className={`relative mx-auto ${compact ? 'w-24 h-16' : 'w-40 h-24'}`}
+      role="img"
+      aria-label={`${percentage}% essential drug coverage`}
+    >
+      <svg viewBox="0 0 120 72" className="w-full h-full overflow-visible" aria-hidden="true">
+        <path
+          d="M 14 62 A 46 46 0 0 1 106 62"
+          pathLength="100"
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth="12"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 14 62 A 46 46 0 0 1 106 62"
+          pathLength="100"
+          fill="none"
+          stroke="var(--color-health-primary)"
+          strokeWidth="12"
+          strokeLinecap="round"
+          strokeDasharray="100"
+          strokeDashoffset={100 - percentage}
+          className="transition-all duration-500"
+        />
+      </svg>
+      <div className="absolute inset-x-0 bottom-0 text-center">
+        <span className={`${compact ? 'text-lg' : 'text-2xl'} font-black tracking-tight text-gray-900`}>{percentage}%</span>
+      </div>
+    </div>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DistrictAnalytics() {
@@ -57,40 +94,34 @@ export default function DistrictAnalytics() {
     setLoading(true)
     setError(null)
     try {
-      const [pharmacies, lowStock] = await Promise.all([
-        AuthApi.getAllPharmacies().catch(() => []),
+      const [lowStock, coverage] = await Promise.all([
         AuthApi.getGovernmentLowStock(10).catch(() => []),
+        AuthApi.getGovernmentDistrictCoverage(),
       ])
 
-      // Group pharmacies by district
+      // The coverage endpoint is authoritative and already contains only approved pharmacies.
       const districtMap = new Map<string, District>()
 
-      pharmacies.forEach((pharm: any) => {
-        const district = pharm.district || 'Unknown'
-        const province = (pharm as any).province || 'Unknown'
-
-        if (!districtMap.has(district)) {
-          districtMap.set(district, {
-            id: `dist-${district}`,
-            name: district,
-            province,
-            pharmacies: 0,
-            activeStock: 95, // Default healthy stock
-            criticalDrugs: [],
-            reservations: 0,
-            population: 200000, // Default population
-          })
-        }
-
-        const districtData = districtMap.get(district)!
-        districtData.pharmacies++
-        if (pharm.status === 'APPROVED') {
-          districtData.reservations += Math.floor(Math.random() * 30) + 5
-        }
+      coverage.forEach((item: any) => {
+        districtMap.set(item.district, {
+          id: `dist-${item.district}`,
+          name: item.district,
+          province: item.province || 'Unknown',
+          pharmacies: Number(item.approvedPharmacies ?? 0),
+          activeStock: Number(item.coverage ?? 0),
+          criticalDrugs: [],
+          reservations: Number(item.reservations ?? 0),
+          population: 200000, // Default population
+        })
       })
 
       // Process low stock data to update critical drugs and stock levels
       lowStock.forEach((item: any) => {
+        const linkedPharmacy = item.pharmacy as any
+        // Prevent stock records belonging to pending/rejected pharmacies from
+        // affecting an approved-pharmacy district's coverage.
+        if (linkedPharmacy?.status && linkedPharmacy.status !== 'APPROVED') return
+
         const district = (item.pharmacy as any)?.district || item.district || 'Unknown'
         const medicineName = (item.medicine as any)?.name || item.medicineName || 'Unknown'
         const quantity = item.quantity || 0
@@ -101,8 +132,6 @@ export default function DistrictAnalytics() {
             if (!districtData.criticalDrugs.includes(medicineName)) {
               districtData.criticalDrugs.push(medicineName)
             }
-            // Reduce stock level based on critical items
-            districtData.activeStock = Math.max(0, districtData.activeStock - 5)
           }
         }
       })
@@ -239,19 +268,26 @@ export default function DistrictAnalytics() {
                   <button
                     key={d.id}
                     onClick={() => setSelectedDistrict(isSelected ? null : d)}
-                    className={`relative rounded-xl p-3 text-left transition-all border-2 focus:outline-none group ${
+                    className={`relative rounded-xl p-2.5 text-left transition-all border-2 focus:outline-none group ${
                       isSelected
                         ? 'border-slate-900 shadow-md scale-105'
-                        : 'border-transparent hover:border-gray-300 hover:shadow-sm hover:scale-102'
+                        : 'border-gray-200 hover:border-emerald-300 hover:shadow-sm hover:scale-102'
                     }`}
                     style={{ background: 'transparent' }}
                     title={`${d.name} — ${d.activeStock}% stock`}
                   >
-                    {/* Heat colour block */}
-                    <div className={`${heatClass(d.activeStock)} rounded-lg p-3 transition-all`}>
-                      <span className="block text-[11px] font-black text-white leading-tight drop-shadow">{d.name}</span>
-                      <span className="block text-lg font-black text-white mt-1 drop-shadow">{d.activeStock}%</span>
-                      <span className="block text-[9px] text-white/80 font-bold mt-0.5">{d.pharmacies} stores</span>
+                    {/* Compact coverage gauge */}
+                    <div className="rounded-lg bg-white p-1 transition-all">
+                      <span className="block text-[10px] font-black text-gray-700 leading-tight truncate" title={d.name}>
+                        {d.name}
+                      </span>
+                      <CoverageGauge value={d.activeStock} compact />
+                      <div className="flex items-center justify-between gap-1 mt-0.5">
+                        <span className="text-[9px] text-gray-500 font-bold truncate">{d.pharmacies} stores</span>
+                        <span className={`text-[8px] font-bold border px-1 py-0.5 rounded ${heatTextClass(d.activeStock)}`}>
+                          {heatLabel(d.activeStock)}
+                        </span>
+                      </div>
                     </div>
                     {d.criticalDrugs.length > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center text-white text-[8px] font-black shadow">
@@ -298,16 +334,11 @@ export default function DistrictAnalytics() {
                       {heatLabel(selectedDistrict.activeStock)}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${heatClass(selectedDistrict.activeStock)}`}
-                      style={{ width: `${selectedDistrict.activeStock}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[10px] text-gray-400 font-semibold">
-                    <span>0%</span>
-                    <span className="font-black text-gray-700">{selectedDistrict.activeStock}% stocked</span>
-                    <span>100%</span>
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 pt-3 pb-2">
+                    <CoverageGauge value={selectedDistrict.activeStock} />
+                    <p className="text-center text-[10px] font-semibold text-gray-400">
+                      essential medicines in stock
+                    </p>
                   </div>
                 </div>
 

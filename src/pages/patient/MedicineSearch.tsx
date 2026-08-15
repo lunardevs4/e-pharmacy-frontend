@@ -19,6 +19,7 @@ import { MedicineApi } from '@/services/medicine-api'
 import MedicineSearchBar from '@/components/patient/MedicineSearchBar'
 import MedicineCard from '@/components/patient/MedicineCard'
 import PharmacyAvailabilityTable from '@/components/patient/PharmacyAvailabilityTable'
+import PrescriptionUploader from '@/components/patient/PrescriptionUploader'
 import { CardSkeleton } from '@/components/patient/LoadingSkeleton'
 
 export default function MedicineSearch() {
@@ -32,6 +33,8 @@ export default function MedicineSearch() {
     executeSearch,
     getMedicineAvailability,
     createReservation,
+    uploadPrescription,
+    createPrescription,
   } = useMedicineSearch()
 
   // Search filter states
@@ -79,6 +82,39 @@ export default function MedicineSearch() {
 
   const [resLoading, setResLoading] = useState(false)
   const [createdReservation, setCreatedReservation] = useState<Reservation | null>(null)
+  const [uploadedPrescription, setUploadedPrescription] = useState<File | null>(null)
+  const [prescriptionPreviewUrl, setPrescriptionPreviewUrl] = useState<string | null>(null)
+  const [prescriptionUploadProgress, setPrescriptionUploadProgress] = useState(0)
+  const [prescriptionError, setPrescriptionError] = useState<string | null>(null)
+
+  const handlePrescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+    if (!allowedTypes.includes(file.type)) {
+      setPrescriptionError('Please upload a PDF, JPG, or PNG prescription.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setPrescriptionError('Prescription files must be smaller than 10MB.')
+      return
+    }
+
+    if (prescriptionPreviewUrl) URL.revokeObjectURL(prescriptionPreviewUrl)
+    setUploadedPrescription(file)
+    setPrescriptionPreviewUrl(file.type.startsWith('image/') ? URL.createObjectURL(file) : null)
+    setPrescriptionUploadProgress(0)
+    setPrescriptionError(null)
+  }
+
+  const removePrescription = () => {
+    if (prescriptionPreviewUrl) URL.revokeObjectURL(prescriptionPreviewUrl)
+    setUploadedPrescription(null)
+    setPrescriptionPreviewUrl(null)
+    setPrescriptionUploadProgress(0)
+    setPrescriptionError(null)
+  }
 
   // Get user's current location
   const getUserLocation = () => {
@@ -242,7 +278,26 @@ export default function MedicineSearch() {
   const handleConfirmReservation = async () => {
     if (!selectedMedicine || !selectedPharmacy) return
     setResLoading(true)
+    setPrescriptionError(null)
     try {
+      if (selectedMedicine.prescriptionRequired && !uploadedPrescription) {
+        setPrescriptionError('Please upload a prescription before continuing.')
+        setResLoading(false)
+        return
+      }
+
+      if (selectedMedicine.prescriptionRequired && uploadedPrescription) {
+        const uploaded = await uploadPrescription(uploadedPrescription, setPrescriptionUploadProgress)
+        await createPrescription({
+          documentUrl: uploaded.fileUrl,
+          pharmacyId: selectedPharmacy.pharmacyId,
+          medicineId: selectedMedicine.id,
+          quantity,
+          dosage: selectedMedicine.dosage,
+          notes: `Prescription uploaded during reservation for ${selectedMedicine.name}`,
+        })
+      }
+
       const res = await createReservation({
         medicineId: selectedMedicine.id,
         pharmacyId: selectedPharmacy.pharmacyId,
@@ -259,8 +314,9 @@ export default function MedicineSearch() {
       )
 
       setResStep(5)
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      setPrescriptionError(err.message || 'Unable to upload the prescription and complete the reservation.')
     } finally {
       setResLoading(false)
     }
@@ -273,6 +329,7 @@ export default function MedicineSearch() {
     setSelectedPharmacy(null)
     setQuantity(1)
     setCreatedReservation(null)
+    removePrescription()
   }
 
   // Google Maps state variables
@@ -726,6 +783,20 @@ export default function MedicineSearch() {
                       Total stock available: {selectedPharmacy.stock} tablets
                     </p>
                   </div>
+
+                  {selectedMedicine.prescriptionRequired && (
+                    <div className="border-t border-gray-150 pt-5">
+                      <PrescriptionUploader
+                        uploadedFile={uploadedPrescription}
+                        filePreviewUrl={prescriptionPreviewUrl}
+                        onFileChange={handlePrescriptionChange}
+                        onRemove={removePrescription}
+                        isRequired
+                        uploadProgress={prescriptionUploadProgress}
+                        error={prescriptionError}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 

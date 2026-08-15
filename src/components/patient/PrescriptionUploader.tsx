@@ -53,7 +53,7 @@ export default function PrescriptionUploader({
             </div>
             
             <div className="flex items-center space-x-2.5 text-xs">
-              {uploadProgress < 100 ? (
+              {uploadProgress > 0 && uploadProgress < 100 ? (
                 <span className="text-emerald-700 font-bold">Uploading {uploadProgress}%...</span>
               ) : (
                 <>
@@ -71,7 +71,7 @@ export default function PrescriptionUploader({
           </div>
 
           {/* Progress bar line indicator */}
-          {uploadProgress < 100 && (
+          {uploadProgress > 0 && uploadProgress < 100 && (
             <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
               <div 
                 className="bg-emerald-600 h-1.5 transition-all duration-150" 

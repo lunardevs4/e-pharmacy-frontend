@@ -386,6 +386,18 @@ export const AuthApi = {
     }
   },
 
+  getGovernmentDistrictCoverage: async (): Promise<unknown[]> => {
+    try {
+      const response = await apiClient.get('/government/district-coverage')
+      const payload = response.data
+      if (Array.isArray(payload)) return payload
+      if (Array.isArray(payload?.data)) return payload.data
+      return []
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
   getGovernmentReservationStats: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/government/reservation-stats')
