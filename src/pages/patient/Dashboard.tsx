@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
 import { Reservation, Medicine, PharmacyStock, Notification, SearchHistoryItem } from '@/types'
 import {
   Search, ClipboardList, Clock, CheckCircle2, XCircle, AlertTriangle,
-  ShieldCheck, History, ArrowRight, Trash2, Bell, Heart, MapPin
+  ShieldCheck, History, ArrowRight, Trash2, Bell, Heart, MapPin, 
+  TrendingUp, DollarSign, Package, Calendar
 } from 'lucide-react'
 
 export default function PatientDashboard() {
@@ -18,6 +19,8 @@ export default function PatientDashboard() {
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([])
   const [favMedicines, setFavMedicines] = useState<Medicine[]>([])
   const [favPharmacies, setFavPharmacies] = useState<PharmacyStock[]>([])
+  const [medicineHistory, setMedicineHistory] = useState<any[]>([])
+  const [reminders, setReminders] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -25,16 +28,20 @@ export default function PatientDashboard() {
   const loadDashboardData = async () => {
     setLoading(true)
     try {
-      const [resData, notData, histData, reportData] = await Promise.all([
+      const [resData, notData, histData, reportData, medHistoryData, remindersData] = await Promise.all([
         MedicineApi.getReservationHistory(),
         MedicineApi.getNotifications(),
         MedicineApi.getSearchHistory(),
         MedicineApi.getPatientDashboardReport().catch(() => null),
+        MedicineApi.getMedicineHistory().catch(() => []),
+        MedicineApi.getReminders().catch(() => []),
       ])
 
       setReservations(resData)
       setNotifications(notData)
       setSearchHistory(histData)
+      setMedicineHistory(medHistoryData)
+      setReminders(remindersData.filter((r: any) => r.isActive))
 
       if (reportData?.reservations?.length) {
         const reportReservations = reportData.reservations.map((item: any) => ({
@@ -133,11 +140,48 @@ export default function PatientDashboard() {
     }
   }
 
-  // Stats calculators
+  // Stats calculators with real data
   const pendingCount = reservations.filter((r) => r.status === 'PENDING' || r.status === 'CONFIRMED').length
   const collectedCount = reservations.filter((r) => r.status === 'COLLECTED').length
   const cancelledCount = reservations.filter((r) => r.status === 'CANCELLED').length
   const unreadCount = notifications.filter((n) => !n.read).length
+  
+  // Additional real stats
+  const totalSpent = medicineHistory.reduce((sum, item) => sum + (item.patientPays || 0), 0)
+  const totalMedicinesPurchased = medicineHistory.length
+  const activeRemindersCount = reminders.length
+  const todayDosesCount = reminders.reduce((sum, r) => sum + (r.times?.length || 0), 0)
+
+  // Calculate spending trend (last 7 days vs previous 7 days)
+  const spendingTrend = useMemo(() => {
+    const now = new Date()
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+    
+    const recentSpending = medicineHistory
+      .filter(item => new Date(item.purchaseDate) >= sevenDaysAgo)
+      .reduce((sum, item) => sum + (item.patientPays || 0), 0)
+    
+    const previousSpending = medicineHistory
+      .filter(item => {
+        const date = new Date(item.purchaseDate)
+        return date >= fourteenDaysAgo && date < sevenDaysAgo
+      })
+      .reduce((sum, item) => sum + (item.patientPays || 0), 0)
+    
+    if (previousSpending === 0) return recentSpending > 0 ? 100 : 0
+    return Math.round(((recentSpending - previousSpending) / previousSpending) * 100)
+  }, [medicineHistory])
+
+  // Reservation status distribution for charts
+  const reservationDistribution = useMemo(() => {
+    const total = reservations.length || 1
+    return {
+      pending: Math.round((pendingCount / total) * 100),
+      collected: Math.round((collectedCount / total) * 100),
+      cancelled: Math.round((cancelledCount / total) * 100),
+    }
+  }, [reservations, pendingCount, collectedCount, cancelledCount])
 
   // Profile completion meter computation
   const getProfileCompletion = () => {
@@ -254,25 +298,61 @@ export default function PatientDashboard() {
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-red-50 rounded-lg text-red-700">
-            <XCircle className="w-5 h-5" />
+          <div className="p-2.5 bg-blue-50 rounded-lg text-blue-700">
+            <DollarSign className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-gray-400 block uppercase font-bold">Cancelled Orders</span>
-            <span className="text-lg font-black text-gray-950">{cancelledCount} items</span>
+            <span className="text-[10px] text-gray-400 block uppercase font-bold">Total Spent</span>
+            <span className="text-lg font-black text-gray-950">{totalSpent.toLocaleString()} RWF</span>
           </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-blue-50 rounded-lg text-blue-700">
-            <ClipboardList className="w-5 h-5" />
+          <div className="p-2.5 bg-purple-50 rounded-lg text-purple-700">
+            <Package className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] text-gray-400 block uppercase font-bold">Medicines Purchased</span>
+            <span className="text-lg font-black text-gray-950">{totalMedicinesPurchased}</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Additional stats row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
+          <div className="p-2.5 bg-rose-50 rounded-lg text-rose-700">
+            <Bell className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] text-gray-400 block uppercase font-bold">Active Reminders</span>
+            <span className="text-lg font-black text-gray-950">{activeRemindersCount} medications</span>
+            <span className="text-[10px] text-gray-400 block">{todayDosesCount} doses today</span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
+          <div className="p-2.5 bg-teal-50 rounded-lg text-teal-700">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] text-gray-400 block uppercase font-bold">Spending Trend (7d)</span>
+            <span className={`text-lg font-black ${spendingTrend >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              {spendingTrend >= 0 ? '+' : ''}{spendingTrend}%
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
+          <div className="p-2.5 bg-indigo-50 rounded-lg text-indigo-700">
+            <Calendar className="w-5 h-5" />
           </div>
           <div>
             <span className="text-[10px] text-gray-400 block uppercase font-bold">Unread Updates</span>
             <span className="text-lg font-black text-gray-950">{unreadCount} alerts</span>
           </div>
         </div>
-
       </div>
 
       {/* Main dashboard content sections */}
@@ -456,7 +536,83 @@ export default function PatientDashboard() {
 
                     <button
                       type="button"
-                      onClick={(e) => handleRemoveFavMedicine(e, med.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveFavMedicine(e, med.id)
+                      }}
+                      className="text-gray-400 hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Reservation Status Distribution Chart */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
+            <div className="flex justify-between items-center pb-2 border-b border-gray-150">
+              <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                <ClipboardList className="w-4 h-4 text-emerald-700" />
+                <span>Reservation Status</span>
+              </h3>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                { label: 'Pending', value: reservationDistribution.pending, color: 'bg-amber-500' },
+                { label: 'Collected', value: reservationDistribution.collected, color: 'bg-emerald-500' },
+                { label: 'Cancelled', value: reservationDistribution.cancelled, color: 'bg-red-500' },
+              ].map((item) => (
+                <div key={item.label} className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold text-gray-700">
+                    <span>{item.label}</span>
+                    <span>{item.value}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div
+                      className={`${item.color} h-2 rounded-full transition-all`}
+                      style={{ width: `${item.value}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Favourite Medicines widget card */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
+            <div className="flex justify-between items-center pb-2 border-b border-gray-150">
+              <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+                <span>Bookmarked Medicines</span>
+              </h3>
+            </div>
+
+            {favMedicines.length === 0 ? (
+              <div className="text-center py-4 text-xs text-gray-400">
+                Bookmark drugs on the search catalog for quick access.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {favMedicines.map((med) => (
+                  <div
+                    key={med.id}
+                    onClick={() => navigate(`/patient/search?q=${encodeURIComponent(med.name)}`)}
+                    className="border border-gray-200 hover:border-rose-300 p-3 rounded-lg flex items-center justify-between text-xs transition-all cursor-pointer bg-white"
+                  >
+                    <div>
+                      <span className="font-bold text-gray-900 block">{med.name}</span>
+                      <span className="text-[10px] text-gray-400 block font-semibold">{med.category} &bull; {med.manufacturer}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveFavMedicine(e, med.id)
+                      }}
                       className="p-1 hover:bg-red-50 text-rose-600 rounded transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

@@ -456,4 +456,200 @@ export const MedicineApi = {
     localStorage.setItem(key, JSON.stringify([]))
     return true
   },
+
+  // Medicine Reminders System
+  getReminders: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/reminders')
+      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return payload.map((item: any) => ({
+        id: item.id,
+        medicineId: item.medicineId,
+        medicineName: item.medicineName || 'Medication',
+        times: item.times || [], // Array of time strings like ["08:00", "12:00", "20:00"]
+        frequency: item.frequency || 'daily', // daily, weekly, as_needed
+        startDate: item.startDate,
+        endDate: item.endDate,
+        notes: item.notes || '',
+        isActive: item.isActive !== false,
+        lastTaken: item.lastTaken,
+        nextDose: item.nextDose,
+        pharmacistInstructions: item.pharmacistInstructions || '',
+      }))
+    } catch (error) {
+      // Fallback to localStorage if backend fails
+      const key = 'epharmacy_reminders_mock'
+      const data = localStorage.getItem(key)
+      return data ? JSON.parse(data) : []
+    }
+  },
+
+  createReminder: async (data: {
+    medicineId: string
+    medicineName: string
+    times: string[] // Array of time strings in HH:MM format
+    frequency: 'daily' | 'weekly' | 'as_needed'
+    startDate: string
+    endDate?: string
+    notes?: string
+    pharmacistInstructions?: string
+  }): Promise<any> => {
+    try {
+      const response = await apiClient.post('/reminders', data)
+      return response.data?.data || response.data
+    } catch (error) {
+      // Fallback to localStorage
+      const key = 'epharmacy_reminders_mock'
+      const list = await MedicineApi.getReminders()
+      const newReminder = {
+        id: `rem-${Math.random().toString(36).substring(2, 9)}`,
+        ...data,
+        isActive: true,
+        lastTaken: null,
+        nextDose: data.times[0] || null,
+        createdAt: new Date().toISOString(),
+      }
+      const updated = [newReminder, ...list]
+      localStorage.setItem(key, JSON.stringify(updated))
+      return newReminder
+    }
+  },
+
+  updateReminder: async (id: string, data: {
+    times?: string[]
+    frequency?: string
+    startDate?: string
+    endDate?: string
+    notes?: string
+    isActive?: boolean
+    pharmacistInstructions?: string
+  }): Promise<boolean> => {
+    try {
+      await apiClient.patch(`/reminders/${id}`, data)
+      return true
+    } catch (error) {
+      // Fallback to localStorage
+      const key = 'epharmacy_reminders_mock'
+      const list = await MedicineApi.getReminders()
+      const updated = list.map((item) => 
+        item.id === id ? { ...item, ...data } : item
+      )
+      localStorage.setItem(key, JSON.stringify(updated))
+      return true
+    }
+  },
+
+  deleteReminder: async (id: string): Promise<boolean> => {
+    try {
+      await apiClient.delete(`/reminders/${id}`)
+      return true
+    } catch (error) {
+      // Fallback to localStorage
+      const key = 'epharmacy_reminders_mock'
+      const list = await MedicineApi.getReminders()
+      const updated = list.filter((item) => item.id !== id)
+      localStorage.setItem(key, JSON.stringify(updated))
+      return true
+    }
+  },
+
+  markReminderTaken: async (id: string, time: string): Promise<boolean> => {
+    try {
+      await apiClient.post(`/reminders/${id}/take`, { time })
+      return true
+    } catch (error) {
+      // Fallback to localStorage
+      const key = 'epharmacy_reminders_mock'
+      const list = await MedicineApi.getReminders()
+      const updated = list.map((item) => {
+        if (item.id === id) {
+          const updatedItem = { 
+            ...item, 
+            lastTaken: new Date().toISOString(),
+            takenHistory: [...(item.takenHistory || []), { time, date: new Date().toISOString() }]
+          }
+          // Calculate next dose time
+          if (item.times && item.times.length > 0) {
+            const currentTimeIndex = item.times.indexOf(time)
+            if (currentTimeIndex >= 0 && currentTimeIndex < item.times.length - 1) {
+              updatedItem.nextDose = item.times[currentTimeIndex + 1]
+            } else {
+              updatedItem.nextDose = item.times[0] // Reset to first time for next day
+            }
+          }
+          return updatedItem
+        }
+        return item
+      })
+      localStorage.setItem(key, JSON.stringify(updated))
+      return true
+    }
+  },
+
+  // Medicine Purchase History
+  getMedicineHistory: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/medicine-history')
+      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return payload.map((item: any) => ({
+        id: item.id,
+        medicineName: item.medicineName || 'Medication',
+        genericName: item.genericName || '',
+        pharmacyName: item.pharmacyName || 'Pharmacy',
+        quantity: item.quantity || 1,
+        price: item.price || 0,
+        insuranceProvider: item.insuranceProvider || '',
+        patientPays: item.patientPays || 0,
+        purchaseDate: item.purchaseDate || item.createdAt || '',
+        prescriptionRequired: item.prescriptionRequired || false,
+        pharmacistNotes: item.pharmacistNotes || '',
+      }))
+    } catch (error) {
+      // Fallback to localStorage with sample data
+      const key = 'epharmacy_medicine_history_mock'
+      const data = localStorage.getItem(key)
+      if (data) return JSON.parse(data)
+      
+      // Return empty array if no data
+      return []
+    }
+  },
+
+  // Late pickup notifications
+  checkLatePickups: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/reservations/late')
+      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return payload.map((item: any) => ({
+        reservationId: item.id,
+        medicineName: item.medicineName,
+        pharmacyName: item.pharmacyName,
+        pickupDeadline: item.pickupDeadline,
+        hoursLate: item.hoursLate || 0,
+        status: item.status,
+      }))
+    } catch (error) {
+      // Calculate locally from reservations
+      const reservations = await MedicineApi.getReservationHistory()
+      const now = new Date()
+      return reservations
+        .filter((res) => res.status === 'PENDING' || res.status === 'CONFIRMED')
+        .map((res) => {
+          const deadline = new Date(res.pickupDeadline)
+          const hoursLate = Math.floor((now.getTime() - deadline.getTime()) / (1000 * 60 * 60))
+          if (hoursLate > 0) {
+            return {
+              reservationId: res.id,
+              medicineName: res.medicineName,
+              pharmacyName: res.pharmacyName,
+              pickupDeadline: res.pickupDeadline,
+              hoursLate,
+              status: res.status,
+            }
+          }
+          return null
+        })
+        .filter(Boolean)
+    }
+  },
 }

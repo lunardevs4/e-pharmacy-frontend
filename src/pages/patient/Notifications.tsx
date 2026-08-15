@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { MedicineApi } from '@/services/medicine-api'
-import { Bell, ClipboardList, Shield, FileText, CheckCircle2, Trash2, CheckSquare, XCircle, AlertCircle, RefreshCw } from 'lucide-react'
+import { Bell, ClipboardList, Shield, FileText, CheckCircle2, Trash2, CheckSquare, XCircle, AlertCircle, RefreshCw, Clock } from 'lucide-react'
 
 interface NotificationItem {
   id: string
   title: string
   message: string
-  type: 'RESERVATION' | 'PRESCRIPTION' | 'SECURITY' | 'SYSTEM'
+  type: 'RESERVATION' | 'PRESCRIPTION' | 'SECURITY' | 'SYSTEM' | 'LATE_PICKUP'
   read: boolean
   createdAt: string
 }
@@ -17,6 +17,7 @@ export default function PatientNotifications() {
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [readFilter, setReadFilter] = useState('ALL') // ALL, UNREAD
   const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [latePickups, setLatePickups] = useState<any[]>([])
 
   const triggerToast = (msg: string) => {
     setToastMsg(msg)
@@ -36,8 +37,42 @@ export default function PatientNotifications() {
     }
   }
 
+  // Check for late pickups
+  const checkLatePickups = async () => {
+    try {
+      const latePickupsData = await MedicineApi.checkLatePickups()
+      setLatePickups(latePickupsData)
+      
+      // Automatically create notifications for late pickups
+      if (latePickupsData.length > 0) {
+        const existingIds = new Set(notifications.map(n => n.id))
+        const newNotifications = latePickupsData
+          .filter(pickup => !existingIds.has(`late-${pickup.reservationId}`))
+          .map(pickup => ({
+            id: `late-${pickup.reservationId}`,
+            title: `Late Pickup Alert - ${pickup.medicineName}`,
+            message: `Your reservation for ${pickup.medicineName} at ${pickup.pharmacyName} is ${pickup.hoursLate} hours late. Please pick it up or contact the pharmacy.`,
+            type: 'LATE_PICKUP' as const,
+            read: false,
+            createdAt: new Date().toISOString()
+          }))
+        
+        if (newNotifications.length > 0) {
+          setNotifications(prev => [...newNotifications, ...prev])
+        }
+      }
+    } catch (err) {
+      console.error('Error checking late pickups:', err)
+    }
+  }
+
   useEffect(() => {
     loadNotifications()
+    checkLatePickups()
+    
+    // Check for late pickups every 5 minutes
+    const interval = setInterval(checkLatePickups, 5 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [])
 
   // Mark single as read
@@ -94,6 +129,8 @@ export default function PatientNotifications() {
         return <FileText className="w-4 h-4 text-blue-700" />
       case 'SECURITY':
         return <Shield className="w-4 h-4 text-rose-700" />
+      case 'LATE_PICKUP':
+        return <Clock className="w-4 h-4 text-amber-700" />
       case 'SYSTEM':
       default:
         return <Bell className="w-4 h-4 text-gray-500" />
@@ -108,6 +145,8 @@ export default function PatientNotifications() {
         return 'bg-blue-50 border-blue-100'
       case 'SECURITY':
         return 'bg-rose-50 border-rose-100'
+      case 'LATE_PICKUP':
+        return 'bg-amber-50 border-amber-100'
       case 'SYSTEM':
       default:
         return 'bg-gray-50 border-gray-100'
@@ -174,7 +213,7 @@ export default function PatientNotifications() {
       {/* Dynamic Filters layout */}
       <div className="flex flex-col sm:flex-row gap-2.5 items-center justify-between bg-gray-50/50 p-3 rounded-lg border border-gray-200 text-xs font-bold text-gray-500">
         <div className="flex flex-wrap items-center gap-1">
-          {['ALL', 'RESERVATION', 'PRESCRIPTION', 'SECURITY', 'SYSTEM'].map((type) => (
+          {['ALL', 'RESERVATION', 'PRESCRIPTION', 'SECURITY', 'LATE_PICKUP', 'SYSTEM'].map((type) => (
             <button
               key={type}
               type="button"
@@ -185,10 +224,18 @@ export default function PatientNotifications() {
                   : 'hover:bg-gray-200/50 hover:text-gray-900'
               }`}
             >
-              {type === 'ALL' ? 'All Alerts' : type.charAt(0) + type.slice(1).toLowerCase()}
+              {type === 'ALL' ? 'All Alerts' : type === 'LATE_PICKUP' ? 'Late Pickups' : type.charAt(0) + type.slice(1).toLowerCase()}
             </button>
           ))}
         </div>
+        
+        {/* Late pickups count indicator */}
+        {latePickups.length > 0 && (
+          <div className="flex items-center space-x-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
+            <Clock className="w-3 h-3 text-amber-700" />
+            <span className="text-amber-800 font-bold">{latePickups.length} Late Pickup{latePickups.length > 1 ? 's' : ''}</span>
+          </div>
+        )}
 
         <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
           <span className="text-[10px] uppercase text-gray-400">Status:</span>

@@ -32,11 +32,11 @@ export default function GovernmentCompliance() {
 
     try {
       const response = await AuthApi.getGovernmentAuditLogs(1, 25)
-      const data = Array.isArray(response?.data)
-        ? response.data
-        : Array.isArray(response?.data?.data)
-          ? response.data.data
-          : response?.data ?? []
+      const data = Array.isArray((response as any)?.data)
+        ? (response as any).data
+        : Array.isArray((response as any)?.data?.data)
+          ? (response as any).data.data
+          : (response as any)?.data ?? []
       setAuditLogs(data)
     } catch (err: any) {
       setErrorMsg(err.message || 'Unable to load government audit logs.')

@@ -18,6 +18,7 @@ import MedicineSearch from '@/pages/patient/MedicineSearch'
 import MedicineDetails from '@/pages/patient/MedicineDetails'
 import Reservations from '@/pages/patient/Reservations'
 import PatientHistory from '@/pages/patient/History'
+import PatientReminders from '@/pages/patient/Reminders'
 import PatientNotifications from '@/pages/patient/Notifications'
 import PatientProfile from '@/pages/patient/Profile'
 
@@ -83,6 +84,7 @@ export default function AppRoutes() {
           <Route path="details" element={<MedicineDetails />} />
           <Route path="reservations" element={<Reservations />} />
           <Route path="history" element={<PatientHistory />} />
+          <Route path="reminders" element={<PatientReminders />} />
           <Route path="notifications" element={<PatientNotifications />} />
           <Route path="profile" element={<PatientProfile />} />
         </Route>

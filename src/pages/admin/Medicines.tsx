@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Package, Search, Plus, X, Check, AlertTriangle, Edit, Archive, RefreshCw } from 'lucide-react'
+import { Package, Search, X, Check, AlertTriangle, Edit, Archive, RefreshCw } from 'lucide-react'
 import { MedicineApi } from '@/services/medicine-api'
 
 interface MedicineEntry {
@@ -32,6 +32,7 @@ interface AutocompleteInputProps {
   selectedName: string
   onChange: (id: string, name: string) => void
   required?: boolean
+  allowCreate?: boolean
 }
 
 function AutocompleteInput({
@@ -42,6 +43,7 @@ function AutocompleteInput({
   selectedName,
   onChange,
   required,
+  allowCreate = false,
 }: AutocompleteInputProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [inputValue, setInputValue] = useState(selectedName)
@@ -85,6 +87,7 @@ function AutocompleteInput({
   )
 
   const showCreateOption =
+    allowCreate &&
     inputValue.trim() !== '' &&
     !options.some((opt) => opt.name.toLowerCase() === inputValue.trim().toLowerCase())
 
@@ -141,8 +144,9 @@ export default function AdminMedicines() {
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [manufacturers, setManufacturers] = useState<ManufacturerOption[]>([])
 
-  const [showAddModal, setShowAddModal] = useState(false)
+
   const [editTarget, setEditTarget] = useState<MedicineEntry | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   // Form fields
   const [fName, setFName] = useState('')
@@ -176,9 +180,9 @@ export default function AdminMedicines() {
     setErrorMsg(null)
     try {
       const [medicineItems, categoryItems, manufacturerItems] = await Promise.all([
-        MedicineApi.getMedicines(1, 200),
-        MedicineApi.getCategories(),
-        MedicineApi.getManufacturers(),
+        MedicineApi.getMedicines(1, 200).catch(() => []),
+        MedicineApi.getCategories().catch(() => []),
+        MedicineApi.getManufacturers().catch(() => []),
       ])
       setMedicines(medicineItems.map(mapMedicine))
       setCategories(categoryItems.map((c: any) => ({ id: c.id, name: c.name })))
@@ -192,7 +196,11 @@ export default function AdminMedicines() {
         setFManufacturerName(manufacturerItems[0].name)
       }
     } catch (error: any) {
-      setErrorMsg(error?.message || 'Unable to load medicines data from the backend.')
+      if (error?.response?.status === 403) {
+        setErrorMsg('Access denied: Admin role does not have permission to access medicine data. Please contact system administrator.')
+      } else {
+        setErrorMsg(error?.message || 'Unable to load medicines data from the backend.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -201,17 +209,6 @@ export default function AdminMedicines() {
   useEffect(() => {
     loadMedicines()
   }, [])
-
-  const openAdd = () => {
-    setEditTarget(null)
-    setFName('')
-    setFGeneric('')
-    setFCategoryId(categories[0]?.id || '')
-    setFCategoryName(categories[0]?.name || '')
-    setFManufacturerId(manufacturers[0]?.id || '')
-    setFManufacturerName(manufacturers[0]?.name || '')
-    setShowAddModal(true)
-  }
 
   const openEdit = (m: MedicineEntry) => {
     setEditTarget(m)
@@ -223,62 +220,35 @@ export default function AdminMedicines() {
     setFCategoryName(m.category)
     setFManufacturerId(matchedManufacturer?.id || '')
     setFManufacturerName(m.manufacturer)
-    setShowAddModal(true)
+    setShowEditModal(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!fName || !fGeneric || !fCategoryName) return
+    if (!fName || !fGeneric || !fCategoryId || !fManufacturerId) {
+      triggerToast('Please fill in all required fields.')
+      return
+    }
 
     try {
-      let categoryId = fCategoryId
-      if (!categoryId && fCategoryName) {
-        const match = categories.find(
-          (c) => c.name.toLowerCase() === fCategoryName.trim().toLowerCase()
-        )
-        if (match) {
-          categoryId = match.id
-        } else {
-          const newCat = await MedicineApi.createCategory(fCategoryName.trim())
-          categoryId = newCat.id
-        }
-      }
-
-      let manufacturerId = fManufacturerId
-      if (!manufacturerId && fManufacturerName) {
-        const match = manufacturers.find(
-          (m) => m.name.toLowerCase() === fManufacturerName.trim().toLowerCase()
-        )
-        if (match) {
-          manufacturerId = match.id
-        } else if (fManufacturerName.trim() !== '') {
-          const newMfr = await MedicineApi.createManufacturer(fManufacturerName.trim())
-          manufacturerId = newMfr.id
-        }
-      }
-
       if (editTarget) {
         await MedicineApi.updateMedicine(editTarget.id, {
           name: fName,
           genericName: fGeneric,
-          categoryId: categoryId,
-          manufacturerId: manufacturerId || undefined,
+          categoryId: fCategoryId,
+          manufacturerId: fManufacturerId,
         })
         triggerToast(`${fName} updated successfully.`)
-      } else {
-        await MedicineApi.createMedicine({
-          name: fName,
-          genericName: fGeneric,
-          categoryId: categoryId,
-          manufacturerId: manufacturerId || undefined,
-        })
-        triggerToast(`${fName} added to the catalogue.`)
       }
       await loadMedicines()
     } catch (error: any) {
-      triggerToast(error?.message || 'Failed to save medicine.')
+      if (error?.response?.status === 403) {
+        triggerToast('Access denied: Admin role does not have permission to update medicines.')
+      } else {
+        triggerToast(error?.message || 'Failed to save medicine.')
+      }
     } finally {
-      setShowAddModal(false)
+      setShowEditModal(false)
     }
   }
 
@@ -289,7 +259,11 @@ export default function AdminMedicines() {
       await loadMedicines()
       triggerToast(restore ? 'Medicine restored successfully.' : 'Medicine archived successfully.')
     } catch (error: any) {
-      triggerToast(error?.message || 'Failed to update medicine status.')
+      if (error?.response?.status === 403) {
+        triggerToast('Access denied: Admin role does not have permission to update medicine status.')
+      } else {
+        triggerToast(error?.message || 'Failed to update medicine status.')
+      }
     }
   }
 
@@ -361,11 +335,6 @@ export default function AdminMedicines() {
               <option value="Archived">Archived</option>
             </select>
           </div>
-          <button onClick={openAdd}
-            className="bg-health-primary hover:bg-health-secondary text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow-sm transition-colors">
-            <Plus className="w-4 h-4" />
-            <span>Add Medicine</span>
-          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -424,17 +393,17 @@ export default function AdminMedicines() {
         </div>
       </div>
 
-      {/* Add / Edit Modal */}
-      {showAddModal && (
+      {/* Edit Modal */}
+      {showEditModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div onClick={() => setShowAddModal(false)} className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
+          <div onClick={() => setShowEditModal(false)} className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
           <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[9999]">
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between">
               <div>
-                <h3 className="font-black text-sm">{editTarget ? 'Edit Medicine' : 'Add Medicine to Catalogue'}</h3>
+                <h3 className="font-black text-sm">Edit Medicine</h3>
                 <p className="text-xs text-emerald-300">National essential drug registry</p>
               </div>
-              <button onClick={() => setShowAddModal(false)} className="text-emerald-300 hover:text-white"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowEditModal(false)} className="text-emerald-300 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
@@ -450,7 +419,7 @@ export default function AdminMedicines() {
                 </div>
                 <AutocompleteInput
                   label="Category *"
-                  placeholder="Search or type new category..."
+                  placeholder="Search category..."
                   options={categories}
                   selectedId={fCategoryId}
                   selectedName={fCategoryName}
@@ -459,10 +428,11 @@ export default function AdminMedicines() {
                     setFCategoryName(name)
                   }}
                   required
+                  allowCreate={false}
                 />
                 <AutocompleteInput
                   label="Manufacturer *"
-                  placeholder="Search or type new manufacturer..."
+                  placeholder="Search manufacturer..."
                   options={manufacturers}
                   selectedId={fManufacturerId}
                   selectedName={fManufacturerName}
@@ -471,13 +441,14 @@ export default function AdminMedicines() {
                     setFManufacturerName(name)
                   }}
                   required
+                  allowCreate={false}
                 />
               </div>
               <button type="submit"
                 className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-lg text-xs transition-colors shadow-sm"
                 disabled={!fCategoryName || !fManufacturerName}
               >
-                {editTarget ? 'Save Changes' : 'Register Medicine'}
+                Save Changes
               </button>
             </form>
           </div>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
 import { AuthApi } from '@/services/auth-api'
-import { RWANDA_LOCATIONS } from '@/utils/rwanda-locations'
+import LocationSelector from '@/components/LocationSelector'
 import { 
   Bookmark, Box, Users, TrendingUp, ChevronRight, Activity, 
   AlertTriangle, CheckCircle, XCircle, Loader2, ArrowRight, Clock,
@@ -49,12 +49,6 @@ export default function PharmacyDashboard() {
   const [statusLoading, setStatusLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
-
-  const provincesList = Object.keys(RWANDA_LOCATIONS)
-  const districtsList = province ? Object.keys(RWANDA_LOCATIONS[province] || {}) : []
-  const sectorsList = (province && district) ? Object.keys(RWANDA_LOCATIONS[province][district] || {}) : []
-  const cellsList = (province && district && sector) ? Object.keys(RWANDA_LOCATIONS[province][district][sector] || {}) : []
-  const villagesList = (province && district && sector && cell) ? (RWANDA_LOCATIONS[province][district][sector][cell] || []) : []
 
   useEffect(() => {
     const loadData = async () => {
@@ -485,106 +479,24 @@ export default function PharmacyDashboard() {
                 <div className="border-t border-gray-150 pt-3 space-y-3.5">
                   <span className="block text-[10px] tracking-wider text-slate-400 uppercase font-black">Store Location Details</span>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-gray-500 uppercase tracking-wider mb-1">Province</label>
-                      <select
-                        required
-                        value={province}
-                        onChange={(e) => {
-                          setProvince(e.target.value)
-                          setDistrict('')
-                          setSector('')
-                          setCell('')
-                          setVillage('')
-                        }}
-                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs text-gray-900 font-bold"
-                      >
-                        <option value="">Select Province...</option>
-                        {provincesList.map((p) => (
-                          <option key={p} value={p}>{p}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-500 uppercase tracking-wider mb-1">District</label>
-                      <select
-                        required
-                        disabled={!province}
-                        value={district}
-                        onChange={(e) => {
-                          setDistrict(e.target.value)
-                          setSector('')
-                          setCell('')
-                          setVillage('')
-                        }}
-                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs text-gray-900 font-bold disabled:bg-gray-50"
-                      >
-                        <option value="">Select District...</option>
-                        {districtsList.map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-gray-500 uppercase tracking-wider mb-1">Sector</label>
-                      <select
-                        required
-                        disabled={!district}
-                        value={sector}
-                        onChange={(e) => {
-                          setSector(e.target.value)
-                          setCell('')
-                          setVillage('')
-                        }}
-                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs text-gray-900 font-bold disabled:bg-gray-50"
-                      >
-                        <option value="">Select...</option>
-                        {sectorsList.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-500 uppercase tracking-wider mb-1">Cell</label>
-                      <select
-                        required
-                        disabled={!sector}
-                        value={cell}
-                        onChange={(e) => {
-                          setCell(e.target.value)
-                          setVillage('')
-                        }}
-                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs text-gray-900 font-bold disabled:bg-gray-50"
-                      >
-                        <option value="">Select...</option>
-                        {cellsList.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-500 uppercase tracking-wider mb-1">Village</label>
-                      <select
-                        required
-                        disabled={!cell}
-                        value={village}
-                        onChange={(e) => setVillage(e.target.value)}
-                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs text-gray-900 font-bold disabled:bg-gray-50"
-                      >
-                        <option value="">Select...</option>
-                        {villagesList.map((v) => (
-                          <option key={v} value={v}>{v}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+                  <LocationSelector
+                    onLocationChange={(location) => {
+                      setProvince(location.province)
+                      setDistrict(location.district)
+                      setSector(location.sector)
+                      setCell(location.cell)
+                      setVillage(location.village)
+                    }}
+                    initialLocation={{
+                      province: (user?.pharmacy as any)?.province,
+                      district: (user?.pharmacy as any)?.district,
+                      sector: (user?.pharmacy as any)?.sector,
+                      cell: (user?.pharmacy as any)?.cell,
+                      village: (user?.pharmacy as any)?.village,
+                    }}
+                    disabled={isSubmitting}
+                    required={true}
+                  />
 
                   <div>
                     <label className="block text-gray-500 uppercase tracking-wider mb-1">Street / Landmark Address (Optional)</label>

@@ -7,7 +7,7 @@ import {
   Menu, X, LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
   ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2, MapPin,
-  CheckSquare, Trash2, Clock
+  CheckSquare, Trash2, Clock, AlarmClock
 } from 'lucide-react'
 
 export default function SidebarLayout() {
@@ -103,6 +103,7 @@ export default function SidebarLayout() {
           { path: '/patient/search',         label: 'Search Medicine',icon: Search          },
           { path: '/patient/reservations',   label: 'My Reservations',icon: ClipboardList   },
           { path: '/patient/history',        label: 'History',        icon: History         },
+          { path: '/patient/reminders',      label: 'Reminders',      icon: AlarmClock      },
           { path: '/patient/notifications',  label: 'Notifications',  icon: Bell            },
           { path: '/patient/profile',        label: 'Profile',        icon: User            },
         ]

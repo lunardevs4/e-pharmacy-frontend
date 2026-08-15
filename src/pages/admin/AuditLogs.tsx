@@ -64,7 +64,7 @@ export default function AdminAuditLogs() {
     setErrorMsg(null)
     try {
       const response = await AuthApi.getGovernmentAuditLogs(1, 100)
-      const items = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : []
+      const items = Array.isArray((response as any)?.data) ? (response as any).data : Array.isArray(response) ? response : []
       if (items.length > 0) {
         setLogs(items.map(normalizeAuditLog))
       }

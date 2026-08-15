@@ -12,8 +12,8 @@ export default function InsuranceDashboard() {
       setErrorMsg(null)
       try {
         const report = await AuthApi.getInsuranceReport().catch(() => null)
-        if (report?.claims?.length) {
-          setClaims(report.claims)
+        if ((report as any)?.claims?.length) {
+          setClaims((report as any).claims)
         } else {
           setClaims([])
         }

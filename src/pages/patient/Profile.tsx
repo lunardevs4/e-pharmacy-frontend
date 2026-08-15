@@ -3,7 +3,7 @@ import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
 import { validateEmail } from '@/utils/validation'
 import PasswordStrengthMeter from '@/components/patient/PasswordStrengthMeter'
-import { RWANDA_LOCATIONS } from '@/utils/rwanda-locations'
+import LocationSelector from '@/components/LocationSelector'
 import { User, Shield, Key, Eye, EyeOff, Save, RefreshCw, CheckCircle, AlertCircle, Camera } from 'lucide-react'
 
 export default function PatientProfile() {
@@ -17,11 +17,11 @@ export default function PatientProfile() {
   const [insuranceProvider, setInsuranceProvider] = useState(user?.insuranceProvider || 'RSSB')
   
   // Cascading location states
-  const [province, setProvince] = useState(user?.province || 'Kigali City')
-  const [district, setDistrict] = useState(user?.district || 'Gasabo')
-  const [sector, setSector] = useState(user?.sector || 'Remera')
-  const [cell, setCell] = useState(user?.cell || 'Kibagabaga')
-  const [village, setVillage] = useState(user?.village || 'Nyirabwana')
+  const [province, setProvince] = useState(user?.province || '')
+  const [district, setDistrict] = useState(user?.district || '')
+  const [sector, setSector] = useState(user?.sector || '')
+  const [cell, setCell] = useState(user?.cell || '')
+  const [village, setVillage] = useState(user?.village || '')
   
   // Extra fields
   const [emergencyContact, setEmergencyContact] = useState(user?.emergencyContact || '')
@@ -66,34 +66,22 @@ export default function PatientProfile() {
   // Location selector triggers
   const handleProvinceChange = (e: string) => {
     setProvince(e)
-    const districts = Object.keys(RWANDA_LOCATIONS[e] || {})
-    if (districts.length > 0) {
-      handleDistrictChange(districts[0], e)
-    }
   }
 
-  const handleDistrictChange = (d: string, p = province) => {
+  const handleDistrictChange = (d: string) => {
     setDistrict(d)
-    const sectors = Object.keys(RWANDA_LOCATIONS[p]?.[d] || {})
-    if (sectors.length > 0) {
-      handleSectorChange(sectors[0], d, p)
-    }
   }
 
-  const handleSectorChange = (s: string, d = district, p = province) => {
+  const handleSectorChange = (s: string) => {
     setSector(s)
-    const cells = Object.keys(RWANDA_LOCATIONS[p]?.[d]?.[s] || {})
-    if (cells.length > 0) {
-      handleCellChange(cells[0], s, d, p)
-    }
   }
 
-  const handleCellChange = (c: string, s = sector, d = district, p = province) => {
+  const handleCellChange = (c: string) => {
     setCell(c)
-    const villages = RWANDA_LOCATIONS[p]?.[d]?.[s]?.[c] || []
-    if (villages.length > 0) {
-      setVillage(villages[0])
-    }
+  }
+
+  const handleVillageChange = (v: string) => {
+    setVillage(v)
   }
 
   // Handle saving demographic profile changes
@@ -110,7 +98,7 @@ export default function PatientProfile() {
     setProfileLoading(true)
     try {
       const updated = await AuthApi.updateProfile(user?.username || 'patient', {
-        name,
+        firstName: name,
         email,
         phone,
         insuranceProvider,
@@ -121,8 +109,7 @@ export default function PatientProfile() {
         village,
         emergencyContact,
         preferredPharmacy,
-        medicalNotes,
-        profilePhoto
+        medicalNotes
       })
       updateProfile(updated)
       triggerToast('success', 'Profile updated successfully!')
@@ -328,76 +315,28 @@ export default function PatientProfile() {
 
             </div>
 
-            {/* Kigali Cascading Location Selectors */}
+            {/* Cascading Location Selectors */}
             <div className="space-y-3.5 pt-2 border-t border-gray-150">
               <span className="text-[10px] font-bold text-gray-400 block uppercase tracking-wider">Demographic Location details</span>
               
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs font-bold text-gray-700">
-                <div className="space-y-1.5">
-                  <label className="text-gray-450 text-[10px]">Province</label>
-                  <select
-                    value={province}
-                    onChange={(e) => handleProvinceChange(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    {Object.keys(RWANDA_LOCATIONS).map((p) => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-gray-450 text-[10px]">District</label>
-                  <select
-                    value={district}
-                    onChange={(e) => handleDistrictChange(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    {Object.keys(RWANDA_LOCATIONS[province] || {}).map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-gray-450 text-[10px]">Sector</label>
-                  <select
-                    value={sector}
-                    onChange={(e) => handleSectorChange(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    {Object.keys(RWANDA_LOCATIONS[province]?.[district] || {}).map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-gray-450 text-[10px]">Cell</label>
-                  <select
-                    value={cell}
-                    onChange={(e) => setCell(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    {Object.keys(RWANDA_LOCATIONS[province]?.[district]?.[sector] || {}).map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-gray-450 text-[10px]">Village</label>
-                  <select
-                    value={village}
-                    onChange={(e) => setVillage(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    {(RWANDA_LOCATIONS[province]?.[district]?.[sector]?.[cell] || []).map((v) => (
-                      <option key={v} value={v}>{v}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <LocationSelector
+                onLocationChange={(location) => {
+                  setProvince(location.province)
+                  setDistrict(location.district)
+                  setSector(location.sector)
+                  setCell(location.cell)
+                  setVillage(location.village)
+                }}
+                initialLocation={{
+                  province: (user as any)?.province,
+                  district: (user as any)?.district,
+                  sector: (user as any)?.sector,
+                  cell: (user as any)?.cell,
+                  village: (user as any)?.village,
+                }}
+                disabled={profileLoading}
+                required={true}
+              />
             </div>
 
             {/* Extra details */}

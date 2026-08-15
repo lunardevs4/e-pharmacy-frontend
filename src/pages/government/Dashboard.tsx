@@ -62,11 +62,11 @@ export default function GovernmentDashboard() {
         console.log('SUMMARY:', summaryResult.value)
         console.log(
           'SUMMARY INNER DATA:',
-          summaryResult.value?.data
+          (summaryResult.value as any)?.data
         )
 
         setSummary(
-          summaryResult.value?.data ?? null
+          (summaryResult.value as any)?.data ?? null
         )
       } else {
         console.error(

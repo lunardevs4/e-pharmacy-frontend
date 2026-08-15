@@ -148,7 +148,7 @@ export default function PharmacyRegistry() {
     setIsSubmittingAction(true)
     try {
       const updated = await AuthApi.approvePharmacy(selectedPharm.id)
-      updateLocalList(updated)
+      updateLocalList(updated as any)
       triggerToast(`License approved for ${selectedPharm.name || selectedPharm.id}.`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Approval action failed.')
@@ -162,7 +162,7 @@ export default function PharmacyRegistry() {
     setIsSubmittingAction(true)
     try {
       const updated = await AuthApi.reactivatePharmacy(selectedPharm.id)
-      updateLocalList(updated)
+      updateLocalList(updated as any)
       triggerToast(`Pharmacy license reactivated for ${selectedPharm.name || selectedPharm.id}.`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Reactivation action failed.')
@@ -177,7 +177,7 @@ export default function PharmacyRegistry() {
 
     setIsSubmittingAction(true)
     try {
-      let updated: Pharmacy
+      let updated: any
       if (activeModal === 'REJECT') {
         updated = await AuthApi.rejectPharmacy(selectedPharm.id)
         triggerToast(`Application rejected for ${selectedPharm.name || selectedPharm.id}.`)

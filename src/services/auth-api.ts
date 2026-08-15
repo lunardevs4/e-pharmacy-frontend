@@ -77,6 +77,17 @@ type UpdateProfileFields = {
   firstName?: string
   lastName?: string
   phone?: string
+  email?: string
+  insuranceProvider?: string
+  province?: string
+  district?: string
+  sector?: string
+  cell?: string
+  village?: string
+  emergencyContact?: string
+  preferredPharmacy?: string
+  medicalNotes?: string
+  profilePhoto?: string
 }
 
 const CURRENT_USER_KEY = 'epharmacy_current_session_user'
