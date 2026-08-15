@@ -618,31 +618,37 @@ export const MedicineApi = {
 
   // Medicine Purchase History
   getMedicineHistory: async (): Promise<any[]> => {
-    try {
-      const response = await apiClient.get('/medicine-history')
-      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
-      return payload.map((item: any) => ({
-        id: item.id,
-        medicineName: item.medicineName || 'Medication',
-        genericName: item.genericName || '',
-        pharmacyName: item.pharmacyName || 'Pharmacy',
-        quantity: item.quantity || 1,
-        price: item.price || 0,
-        insuranceProvider: item.insuranceProvider || '',
-        patientPays: item.patientPays || 0,
-        purchaseDate: item.purchaseDate || item.createdAt || '',
-        prescriptionRequired: item.prescriptionRequired || false,
-        pharmacistNotes: item.pharmacistNotes || '',
-      }))
-    } catch (error) {
-      // Fallback to localStorage with sample data
-      const key = 'epharmacy_medicine_history_mock'
-      const data = localStorage.getItem(key)
-      if (data) return JSON.parse(data)
-      
-      // Return empty array if no data
-      return []
-    }
+    const response = await apiClient.get('/reports/patient/me')
+    const report = response.data || {}
+    const prescriptions = Array.isArray(report.prescriptions) ? report.prescriptions : []
+    const reservations = Array.isArray(report.reservations) ? report.reservations : []
+
+    return reservations
+      .filter((item: any) => String(item.status || '').toUpperCase() === 'COLLECTED')
+      .map((item: any) => {
+        const medicine = item.medicine || {}
+        const pharmacy = item.pharmacy || {}
+        const relatedPrescription = prescriptions.find((prescription: any) =>
+          prescription.pharmacyId === item.pharmacyId &&
+          prescription.medicines?.some((medicineItem: any) => medicineItem.medicineId === item.medicineId),
+        )
+        const unitPrice = Number(item.unitPrice ?? item.price ?? 0)
+        const totalPrice = Number(item.totalPrice ?? unitPrice * Number(item.quantity || 0))
+
+        return {
+          id: item.id,
+          medicineName: medicine.tradeName || medicine.name || item.medicineName || 'Medication',
+          genericName: medicine.genericName || '',
+          pharmacyName: pharmacy.name || item.pharmacyName || 'Pharmacy',
+          quantity: Number(item.quantity || 0),
+          price: unitPrice,
+          insuranceProvider: item.insuranceProvider || '',
+          patientPays: Number(item.patientPays ?? totalPrice),
+          purchaseDate: item.updatedAt || item.createdAt || '',
+          prescriptionRequired: Boolean(relatedPrescription),
+          pharmacistNotes: relatedPrescription?.notes || '',
+        }
+      })
   },
 
   // Late pickup notifications

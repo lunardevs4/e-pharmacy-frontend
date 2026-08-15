@@ -148,7 +148,7 @@ export default function PharmacyRegistry() {
     setIsSubmittingAction(true)
     try {
       const updated = await AuthApi.approvePharmacy(selectedPharm.id)
-      updateLocalList(updated as any)
+      updateLocalList(updated, { id: selectedPharm.id, status: 'APPROVED' })
       triggerToast(`License approved for ${selectedPharm.name || selectedPharm.id}.`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Approval action failed.')
@@ -162,7 +162,7 @@ export default function PharmacyRegistry() {
     setIsSubmittingAction(true)
     try {
       const updated = await AuthApi.reactivatePharmacy(selectedPharm.id)
-      updateLocalList(updated as any)
+      updateLocalList(updated, { id: selectedPharm.id, status: 'APPROVED' })
       triggerToast(`Pharmacy license reactivated for ${selectedPharm.name || selectedPharm.id}.`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Reactivation action failed.')
@@ -190,7 +190,10 @@ export default function PharmacyRegistry() {
         triggerToast(`Requested additional information for ${selectedPharm.name || selectedPharm.id}.`)
       }
 
-      updateLocalList(updated)
+      updateLocalList(updated, {
+        id: selectedPharm.id,
+        status: activeModal === 'REQUEST_INFO' ? selectedPharm.status : 'REJECTED',
+      })
       setActiveModal(null)
       setModalComment('')
     } catch (err: any) {
@@ -200,8 +203,9 @@ export default function PharmacyRegistry() {
     }
   }
 
-  const updateLocalList = (updated: Pharmacy) => {
-    const normalized = normalizePharmacy(updated)
+  const updateLocalList = (updated: unknown, fallback: Partial<Pharmacy>) => {
+    const payload = (updated as any)?.data ?? updated
+    const normalized = normalizePharmacy({ ...fallback, ...(payload || {}) })
     setPharmacies((prev) =>
       prev.map((ph) => ph.id === normalized.id ? normalized : ph)
     )
