@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
 import { AuthApi } from '@/services/auth-api'
+import { PharmacyApi } from '@/services/pharmacy-api'
 import LocationSelector from '@/components/LocationSelector'
 import { 
   Bookmark, Box, Users, TrendingUp, ChevronRight, Activity, 
@@ -12,18 +13,28 @@ import {
 
 interface PharmacyDashboardReservation {
   id: string
+  patientId: string
   patient: string
   medicine: string
   date: string
+  createdAt: string
   insurance: boolean
   status: string
+}
+
+interface PharmacyDashboardAuditLog {
+  id: string
+  createdAt: string
+  action: string
+  entityType: string
+  user?: { firstName?: string; lastName?: string; email?: string }
 }
 
 export default function PharmacyDashboard() {
   const { user, updateProfile } = useAuthStore()
   const [reservations, setReservations] = useState<PharmacyDashboardReservation[]>([])
   const [inventory, setInventory] = useState<any[]>([])
-  const [report, setReport] = useState<any>(null)
+  const [auditLogs, setAuditLogs] = useState<PharmacyDashboardAuditLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -60,19 +71,24 @@ export default function PharmacyDashboard() {
           throw new Error('No pharmacy is linked to your account yet.')
         }
 
-        const data = await MedicineApi.getPharmacyDashboardData(pharmacyId)
+        const [data, pharmacyAuditLogs] = await Promise.all([
+          MedicineApi.getPharmacyDashboardData(pharmacyId),
+          PharmacyApi.getAuditLogs(pharmacyId, 5),
+        ])
         const mappedReservations = (data.reservations || []).map((item: any) => ({
           id: item.id,
-          patient: item.patient?.user?.name || item.patient?.name || 'Patient',
-          medicine: item.medicine?.name || 'Medication',
+          patientId: item.patientId || '',
+          patient: item.patientName || 'Patient',
+          medicine: item.medicineName || 'Medication',
           date: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '—',
+          createdAt: item.createdAt || '',
           insurance: Boolean(item.insuranceProvider || item.insuranceId),
-          status: String(item.status || 'PENDING').replace('_', ' '),
+          status: String(item.status || '').toUpperCase(),
         }))
 
         setReservations(mappedReservations)
         setInventory(data.inventory || [])
-        setReport(data.report || {})
+        setAuditLogs(pharmacyAuditLogs || [])
       } catch (err: any) {
         console.error(err)
         setErrorMsg(err.message || 'Unable to load pharmacy dashboard data.')
@@ -89,13 +105,54 @@ export default function PharmacyDashboard() {
   }, [user?.pharmacy?.id, user?.pharmacyId, isApproved])
 
   const summary = useMemo(() => {
-    const pending = reservations.filter((res) => res.status.toUpperCase().includes('PENDING')).length
-    const ready = reservations.filter((res) => res.status.toUpperCase().includes('READY')).length
-    const collected = reservations.filter((res) => res.status.toUpperCase().includes('COLLECTED')).length
+    const now = new Date()
+    const isToday = (date: string) => {
+      if (!date) return false
+      const value = new Date(date)
+      return value.getFullYear() === now.getFullYear() &&
+        value.getMonth() === now.getMonth() &&
+        value.getDate() === now.getDate()
+    }
+    const isThisMonth = (date: string) => {
+      if (!date) return false
+      const value = new Date(date)
+      return value.getFullYear() === now.getFullYear() && value.getMonth() === now.getMonth()
+    }
+    const todayReservations = reservations.filter((res) => isToday(res.createdAt))
+    const monthPatients = new Set(
+      reservations.filter((res) => isThisMonth(res.createdAt)).map((res) => res.patientId).filter(Boolean),
+    )
+    const pending = reservations.filter((res) => res.status === 'PENDING').length
+    const ready = reservations.filter((res) => res.status === 'CONFIRMED').length
+    const collected = reservations.filter((res) => res.status === 'COLLECTED').length
     const lowStock = inventory.filter((item) => Number(item.quantity) < 10).length
     const totalInventory = inventory.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
-    return { pending, ready, collected, lowStock, totalInventory }
+    const inventoryValue = inventory.reduce(
+      (sum, item) => sum + Number(item.quantity || 0) * Number(item.price || 0),
+      0,
+    )
+    return { todayReservations, monthPatients, pending, ready, collected, lowStock, totalInventory, inventoryValue }
   }, [inventory, reservations])
+
+  const updateReservation = async (reservationId: string, status: string) => {
+    const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
+    if (!pharmacyId) return
+    try {
+      await PharmacyApi.updateReservationStatus(pharmacyId, reservationId, status)
+      setReservations((current) => current.map((reservation) =>
+        reservation.id === reservationId ? { ...reservation, status } : reservation,
+      ))
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Unable to update reservation status.')
+    }
+  }
+
+  const reservationStatusLabel = (status: string) => ({
+    PENDING: 'Pending',
+    CONFIRMED: 'Confirmed',
+    COLLECTED: 'Collected',
+    CANCELLED: 'Cancelled',
+  }[status] || status || 'Unknown')
 
   const handleRegisterCompany = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -189,21 +246,27 @@ export default function PharmacyDashboard() {
       <div className={`space-y-6 max-w-7xl mx-auto transition-all duration-300 ${
         !isApproved ? 'filter blur-xs grayscale opacity-35 pointer-events-none select-none' : ''
       }`}>
+
+        {errorMsg && (
+          <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm font-semibold text-red-800">
+            {errorMsg}
+          </div>
+        )}
         
         {/* Top Banner Information Block */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-black text-sm flex items-center justify-center">
-              {user?.name ? user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() : 'PO'}
+              {user?.name ? user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() : '—'}
             </div>
             <div className="text-xs space-y-0.5">
-              <p className="text-gray-500">Logged in as <span className="font-bold text-gray-900">{user?.name || 'Pharmacy Owner'}</span></p>
-              <p className="text-gray-500">Role <span className="font-bold text-gray-900">{user?.role || 'PHARMACY'}</span></p>
+              <p className="text-gray-500">Logged in as <span className="font-bold text-gray-900">{user?.name || '—'}</span></p>
+              <p className="text-gray-500">Role <span className="font-bold text-gray-900">{user?.role || '—'}</span></p>
             </div>
           </div>
           <div className="h-px md:h-8 w-full md:w-px bg-gray-200" />
           <div className="text-xs">
-            <p className="text-gray-500">Pharmacy <span className="font-bold text-emerald-800">{user?.pharmacy?.name || 'Bralirwa Pharmacy, Gasabo'}</span></p>
+            <p className="text-gray-500">Pharmacy <span className="font-bold text-emerald-800">{user?.pharmacy?.name || '—'}</span></p>
           </div>
         </div>
 
@@ -212,9 +275,8 @@ export default function PharmacyDashboard() {
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Today's Reservations</span>
-              <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : reservations.length}</p>
-              <span className="text-[11px] text-gray-400 block font-medium">{summary.ready} ready for pickup</span>
-              <span className="text-[10px] font-black text-emerald-600 block pt-1">↗ 8% vs last month</span>
+              <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.todayReservations.length}</p>
+              <span className="text-[11px] text-gray-400 block font-medium">{summary.ready} confirmed reservation{summary.ready === 1 ? '' : 's'}</span>
             </div>
             <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100 flex-shrink-0">
               <Bookmark className="w-4 h-4" />
@@ -223,7 +285,7 @@ export default function PharmacyDashboard() {
 
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total SKUs</span>
+              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total Units</span>
               <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.totalInventory}</p>
               <span className="text-[11px] text-gray-400 block font-medium">{summary.lowStock} low stock</span>
             </div>
@@ -235,8 +297,8 @@ export default function PharmacyDashboard() {
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Patients (Month)</span>
-              <p className="text-3xl font-black text-gray-900 mt-1">{report?.totalReservations ?? 0}</p>
-              <span className="text-[10px] font-black text-emerald-600 block pt-1">Live reservation count</span>
+              <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.monthPatients.size}</p>
+              <span className="text-[10px] font-black text-emerald-600 block pt-1">Unique patients this month</span>
             </div>
             <div className="p-2 bg-gray-50 text-gray-650 rounded-lg border border-gray-205 flex-shrink-0">
               <Users className="w-4 h-4" />
@@ -245,9 +307,9 @@ export default function PharmacyDashboard() {
 
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Monthly Revenue</span>
-              <p className="text-2xl font-black text-gray-900 mt-1">{report?.pharmacy ? 'Live report' : '—'}</p>
-              <span className="text-[10px] font-black text-emerald-600 block pt-1">Inventory report available</span>
+              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Inventory Value</span>
+              <p className="text-2xl font-black text-gray-900 mt-1">{isLoading ? '—' : `${summary.inventoryValue.toLocaleString()} RWF`}</p>
+              <span className="text-[10px] font-black text-emerald-600 block pt-1">Based on current stock and prices</span>
             </div>
             <div className="p-2 bg-gray-50 text-gray-650 rounded-lg border border-gray-205 flex-shrink-0">
               <TrendingUp className="w-4 h-4" />
@@ -272,7 +334,6 @@ export default function PharmacyDashboard() {
                 <table className="w-full text-left text-xs divide-y divide-gray-150">
                   <thead>
                     <tr className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
-                      <th className="py-2.5">ID</th>
                       <th className="py-2.5">Patient</th>
                       <th className="py-2.5">Medicine</th>
                       <th className="py-2.5">Date</th>
@@ -282,9 +343,14 @@ export default function PharmacyDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-                    {reservations.map((res) => (
+                    {isLoading && (
+                      <tr><td colSpan={6} className="py-8 text-center text-gray-400">Loading reservations…</td></tr>
+                    )}
+                    {!isLoading && reservations.length === 0 && (
+                      <tr><td colSpan={7} className="py-8 text-center text-gray-400">No reservations found.</td></tr>
+                    )}
+                    {!isLoading && reservations.map((res) => (
                       <tr key={res.id} className="hover:bg-gray-50/50">
-                        <td className="py-3 font-semibold text-gray-950">{res.id}</td>
                         <td className="py-3 font-bold text-gray-900">{res.patient}</td>
                         <td className="py-3">{res.medicine}</td>
                         <td className="py-3 text-gray-500">{res.date}</td>
@@ -296,42 +362,42 @@ export default function PharmacyDashboard() {
                           )}
                         </td>
                         <td className="py-3">
-                          {res.status === 'Ready for Pickup' && (
+                          {res.status === 'CONFIRMED' && (
                             <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.25 rounded border border-emerald-200">
-                              Ready for Pickup
+                              {reservationStatusLabel(res.status)}
                             </span>
                           )}
-                          {res.status === 'Pending' && (
+                          {res.status === 'PENDING' && (
                             <span className="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.25 rounded border border-amber-200">
-                              Pending
+                              {reservationStatusLabel(res.status)}
                             </span>
                           )}
-                          {res.status === 'Collected' && (
+                          {res.status === 'COLLECTED' && (
                             <span className="inline-flex items-center text-[10px] font-bold text-slate-650 bg-slate-50 px-2 py-0.25 rounded border border-slate-200">
-                              Collected
+                              {reservationStatusLabel(res.status)}
                             </span>
                           )}
-                          {res.status === 'Expired' && (
+                          {res.status === 'CANCELLED' && (
                             <span className="inline-flex items-center text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.25 rounded border border-red-200">
-                              Expired
+                              {reservationStatusLabel(res.status)}
                             </span>
                           )}
                         </td>
                         <td className="py-3 text-right">
-                          {res.status === 'Ready for Pickup' && (
+                          {res.status === 'CONFIRMED' && (
                             <button
                               type="button"
-                              onClick={() => setReservations((prev) => prev.map((r) => r.id === res.id ? { ...r, status: 'Collected' } : r))}
+                              onClick={() => updateReservation(res.id, 'COLLECTED')}
                               aria-label={`Confirm collection for reservation ${res.id}`}
                               className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-3 py-1 rounded text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
                             >
                               Confirm
                             </button>
                           )}
-                          {res.status === 'Pending' && (
+                          {res.status === 'PENDING' && (
                             <button
                               type="button"
-                              onClick={() => setReservations((prev) => prev.map((r) => r.id === res.id ? { ...r, status: 'Ready for Pickup' } : r))}
+                              onClick={() => updateReservation(res.id, 'CONFIRMED')}
                               aria-label={`Mark reservation ${res.id} ready for pickup`}
                               className="bg-health-primary hover:bg-health-secondary text-white font-bold px-3 py-1 rounded text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
                             >
@@ -355,29 +421,29 @@ export default function PharmacyDashboard() {
                 </div>
               </div>
               <div className="space-y-3 font-medium text-xs text-gray-600">
-                <div className="flex items-center space-x-3.5">
-                  <span className="text-gray-400 font-mono">08:30</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <p>🟢 <span className="font-bold text-gray-900">Alice</span> added 200 units of Amoxicillin 500mg</p>
-                </div>
+                {auditLogs.length === 0 ? (
+                  <p className="text-gray-400">No staff activity recorded.</p>
+                ) : auditLogs.map((log) => (
+                  <div key={log.id} className="flex items-center space-x-3.5">
+                    <span className="text-gray-400 font-mono whitespace-nowrap">{new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <p><span className="font-bold text-gray-900">{[log.user?.firstName, log.user?.lastName].filter(Boolean).join(' ') || log.user?.email || 'System'}</span> {log.action.toLowerCase()} {log.entityType.toLowerCase()}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
             <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Revenue (7 Mo.)</span>
-              <div className="pt-2">
-                <svg viewBox="0 0 100 35" className="w-full h-14">
-                  <defs>
-                    <linearGradient id="chart-rev-grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M0,28 Q15,26 30,22 T60,20 T90,14 T100,12" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M0,28 Q15,26 30,22 T60,20 T90,14 T100,12 L100,35 L0,35 Z" fill="url(#chart-rev-grad)" />
-                </svg>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Reservation Status</span>
+              <div className="space-y-2 pt-2 text-xs">
+                {[['Pending', summary.pending, 'bg-amber-400'], ['Confirmed', summary.ready, 'bg-emerald-500'], ['Collected', summary.collected, 'bg-slate-500']].map(([label, count, color]) => (
+                  <div key={label as string} className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-gray-600"><span className={`w-2 h-2 rounded-full ${color}`} />{label}</span>
+                    <span className="font-black text-gray-900">{count}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -563,10 +629,6 @@ export default function PharmacyDashboard() {
                 <div className="flex justify-between items-center">
                   <span>Store Name:</span>
                   <span className="text-gray-900 font-bold">{user?.pharmacy?.name}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Licence Number:</span>
-                  <span className="text-gray-900 font-mono font-bold">{user?.pharmacy?.licenseNumber}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Category:</span>

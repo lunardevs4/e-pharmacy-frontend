@@ -67,7 +67,7 @@ export default function PharmacyPatients() {
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Search patient name, email, or national ID..."
+            placeholder="Search patient name or email..."
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
@@ -79,9 +79,7 @@ export default function PharmacyPatients() {
           <table className="w-full text-left text-xs divide-y divide-gray-150">
             <thead>
               <tr className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
-                <th className="py-2.5">Patient ID</th>
                 <th className="py-2.5">Name</th>
-                <th className="py-2.5">National ID</th>
                 <th className="py-2.5">Email</th>
                 <th className="py-2.5">Phone</th>
                 <th className="py-2.5 text-center">Active Res.</th>
@@ -89,16 +87,14 @@ export default function PharmacyPatients() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-              {loading ? <tr><td colSpan={7} className="py-8 text-center">Loading patients…</td></tr> : error ? <tr><td colSpan={7} className="py-8 text-center text-red-600">{error}</td></tr> : filteredPatients.map((p) => (
+              {loading ? <tr><td colSpan={5} className="py-8 text-center">Loading patients…</td></tr> : error ? <tr><td colSpan={5} className="py-8 text-center text-red-600">{error}</td></tr> : filteredPatients.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50/50">
-                  <td className="py-3 font-semibold text-gray-900">{p.id}</td>
                   <td className="py-3 font-bold text-gray-950 flex items-center space-x-2">
                     <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-650">
                       {p.name.split(' ').map((n) => n[0]).join('').toUpperCase()}
                     </span>
                     <span>{p.name}</span>
                   </td>
-                  <td className="py-3 font-mono text-gray-550">{p.nationalId}</td>
                   <td className="py-3 text-gray-600">{p.email}</td>
                   <td className="py-3">{p.phone}</td>
                   <td className="py-3 text-center text-emerald-800 font-bold">{p.activeReservations}</td>

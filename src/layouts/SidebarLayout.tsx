@@ -110,7 +110,7 @@ export default function SidebarLayout() {
       case 'PHARMACY':
       case 'PHARMACY_OWNER':
       case 'PHARMACIST': {
-        const isOwner = user?.role === 'PHARMACY' || user?.position === 'Owner'
+        const isOwner = user?.role === 'PHARMACY' || user?.role === 'PHARMACY_OWNER'
         const links = [
           { path: '/pharmacy',               label: 'Dashboard',      icon: LayoutDashboard },
           { path: '/pharmacy/inventory',     label: 'Inventory',      icon: Package         },
@@ -154,7 +154,7 @@ export default function SidebarLayout() {
         return [
           { path: '/admin',          label: 'Dashboard',   icon: LayoutDashboard },
           { path: '/admin/users',    label: 'Users',       icon: Users           },
-          { path: '/admin/medicines',label: 'Medicines',   icon: Package         },
+          
           { path: '/admin/roles',    label: 'Roles',       icon: ShieldAlert     },
           { path: '/admin/settings', label: 'Settings',    icon: Settings        },
           { path: '/admin/audit',    label: 'Audit Logs',  icon: FileLock2       },

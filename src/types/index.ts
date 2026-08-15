@@ -105,6 +105,8 @@ export interface PharmacyStock {
 
 export interface Reservation {
   id: string
+  patientId?: string
+  patientName?: string
   medicineId: string
   medicineName: string
   pharmacyId: string

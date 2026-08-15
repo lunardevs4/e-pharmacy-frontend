@@ -108,6 +108,8 @@ export default function Login() {
             navigate('/patient')
             break
           case 'PHARMACY':
+          case 'PHARMACY_OWNER':
+          case 'PHARMACIST':
             navigate('/pharmacy')
             break
 

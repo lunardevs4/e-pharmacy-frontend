@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ClipboardList, Search, CheckCircle2, XCircle, Clock, Shield, RefreshCw, AlertTriangle } from 'lucide-react'
+import { ClipboardList, Search, CheckCircle2, XCircle, Clock, RefreshCw, AlertTriangle } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { PharmacyApi } from '@/services/pharmacy-api'
 type ResStatus = 'PENDING' | 'READY' | 'COLLECTED' | 'EXPIRED' | 'CANCELLED'
@@ -124,17 +124,6 @@ export default function PharmacyReservations() {
     void loadReservations()
   }, [loadReservations])
 
-  const markReady = async (id: string) => {
-    try {
-      await PharmacyApi.updateReservationStatusSimple(id, 'READY')
-      triggerToast(`Reservation ${id} marked as ready for pickup`)
-      await loadReservations()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to update reservation status'
-      setErrorMsg(message)
-    }
-  }
-
   const confirm = async (id: string) => {
     try {
       await PharmacyApi.updateReservationStatusSimple(id, 'COLLECTED')
@@ -166,7 +155,6 @@ export default function PharmacyReservations() {
 
   const counts = {
     pending: reservations.filter(r => r.status === 'PENDING').length,
-    ready: reservations.filter(r => r.status === 'READY').length,
     collected: reservations.filter(r => r.status === 'COLLECTED').length,
     expired: reservations.filter(r => r.status === 'EXPIRED').length,
   }
@@ -204,7 +192,6 @@ export default function PharmacyReservations() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4" role="list" aria-label="Reservation statistics">
         {[
           { label: 'Pending',          value: counts.pending,   color: 'text-amber-700',   bg: 'bg-amber-50',   Icon: Clock        },
-          { label: 'Ready for Pickup', value: counts.ready,     color: 'text-emerald-700', bg: 'bg-emerald-50', Icon: CheckCircle2 },
           { label: 'Collected',        value: counts.collected, color: 'text-slate-700',   bg: 'bg-slate-50',   Icon: ClipboardList},
           { label: 'Expired',          value: counts.expired,   color: 'text-red-700',     bg: 'bg-red-50',     Icon: XCircle      },
         ].map(s => (
@@ -223,10 +210,10 @@ export default function PharmacyReservations() {
         <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row gap-3">
           <div className="relative flex-grow max-w-sm">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" aria-hidden="true" />
-            <input
-              type="search"
-              aria-label="Search reservations"
-              placeholder="Search patient, ID, or medicine..."
+                <input
+                  type="search"
+                  aria-label="Search reservations"
+                  placeholder="Search patient or medicine..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
@@ -251,11 +238,9 @@ export default function PharmacyReservations() {
           <table className="w-full text-left text-xs" aria-label="Reservations list">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                <th scope="col" className="px-5 py-3">Ref ID</th>
                 <th scope="col" className="px-5 py-3">Patient</th>
                 <th scope="col" className="px-5 py-3">Medicine</th>
                 <th scope="col" className="px-5 py-3 text-center">Qty</th>
-                <th scope="col" className="px-5 py-3">Insurance</th>
                 <th scope="col" className="px-5 py-3">Patient Pays</th>
                 <th scope="col" className="px-5 py-3">Pickup By</th>
                 <th scope="col" className="px-5 py-3">Status</th>
@@ -264,13 +249,11 @@ export default function PharmacyReservations() {
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
               {isLoading ? (
-                <tr><td colSpan={9} className="text-center py-10 text-gray-400 text-xs">Loading reservations...</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-gray-400 text-xs">Loading reservations...</td></tr>
               ) : filtered.map(r => (
                 <tr key={r.id} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3 font-mono font-bold text-gray-900">{r.id}</td>
                   <td className="px-5 py-3">
                     <span className="font-bold text-gray-900 block">{r.patient}</span>
-                    <span className="text-[10px] text-gray-400 font-mono">{r.nationalId}</span>
                   </td>
                   <td className="px-5 py-3">
                     <span className="font-semibold text-gray-800 block">{r.medicine}</span>
@@ -279,12 +262,6 @@ export default function PharmacyReservations() {
                     )}
                   </td>
                   <td className="px-5 py-3 text-center font-bold text-gray-900">{r.qty}</td>
-                  <td className="px-5 py-3">
-                    {r.insurance
-                      ? <span className="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-700"><Shield className="w-3 h-3" aria-hidden="true" /><span>{r.insurer}</span></span>
-                      : <span className="text-[10px] text-gray-400 font-semibold">Private</span>
-                    }
-                  </td>
                   <td className="px-5 py-3 font-black text-gray-900">RWF {r.patientPays.toLocaleString()}</td>
                   <td className="px-5 py-3 font-mono text-gray-500">{r.pickupDeadline}</td>
                   <td className="px-5 py-3">
@@ -294,15 +271,6 @@ export default function PharmacyReservations() {
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end space-x-1.5">
-                      {r.status === 'PENDING' && (
-                        <button
-                          onClick={() => markReady(r.id)}
-                          aria-label={`Mark ${r.id} ready for pickup`}
-                          className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-health-primary hover:bg-health-secondary text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
-                        >
-                          Mark Ready
-                        </button>
-                      )}
                       {r.status === 'READY' && (
                         <button
                           onClick={() => confirm(r.id)}
@@ -326,7 +294,7 @@ export default function PharmacyReservations() {
                 </tr>
               ))}
               {!isLoading && filtered.length === 0 && (
-                <tr><td colSpan={9} className="text-center py-10 text-gray-400 text-xs">No reservations match the current filters.</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-gray-400 text-xs">No reservations match the current filters.</td></tr>
               )}
             </tbody>
           </table>

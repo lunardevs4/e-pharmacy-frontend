@@ -18,6 +18,11 @@ const normalizeReservation = (payload: any): Reservation => {
     id: payload.id,
     medicineId: medicine.id || payload.medicineId || '',
     medicineName: medicine.name || payload.medicineName || 'Medication',
+    patientId: payload.patient?.id || payload.patientId || '',
+    patientName:
+      [payload.patient?.user?.firstName, payload.patient?.user?.lastName]
+        .filter(Boolean)
+        .join(' ') || payload.patient?.user?.name || payload.patient?.name || 'Patient',
     pharmacyId: pharmacy.id || payload.pharmacyId || '',
     pharmacyName: pharmacy.name || payload.pharmacyName || 'Pharmacy',
     quantity: payload.quantity ?? 1,

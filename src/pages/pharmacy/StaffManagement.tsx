@@ -212,7 +212,6 @@ export default function StaffManagement() {
           <table className="w-full text-left text-xs divide-y divide-gray-150">
             <thead>
               <tr className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
-                <th className="py-2.5">Employee ID</th>
                 <th className="py-2.5">Name</th>
                 <th className="py-2.5">Role</th>
                 <th className="py-2.5">Email</th>
@@ -225,7 +224,6 @@ export default function StaffManagement() {
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
               {filteredEmployees.map((emp) => (
                 <tr key={emp.id} className="hover:bg-gray-50/50">
-                  <td className="py-3 font-semibold text-gray-900">{emp.id}</td>
                   <td className="py-3 font-bold text-gray-950 flex items-center space-x-2">
                     <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-650">
                       {emp.name.split(' ').map((n) => n[0]).join('').toUpperCase()}

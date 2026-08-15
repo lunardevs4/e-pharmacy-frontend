@@ -12,6 +12,8 @@ export default function PublicRoute() {
     switch (user.role) {
       case 'PATIENT':    return <Navigate to="/patient"    replace />
       case 'PHARMACY':   return <Navigate to="/pharmacy"   replace />
+      case 'PHARMACY_OWNER':
+      case 'PHARMACIST': return <Navigate to="/pharmacy"   replace />
       case 'GOVERNMENT': return <Navigate to="/government" replace />
       case 'ADMIN':      return <Navigate to="/admin"      replace />
       default:           return <Navigate to="/"           replace />

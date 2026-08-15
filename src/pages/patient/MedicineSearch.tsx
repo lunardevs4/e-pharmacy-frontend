@@ -302,9 +302,9 @@ export default function MedicineSearch() {
   }
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col relative overflow-hidden">
+    <div className="h-[calc(100vh-6rem)] flex flex-col relative overflow-visible">
       {/* Search Header Console */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-200 py-4 px-6">
+      <div className="relative z-50 flex-shrink-0 bg-white border-b border-gray-200 py-4 px-6">
         <form
           onSubmit={handleSearch}
           className="max-w-5xl mx-auto flex flex-col md:flex-row gap-3 items-center justify-between"
@@ -345,7 +345,7 @@ export default function MedicineSearch() {
               />
               {/* Recent searches dropdown list */}
               {inputFocused && searchHistory.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-250 rounded-lg shadow-xl z-55 max-h-48 overflow-y-auto text-xs font-bold text-gray-700 divide-y divide-gray-100">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-250 rounded-lg shadow-xl z-[60] max-h-48 overflow-y-auto text-xs font-bold text-gray-700 divide-y divide-gray-100">
                   <div className="p-2 bg-gray-55/30 text-[9px] uppercase tracking-wider text-gray-400">
                     Recent Searches
                   </div>

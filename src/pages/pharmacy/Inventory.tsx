@@ -613,7 +613,6 @@ export default function PharmacyInventory() {
 
           <p className="text-xs text-gray-500 font-medium">
             Active Storefront: <span className="font-bold text-health-primary">{pharmacyName}</span>{' '}
-            (ID: {pharmacyId})
           </p>
         </div>
 

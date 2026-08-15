@@ -24,7 +24,6 @@ export default function PharmacyProfile() {
             {
                 [
                     ['Name', pharmacy?.name],
-                    ['License', pharmacy?.licenseNumber],
                     ['Phone', pharmacy?.phone],
                     ['Address', pharmacy?.address],
                     ['Province', pharmacy?.province],
