@@ -158,14 +158,38 @@ h1, h2, h3, h4, h5, h6 {
     print-color-adjust: exact !important;
   }
 
-  .receipt-print-root * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
   .receipt-actions {
     display: none !important;
   }
 }
+
+/* Infinite Ribbon Marquee Animation */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-scroll 32s linear infinite;
+}
+
+.animate-marquee-infinite:hover,
+.group:hover .animate-marquee-infinite {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-infinite {
+    animation: none;
+  }
+}
+
 
 
