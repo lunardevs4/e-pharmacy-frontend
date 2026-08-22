@@ -159,14 +159,18 @@ export default function MedicineAnalytics() {
             <h3 className="text-sm font-black text-gray-900">Drug Dispensing Volume Trends</h3>
             <p className="text-[10px] text-gray-400">Monthly units dispensed by category</p>
           </div>
-          <Line data={usageTrend} options={{
-            responsive: true,
-            plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } } },
-            scales: {
-              y: { ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
-              x: { ticks: { font: { size: 10 } }, grid: { display: false } },
-            },
-          }} />
+          <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
+            <Line data={usageTrend} options={{
+              responsive: true,
+              interaction: { mode: 'index', intersect: false },
+              elements: { line: { tension: 0.5 }, point: { radius: 4, hoverRadius: 6, borderWidth: 2, borderColor: '#fff' } },
+              plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 } } },
+              scales: {
+                y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
+                x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },
+              },
+            }} />
+          </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
@@ -174,14 +178,18 @@ export default function MedicineAnalytics() {
             <h3 className="text-sm font-black text-gray-900">National Drug Availability Index</h3>
             <p className="text-[10px] text-gray-400">% of essential medicines in adequate stock</p>
           </div>
-          <Line data={stockIndex} options={{
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { min: 85, max: 100, ticks: { callback: (v: any) => `${v}%`, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
-              x: { ticks: { font: { size: 10 } }, grid: { display: false } },
-            },
-          }} />
+          <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
+            <Line data={stockIndex} options={{
+              responsive: true,
+              interaction: { mode: 'index', intersect: false },
+              elements: { line: { tension: 0.5 }, point: { radius: 4, hoverRadius: 6, borderWidth: 2, borderColor: '#fff' } },
+              plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
+              scales: {
+                y: { min: 85, max: 100, border: { display: false }, ticks: { callback: (v: any) => `${v}%`, font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
+                x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },
+              },
+            }} />
+          </div>
         </div>
       </div>
 

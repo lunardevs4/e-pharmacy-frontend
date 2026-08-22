@@ -304,14 +304,18 @@ export default function AdminDashboard() {
             <h3 className="text-sm font-black text-gray-900">User Growth Trend</h3>
             <p className="text-[10px] text-gray-400">Monthly active users</p>
           </div>
-          <Line data={userGrowthData} options={{
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
-              x: { ticks: { font: { size: 10 } }, grid: { display: false } },
-            },
-          }} />
+          <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
+            <Line data={userGrowthData} options={{
+              responsive: true,
+              interaction: { mode: 'index', intersect: false },
+              elements: { line: { tension: 0.5 }, point: { radius: 4, hoverRadius: 6, borderWidth: 2, borderColor: '#fff' } },
+              plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
+              scales: {
+                y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
+                x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },
+              },
+            }} />
+          </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
@@ -319,14 +323,18 @@ export default function AdminDashboard() {
             <h3 className="text-sm font-black text-gray-900">Reservation Volume</h3>
             <p className="text-[10px] text-gray-400">Monthly reservation count</p>
           </div>
-          <Line data={reservationTrendData} options={{
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
-              x: { ticks: { font: { size: 10 } }, grid: { display: false } },
-            },
-          }} />
+          <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/70 via-white to-emerald-50/70 p-3">
+            <Line data={reservationTrendData} options={{
+              responsive: true,
+              interaction: { mode: 'index', intersect: false },
+              elements: { line: { tension: 0.5 }, point: { radius: 4, hoverRadius: 6, borderWidth: 2, borderColor: '#fff' } },
+              plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
+              scales: {
+                y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
+                x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },
+              },
+            }} />
+          </div>
         </div>
       </div>
 

@@ -11,6 +11,8 @@ import PatientRegister from '@/pages/public/PatientRegister'
 import PharmacyRegister from '@/pages/public/PharmacyRegister'
 import ForgotPassword from '@/pages/public/ForgotPassword'
 import ChangePassword from '@/pages/public/ChangePassword'
+import VerifyEmail from '@/pages/public/VerifyEmail'
+import CheckEmail from '@/pages/public/CheckEmail'
 
 // Patient Pages
 import PatientDashboard from '@/pages/patient/Dashboard'
@@ -76,7 +78,8 @@ export default function AppRoutes() {
         <Route path="/register/patient" element={<PatientRegister />} />
         <Route path="/register/pharmacy" element={<PharmacyRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/verify-email" element={<ForgotPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/check-email" element={<CheckEmail />} />
         <Route path="/reset-password" element={<ForgotPassword />} />
         <Route path="/success" element={<ForgotPassword />} />
       </Route>
