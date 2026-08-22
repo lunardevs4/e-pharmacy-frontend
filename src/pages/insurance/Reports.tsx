@@ -6,12 +6,17 @@ import {
 import { Bar, Doughnut } from 'react-chartjs-2'
 import { Download, RefreshCw, BarChart2 } from 'lucide-react'
 import { useState } from 'react'
+import { useAuthStore } from '@/store/authStore'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend)
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
 
 export default function InsuranceReports() {
+  const { user } = useAuthStore()
+  const insurer = user?.insuranceProvider || 'RSSB'
+  const isMMI = insurer === 'MMI'
+
   const [loading, setLoading] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -23,8 +28,20 @@ export default function InsuranceReports() {
   const claimsVolumeData = {
     labels: MONTHS,
     datasets: [
-      { label: 'Approved Claims', data: [142, 165, 178, 190, 210, 225, 248], backgroundColor: 'rgba(15,81,50,0.75)', borderRadius: 6, borderSkipped: false },
-      { label: 'Rejected Claims', data: [12,  9,  14,  11,  8,  10,   7],  backgroundColor: 'rgba(220,53,69,0.55)', borderRadius: 6, borderSkipped: false },
+      {
+        label: 'Approved Claims',
+        data: isMMI ? [45, 52, 58, 65, 70, 78, 85] : [142, 165, 178, 190, 210, 225, 248],
+        backgroundColor: 'rgba(15,81,50,0.75)',
+        borderRadius: 6,
+        borderSkipped: false
+      },
+      {
+        label: 'Rejected Claims',
+        data: isMMI ? [4, 3, 5, 2, 4, 3, 2] : [12,  9,  14,  11,  8,  10,   7],
+        backgroundColor: 'rgba(220,53,69,0.55)',
+        borderRadius: 6,
+        borderSkipped: false
+      },
     ],
   }
 
@@ -32,18 +49,20 @@ export default function InsuranceReports() {
     labels: MONTHS,
     datasets: [{
       label: 'Total Payout (RWF)',
-      data: [3200000, 3700000, 4000000, 4200000, 4600000, 4800000, 5100000],
-      backgroundColor: 'rgba(37,99,235,0.65)',
+      data: isMMI 
+        ? [1100000, 1300000, 1400000, 1600000, 1700000, 1900000, 2100000]
+        : [3200000, 3700000, 4000000, 4200000, 4600000, 4800000, 5100000],
+      backgroundColor: isMMI ? 'rgba(16,185,129,0.65)' : 'rgba(37,99,235,0.65)',
       borderRadius: 6,
       borderSkipped: false,
     }],
   }
 
-  const insurerShareData = {
-    labels: ['RSSB', 'MMI', 'SANLAM', 'Radiant'],
+  const statusDistributionData = {
+    labels: ['Approved', 'Paid', 'Pending', 'Rejected'],
     datasets: [{
-      data: [58, 22, 12, 8],
-      backgroundColor: ['#059669', '#2563eb', '#d97706', '#7c3aed'],
+      data: isMMI ? [60, 25, 10, 5] : [50, 30, 15, 5],
+      backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
       borderWidth: 2, borderColor: '#fff', hoverOffset: 8,
     }],
   }
@@ -58,19 +77,30 @@ export default function InsuranceReports() {
   }
 
   const reports = [
-    { name: 'Monthly Claims Summary — Jul 2026', type: 'PDF' },
-    { name: 'Pharmacy Payout Register — Jul 2026', type: 'CSV' },
-    { name: 'Rejection Analysis Report',           type: 'PDF' },
-    { name: 'Insured Patient Coverage Audit',      type: 'CSV' },
+    { name: `${insurer} Monthly Claims Summary — Jul 2026`, type: 'PDF' },
+    { name: `${insurer} Pharmacy Payout Register — Jul 2026`, type: 'CSV' },
+    { name: `${insurer} Rejection Analysis Report`,           type: 'PDF' },
+    { name: `${insurer} Insured Patient Coverage Audit`,      type: 'CSV' },
   ]
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
       {toast && (
-        <div role="status" aria-live="polite" className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg shadow-xl text-xs font-bold">
+        <div role="status" aria-live="polite" className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-805 px-4 py-3 rounded-lg shadow-xl text-xs font-bold">
           {toast}
         </div>
       )}
+
+      {/* Header card */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center gap-3">
+        <div className={`p-2.5 rounded-lg ${isMMI ? 'bg-[#e8f5e9] text-[#2d6a4f]' : 'bg-[#eff6ff] text-[#3b82f6]'}`}>
+          <BarChart2 className="w-6 h-6" />
+        </div>
+        <div>
+          <h1 className="text-xl font-black text-gray-900">{insurer} Analytics & Audit Reports</h1>
+          <p className="text-xs text-gray-500">Visual payouts, claim volumes, status distributions, and downloadable accounting reports for {insurer}.</p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
@@ -89,8 +119,8 @@ export default function InsuranceReports() {
           }} />
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
-          <div><h3 className="text-sm font-black text-gray-900">Share by Insurer</h3><p className="text-[10px] text-gray-400">% of total claims</p></div>
-          <Doughnut data={insurerShareData} options={{ responsive: true, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } } } }} />
+          <div><h3 className="text-sm font-black text-gray-900">Claims Status Distribution</h3><p className="text-[10px] text-gray-400">% share of claims by status</p></div>
+          <Doughnut data={statusDistributionData} options={{ responsive: true, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } } } }} />
         </div>
       </div>
 

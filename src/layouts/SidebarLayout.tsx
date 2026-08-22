@@ -168,6 +168,64 @@ export default function SidebarLayout() {
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
   const currentRole = user?.role ? (['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user.role) ? 'PHARMACY' : user.role) : ''
 
+  // Dynamic theme colors and branding based on insurance provider
+  const isInsurance = user?.role === 'INSURANCE'
+  const insurer = user?.insuranceProvider || ''
+
+  const sidebarBg = isInsurance
+    ? insurer === 'MMI'
+      ? 'bg-[#1b4332]' // Deep military green
+      : 'bg-[#1e293b]' // Deep slate/blue for RSSB
+    : 'bg-slate-900'
+
+  const activeLinkClass = isInsurance
+    ? insurer === 'MMI'
+      ? 'bg-[#2d6a4f] text-white font-bold' // Brighter military green
+      : 'bg-[#3b82f6] text-white font-bold' // RSSB bright blue
+    : 'bg-slate-800 text-white font-bold'
+
+  const hoverLinkClass = isInsurance
+    ? insurer === 'MMI'
+      ? 'text-emerald-100/75 hover:bg-[#2d6a4f]/50 hover:text-white'
+      : 'text-slate-100/75 hover:bg-[#3b82f6]/30 hover:text-white'
+    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
+
+  const borderClass = isInsurance
+    ? insurer === 'MMI'
+      ? 'border-[#2d6a4f]'
+      : 'border-slate-700'
+    : 'border-slate-800'
+
+  const footerBg = isInsurance
+    ? insurer === 'MMI'
+      ? 'bg-[#1b4332]/70'
+      : 'bg-[#1e293b]/70'
+    : 'bg-slate-950/40'
+
+  const portalLabel = isInsurance
+    ? insurer === 'MMI'
+      ? 'MMI Portal'
+      : 'RSSB Portal'
+    : `${user?.role} Portal`
+
+  const portalSub = isInsurance
+    ? insurer === 'MMI'
+      ? 'MMI Insurance'
+      : 'RSSB Insurance'
+    : 'E-Pharmacy'
+
+  const headerBg = isInsurance
+    ? insurer === 'MMI'
+      ? 'bg-[#e8f5e9]/95' // Very light green
+      : 'bg-[#eff6ff]/95' // Very light blue
+    : 'bg-white'
+
+  const headerBorder = isInsurance
+    ? insurer === 'MMI'
+      ? 'border-emerald-100'
+      : 'border-blue-100'
+    : 'border-gray-200'
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
 
@@ -184,12 +242,12 @@ export default function SidebarLayout() {
       <aside
         id="main-sidebar"
         aria-label="Main navigation"
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 ${sidebarBg} text-white flex flex-col overflow-hidden
           transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Brand */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 flex-shrink-0">
+        <div className={`h-16 flex items-center justify-between px-4 border-b ${borderClass} flex-shrink-0`}>
           <div className="flex items-center space-x-2.5 min-w-0">
             <div className="flex-shrink-0 rounded-lg overflow-hidden">
               <img src="/browsersvg.png" alt="Rwanda E-Pharmacy" className="h-8 w-8 object-contain" />
@@ -197,7 +255,7 @@ export default function SidebarLayout() {
             <div className="min-w-0">
               <span className="font-black text-sm leading-none block text-white tracking-wide">Rwanda</span>
               <span className="block text-[9px] text-emerald-400 tracking-widest font-bold uppercase mt-0.5">
-                E-Pharmacy
+                {portalSub}
               </span>
             </div>
           </div>
@@ -213,11 +271,11 @@ export default function SidebarLayout() {
 
         {/* Nav links */}
         <nav
-          aria-label={`${user?.role ?? ''} portal navigation`}
+          aria-label={`${portalLabel} navigation`}
           className="flex-grow py-5 px-3 space-y-0.5 overflow-y-auto"
         >
-          <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase px-3 mb-3">
-            {user?.role} Portal
+          <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 mb-3">
+            {portalLabel}
           </p>
           {navLinks.map((link) => {
             const Icon = link.icon
@@ -230,8 +288,8 @@ export default function SidebarLayout() {
                 className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 ${
                   isActive
-                    ? 'bg-slate-800 text-white font-bold'
-                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
+                    ? activeLinkClass
+                    : hoverLinkClass
                 }`}
               >
                 <div className="flex items-center space-x-3">
@@ -245,7 +303,7 @@ export default function SidebarLayout() {
         </nav>
 
         {/* User footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between flex-shrink-0">
+        <div className={`p-4 border-t ${borderClass} ${footerBg} flex items-center justify-between flex-shrink-0`}>
           <div className="flex items-center space-x-3 overflow-hidden">
             <div
               aria-hidden="true"
@@ -255,7 +313,7 @@ export default function SidebarLayout() {
             </div>
             <div className="overflow-hidden">
               <span className="block font-bold text-xs text-white truncate">{user?.name || 'User'}</span>
-              <span className="block text-[10px] text-slate-400 truncate">{user?.role}</span>
+              <span className="block text-[10px] text-slate-400 truncate">{isInsurance ? `${insurer} Auditor` : user?.role}</span>
             </div>
           </div>
           <button
@@ -275,7 +333,7 @@ export default function SidebarLayout() {
         }`}
       >
         {/* Top header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
+        <header className={`h-16 ${headerBg} backdrop-blur border-b ${headerBorder} flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20`}>
           <div className="flex items-center space-x-3">
             {/* Hamburger — always three lines, never animates to X */}
             <button
@@ -288,8 +346,8 @@ export default function SidebarLayout() {
               <Menu className="w-6 h-6" aria-hidden="true" />
             </button>
 
-            <span className="hidden sm:block text-sm text-gray-500 font-medium">
-              Rwanda E-Pharmacy &bull; {user?.role} Portal
+            <span className="hidden sm:block text-sm text-gray-550 font-medium">
+              Rwanda E-Pharmacy &bull; {portalLabel}
             </span>
           </div>
 

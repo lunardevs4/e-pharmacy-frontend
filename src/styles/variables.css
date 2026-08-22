@@ -1,13 +1,13 @@
 :root {
   /* Colors */
-  --color-health-primary: #0f5132;
-  --color-health-secondary: #064e3b;
-  --color-health-accent: #198754;
-  --color-health-light-bg: #d1fae5;
-  --color-health-light-text: #065f46;
+  --color-health-primary: #235347;
+  --color-health-secondary: #0b2b26;
+  --color-health-accent: #8eb69b;
+  --color-health-light-bg: #daf1de;
+  --color-health-light-text: #163832;
   
   --color-neutral-white: #ffffff;
-  --color-neutral-light-gray: #f8f9fa;
+  --color-neutral-light-gray: #daf1de;
   --color-neutral-border: #e9ecef;
   --color-neutral-text: #212529;
   --color-neutral-muted: #6c757d;

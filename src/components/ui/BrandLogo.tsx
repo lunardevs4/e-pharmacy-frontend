@@ -21,7 +21,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         }}
       />
       {showText && (
-        <span className="font-bold text-sm text-emerald-900 tracking-tight">
+        <span className="font-bold text-sm text-health-950 tracking-tight">
           Rwanda E-Pharmacy
         </span>
       )}

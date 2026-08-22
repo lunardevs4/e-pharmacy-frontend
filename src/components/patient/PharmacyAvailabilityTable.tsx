@@ -1,6 +1,7 @@
 import React from 'react'
 import { Star, MapPin, Check } from 'lucide-react'
 import { PharmacyStock } from '@/types'
+import { INSURANCE_COVERAGE_RATES } from '@/config/insurance-rates'
 
 interface PharmacyAvailabilityTableProps {
   pharmacies: PharmacyStock[]
@@ -10,6 +11,8 @@ interface PharmacyAvailabilityTableProps {
   onSelectPharmacy?: (pharm: PharmacyStock) => void
   bookmarkedPharmacies?: string[]
   onToggleBookmarkPharmacy?: (pharmId: string) => void
+  insuranceProvider: string
+  onInsuranceChange?: (ins: string) => void
 }
 
 export default function PharmacyAvailabilityTable({
@@ -19,7 +22,9 @@ export default function PharmacyAvailabilityTable({
   onSortChange,
   onSelectPharmacy,
   bookmarkedPharmacies = [],
-  onToggleBookmarkPharmacy
+  onToggleBookmarkPharmacy,
+  insuranceProvider,
+  onInsuranceChange
 }: PharmacyAvailabilityTableProps) {
 
   const renderStockBadge = (status: string, count: number) => {
@@ -54,21 +59,37 @@ export default function PharmacyAvailabilityTable({
 
   return (
     <div className="space-y-4">
-      {/* Sorter Selector */}
-      <div className="flex justify-between items-center">
+      {/* Sorter & Insurance Selector */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Available Stocks</h3>
-        <div className="flex items-center space-x-2 text-xs">
-          <span className="text-gray-500 font-semibold">Sort by:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value)}
-            className="bg-white border border-gray-300 rounded px-2.5 py-1 text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          >
-            <option value="proximity">Proximity (Nearest)</option>
-            <option value="price">Price (Lowest)</option>
-            <option value="stock">Stock (Highest)</option>
-            <option value="rating">Rating (Highest)</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-500 font-semibold">Insurance:</span>
+            <select
+              value={insuranceProvider}
+              onChange={(e) => onInsuranceChange?.(e.target.value)}
+              className="bg-white border border-gray-300 rounded px-2.5 py-1 text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            >
+              <option value="RSSB">RSSB (Rwanda Social Security Board)</option>
+              <option value="MMI">MMI (Military Medical Insurance)</option>
+              <option value="SANLAM">SANLAM</option>
+              <option value="Radiant">Radiant Insurance</option>
+              <option value="None">None (Paying Cash)</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-500 font-semibold">Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value)}
+              className="bg-white border border-gray-300 rounded px-2.5 py-1 text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            >
+              <option value="proximity">Proximity (Nearest)</option>
+              <option value="price">Price (Lowest)</option>
+              <option value="stock">Stock (Highest)</option>
+              <option value="rating">Rating (Highest)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -76,6 +97,11 @@ export default function PharmacyAvailabilityTable({
       <div className="space-y-3">
         {pharmacies.map((pharm) => {
           const isFav = bookmarkedPharmacies.includes(pharm.pharmacyId)
+          const isAccepted = pharm.insuranceAccepted.includes(insuranceProvider) && insuranceProvider !== 'None'
+          const coverage = isAccepted ? Math.round((INSURANCE_COVERAGE_RATES[insuranceProvider] || 0) * 100) : 0
+          const insurancePays = isAccepted ? Math.round(pharm.price * (INSURANCE_COVERAGE_RATES[insuranceProvider] || 0)) : 0
+          const patientPays = pharm.price - insurancePays
+
           return (
             <div
               key={pharm.pharmacyId}
@@ -135,9 +161,38 @@ export default function PharmacyAvailabilityTable({
 
               {/* Price & Action button columns */}
               <div className="text-right w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100">
-                <div>
-                  <span className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider leading-none">Price per tab</span>
-                  <span className="text-base font-black text-gray-950 mt-1 block">{pharm.price} RWF</span>
+                <div className="space-y-1">
+                  {isAccepted ? (
+                    <div className="bg-emerald-50 border border-emerald-150 rounded-xl p-2.5 text-right shadow-xs">
+                      <span className="block text-[9px] font-bold text-emerald-800 uppercase tracking-wider leading-none">
+                        With {insuranceProvider} ({coverage}% off)
+                      </span>
+                      <span className="text-sm font-black text-emerald-700 block mt-1">
+                        {patientPays} RWF
+                      </span>
+                      <span className="block text-[9px] text-emerald-600 font-semibold mt-0.5">
+                        Co-pay / Retail: <span className="line-through text-gray-400">{pharm.price} RWF</span>
+                      </span>
+                      <span className="block text-[9px] text-emerald-600 font-semibold">
+                        Insurance pays: {insurancePays} RWF
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-55 border border-gray-200 rounded-xl p-2.5 text-right shadow-xs">
+                      {insuranceProvider !== 'None' ? (
+                        <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1 py-0.5 uppercase tracking-wider mb-1.5">
+                          {insuranceProvider} Not Accepted
+                        </span>
+                      ) : (
+                        <span className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider leading-none">
+                          Retail Price
+                        </span>
+                      )}
+                      <span className="text-base font-black text-gray-950 block">
+                        {pharm.price} RWF
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"

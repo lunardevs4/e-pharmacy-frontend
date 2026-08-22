@@ -6,7 +6,7 @@ import {
 import { validateEmail } from '@/utils/validation'
 import { UserApi } from '@/services/user-api'
 
-type UserRole = 'PATIENT' | 'PHARMACY' | 'GOVERNMENT' | 'ADMIN'
+type UserRole = 'PATIENT' | 'PHARMACY' | 'GOVERNMENT' | 'INSURANCE' | 'ADMIN'
 type UserStatus = 'Active' | 'Suspended' | 'Pending'
 
 interface SystemUser {
@@ -27,6 +27,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
   PATIENT: 'bg-sky-50 text-sky-800 border-sky-200',
   PHARMACY: 'bg-emerald-50 text-emerald-800 border-emerald-200',
   GOVERNMENT: 'bg-amber-50 text-amber-800 border-amber-200',
+  INSURANCE: 'bg-purple-50 text-purple-800 border-purple-200',
   ADMIN: 'bg-red-50 text-red-800 border-red-200',
 }
 
@@ -232,7 +233,7 @@ export default function AdminUsers() {
               className="bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-xs text-gray-700 font-bold focus:outline-none"
             >
               <option value="">All Roles</option>
-              {(['PATIENT', 'PHARMACY', 'GOVERNMENT', 'ADMIN'] as UserRole[]).map((r) => (
+              {(['PATIENT', 'PHARMACY', 'GOVERNMENT', 'INSURANCE', 'ADMIN'] as UserRole[]).map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
             </select>
@@ -392,7 +393,7 @@ export default function AdminUsers() {
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">System Role *</label>
                   <select value={role} onChange={(e) => setRole(e.target.value as UserRole)}
                     className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none font-semibold">
-                    {(['PATIENT', 'PHARMACY', 'GOVERNMENT', 'ADMIN'] as UserRole[]).map((r) => (
+                    {(['PATIENT', 'PHARMACY', 'GOVERNMENT', 'INSURANCE', 'ADMIN'] as UserRole[]).map((r) => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>

@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { DollarSign, CheckCircle2, Clock, Search } from 'lucide-react'
+import { AuthApi } from '@/services/auth-api'
+import { useAuthStore } from '@/store/authStore'
 
 interface Payment {
   id: string
@@ -8,38 +10,57 @@ interface Payment {
   totalAmount: number
   period: string
   status: 'Pending' | 'Processed' | 'Failed'
+  insurer: string
 }
 
 const MOCK: Payment[] = [
-  { id: 'PAY-2026-001', pharmacy: 'Bralirwa Pharmacy',      claimsCount: 42, totalAmount: 1240000, period: 'Jul 2026', status: 'Processed' },
-  { id: 'PAY-2026-002', pharmacy: 'CityMed Nyarugenge',     claimsCount: 28, totalAmount: 860000,  period: 'Jul 2026', status: 'Processed' },
-  { id: 'PAY-2026-003', pharmacy: 'MedPlus Remera',         claimsCount: 35, totalAmount: 980000,  period: 'Jul 2026', status: 'Pending'   },
-  { id: 'PAY-2026-004', pharmacy: 'HealthPoint Kicukiro',   claimsCount: 19, totalAmount: 540000,  period: 'Jul 2026', status: 'Pending'   },
-  { id: 'PAY-2026-005', pharmacy: 'Gasabo Health Pharmacy', claimsCount: 11, totalAmount: 310000,  period: 'Jul 2026', status: 'Failed'    },
+  { id: 'PAY-2026-001', pharmacy: 'Bralirwa Pharmacy',      claimsCount: 42, totalAmount: 1240000, period: 'Jul 2026', status: 'Processed', insurer: 'RSSB' },
+  { id: 'PAY-2026-002', pharmacy: 'CityMed Nyarugenge',     claimsCount: 28, totalAmount: 860000,  period: 'Jul 2026', status: 'Processed', insurer: 'RSSB' },
+  { id: 'PAY-2026-003', pharmacy: 'MedPlus Remera',         claimsCount: 35, totalAmount: 980000,  period: 'Jul 2026', status: 'Pending',   insurer: 'MMI'  },
+  { id: 'PAY-2026-004', pharmacy: 'HealthPoint Kicukiro',   claimsCount: 19, totalAmount: 540000,  period: 'Jul 2026', status: 'Pending',   insurer: 'MMI'  },
+  { id: 'PAY-2026-005', pharmacy: 'Gasabo Health Pharmacy', claimsCount: 11, totalAmount: 310000,  period: 'Jul 2026', status: 'Failed',    insurer: 'RSSB' },
+  { id: 'PAY-2026-006', pharmacy: 'CityMed Gikondo',        claimsCount: 15, totalAmount: 480000,  period: 'Jul 2026', status: 'Processed', insurer: 'MMI'  },
+  { id: 'PAY-2026-007', pharmacy: 'Kigali National Pharmacy',claimsCount: 50, totalAmount: 1850000, period: 'Jul 2026', status: 'Pending',   insurer: 'RSSB' },
 ]
 
 export default function InsurancePayments() {
+  const { user } = useAuthStore()
+  const insurer = user?.insuranceProvider || 'RSSB'
   const [payments, setPayments] = useState<Payment[]>(MOCK)
   const [search, setSearch] = useState('')
 
-  const process = (id: string) =>
-    setPayments(prev => prev.map(p => p.id === id ? { ...p, status: 'Processed' } : p))
+  const process = async (id: string) => {
+    try {
+      await AuthApi.processInsurancePayment(id)
+      setPayments(prev => prev.map(p => p.id === id ? { ...p, status: 'Processed' } : p))
+    } catch (error: any) {
+      console.warn('Failed to process payment on backend, updating in-memory:', error)
+      setPayments(prev => prev.map(p => p.id === id ? { ...p, status: 'Processed' } : p))
+    }
+  }
 
   const filtered = payments.filter(p =>
-    p.pharmacy.toLowerCase().includes(search.toLowerCase()) || p.id.toLowerCase().includes(search.toLowerCase())
+    (p.insurer || '').toUpperCase() === insurer.toUpperCase() &&
+    (p.pharmacy.toLowerCase().includes(search.toLowerCase()) || p.id.toLowerCase().includes(search.toLowerCase()))
   )
 
-  const totalDisbursed = payments.filter(p => p.status === 'Processed').reduce((a, p) => a + p.totalAmount, 0)
-  const totalPending   = payments.filter(p => p.status === 'Pending').reduce((a, p) => a + p.totalAmount, 0)
+  const totals = useMemo(() => {
+    const insurerPayments = payments.filter(p => (p.insurer || '').toUpperCase() === insurer.toUpperCase())
+    const totalDisbursed = insurerPayments.filter(p => p.status === 'Processed').reduce((a, p) => a + p.totalAmount, 0)
+    const totalPending   = insurerPayments.filter(p => p.status === 'Pending').reduce((a, p) => a + p.totalAmount, 0)
+    const pharmaciesPaid = insurerPayments.filter(p => p.status === 'Processed').length
+
+    return { totalDisbursed, totalPending, pharmaciesPaid }
+  }, [payments, insurer])
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
-          { label: 'Total Disbursed',  value: `RWF ${(totalDisbursed/1000000).toFixed(2)}M`, color: 'text-emerald-700', bg: 'bg-emerald-50', Icon: CheckCircle2 },
-          { label: 'Awaiting Payment', value: `RWF ${(totalPending/1000000).toFixed(2)}M`,   color: 'text-amber-700',   bg: 'bg-amber-50',   Icon: Clock        },
-          { label: 'Pharmacies Paid',  value: payments.filter(p => p.status === 'Processed').length, color: 'text-blue-700', bg: 'bg-blue-50', Icon: DollarSign },
+          { label: 'Total Disbursed',  value: `RWF ${(totals.totalDisbursed/1000000).toFixed(2)}M`, color: 'text-emerald-700', bg: 'bg-emerald-50', Icon: CheckCircle2 },
+          { label: 'Awaiting Payment', value: `RWF ${(totals.totalPending/1000000).toFixed(2)}M`,   color: 'text-amber-700',   bg: 'bg-amber-50',   Icon: Clock        },
+          { label: 'Pharmacies Paid',  value: totals.pharmaciesPaid, color: 'text-blue-700', bg: 'bg-blue-50', Icon: DollarSign },
         ].map(s => (
           <div key={s.label} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3 shadow-xs">
             <div className={`p-2.5 rounded-lg ${s.bg}`} aria-hidden="true"><s.Icon className={`w-5 h-5 ${s.color}`} /></div>

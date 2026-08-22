@@ -116,6 +116,9 @@ export default function Login() {
           case 'GOVERNMENT':
             navigate('/government')
             break
+          case 'INSURANCE':
+            navigate('/insurance')
+            break
           case 'ADMIN':
             navigate('/admin')
             break

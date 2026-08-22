@@ -341,12 +341,18 @@ export const MedicineApi = {
     medicineId: string
     pharmacyId: string
     quantity: number
+    insuranceProvider?: string
+    insurancePays?: number
+    patientPays?: number
   }): Promise<Reservation> => {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     const response = await apiClient.post('/reservations', {
       medicineId: data.medicineId,
       pharmacyId: data.pharmacyId,
       quantity: data.quantity,
+      insuranceProvider: data.insuranceProvider,
+      insurancePays: data.insurancePays,
+      patientPays: data.patientPays,
       expiresAt,
     })
     return normalizeReservation(response.data)

@@ -26,6 +26,7 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
       case 'PHARMACIST': return <Navigate to="/pharmacy"    replace />
 
       case 'GOVERNMENT': return <Navigate to="/government"  replace />
+      case 'INSURANCE':  return <Navigate to="/insurance"   replace />
       case 'ADMIN':      return <Navigate to="/admin"       replace />
       default:           return <Navigate to="/"            replace />
     }

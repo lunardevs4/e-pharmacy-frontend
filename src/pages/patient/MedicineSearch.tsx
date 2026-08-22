@@ -21,6 +21,8 @@ import MedicineCard from '@/components/patient/MedicineCard'
 import PharmacyAvailabilityTable from '@/components/patient/PharmacyAvailabilityTable'
 import PrescriptionUploader from '@/components/patient/PrescriptionUploader'
 import { CardSkeleton } from '@/components/patient/LoadingSkeleton'
+import { useAuthStore } from '@/store/authStore'
+import { INSURANCE_COVERAGE_RATES } from '@/config/insurance-rates'
 
 export default function MedicineSearch() {
   const location = useLocation()
@@ -38,6 +40,8 @@ export default function MedicineSearch() {
   } = useMedicineSearch()
 
   // Search filter states
+  const { user } = useAuthStore()
+  const [selectedInsurance, setSelectedInsurance] = useState<string>(user?.insuranceProvider || 'RSSB')
   const [query, setQuery] = useState(initialQuery)
   const [category, setCategory] = useState('')
   const [inStockOnly, setInStockOnly] = useState(false)
@@ -298,10 +302,19 @@ export default function MedicineSearch() {
         })
       }
 
+      const isAccepted = selectedPharmacy.insuranceAccepted.includes(selectedInsurance) && selectedInsurance !== 'None'
+      const coverageRate = isAccepted ? (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0) : 0
+      const totalCost = selectedPharmacy.price * quantity
+      const insurancePays = Math.round(totalCost * coverageRate)
+      const patientPays = totalCost - insurancePays
+
       const res = await createReservation({
         medicineId: selectedMedicine.id,
         pharmacyId: selectedPharmacy.pharmacyId,
         quantity,
+        insuranceProvider: selectedInsurance !== 'None' ? selectedInsurance : '',
+        insurancePays,
+        patientPays,
       })
       setCreatedReservation(res)
 
@@ -658,6 +671,8 @@ export default function MedicineSearch() {
                   onSelectPharmacy={handleSelectPharmacyMap}
                   bookmarkedPharmacies={bookmarkedPharmacies}
                   onToggleBookmarkPharmacy={handleToggleBookmarkPharmacy}
+                  insuranceProvider={selectedInsurance}
+                  onInsuranceChange={setSelectedInsurance}
                 />
               )}
             </div>
@@ -754,6 +769,29 @@ export default function MedicineSearch() {
                       <span>Unit Retail Price:</span>
                       <span className="font-bold text-gray-900">{selectedPharmacy.price} RWF</span>
                     </div>
+                    <div className="flex justify-between items-center text-gray-700 pt-1.5 border-t border-gray-200">
+                      <span>Total Retail Price:</span>
+                      <span className="font-bold text-gray-900">{selectedPharmacy.price * quantity} RWF</span>
+                    </div>
+                    {selectedPharmacy.insuranceAccepted.includes(selectedInsurance) && selectedInsurance !== 'None' ? (
+                      <>
+                        <div className="flex justify-between items-center text-emerald-800 font-semibold">
+                          <span>Insurance Pays ({selectedInsurance} - {Math.round((INSURANCE_COVERAGE_RATES[selectedInsurance] || 0) * 100)}%):</span>
+                          <span>-{Math.round(selectedPharmacy.price * quantity * (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0))} RWF</span>
+                        </div>
+                        <div className="flex justify-between items-center text-gray-950 font-black pt-1.5 border-t border-dashed border-gray-200">
+                          <span>Your Estimated Co-Pay:</span>
+                          <span className="text-health-primary text-sm">
+                            {(selectedPharmacy.price * quantity) - Math.round(selectedPharmacy.price * quantity * (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0))} RWF
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between items-center text-gray-955 font-black pt-1.5 border-t border-dashed border-gray-200">
+                        <span>Total Out-of-Pocket:</span>
+                        <span className="text-health-primary text-sm">{selectedPharmacy.price * quantity} RWF</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-center space-y-3.5 pt-2">

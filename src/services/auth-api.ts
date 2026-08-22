@@ -270,7 +270,6 @@ export const AuthApi = {
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalized))
       return normalized
     } catch (error: unknown) {
-      // Surface the actual backend message (400 body) clearly
       const msg = getErrorMessage(error)
       throw new Error(msg)
     }

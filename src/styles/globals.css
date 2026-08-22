@@ -13,6 +13,13 @@ body {
   padding: 0;
 }
 
+/* E-Pharmacy brand surface: keeps white cards readable while making the
+   surrounding application feel like one intentional product. */
+#root {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #daf1de 0%, #8eb69b 48%, #235347 100%);
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Merriweather', Georgia, serif;
 }

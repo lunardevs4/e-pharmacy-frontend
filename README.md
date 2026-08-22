@@ -145,6 +145,8 @@ Each role has an isolated route prefix and a role-specific sidebar.
 | Admin | `admin` | `AdminPass123!` |
 | Pharmacy (Kigali National) | `staff` | `TempPass123!` |
 | Pharmacy (Gikondo District) | `manager` | `ManagerPass123!` |
+| RSSB Insurance Portal | `rssb@epharmacy.local` | `InsurancePass123!` |
+| MMI Insurance Portal | `mmi@epharmacy.local` | `InsurancePass123!` |
 
 Password reset OTP code (mock): **123456**
 

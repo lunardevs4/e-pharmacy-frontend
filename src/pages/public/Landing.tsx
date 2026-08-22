@@ -1,7 +1,40 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { apiClient } from '@/api/client'
+
+function CountUp({ end, duration = 1500, suffix = '', decimals = 0 }: { end: number; duration?: number; suffix?: string; decimals?: number }) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    let startTimestamp: number | null = null
+    let active = true
+    const step = (timestamp: number) => {
+      if (!active) return
+      if (!startTimestamp) startTimestamp = timestamp
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1)
+      setCount(progress * end)
+      if (progress < 1) {
+        window.requestAnimationFrame(step)
+      }
+    }
+    window.requestAnimationFrame(step)
+    return () => {
+      active = false
+    }
+  }, [end, duration])
+
+  const formatted = decimals > 0 
+    ? count.toFixed(decimals)
+    : Math.floor(count).toLocaleString('en-US')
+
+  return (
+    <span>
+      {formatted}
+      {suffix}
+    </span>
+  )
+}
 import {
   Search,
   MapPin,
@@ -449,45 +482,53 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* Animated Stats Ribbon in Motion */}
-      <section className="bg-white border-y border-gray-200 py-8 relative overflow-hidden group select-none">
-        {/* Soft edge fade masks */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent z-10" />
-
-        {/* Continuous Gliding Track */}
-        <div className="flex items-center animate-marquee-infinite">
-          {[
-            { value: stats.registeredPharmacies, label: 'Registered Pharmacies' },
-            { value: stats.patientsRegistered, label: 'Patients Registered' },
-            { value: stats.provincesCovered, label: 'Provinces Covered' },
-            { value: stats.nationalAvailability, label: 'National Availability' },
-            { value: '30 Districts', label: 'Nationwide Reach' },
-            { value: '24/7', label: 'Live Stock Sync' },
-            { value: '100%', label: 'Licensed & Verified' },
-            { value: '15,000+', label: 'Daily Verified Searches' },
-            // Seamless duplicate loop
-            { value: stats.registeredPharmacies, label: 'Registered Pharmacies' },
-            { value: stats.patientsRegistered, label: 'Patients Registered' },
-            { value: stats.provincesCovered, label: 'Provinces Covered' },
-            { value: stats.nationalAvailability, label: 'National Availability' },
-            { value: '30 Districts', label: 'Nationwide Reach' },
-            { value: '24/7', label: 'Live Stock Sync' },
-            { value: '100%', label: 'Licensed & Verified' },
-            { value: '15,000+', label: 'Daily Verified Searches' },
-          ].map((item, idx) => (
-            <div key={idx} className="flex items-center px-8 sm:px-12 flex-shrink-0">
-              <div className="text-center space-y-1">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                  {item.value}
-                </span>
-                <span className="block text-[11px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
-                  {item.label}
-                </span>
-              </div>
-              <div className="h-10 w-px bg-gray-200 ml-8 sm:ml-12 flex-shrink-0" />
+      {/* Fixed Stats Section with Counting Numbers */}
+      <section className="bg-white border-y border-gray-200 py-8 relative select-none">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-around gap-6 md:gap-0 max-w-5xl mx-auto">
+            {/* Stat 1 */}
+            <div className="text-center space-y-1">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                <CountUp end={1847} decimals={0} />
+              </span>
+              <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
+                Registered Pharmacies
+              </span>
             </div>
-          ))}
+            <div className="hidden md:block h-8 w-px bg-gray-200" />
+            
+            {/* Stat 2 */}
+            <div className="text-center space-y-1">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                <CountUp end={2.4} decimals={1} suffix="M+" />
+              </span>
+              <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
+                Patients Registered
+              </span>
+            </div>
+            <div className="hidden md:block h-8 w-px bg-gray-200" />
+            
+            {/* Stat 3 */}
+            <div className="text-center space-y-1">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                <CountUp end={5} decimals={0} />
+              </span>
+              <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
+                Provinces Covered
+              </span>
+            </div>
+            <div className="hidden md:block h-8 w-px bg-gray-200" />
+            
+            {/* Stat 4 */}
+            <div className="text-center space-y-1">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                <CountUp end={94.2} decimals={1} suffix="%" />
+              </span>
+              <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
+                National Availability
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 {' '}

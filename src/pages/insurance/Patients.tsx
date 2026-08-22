@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Users, Search, Shield, Loader2, RefreshCw, AlertTriangle } from 'lucide-react'
 import { AuthApi } from '@/services/auth-api'
+import { useAuthStore } from '@/store/authStore'
 
 interface PolicyHolder {
   id: string
@@ -21,6 +22,8 @@ const FALLBACK: PolicyHolder[] = [
   { id: 'POL-004', name: 'Emmanuel Habimana',      nid: '1199080037284729', phone: '+250 788 456 789', insurer: 'SANLAM',  policyId: 'SAL-2024-00341',  coverage: 75, activeClaims: 0, status: 'Inactive'  },
   { id: 'POL-005', name: 'Clarisse Ingabire',      nid: '1199880018374928', phone: '+250 788 567 890', insurer: 'Radiant', policyId: 'RAD-2026-00021',  coverage: 70, activeClaims: 0, status: 'Active'    },
   { id: 'POL-006', name: 'Robert Uwera',           nid: '1198980028384920', phone: '+250 788 678 901', insurer: 'RSSB',    policyId: 'RSSB-2022-00223', coverage: 85, activeClaims: 1, status: 'Suspended' },
+  { id: 'POL-007', name: 'Jean-Paul Mutabazi',     nid: '1199180028374829', phone: '+250 788 789 012', insurer: 'MMI',     policyId: 'MMI-2024-00234',  coverage: 90, activeClaims: 1, status: 'Active'    },
+  { id: 'POL-008', name: 'Divine Uwera',           nid: '1199480038472918', phone: '+250 788 890 123', insurer: 'MMI',     policyId: 'MMI-2023-00123',  coverage: 90, activeClaims: 0, status: 'Active'    },
 ]
 
 const STATUS_STYLE: Record<string, string> = {
@@ -45,9 +48,10 @@ const normalizePolicyHolder = (item: any): PolicyHolder => {
 }
 
 export default function InsurancePatients() {
+  const { user } = useAuthStore()
+  const insurer = user?.insuranceProvider || 'RSSB'
   const [patients, setPatients] = useState<PolicyHolder[]>(FALLBACK)
   const [search, setSearch] = useState('')
-  const [insurerFilter, setInsurerFilter] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -73,8 +77,9 @@ export default function InsurancePatients() {
 
   const filtered = patients.filter(p => {
     const q = search.toLowerCase()
-    return (p.name.toLowerCase().includes(q) || p.nid.includes(q) || p.policyId.toLowerCase().includes(q)) &&
-      (insurerFilter ? p.insurer === insurerFilter : true)
+    const pInsurer = p.insurer || ''
+    return pInsurer.toUpperCase() === insurer.toUpperCase() &&
+      (p.name.toLowerCase().includes(q) || p.nid.includes(q) || p.policyId.toLowerCase().includes(q))
   })
 
   return (
@@ -107,14 +112,12 @@ export default function InsurancePatients() {
               value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold" />
           </div>
-          <select aria-label="Filter by insurer" value={insurerFilter} onChange={e => setInsurerFilter(e.target.value)}
-            className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            <option value="">All Insurers</option>
-            <option value="RSSB">RSSB</option>
-            <option value="MMI">MMI</option>
-            <option value="SANLAM">SANLAM</option>
-            <option value="Radiant">Radiant</option>
-          </select>
+          <div className="bg-white border border-gray-300 rounded-lg px-3.5 py-2 text-xs text-gray-600 font-extrabold flex items-center gap-1.5 shadow-xs">
+            <span>Insurer:</span>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+              insurer === 'MMI' ? 'bg-emerald-100 text-emerald-900 border border-emerald-250' : 'bg-blue-100 text-blue-900 border border-blue-250'
+            }`}>{insurer}</span>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

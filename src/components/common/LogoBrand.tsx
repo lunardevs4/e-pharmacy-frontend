@@ -21,7 +21,7 @@ export const LogoBrand: React.FC<LogoBrandProps> = ({
     return (
       <div className={`flex items-center justify-center ${className}`}>
         <div
-          className={`${logoSizes[size]} flex items-center justify-center rounded-full bg-emerald-600 px-3 text-sm font-semibold text-white shadow-sm`}
+          className={`${logoSizes[size]} flex items-center justify-center rounded-full bg-health-950 px-3 text-sm font-semibold text-white shadow-sm`}
         >
           E-Pharmacy
         </div>
