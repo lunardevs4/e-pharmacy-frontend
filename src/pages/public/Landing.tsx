@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { apiClient } from '@/api/client'
@@ -56,11 +56,12 @@ import {
 export default function LandingPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [stats, setStats] = useState({
-    registeredPharmacies: '1,847',
-    patientsRegistered: '2.4M+',
-    provincesCovered: '5',
-    nationalAvailability: '94.2%',
+    registeredPharmacies: '—',
+    patientsRegistered: '—',
+    provincesCovered: '—',
+    nationalAvailability: '—',
   })
+  const [statsLoading, setStatsLoading] = useState(true)
   const [showResults, setShowResults] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(1) // Item 1 (How do I find a medicine near me?) is expanded by default
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
@@ -73,6 +74,32 @@ export default function LandingPage() {
       text: 'Hello! I can answer educational questions about medicines — what they are, what they treat, and common side effects. I do not replace professional medical advice. How can I help?',
     },
   ])
+
+  useEffect(() => {
+    let active = true
+
+    apiClient
+      .get('/public/stats')
+      .then((response) => {
+        const data = response.data?.data ?? response.data
+        if (!active || !data) return
+
+        setStats({
+          registeredPharmacies: Number(data.registeredPharmacies).toLocaleString(),
+          patientsRegistered: Number(data.patientsRegistered).toLocaleString(),
+          provincesCovered: Number(data.provincesCovered).toLocaleString(),
+          nationalAvailability: `${Number(data.nationalAvailability).toFixed(1)}%`,
+        })
+      })
+      .catch((error) => console.error('Unable to load public platform stats:', error))
+      .finally(() => {
+        if (active) setStatsLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
@@ -485,44 +512,34 @@ export default function LandingPage() {
       {/* Fixed Stats Section with Counting Numbers */}
       <section className="bg-white border-y border-gray-200 py-8 relative select-none">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-around gap-6 md:gap-0 max-w-5xl mx-auto">
-            {/* Stat 1 */}
-            <div className="text-center space-y-1">
-              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                <CountUp end={1847} decimals={0} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-200 text-center">
+            <div className="space-y-1">
+              <span className="block text-3xl font-extrabold text-gray-900">
+                {statsLoading ? '…' : stats.registeredPharmacies}
               </span>
               <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
                 Registered Pharmacies
               </span>
             </div>
-            <div className="hidden md:block h-8 w-px bg-gray-200" />
-            
-            {/* Stat 2 */}
-            <div className="text-center space-y-1">
-              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                <CountUp end={2.4} decimals={1} suffix="M+" />
+            <div className="space-y-1 pl-4">
+              <span className="block text-3xl font-extrabold text-gray-900">
+                {statsLoading ? '…' : stats.patientsRegistered}
               </span>
               <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
                 Patients Registered
               </span>
             </div>
-            <div className="hidden md:block h-8 w-px bg-gray-200" />
-            
-            {/* Stat 3 */}
-            <div className="text-center space-y-1">
-              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                <CountUp end={5} decimals={0} />
+            <div className="space-y-1 pl-4">
+              <span className="block text-3xl font-extrabold text-gray-900">
+                {statsLoading ? '…' : stats.provincesCovered}
               </span>
               <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
                 Provinces Covered
               </span>
             </div>
-            <div className="hidden md:block h-8 w-px bg-gray-200" />
-            
-            {/* Stat 4 */}
-            <div className="text-center space-y-1">
-              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                <CountUp end={94.2} decimals={1} suffix="%" />
+            <div className="space-y-1 pl-4">
+              <span className="block text-3xl font-extrabold text-gray-900">
+                {statsLoading ? '…' : stats.nationalAvailability}
               </span>
               <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
                 National Availability

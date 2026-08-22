@@ -73,10 +73,7 @@ export default function PharmacyRegister() {
         passwordHash: password,
       })
 
-      setSuccessMsg('Pharmacy owner account registered successfully!')
-      setTimeout(() => {
-        navigate('/login')
-      }, 2500)
+      navigate(`/check-email?email=${encodeURIComponent(email.trim())}`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration failed. Please try again.')
     } finally {

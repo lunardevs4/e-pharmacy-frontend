@@ -148,10 +148,10 @@ export default function PatientRegister() {
         password,
       })
 
-      setSuccessMsg('Patient account created successfully! Redirecting to login...')
-      setTimeout(() => {
-        navigate('/login')
-      }, 1500)
+      const [registeredFirstName, ...registeredRest] = fullName.trim().split(/\s+/)
+      const registeredLastName = registeredRest.join(' ') || 'User'
+      const registeredEmail = email.trim() || `${registeredFirstName.toLowerCase()}.${registeredLastName.toLowerCase().replace(/\s+/g, '.')}@epharmacy.local`
+      navigate(`/check-email?email=${encodeURIComponent(registeredEmail)}`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration failed. Please try again.')
     } finally {
