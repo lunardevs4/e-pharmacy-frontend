@@ -48,6 +48,13 @@ import ProvinceAnalytics from '@/pages/government/ProvinceAnalytics'
 import GovernmentCompliance from '@/pages/government/Compliance'
 import GovernmentReports from '@/pages/government/Reports'
 
+// Insurance Pages
+import InsuranceDashboard from '@/pages/insurance/Dashboard'
+import InsuranceClaims from '@/pages/insurance/Claims'
+import InsurancePatients from '@/pages/insurance/Patients'
+import InsurancePayments from '@/pages/insurance/Payments'
+import InsuranceReports from '@/pages/insurance/Reports'
+
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard'
 import AdminUsers from '@/pages/admin/Users'
@@ -56,12 +63,6 @@ import AdminRoles from '@/pages/admin/Roles'
 import AdminSettings from '@/pages/admin/Settings'
 import AdminAuditLogs from '@/pages/admin/AuditLogs'
 
-// Insurance Pages
-import InsuranceDashboard from '@/pages/insurance/Dashboard'
-import InsuranceClaims from '@/pages/insurance/Claims'
-import InsurancePayments from '@/pages/insurance/Payments'
-import InsuranceReports from '@/pages/insurance/Reports'
-import InsurancePatients from '@/pages/insurance/Patients'
 
 export default function AppRoutes() {
   return (
@@ -136,6 +137,17 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
+      {/* Insurance Portal */}
+      <Route element={<ProtectedRoute allowedRoles={['INSURANCE']} />}>
+        <Route path="/insurance" element={<SidebarLayout />}>
+          <Route index element={<InsuranceDashboard />} />
+          <Route path="claims" element={<InsuranceClaims />} />
+          <Route path="patients" element={<InsurancePatients />} />
+          <Route path="payments" element={<InsurancePayments />} />
+          <Route path="reports" element={<InsuranceReports />} />
+        </Route>
+      </Route>
+
       {/* Admin Portal */}
       <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
         <Route path="/admin" element={<SidebarLayout />}>
@@ -147,16 +159,6 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Insurance Portal */}
-      <Route element={<ProtectedRoute allowedRoles={['INSURANCE']} />}>
-        <Route path="/insurance" element={<SidebarLayout />}>
-          <Route index element={<InsuranceDashboard />} />
-          <Route path="claims" element={<InsuranceClaims />} />
-          <Route path="payments" element={<InsurancePayments />} />
-          <Route path="reports" element={<InsuranceReports />} />
-          <Route path="patients" element={<InsurancePatients />} />
-        </Route>
-      </Route>
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

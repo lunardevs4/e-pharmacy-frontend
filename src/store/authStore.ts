@@ -20,10 +20,9 @@ interface AuthStore {
 /**
  * Returns true only when the token looks like a real JWT
  * (three base64-url segments separated by dots).
- * Mock tokens produced by auth-api.ts start with "mock_jwt_" and are rejected.
  */
 function isRealJwt(token: string): boolean {
-  if (!token || token.startsWith('mock_jwt_')) return false
+  if (!token) return false
   const parts = token.split('.')
   return parts.length === 3
 }

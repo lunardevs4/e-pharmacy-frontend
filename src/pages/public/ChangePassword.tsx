@@ -63,7 +63,7 @@ export default function ChangePassword() {
       
       // Update state in Zustand store
       const updatedUser = { ...user, firstLogin: false }
-      login(updatedUser, token || 'mock_token')
+      login(updatedUser, token || '')
 
       // Redirect to correct dashboard
       setTimeout(() => {
