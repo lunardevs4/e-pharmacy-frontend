@@ -482,16 +482,25 @@ export default function SidebarLayout() {
             </div>
 
             {/* Profile */}
-            <div className="flex items-center space-x-2 border-l border-gray-200 pl-3">
+            <div className="flex items-center space-x-3 border-l border-gray-200 pl-3">
               <div
                 aria-hidden="true"
                 className="w-8 h-8 rounded-full bg-emerald-100 text-health-primary flex items-center justify-center font-bold text-sm flex-shrink-0"
               >
                 {user?.name?.[0] ?? 'U'}
               </div>
-              <span className="text-xs font-bold text-gray-800 hidden md:block truncate max-w-[120px]">
-                {user?.name}
-              </span>
+              <div className="hidden md:flex flex-col min-w-0 text-left">
+                <span className="text-xs font-bold text-gray-800 truncate max-w-[180px] leading-tight">
+                  {user?.name}
+                </span>
+                <span className="text-[10px] text-gray-500 font-medium truncate max-w-[180px] leading-tight mt-0.5">
+                  {['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user?.role || '') && user?.pharmacy?.name
+                    ? `${user?.role} • ${user?.pharmacy?.name}`
+                    : isInsurance && insurer
+                    ? `${insurer} Auditor`
+                    : user?.role}
+                </span>
+              </div>
             </div>
           </div>
         </header>
