@@ -137,7 +137,7 @@ export default function PatientProfile() {
       await AuthApi.changePassword(user?.username || 'patient', currentPass, newPass)
       
       // Seed security log action to Notification logs too
-      const notKey = 'epharmacy_notifications_mock'
+      const notKey = 'epharmacy_notifications'
       const rawNot = localStorage.getItem(notKey)
       const list = rawNot ? JSON.parse(rawNot) : []
       const newAlert = {

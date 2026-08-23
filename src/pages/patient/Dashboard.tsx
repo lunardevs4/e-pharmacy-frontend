@@ -100,7 +100,7 @@ export default function PatientDashboard() {
   const handleDeleteHistoryItem = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
     try {
-      const key = 'epharmacy_search_history_mock'
+      const key = 'epharmacy_search_history'
       const updated = searchHistory.filter((item) => item.id !== id)
       localStorage.setItem(key, JSON.stringify(updated))
       setSearchHistory(updated)

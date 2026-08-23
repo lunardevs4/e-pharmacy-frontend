@@ -214,6 +214,14 @@ const getErrorMessage = (error: unknown): string => {
 
 
 export const AuthApi = {
+  verifyEmail: async (token: string): Promise<{ message: string }> => {
+    try { const response = await apiClient.get('/auth/verify-email', { params: { token } }); return response.data?.data || response.data }
+    catch (error) { throw new Error(getErrorMessage(error)) }
+  },
+  resendVerification: async (email: string): Promise<{ message: string }> => {
+    try { const response = await apiClient.post('/auth/resend-verification', { email }); return response.data?.data || response.data }
+    catch (error) { throw new Error(getErrorMessage(error)) }
+  },
   createStaff: async (pharmacyId: string, data: { firstName: string; lastName: string; email: string; phone: string; role: string; position: string }) => {
     const response = await apiClient.post(`/auth/pharmacies/${pharmacyId}/staff`, data)
     return response.data

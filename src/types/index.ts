@@ -101,6 +101,18 @@ export interface PharmacyStock {
   lat: number
   lng: number
   locationText: string
+  insuranceCoverage?: {
+    isCovered: boolean
+    hasAgreement: boolean
+    insurancePays: number
+    patientPays: number
+    coveragePercentage?: number
+    copayPercentage?: number
+    requiresPreAuth?: boolean
+    coveredPrice?: number
+    insuranceName?: string
+    message?: string
+  }
 }
 
 export interface Reservation {

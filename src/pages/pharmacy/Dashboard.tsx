@@ -253,22 +253,6 @@ export default function PharmacyDashboard() {
           </div>
         )}
         
-        {/* Top Banner Information Block */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-black text-sm flex items-center justify-center">
-              {user?.name ? user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() : '—'}
-            </div>
-            <div className="text-xs space-y-0.5">
-              <p className="text-gray-500">Logged in as <span className="font-bold text-gray-900">{user?.name || '—'}</span></p>
-              <p className="text-gray-500">Role <span className="font-bold text-gray-900">{user?.role || '—'}</span></p>
-            </div>
-          </div>
-          <div className="h-px md:h-8 w-full md:w-px bg-gray-200" />
-          <div className="text-xs">
-            <p className="text-gray-500">Pharmacy <span className="font-bold text-emerald-800">{user?.pharmacy?.name || '—'}</span></p>
-          </div>
-        </div>
 
         {/* Quick Metrics Statistics Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

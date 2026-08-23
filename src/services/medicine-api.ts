@@ -199,7 +199,7 @@ export const MedicineApi = {
   },
 
   // Resolves pharmacy stock levels dynamically for any medicine ID
-  getMedicineAvailability: async (medicineId: string): Promise<PharmacyStock[]> => {
+  getMedicineAvailability: async (medicineId: string, insuranceId?: string | null): Promise<PharmacyStock[]> => {
     const pharmaciesResponse = await apiClient.get('/pharmacies', {
       params: { limit: 100, status: 'APPROVED' },
     })
@@ -215,13 +215,37 @@ export const MedicineApi = {
             (record: any) => record.medicineId === medicineId || record.medicine?.id === medicineId,
           )
           const stock = Number(item?.quantity || 0)
+          const price = Number(item?.price || 0)
+          
+          // Get insurance coverage if insuranceId is provided
+          let insuranceCoverage = undefined
+          if (insuranceId && price > 0) {
+            try {
+              const coverageResponse = await apiClient.get('/search/medicines', {
+                params: { 
+                  medicineId,
+                  insuranceId,
+                  pharmacyId: pharm.id
+                }
+              })
+              const searchResults = extractArrayPayload(coverageResponse.data)
+              const pharmacyResult = searchResults.find((r: any) => r.pharmacyId === pharm.id)
+              if (pharmacyResult?.insuranceCoverage) {
+                insuranceCoverage = pharmacyResult.insuranceCoverage
+              }
+            } catch (e) {
+              // If insurance calculation fails, continue without coverage
+              console.warn('Insurance coverage calculation failed', e)
+            }
+          }
+          
           return {
             pharmacyId: pharm.id,
             pharmacyName: pharm.name,
             rating: 0,
             isOpen: pharm.isActive !== false,
             distance: 0,
-            price: Number(item?.price || 0),
+            price,
             stock,
             stockStatus:
               stock === 0
@@ -235,6 +259,7 @@ export const MedicineApi = {
             lat: Number(pharm.latitude || 0),
             lng: Number(pharm.longitude || 0),
             locationText: pharm.address || '',
+            insuranceCoverage
           }
         } catch {
           return null
@@ -420,13 +445,13 @@ export const MedicineApi = {
   // Favourite Medicines list
   getFavouriteMedicines: async (): Promise<string[]> => {
     await new Promise((resolve) => setTimeout(resolve, 200))
-    const key = 'epharmacy_fav_medicines_mock'
+    const key = 'epharmacy_fav_medicines'
     const data = localStorage.getItem(key)
     return data ? JSON.parse(data) : []
   },
 
   saveFavouriteMedicine: async (medicineId: string, isFav: boolean): Promise<boolean> => {
-    const key = 'epharmacy_fav_medicines_mock'
+    const key = 'epharmacy_fav_medicines'
     const list = await MedicineApi.getFavouriteMedicines()
     let updated = [...list]
     if (isFav) {
@@ -441,13 +466,13 @@ export const MedicineApi = {
   // Favourite Pharmacies list
   getFavouritePharmacies: async (): Promise<string[]> => {
     await new Promise((resolve) => setTimeout(resolve, 200))
-    const key = 'epharmacy_fav_pharmacies_mock'
+    const key = 'epharmacy_fav_pharmacies'
     const data = localStorage.getItem(key)
     return data ? JSON.parse(data) : []
   },
 
   saveFavouritePharmacy: async (pharmacyId: string, isFav: boolean): Promise<boolean> => {
-    const key = 'epharmacy_fav_pharmacies_mock'
+    const key = 'epharmacy_fav_pharmacies'
     const list = await MedicineApi.getFavouritePharmacies()
     let updated = [...list]
     if (isFav) {
@@ -462,14 +487,14 @@ export const MedicineApi = {
   // Search History tracking (Max 20 searches)
   getSearchHistory: async (): Promise<any[]> => {
     await new Promise((resolve) => setTimeout(resolve, 200))
-    const key = 'epharmacy_search_history_mock'
+    const key = 'epharmacy_search_history'
     const data = localStorage.getItem(key)
     return data ? JSON.parse(data) : []
   },
 
   saveSearchHistory: async (query: string, category: string): Promise<boolean> => {
     if (!query.trim()) return false
-    const key = 'epharmacy_search_history_mock'
+    const key = 'epharmacy_search_history'
     const list = await MedicineApi.getSearchHistory()
 
     // Filter duplicates of same query string
@@ -488,7 +513,7 @@ export const MedicineApi = {
   },
 
   clearSearchHistory: async (): Promise<boolean> => {
-    const key = 'epharmacy_search_history_mock'
+    const key = 'epharmacy_search_history'
     localStorage.setItem(key, JSON.stringify([]))
     return true
   },
@@ -514,7 +539,7 @@ export const MedicineApi = {
       }))
     } catch (error) {
       // Fallback to localStorage if backend fails
-      const key = 'epharmacy_reminders_mock'
+      const key = 'epharmacy_reminders'
       const data = localStorage.getItem(key)
       return data ? JSON.parse(data) : []
     }
@@ -535,7 +560,7 @@ export const MedicineApi = {
       return response.data?.data || response.data
     } catch (error) {
       // Fallback to localStorage
-      const key = 'epharmacy_reminders_mock'
+      const key = 'epharmacy_reminders'
       const list = await MedicineApi.getReminders()
       const newReminder = {
         id: `rem-${Math.random().toString(36).substring(2, 9)}`,
@@ -565,7 +590,7 @@ export const MedicineApi = {
       return true
     } catch (error) {
       // Fallback to localStorage
-      const key = 'epharmacy_reminders_mock'
+      const key = 'epharmacy_reminders'
       const list = await MedicineApi.getReminders()
       const updated = list.map((item) => 
         item.id === id ? { ...item, ...data } : item
@@ -581,7 +606,7 @@ export const MedicineApi = {
       return true
     } catch (error) {
       // Fallback to localStorage
-      const key = 'epharmacy_reminders_mock'
+      const key = 'epharmacy_reminders'
       const list = await MedicineApi.getReminders()
       const updated = list.filter((item) => item.id !== id)
       localStorage.setItem(key, JSON.stringify(updated))
@@ -595,7 +620,7 @@ export const MedicineApi = {
       return true
     } catch (error) {
       // Fallback to localStorage
-      const key = 'epharmacy_reminders_mock'
+      const key = 'epharmacy_reminders'
       const list = await MedicineApi.getReminders()
       const updated = list.map((item) => {
         if (item.id === id) {

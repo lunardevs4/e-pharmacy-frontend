@@ -19,17 +19,7 @@ interface Claim {
   status: ClaimStatus
 }
 
-const FALLBACK: Claim[] = [
-  { id: 'CLM-2026-001', pharmacy: 'Bralirwa Pharmacy',      patientNid: '1199580048123984', medicine: 'Artemether + Lumefantrine', qty: 1, total: 3500,  insurancePays: 2975, patientPays: 525,  insurer: 'RSSB',   submittedAt: '2026-08-01', status: 'Pending'  },
-  { id: 'CLM-2026-002', pharmacy: 'CityMed Nyarugenge',     patientNid: '1199080037284729', medicine: 'Metformin 850mg',           qty: 2, total: 1920,  insurancePays: 1728, patientPays: 192,  insurer: 'RSSB',   submittedAt: '2026-08-01', status: 'Approved' },
-  { id: 'CLM-2026-003', pharmacy: 'MedPlus Remera',         patientNid: '1199680018374829', medicine: 'Insulin Glargine',          qty: 1, total: 27000, insurancePays: 24300,patientPays: 2700, insurer: 'MMI',    submittedAt: '2026-07-31', status: 'Paid'     },
-  { id: 'CLM-2026-004', pharmacy: 'HealthPoint Kicukiro',   patientNid: '1199380092384728', medicine: 'Amoxicillin 500mg',         qty: 2, total: 1600,  insurancePays: 1200, patientPays: 400,  insurer: 'SANLAM', submittedAt: '2026-07-31', status: 'Rejected' },
-  { id: 'CLM-2026-005', pharmacy: 'Bralirwa Pharmacy',      patientNid: '1199880018374928', medicine: 'Atenolol 50mg',             qty: 1, total: 950,   insurancePays: 665,  patientPays: 285,  insurer: 'Radiant',submittedAt: '2026-07-30', status: 'Approved' },
-  { id: 'CLM-2026-006', pharmacy: 'Gasabo Health Pharmacy', patientNid: '1198980028384920', medicine: 'Paracetamol 500mg',         qty: 4, total: 1200, insurancePays: 1020, patientPays: 180, insurer: 'RSSB',   submittedAt: '2026-07-30', status: 'Paid'     },
-  { id: 'CLM-2026-007', pharmacy: 'CityMed Gikondo',        patientNid: '1199080037284729', medicine: 'Atorvastatin 20mg',         qty: 1, total: 12000, insurancePays: 10800,patientPays: 1200, insurer: 'MMI',    submittedAt: '2026-08-01', status: 'Pending'  },
-  { id: 'CLM-2026-008', pharmacy: 'Rubavu Health Center',   patientNid: '1199680018374829', medicine: 'Ciprofloxacin 500mg',       qty: 3, total: 3200,  insurancePays: 2880, patientPays: 320,  insurer: 'MMI',    submittedAt: '2026-07-31', status: 'Pending'  },
-  { id: 'CLM-2026-009', pharmacy: 'Kigali National Pharmacy', patientNid: '1199580048123984', medicine: 'Coartem 20/120mg',        qty: 1, total: 4500,  insurancePays: 3825, patientPays: 675,  insurer: 'RSSB',   submittedAt: '2026-08-01', status: 'Pending'  },
-]
+
 
 const STATUS_STYLE: Record<ClaimStatus, string> = {
   Pending:  'text-amber-700 bg-amber-50 border-amber-200',
@@ -63,7 +53,7 @@ const normalizeClaim = (item: any): Claim => {
 export default function InsuranceClaims() {
   const { user } = useAuthStore()
   const insurer = user?.insuranceProvider || 'RSSB'
-  const [claims, setClaims] = useState<Claim[]>(FALLBACK)
+  const [claims, setClaims] = useState<Claim[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ClaimStatus | ''>('')
   const [isLoading, setIsLoading] = useState(true)

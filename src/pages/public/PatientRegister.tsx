@@ -142,9 +142,8 @@ export default function PatientRegister() {
       setTimeout(() => {
         navigate('/login')
       }, 1500)
-    } catch (err) {
-      const e = err as Error & { message?: string }
-      setErrorMsg(e.message || 'Registration failed. Please try again.')
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
     }

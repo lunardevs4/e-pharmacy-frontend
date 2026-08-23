@@ -73,6 +73,7 @@ export default function Login() {
   const {
     register,
     handleSubmit,
+    watch,
     setValue,
     formState: { errors },
   } = useForm<LoginFormValues>({
@@ -82,6 +83,7 @@ export default function Login() {
       password: '',
     },
   })
+  const loginEmail = watch('email')
 
 
   useEffect(() => {
@@ -151,7 +153,13 @@ export default function Login() {
           setErrorMsg('Failed to parse pharmacy registration details.')
         }
       } else {
-        setErrorMsg(error.message || 'Authentication failed. Please check your credentials.')
+        if (error.message?.toLowerCase().includes('verification link expired')) {
+          navigate(`/check-email?email=${encodeURIComponent(data.email)}&expired=1`)
+        } else if (error.message?.toLowerCase().includes('verify your email')) {
+          navigate(`/check-email?email=${encodeURIComponent(data.email)}&reason=login`)
+        } else {
+          setErrorMsg(error.message || 'Authentication failed. Please check your credentials.')
+        }
       }
     } finally {
       setIsLoading(false)
@@ -403,6 +411,19 @@ export default function Login() {
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span className="font-medium leading-relaxed">{errorMsg}</span>
         </div>
+      )}
+      {errorMsg?.toLowerCase().includes('verify your email') && (
+        <button
+          type="button"
+          disabled={isLoading || !loginEmail}
+          onClick={async () => {
+            setIsLoading(true)
+            try { const result = await AuthApi.resendVerification(loginEmail); setSuccessMsg(result.message); setErrorMsg(null) }
+            catch (error) { setErrorMsg(error instanceof Error ? error.message : 'Could not resend verification email.') }
+            finally { setIsLoading(false) }
+          }}
+          className="w-full text-xs font-bold text-health-primary hover:underline disabled:opacity-50"
+        >Resend verification email</button>
       )}
 
 

@@ -7,7 +7,7 @@ import {
   Menu, X, LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
   ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2, MapPin,
-  CheckSquare, Trash2, Clock, AlarmClock
+  CheckSquare, Trash2, Clock, AlarmClock, PanelLeft
 } from 'lucide-react'
 
 export default function SidebarLayout() {
@@ -45,6 +45,7 @@ export default function SidebarLayout() {
       case 'PHARMACY':
       case 'PHARMACY_OWNER':
       case 'PHARMACIST': return '/pharmacy/notifications'
+      case 'INSURANCE':  return '/insurance/notifications'
       default:           return null
     }
   }
@@ -180,15 +181,15 @@ export default function SidebarLayout() {
 
   const activeLinkClass = isInsurance
     ? insurer === 'MMI'
-      ? 'bg-[#2d6a4f] text-white font-bold' // Brighter military green
-      : 'bg-[#3b82f6] text-white font-bold' // RSSB bright blue
-    : 'bg-slate-800 text-white font-bold'
+      ? 'bg-emerald-950/35 text-white font-bold border-l-4 border-emerald-500 pl-2 pr-3'
+      : 'bg-slate-950/35 text-white font-bold border-l-4 border-emerald-500 pl-2 pr-3'
+    : 'bg-black/25 text-white font-bold border-l-4 border-health-primary pl-2 pr-3'
 
   const hoverLinkClass = isInsurance
     ? insurer === 'MMI'
-      ? 'text-emerald-100/75 hover:bg-[#2d6a4f]/50 hover:text-white'
-      : 'text-slate-100/75 hover:bg-[#3b82f6]/30 hover:text-white'
-    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
+      ? 'text-emerald-100/80 hover:bg-white/5 hover:text-white pl-3 pr-3'
+      : 'text-slate-200/80 hover:bg-white/5 hover:text-white pl-3 pr-3'
+    : 'text-slate-400 hover:bg-white/5 hover:text-white pl-3 pr-3'
 
   const borderClass = isInsurance
     ? insurer === 'MMI'
@@ -259,13 +260,13 @@ export default function SidebarLayout() {
               </span>
             </div>
           </div>
-          {/* X button — visible on all sizes so user can close from inside */}
+          {/* Sidebar Toggle button — visible when sidebar is open */}
           <button
             onClick={() => setSidebarOpen(false)}
             aria-label="Close navigation"
-            className="text-slate-400 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 rounded p-1 flex-shrink-0"
+            className="text-slate-200 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 rounded p-1 flex-shrink-0"
           >
-            <X className="w-5 h-5" aria-hidden="true" />
+            <PanelLeft className="w-5 h-5 text-white" aria-hidden="true" />
           </button>
         </div>
 
@@ -285,7 +286,7 @@ export default function SidebarLayout() {
                 key={link.path}
                 to={link.path}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                className={`flex items-center justify-between py-2.5 rounded-none text-sm font-medium transition-all
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 ${
                   isActive
                     ? activeLinkClass
@@ -335,16 +336,21 @@ export default function SidebarLayout() {
         {/* Top header */}
         <header className={`h-16 ${headerBg} backdrop-blur border-b ${headerBorder} flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20`}>
           <div className="flex items-center space-x-3">
-            {/* Hamburger — always three lines, never animates to X */}
-            <button
-              onClick={toggleSidebar}
-              aria-label={sidebarOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              aria-expanded={sidebarOpen}
-              aria-controls="main-sidebar"
-              className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-health-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
-            >
-              <Menu className="w-6 h-6" aria-hidden="true" />
-            </button>
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open navigation menu"
+                className={`p-2 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 mr-2 ${
+                  isInsurance
+                    ? insurer === 'MMI'
+                      ? 'text-[#1b4332] hover:bg-[#1b4332]/10'
+                      : 'text-[#1e293b] hover:bg-[#1e293b]/10'
+                    : 'text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <PanelLeft className="w-6 h-6" aria-hidden="true" />
+              </button>
+            )}
 
             <span className="hidden sm:block text-sm text-gray-550 font-medium">
               Rwanda E-Pharmacy &bull; {portalLabel}
@@ -476,16 +482,25 @@ export default function SidebarLayout() {
             </div>
 
             {/* Profile */}
-            <div className="flex items-center space-x-2 border-l border-gray-200 pl-3">
+            <div className="flex items-center space-x-3 border-l border-gray-200 pl-3">
               <div
                 aria-hidden="true"
                 className="w-8 h-8 rounded-full bg-emerald-100 text-health-primary flex items-center justify-center font-bold text-sm flex-shrink-0"
               >
                 {user?.name?.[0] ?? 'U'}
               </div>
-              <span className="text-xs font-bold text-gray-800 hidden md:block truncate max-w-[120px]">
-                {user?.name}
-              </span>
+              <div className="hidden md:flex flex-col min-w-0 text-left">
+                <span className="text-xs font-bold text-gray-800 truncate max-w-[180px] leading-tight">
+                  {user?.name}
+                </span>
+                <span className="text-[10px] text-gray-500 font-medium truncate max-w-[180px] leading-tight mt-0.5">
+                  {['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user?.role || '') && user?.pharmacy?.name
+                    ? `${user?.role} • ${user?.pharmacy?.name}`
+                    : isInsurance && insurer
+                    ? `${insurer} Auditor`
+                    : user?.role}
+                </span>
+              </div>
             </div>
           </div>
         </header>

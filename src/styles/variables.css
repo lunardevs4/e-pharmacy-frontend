@@ -1,48 +1,103 @@
+/* ==========================================================================
+   E-Pharmacy Frontend — CSS Custom Properties (Design Tokens)
+   ==========================================================================
+   Table of Contents
+   --------------------------------------------------------------------------
+   A. COLORS
+      A.1 Health / Pharmacy Brand Palette  (emerald, forest, mint greens)
+      A.2 Neutral Palette                  (white, grays, text)
+      A.3 Status / Semantic Colors         (success, warning, danger, info)
+
+   B. TYPOGRAPHY
+      B.1 Base Font Family
+      B.2 Font Size Scale                  (xs → 3xl)
+
+   C. SPACING SCALE                       (xs → 2xl)
+
+   D. BORDER RADIUS                       (sm → full)
+
+   E. TRANSITIONS & EASING                (fast, normal)
+
+   ========================================================================== */
+
 :root {
-  /* Colors */
-  --color-health-primary: #235347;
-  --color-health-secondary: #0b2b26;
-  --color-health-accent: #8eb69b;
-  --color-health-light-bg: #daf1de;
-  --color-health-light-text: #163832;
-  
-  --color-neutral-white: #ffffff;
-  --color-neutral-light-gray: #daf1de;
-  --color-neutral-border: #e9ecef;
-  --color-neutral-text: #212529;
-  --color-neutral-muted: #6c757d;
 
-  --color-status-success: #198754;
-  --color-status-warning: #f97316;
-  --color-status-danger: #dc3545;
-  --color-status-info: #0dcaf0;
+  /* -----------------------------------------------------------------------
+     A. COLORS
+     ----------------------------------------------------------------------- */
 
-  /* Typography */
+  /* ---- A.1 Health / Pharmacy Brand Palette ----------------------------- */
+  /* Deep emerald → forest → mint gradient. Aligns with tailwind health.*
+     tokens and the E-Pharmacy logo green + blue complementary colors. */
+  --color-health-primary:    #235347;   /* Main brand emerald — buttons, focus rings */
+  --color-health-secondary:  #0b2b26;   /* Deep forest green — hover states, headings */
+  --color-health-accent:     #8eb69b;   /* Soft sage/mint green — accents, dividers, scrollbar */
+  --color-health-light-bg:   #daf1de;   /* Pale mint surface — card backgrounds */
+  --color-health-light-text: #163832;   /* Plummy dark green for text on light bg */
+
+  /* ---- A.2 Neutral Palette --------------------------------------------- */
+  --color-neutral-white:      #ffffff;   /* Pure white */
+  --color-neutral-light-gray: #daf1de;   /* Body fallback background (matches health-light-bg) */
+  --color-neutral-border:     #e9ecef;   /* Input/card border gray */
+  --color-neutral-text:       #212529;   /* Primary body text */
+  --color-neutral-muted:      #6c757d;   /* Secondary / helper text */
+
+  /* ---- A.3 Status / Semantic Colors ------------------------------------ */
+  /* Used by toasts, badges, inventory warnings, insurance-claim status. */
+  --color-status-success: #198754;   /* Approved / In stock / Success */
+  --color-status-warning: #f97316;   /* Low stock / Pending review */
+  --color-status-danger:  #dc3545;   /* Rejected / Out of stock / Error */
+  --color-status-info:    #0dcaf0;   /* Info / Processing / In transit */
+
+
+  /* -----------------------------------------------------------------------
+     B. TYPOGRAPHY
+     ----------------------------------------------------------------------- */
+
+  /* ---- B.1 Base Font Family -------------------------------------------- */
+  /* Modern humanist sans (Source Sans 3) with fallbacks through the full
+     system-ui stack to keep the product looking native on every OS. */
   --font-family-base: "Source Sans 3", 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
 
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
+  /* ---- B.2 Font Size Scale --------------------------------------------- */
+  --font-size-xs:   0.75rem;   /* 12px  — fine-print, trust seals, timestamps */
+  --font-size-sm:   0.875rem;  /* 14px  — helper text, labels, captions */
+  --font-size-base: 1rem;      /* 16px  — body copy, form inputs */
+  --font-size-lg:   1.125rem;  /* 18px  — lead paragraphs */
+  --font-size-xl:   1.25rem;   /* 20px  — card sub-headings */
+  --font-size-2xl:  1.5rem;    /* 24px  — section headings */
+  --font-size-3xl:  1.875rem;  /* 30px  — page headings, hero */
 
-  /* Border Radius */
-  --border-radius-sm: 0.25rem;
-  --border-radius-md: 0.375rem;
-  --border-radius-lg: 0.5rem;
-  --border-radius-xl: 0.75rem;
-  --border-radius-full: 9999px;
 
-  /* Transitions */
-  --transition-fast: 0.15s ease-in-out;
-  --transition-normal: 0.3s ease-in-out;
+  /* -----------------------------------------------------------------------
+     C. SPACING SCALE
+     ----------------------------------------------------------------------- */
+  /* Standard 4px base grid. Use tokens instead of raw px/pc values so the
+     layout remains visually consistent across login, dashboards, reports. */
+  --spacing-xs:  0.25rem;   /*  4px  — element-internal micro gaps */
+  --spacing-sm:  0.5rem;    /*  8px  — icon-to-text, input paddings */
+  --spacing-md:  1rem;      /* 16px  — card paddings, form gaps */
+  --spacing-lg:  1.5rem;    /* 24px  — section gaps */
+  --spacing-xl:  2rem;      /* 32px  — major card margins */
+  --spacing-2xl: 3rem;      /* 48px  — layout hero/panel margins */
+
+
+  /* -----------------------------------------------------------------------
+     D. BORDER RADIUS
+     ----------------------------------------------------------------------- */
+  /* Soft rounded shapes to match the premium healthcare aesthetic. */
+  --border-radius-sm:   0.25rem;   /*  4px — small badges, tags */
+  --border-radius-md:   0.375rem;  /*  6px — buttons, inputs, default card */
+  --border-radius-lg:   0.5rem;    /*  8px — stat cards */
+  --border-radius-xl:   0.75rem;   /* 12px — large panels, modals */
+  --border-radius-full: 9999px;    /* Pill / circle shapes */
+
+
+  /* -----------------------------------------------------------------------
+     E. TRANSITIONS & EASING
+     ----------------------------------------------------------------------- */
+  /* Snappy but soft — avoids the jitter of instant state changes while
+     staying responsive enough for a pharmacy workflow UI. */
+  --transition-fast:   0.15s ease-in-out;  /* Hover / focus / button state */
+  --transition-normal: 0.30s ease-in-out;  /* Dialog open/close, theme swap */
 }

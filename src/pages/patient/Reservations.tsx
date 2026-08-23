@@ -44,7 +44,7 @@ export default function Reservations() {
       const success = await MedicineApi.cancelReservation(selectedRes.id)
       if (success) {
         // Log cancellation log to notifications center
-        const notKey = 'epharmacy_notifications_mock'
+        const notKey = 'epharmacy_notifications'
         const rawNot = localStorage.getItem(notKey)
         const alertsList = rawNot ? JSON.parse(rawNot) : []
         const cancelAlert = {

@@ -1,8 +1,4 @@
-/**
- * Global notification store — shared across all portals.
- * Persists notifications to localStorage under a per-role key
- * so patient / pharmacy / government etc each see their own list.
- */
+
 import { create } from 'zustand'
 
 export interface AppNotification {

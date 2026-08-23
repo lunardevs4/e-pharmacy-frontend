@@ -1,10 +1,73 @@
+/* ==========================================================================
+   E-Pharmacy Frontend — Global Stylesheet
+   ==========================================================================
+   Table of Contents
+   --------------------------------------------------------------------------
+   1. IMPORTS & TAILWIND LAYERS
+      - CSS variable imports
+      - Tailwind base, components, utilities
+
+   2. BASE / TYPOGRAPHY / ROOT STYLES
+      - Body, #root, headings
+      - Brand background gradient
+
+   3. AUTHENTICATION LAYOUT (Login / Register / Forgot Password screens)
+      3.1 AuthLayout — 50/50 Split-Screen Container
+      3.2 AuthLayout — Left Side (Login / Register Form Side)
+      3.3 AuthLayout — Right Side (Promotional Brand Panel)
+      3.4 AuthLayout — Heading + Decorative Leaf Divider
+      3.5 AuthLayout — Three Benefit Sections (Icons + Text)
+      3.6 AuthLayout — Decorative Background Elements
+      3.7 AuthLayout — Responsive Breakpoints (Mobile / Tablet)
+
+   4. LOGIN PAGE SPECIFIC
+      4.1 Login Card Wrapper & ISO/GDPR/MOH Trust Badges
+      4.2 Pharmacist / Staff Login Toggle
+
+   5. REGISTRATION PAGES (Patient + Pharmacy)
+      - Shared registration card styling
+
+   6. FORGOT PASSWORD / CHANGE PASSWORD
+      - Password reset flow helpers
+
+   7. REUSABLE UI HELPERS (Form Controls & Buttons)
+      - Primary button variants
+      - Input field base styles
+      - Grid / mesh backgrounds
+
+   8. ANIMATIONS
+      8.1 Modal & Element Fade / Scale
+      8.2 Infinite Ribbon Marquee (Landing)
+      8.3 Reduced Motion Support
+
+   9. CUSTOM SCROLLBAR
+      - WebKit + Firefox themed scrollbar
+
+   10. MISC / IMAGE HELPERS
+       - Circular image container
+
+   11. PRINT STYLES
+       - Receipt printing support
+
+   ========================================================================== */
+
+
+/* --------------------------------------------------------------------------
+   1. IMPORTS & TAILWIND LAYERS
+   -------------------------------------------------------------------------- */
+
 @import './variables.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Base Styles */
+
+/* --------------------------------------------------------------------------
+   2. BASE / TYPOGRAPHY / ROOT STYLES
+   -------------------------------------------------------------------------- */
+
+/* Base body reset: font, background, text color, no default margins */
 body {
   font-family: var(--font-family-base);
   background-color: var(--color-neutral-light-gray);
@@ -20,18 +83,283 @@ body {
   background: linear-gradient(135deg, #daf1de 0%, #8eb69b 48%, #235347 100%);
 }
 
+/* Editorial serif headings for the health/pharmacy premium feel */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Merriweather', Georgia, serif;
 }
 
+/* Subtle health-green mesh grid used on landing backgrounds */
 .bg-grid-mesh {
   background-size: 40px 40px;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(15, 81, 50, 0.12) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(15, 81, 50, 0.12) 1px, transparent 1px);
 }
 
-/* Modular custom helper utilities to avoid inline overrides and keep style DRY */
+
+/* --------------------------------------------------------------------------
+   3. AUTHENTICATION LAYOUT (Login / Register / Forgot Password screens)
+   -------------------------------------------------------------------------- */
+
+/* ---- 3.1 AuthLayout — 50/50 Split-Screen Container --------------------- */
+/* Root flex container used by Login, PatientRegister, PharmacyRegister,
+   ForgotPassword, ChangePassword pages. Forces true 50/50 desktop split
+   with no horizontal overflow. */
+.auth-main-container {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ---- 3.2 AuthLayout — Left Side (Login / Register Form Side) ----------- */
+/* Left 50% panel: white/light surface with centered card, ambient green
+   blur glows and soft dotted grid texture in the background. */
+.auth-left-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 50%;
+  min-width: 0;
+  min-height: 100vh;
+  background-color: #ffffff;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Outer spacing wrapper around the centered authentication card */
+.auth-left-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 520px;
+  padding: 40px 60px;
+  box-sizing: border-box;
+}
+
+/* ---- 3.3 AuthLayout — Right Side (Promotional Brand Panel) ------------- */
+/* Right 50% panel: deep emerald forest-green gradient with blurred
+   one1.png pharmacy shelf backdrop, promotional copy, and benefits. */
+.auth-right-panel {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  width: 50%;
+  min-width: 0;
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: linear-gradient(145deg, #0B2B26 0%, #163832 45%, #235347 100%);
+}
+
+/* Inner content wrapper for the promotional copy. Keeps everything
+   comfortably away from the edges with 60px/70px padding. */
+.auth-right-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 60px 70px;
+  box-sizing: border-box;
+}
+
+/* ---- 3.4 AuthLayout — Heading + Decorative Leaf Divider ---------------- */
+/* Applied to the "Your trusted partner in better health" heading on the
+   promotional right panel. Bold "better health" sub-line. */
+.auth-right-heading {
+  /* currently rendered inline in AuthLayout — placeholder hook */
+}
+
+/* Small leaf divider between the heading and benefits column, flanked by
+   two thin gradient horizontal rules */
+.auth-right-leaf-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* ---- 3.5 AuthLayout — Three Benefit Sections (Icons + Text) ------------ */
+/* Vertical stack of the three benefits (Order Medicines, Fast Delivery,
+   Secure & Reliable). 38px gap between benefits, 24px icon↔text gap. */
+.auth-right-benefits {
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  gap: 38px;
+}
+
+/* Single benefit row: circular icon (72×72) + text block side-by-side */
+.auth-benefit-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+/* Circular light-mint glass-morphism icon container for each benefit */
+.auth-benefit-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  background-color: rgba(218, 241, 222, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(142, 182, 155, 0.25);
+}
+
+/* Uppercase bold benefit title e.g. "ORDER MEDICINES" */
+.auth-benefit-title {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* Benefit descriptive paragraph in muted mint-white */
+.auth-benefit-text {
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: rgba(218, 241, 222, 0.75);
+}
+
+/* ---- 3.6 AuthLayout — Decorative Background Elements ------------------- */
+/* Large semi-transparent medical cross + capsule + leaves ornament in the
+   lower-right of the promotional panel. opacity 0.10–0.15 so it never
+   obscures benefit copy. */
+.auth-right-medical-decoration {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 340px;
+  height: 340px;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Tiny dotted pattern accent in the bottom-left of the right panel */
+.auth-right-dots-decoration {
+  position: absolute;
+  left: 40px;
+  bottom: 50px;
+  width: 120px;
+  height: 120px;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(142, 182, 155, 0.35) 1.2px, transparent 1.2px);
+  background-size: 14px 14px;
+}
+
+/* ---- 3.7 AuthLayout — Responsive Breakpoints (Mobile / Tablet) --------- */
+/* Enforced at file-end via <style> in AuthLayout component; placeholders
+   here so it is discoverable when auditing CSS:
+     <768px : hide right panel, stack left to 100% width
+     768–1023px : reduce paddings for tablet
+*/
+
+
+/* --------------------------------------------------------------------------
+   4. LOGIN PAGE SPECIFIC
+   -------------------------------------------------------------------------- */
+
+/* ---- 4.1 Login Card Wrapper & ISO/GDPR/MOH Trust Badges ---------------- */
+/* White card housing logo, welcome heading, form inputs, buttons, and
+   trust seals along the bottom divider. */
+.auth-login-card {
+  background-color: #ffffff;
+  border: 1px solid #f3f4f6;
+  border-radius: 24px;
+  padding: 40px 48px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+/* Compliance seal row (ISO 27001 • GDPR • MOH) below the login form */
+.auth-login-trust-seals {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+/* Colored dot next to each trust-seal label */
+.auth-login-seal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+}
+
+/* ---- 4.2 Pharmacist / Staff Login Toggle ------------------------------- */
+/* Secondary toggle button under the main Sign In; swaps the login mode
+   to Pharmacy/Pharmacist staff credentials entry. */
+.auth-login-staff-toggle {
+  /* Styled inline in Login.tsx — hook retained for future overrides */
+}
+
+/* Pharmacy-registration status audit card (shown after staff login
+   attempt when a pharmacy is under MoH review). */
+.auth-pharmacy-status-card {
+  /* Styled inline in Login.tsx renderStatusCard — hook retained */
+}
+
+
+/* --------------------------------------------------------------------------
+   5. REGISTRATION PAGES (Patient + Pharmacy)
+   -------------------------------------------------------------------------- */
+
+/* Shared registration card. Uses the same auth-login-card visuals;
+   extend classes here if patient vs pharmacy registration ever need
+   to diverge stylistically. */
+
+/* Patient-specific registration form container */
+.auth-register-patient-card {
+  /* Mirror of .auth-login-card unless customised later */
+}
+
+/* Pharmacy-store onboarding registration card (includes MoH license
+   fields, superintendent pharmacist info, RDB certificates etc.) */
+.auth-register-pharmacy-card {
+  /* Mirror of .auth-login-card unless customised later */
+}
+
+
+/* --------------------------------------------------------------------------
+   6. FORGOT PASSWORD / CHANGE PASSWORD
+   -------------------------------------------------------------------------- */
+
+/* Centered card for the "Request password reset" flow */
+.auth-forgot-password-card {
+  /* Mirror of .auth-login-card unless customised later */
+}
+
+/* Forced password-change screen shown after first login or admin reset */
+.auth-change-password-card {
+  /* Mirror of .auth-login-card unless customised later */
+}
+
+
+/* --------------------------------------------------------------------------
+   7. REUSABLE UI HELPERS (Form Controls & Buttons)
+   -------------------------------------------------------------------------- */
+
+/* Modular custom helper utilities to avoid inline overrides and keep
+   style DRY across login, register, and internal dashboard forms. */
+
+/* Primary call-to-action button. Used by Sign In / Create Account /
+   Send Reset Link / Submit Registration flows. */
 .btn-primary {
   background-color: var(--color-health-primary);
   color: var(--color-neutral-white);
@@ -45,6 +373,8 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--color-health-secondary);
 }
 
+/* Generic input-field base. Concrete inputs in Login/Register pages use
+   Tailwind focus rings but this utility is available for plain forms. */
 .input-field {
   border: 1px solid var(--color-neutral-border);
   padding: var(--spacing-sm) var(--spacing-md);
@@ -57,14 +387,18 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--color-health-accent);
 }
 
-/* Modal and Element Fade/Scale Animations */
+
+/* --------------------------------------------------------------------------
+   8. ANIMATIONS
+   -------------------------------------------------------------------------- */
+
+/* ---- 8.1 Modal & Element Fade / Scale ---------------------------------- */
+/* Used for status cards, confirmation dialogs, and soft page-in fades
+   throughout the authentication flow (e.g. pharmacy status reveal). */
+
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes scaleIn {
@@ -86,7 +420,43 @@ h1, h2, h3, h4, h5, h6 {
   animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Custom elegant theme-oriented scrollbar */
+/* ---- 8.2 Infinite Ribbon Marquee (Landing Page) ------------------------ */
+/* Scrolling partner-pharmacy / accreditation badge ribbon on the public
+   landing page. Pauses on hover; respects reduced-motion preferences. */
+
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-scroll 32s linear infinite;
+}
+
+.animate-marquee-infinite:hover,
+.group:hover .animate-marquee-infinite {
+  animation-play-state: paused;
+}
+
+/* ---- 8.3 Reduced Motion Support --------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-infinite {
+    animation: none;
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+   9. CUSTOM SCROLLBAR
+   -------------------------------------------------------------------------- */
+
+/* Elegant health-green themed thin scrollbar. Apply .custom-scrollbar to
+   dashboard sidebars, audit-log tables, medicine modals, etc. */
+
+/* WebKit (Chrome, Edge, Safari) */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -112,7 +482,13 @@ h1, h2, h3, h4, h5, h6 {
   scrollbar-color: var(--color-health-accent, #198754) rgba(15, 81, 50, 0.05);
 }
 
-/* Circular Image Container */
+
+/* --------------------------------------------------------------------------
+   10. MISC / IMAGE HELPERS
+   -------------------------------------------------------------------------- */
+
+/* Large circular image cropper. Used by landing-page hero and profile
+   photo placeholders. */
 .image-container {
   width: 550px;
   height: 550px;
@@ -126,6 +502,15 @@ h1, h2, h3, h4, h5, h6 {
   object-fit: cover;
 }
 
+
+/* --------------------------------------------------------------------------
+   11. PRINT STYLES
+   -------------------------------------------------------------------------- */
+
+/* Receipt / invoice printing flow used by Pharmacy dashboard → Reports
+   and Patient dashboard → Reservation history. Hides #root entirely
+   during print, forces color, and removes shadows/actions. */
+
 @media print {
   @page {
     margin: 0;
@@ -135,6 +520,7 @@ h1, h2, h3, h4, h5, h6 {
     background: white !important;
   }
 
+  /* Hide the entire SPA shell; only the detached receipt root prints */
   body > #root {
     display: none !important;
   }
@@ -165,38 +551,8 @@ h1, h2, h3, h4, h5, h6 {
     print-color-adjust: exact !important;
   }
 
+  /* Hide "Download PDF / Close" action buttons when printing */
   .receipt-actions {
     display: none !important;
   }
 }
-
-/* Infinite Ribbon Marquee Animation */
-@keyframes marquee-scroll {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-marquee-infinite {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  animation: marquee-scroll 32s linear infinite;
-}
-
-.animate-marquee-infinite:hover,
-.group:hover .animate-marquee-infinite {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-marquee-infinite {
-    animation: none;
-  }
-}
-
-
-
