@@ -7,7 +7,21 @@ import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
 import { isValidRealEmail } from '@/utils/validation'
 import AuthLayout from '@/layouts/AuthLayout'
-import { Lock, User, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff, Clock, ArrowLeft, RefreshCw, XCircle, ShieldAlert } from 'lucide-react'
+import {
+  Lock,
+  User,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Eye,
+  EyeOff,
+  Clock,
+  ArrowLeft,
+  RefreshCw,
+  XCircle,
+  ShieldAlert,
+  ShieldCheck,
+} from 'lucide-react'
 
 
 const loginSchema = z.object({
@@ -30,6 +44,12 @@ interface PharmacyStatusData {
 }
 
 
+const BRAND = '#006846'
+const BRAND_HOVER = '#005238'
+const INPUT_BG = '#FFFFFF'
+const SERIF = "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif"
+
+
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuthStore()
@@ -42,22 +62,12 @@ export default function Login() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [isStaffLogin, setIsStaffLogin] = useState(false)
 
 
-  // Status view for unapproved pharmacies
   const [pharmacyStatusData, setPharmacyStatusData] = useState<PharmacyStatusData | null>(null)
   const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
   const [lastCheckedEmail, setLastCheckedEmail] = useState('')
-
-
-  // Load remembered email on mount
-  useEffect(() => {
-    const savedEmail = localStorage.getItem('epharmacy_remembered_email')
-    if (savedEmail) {
-      setValue('email', savedEmail)
-      setRememberMe(true)
-    }
-  }, [])
 
 
   const {
@@ -74,6 +84,15 @@ export default function Login() {
   })
 
 
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('epharmacy_remembered_email')
+    if (savedEmail) {
+      setValue('email', savedEmail)
+      setRememberMe(true)
+    }
+  }, [setValue])
+
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true)
     setErrorMsg(null)
@@ -81,10 +100,8 @@ export default function Login() {
     setLastCheckedEmail(data.email)
 
     try {
-      // Authenticate via NestJS-compatible auth service
       const res = await AuthApi.login(data.email, data.password)
 
-      // Save email if rememberMe is enabled
       if (rememberMe) {
         localStorage.setItem('epharmacy_remembered_email', data.email)
       } else {
@@ -92,11 +109,8 @@ export default function Login() {
       }
 
       setSuccessMsg('Authentication successful! Redirecting...')
-      console.log('Login successful:', res)
-      // Save details to Zustand authStore
       login(res.user, res.accessToken)
 
-      // Direct roles to appropriate dashboards based STRICTLY on returned user role
       setTimeout(() => {
         if (res.user.firstLogin) {
           navigate('/change-password')
@@ -133,7 +147,7 @@ export default function Login() {
         try {
           const parsed = JSON.parse(statusJson)
           setPharmacyStatusData(parsed)
-        } catch (e) {
+        } catch {
           setErrorMsg('Failed to parse pharmacy registration details.')
         }
       } else {
@@ -145,7 +159,6 @@ export default function Login() {
   }
 
 
-  // Reload status to check if MOH has updated it
   const handleRefreshStatus = async () => {
     setIsRefreshingStatus(true)
     setErrorMsg(null)
@@ -224,64 +237,128 @@ export default function Login() {
 
 
     return (
-      <div className="space-y-6 animate-fadeIn font-semibold text-xs text-gray-700">
-        <div className="text-center pb-2 border-b border-gray-150">
-          <span className="text-[10px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block mb-2">MoH Audit System</span>
+      <div className="space-y-6 animate-fadeIn" style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>
+        <div className="text-center pb-2" style={{ borderBottom: '1px solid #F1F5F9' }}>
+          <span
+            className="inline-block mb-2 px-2 py-0.5 rounded border"
+            style={{
+              fontSize: '10px',
+              letterSpacing: '0.15em',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              color: BRAND,
+              backgroundColor: '#ECFDF5',
+              borderColor: '#A7F3D0',
+            }}
+          >
+            MoH Audit System
+          </span>
           <h3 className="text-base font-black text-gray-900">{data.pharmacyName}</h3>
         </div>
 
 
-        <div className="flex flex-col items-center bg-gray-50 border border-gray-200 rounded-2xl p-5 text-center gap-3">
-          <div className={`p-3.5 rounded-full ${current.color.split(' ')[0]} ${current.color.split(' ')[1]}`}>
+        <div
+          className="flex flex-col items-center rounded-2xl p-5 text-center"
+          style={{
+            gap: '12px',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #E5E7EB',
+          }}
+        >
+          <div
+            className={`p-3.5 rounded-full ${current.color.split(' ')[0]} ${current.color.split(' ')[1]}`}
+          >
             <IconComponent className="w-7 h-7" />
           </div>
-         
+
           <div className="space-y-1">
-            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider ${current.color}`}>
+            <span
+              className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider ${current.color}`}
+            >
               {current.label}
             </span>
-            <p className="text-gray-950 font-extrabold text-sm pt-2">{current.message}</p>
-            <p className="text-gray-550 text-[11px] font-medium leading-relaxed px-2 pt-1">{current.desc}</p>
+            <p
+              className="text-gray-950 font-extrabold text-sm pt-2"
+              style={{ fontFamily: SERIF }}
+            >
+              {current.message}
+            </p>
+            <p className="text-[11px] font-medium leading-relaxed px-2 pt-1 text-gray-500">
+              {current.desc}
+            </p>
           </div>
 
 
           {data.statusNotes && (
-            <div className="w-full bg-white border border-gray-200 rounded-xl p-3.5 mt-2 text-left space-y-1">
-              <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Auditor Board Comments:</span>
-              <p className="text-gray-800 text-[11px] font-mono leading-normal">{data.statusNotes}</p>
+            <div
+              className="w-full rounded-xl p-3.5 mt-2 text-left"
+              style={{
+                gap: '4px',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E5E7EB',
+              }}
+            >
+              <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                Auditor Board Comments:
+              </span>
+              <p className="text-gray-800 text-[11px] font-mono leading-normal">
+                {data.statusNotes}
+              </p>
             </div>
           )}
         </div>
 
 
-        {/* Timelines and metadata */}
-        <div className="grid grid-cols-2 gap-4 bg-gray-50/50 border border-gray-150 p-4 rounded-xl text-left text-[11px] leading-relaxed">
+        <div
+          className="grid grid-cols-2 p-4 rounded-xl text-left"
+          style={{
+            gap: '16px',
+            backgroundColor: 'rgba(249,250,251,0.5)',
+            border: '1px solid #F1F5F9',
+            fontSize: '11px',
+            lineHeight: 1.6,
+          }}
+        >
           <div>
-            <span className="text-gray-450 block text-[10px] uppercase font-bold tracking-wider">Submission Date</span>
-            <span className="text-gray-800 font-bold font-mono">{data.submissionDate}</span>
+            <span className="block text-[10px] uppercase font-bold tracking-wider text-gray-400">
+              Submission Date
+            </span>
+            <span className="font-bold font-mono text-gray-800">{data.submissionDate}</span>
           </div>
           <div>
-            <span className="text-gray-450 block text-[10px] uppercase font-bold tracking-wider">Estimated Review Time</span>
-            <span className="text-gray-800 font-bold">{data.estimatedReviewTime}</span>
+            <span className="block text-[10px] uppercase font-bold tracking-wider text-gray-400">
+              Estimated Review Time
+            </span>
+            <span className="font-bold text-gray-800">{data.estimatedReviewTime}</span>
           </div>
         </div>
 
 
-        <div className="flex space-x-3 pt-2">
+        <div className="flex pt-2" style={{ gap: '12px' }}>
           <button
             type="button"
             onClick={() => setPharmacyStatusData(null)}
-            className="w-1/2 flex items-center justify-center py-2.5 border border-gray-300 rounded-lg text-sm font-bold text-gray-650 hover:bg-gray-100 transition-colors"
+            className="w-1/2 flex items-center justify-center py-2.5 border rounded-xl text-sm font-bold transition-colors"
+            style={{
+              borderColor: '#D1D5DB',
+              color: '#4B5563',
+              backgroundColor: '#FFFFFF',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F9FAFB')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             <span>Back to Sign In</span>
           </button>
-         
+
           <button
             type="button"
             disabled={isRefreshingStatus}
             onClick={handleRefreshStatus}
-            className="w-1/2 flex items-center justify-center py-2.5 text-white bg-health-primary hover:bg-health-secondary rounded-lg text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+            className="w-1/2 flex items-center justify-center py-2.5 rounded-xl text-sm font-bold shadow-md transition-all disabled:opacity-50"
+            style={{ backgroundColor: BRAND, color: '#FFFFFF' }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BRAND_HOVER)}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BRAND)}
           >
             {isRefreshingStatus ? (
               <>
@@ -301,20 +378,46 @@ export default function Login() {
   }
 
 
+  const inputStyle = {
+    borderRadius: '16px',
+    backgroundColor: INPUT_BG,
+  }
+
+  const focusRing = `0 0 0 4px ${BRAND}14`
+
   return (
-    <AuthLayout title={pharmacyStatusData ? "Registration Status" : "Sign In"} subtitle={pharmacyStatusData ? undefined : "Access your secure Rwanda National E-Pharmacy account."}>
+    <AuthLayout
+      title={pharmacyStatusData ? 'Registration Status' : 'Welcome back!'}
+      subtitle={pharmacyStatusData ? undefined : 'Enter your email and password to sign in to your account'}
+    >
       {errorMsg && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs mb-4">
+        <div
+          className="flex items-start rounded-2xl p-4 mb-5 text-sm shadow-sm"
+          style={{
+            gap: '12px',
+            backgroundColor: '#FEF2F2',
+            border: '1px solid #FECACA',
+            color: '#991B1B',
+          }}
+        >
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <span>{errorMsg}</span>
+          <span className="font-medium leading-relaxed">{errorMsg}</span>
         </div>
       )}
 
 
       {successMsg && (
-        <div className="bg-emerald-50 border border-emerald-250 rounded-lg p-3 flex items-start space-x-2 text-emerald-805 text-xs mb-4">
+        <div
+          className="flex items-start rounded-2xl p-4 mb-5 text-sm shadow-sm"
+          style={{
+            gap: '12px',
+            backgroundColor: '#ECFDF5',
+            border: '1px solid #A7F3D0',
+            color: '#065F46',
+          }}
+        >
           <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <span>{successMsg}</span>
+          <span className="font-medium leading-relaxed">{successMsg}</span>
         </div>
       )}
 
@@ -322,73 +425,118 @@ export default function Login() {
       {pharmacyStatusData ? (
         renderStatusCard(pharmacyStatusData)
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 font-semibold text-xs text-gray-700">
-          {/* Email Address */}
+        <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Email Field */}
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
-              Email Address
+            <label
+              htmlFor="email"
+              className="block mb-1.5"
+              style={{ fontSize: '13.5px', fontWeight: 600, color: '#111827' }}
+            >
+              Email
             </label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-4 w-4 text-gray-400" />
+            <div className="group">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <User style={{ height: '18px', width: '18px', color: BRAND }} />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  disabled={isLoading}
+                  {...register('email')}
+                  style={inputStyle}
+                  className={`block w-full pl-11 pr-3.5 py-[12px] border shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200 placeholder:text-gray-400 font-normal ${
+                    errors.email ? 'border-red-300' : 'border-[#E5E7EB] hover:border-gray-300'
+                  } focus:outline-none focus:bg-white disabled:bg-gray-50 disabled:cursor-not-allowed`}
+                  placeholder="Enter your email"
+                  onFocus={(e) => {
+                    if (!errors.email) {
+                      e.currentTarget.style.borderColor = BRAND
+                      e.currentTarget.style.boxShadow = focusRing
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = errors.email ? '#FCA5A5' : '#E5E7EB'
+                    e.currentTarget.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.05)'
+                  }}
+                />
               </div>
-              <input
-                id="email"
-                type="email"
-                disabled={isLoading}
-                {...register('email')}
-                className={`block w-full pl-10 pr-3 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="name@example.com"
-              />
             </div>
             {errors.email && (
-              <p className="mt-1 text-xs text-red-655 font-bold">{errors.email.message}</p>
+              <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {errors.email.message}
+              </p>
             )}
           </div>
 
 
-          {/* Password */}
+          {/* Password Field */}
           <div>
-            <div className="flex justify-between items-center">
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+            <div className="flex justify-between items-center mb-1.5">
+              <label
+                htmlFor="password"
+                className="block"
+                style={{ fontSize: '13.5px', fontWeight: 600, color: '#111827' }}
+              >
                 Password
               </label>
-              <Link to="/forgot-password" className="text-xs font-semibold text-health-primary hover:underline">
-                Forgot Password?
-              </Link>
             </div>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-4 w-4 text-gray-400" />
+            <div className="group">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock style={{ height: '18px', width: '18px', color: BRAND }} />
+                </div>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  disabled={isLoading}
+                  {...register('password')}
+                  style={inputStyle}
+                  className={`block w-full pl-11 pr-11 py-[12px] border shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200 placeholder:text-gray-400 font-normal ${
+                    errors.password ? 'border-red-300' : 'border-[#E5E7EB] hover:border-gray-300'
+                  } focus:outline-none focus:bg-white disabled:bg-gray-50 disabled:cursor-not-allowed`}
+                  placeholder="Enter your password"
+                  onFocus={(e) => {
+                    if (!errors.password) {
+                      e.currentTarget.style.borderColor = BRAND
+                      e.currentTarget.style.boxShadow = focusRing
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = errors.password ? '#FCA5A5' : '#E5E7EB'
+                    e.currentTarget.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.05)'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center transition-colors"
+                  style={{ color: '#9CA3AF' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = BRAND)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
+                >
+                  {showPassword ? (
+                    <EyeOff style={{ width: '18px', height: '18px' }} />
+                  ) : (
+                    <Eye style={{ width: '18px', height: '18px' }} />
+                  )}
+                </button>
               </div>
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                disabled={isLoading}
-                {...register('password')}
-                className={`block w-full pl-10 pr-10 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-650"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
             </div>
             {errors.password && (
-              <p className="mt-1 text-xs text-red-655 font-bold">{errors.password.message}</p>
+              <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" /> {errors.password.message}
+              </p>
             )}
           </div>
 
 
-          {/* Remember Me */}
-          <div className="flex items-center justify-between">
+          {/* Remember me + Forgot password */}
+          <div
+            className="flex items-center justify-between pt-0.5"
+            style={{ fontSize: '13px' }}
+          >
             <div className="flex items-center">
               <input
                 id="remember_me"
@@ -396,24 +544,51 @@ export default function Login() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded cursor-pointer"
+                className="h-[15px] w-[15px] rounded cursor-pointer flex-shrink-0"
+                style={{ accentColor: BRAND, color: BRAND, borderColor: '#D1D5DB' }}
               />
-              <label htmlFor="remember_me" className="ml-2 block text-xs text-gray-755 font-medium cursor-pointer">
+              <label
+                htmlFor="remember_me"
+                className="ml-2 block cursor-pointer font-medium"
+                style={{ color: '#4B5563' }}
+              >
                 Remember me
               </label>
             </div>
+            <Link
+              to="/forgot-password"
+              className="font-semibold transition-colors"
+              style={{ color: BRAND }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
+              Forgot password?
+            </Link>
           </div>
 
 
-          {/* Submit Button */}
+          {/* Sign In Button — cute pill shape */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors"
+            className="w-full flex justify-center py-[12.5px] px-4 border border-transparent rounded-full shadow-lg focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99]"
+            style={{
+              backgroundColor: BRAND,
+              color: '#FFFFFF',
+              fontWeight: 700,
+              fontSize: '14.5px',
+              boxShadow: `0 10px 24px -10px ${BRAND}AA, 0 4px 10px -4px ${BRAND}55`,
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) e.currentTarget.style.backgroundColor = BRAND_HOVER
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = isLoading ? BRAND : BRAND
+            }}
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="w-[18px] h-[18px] mr-2 animate-spin" />
                 <span>Authenticating...</span>
               </>
             ) : (
@@ -422,20 +597,64 @@ export default function Login() {
           </button>
 
 
-          {/* Registration Link */}
-          <div className="text-center text-xs mt-4 pt-4 border-t border-gray-150 flex flex-col gap-2">
-            <div>
-              <span className="text-gray-500">Need a secure patient account? </span>
-              <Link to="/register/patient" className="font-bold text-health-primary hover:underline">
-                Register as Patient
-              </Link>
-            </div>
-            <div>
-              <span className="text-gray-500">Register a pharmacy store? </span>
-              <Link to="/register/pharmacy" className="font-bold text-health-primary hover:underline">
-                Onboard Pharmacy
-              </Link>
-            </div>
+          {/* "or" divider */}
+          <div className="flex items-center gap-3 py-0.5">
+            <div className="flex-1 h-px" style={{ backgroundColor: '#E5E7EB' }} />
+            <span
+              className="text-xs text-gray-400 font-medium"
+              style={{ fontSize: '12px', color: '#9CA3AF' }}
+            >
+              or
+            </span>
+            <div className="flex-1 h-px" style={{ backgroundColor: '#E5E7EB' }} />
+          </div>
+
+
+          {/* Sign in as Pharmacist / Staff — cute outline pill with Shield */}
+          <button
+            type="button"
+            onClick={() => setIsStaffLogin(!isStaffLogin)}
+            className={`w-full flex justify-center items-center gap-2 py-[12px] px-4 rounded-full text-sm font-semibold transition-all duration-200 active:scale-[0.99]`}
+            style={{
+              borderWidth: '1.5px',
+              borderStyle: 'solid',
+              borderColor: isStaffLogin ? BRAND : '#B7F0D0',
+              color: BRAND,
+              backgroundColor: isStaffLogin ? `${BRAND}0B` : '#ffffff',
+              fontSize: '14.5px',
+              boxShadow: isStaffLogin ? `0 0 0 4px ${BRAND}10` : 'none',
+            }}
+          >
+            <ShieldCheck className="w-[18px] h-[18px]" />
+            <span>Sign in as Pharmacist / Staff</span>
+          </button>
+
+
+          {/* Account links — clean single-line registration prompt */}
+          <div
+            className="text-center pt-1"
+            style={{ fontSize: '14px' }}
+          >
+            <span style={{ color: '#6B7280', fontWeight: 500 }}>Don&apos;t have an account? </span>
+            <Link
+              to="/register/patient"
+              className="font-semibold transition-colors"
+              style={{ color: BRAND }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
+              Sign up
+            </Link>
+            <span style={{ color: '#D1D5DB', margin: '0 6px' }}>·</span>
+            <Link
+              to="/register/pharmacy"
+              className="font-semibold transition-colors"
+              style={{ color: BRAND }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            >
+              Onboard Pharmacy
+            </Link>
           </div>
         </form>
       )}
@@ -452,5 +671,3 @@ function MailIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-
-

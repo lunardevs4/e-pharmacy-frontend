@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthLayout from '@/layouts/AuthLayout'
-import { validateEmail, getEmailErrorMessage } from '@/utils/validation'
+import { validateEmail } from '@/utils/validation'
 import { AuthApi } from '@/services/auth-api'
 import {
   AlertCircle,
@@ -9,18 +9,22 @@ import {
   Loader2,
   ArrowRight,
   ArrowLeft,
-  MapPin,
   Eye,
   EyeOff,
   User,
-  CreditCard,
   Calendar,
   Smartphone,
   Mail,
   Lock,
   Check,
-  ShieldAlert,
 } from 'lucide-react'
+
+const BRAND = '#006846'
+const BRAND_HOVER = '#005238'
+const INPUT_BG = '#FFFFFF'
+const SERIF = "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif"
+const focusRing = `0 0 0 4px ${BRAND}14`
+const inputBorderRadius = '16px'
 
 type RegStep = 1 | 2 | 3
 
@@ -28,14 +32,11 @@ export default function PatientRegister() {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<RegStep>(1)
 
-  // Step 1 States (Personal Details)
   const [fullName, setFullName] = useState('')
-  // const [nid, setNid] = useState('')
   const [dob, setDob] = useState('')
   const [gender, setGender] = useState('')
   const [phone, setPhone] = useState('')
 
-  // Step 2 States (Account Security)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -44,12 +45,10 @@ export default function PatientRegister() {
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
 
-  // Feedback states
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  // Password criteria checks
   const passwordCriteria = {
     length: password.length >= 8,
     uppercase: /[A-Z]/.test(password),
@@ -61,29 +60,23 @@ export default function PatientRegister() {
 
   const getPasswordStrength = () => {
     const passed = Object.values(passwordCriteria).filter(Boolean).length
-    if (passed <= 2) return { score: 1, label: 'Weak', color: 'bg-red-500' }
-    if (passed <= 4) return { score: 2, label: 'Medium', color: 'bg-orange-500' }
-    return { score: 3, label: 'Strong', color: 'bg-emerald-600' }
+    if (passed <= 2) return { score: 1, label: 'Weak', color: '#EF4444' }
+    if (passed <= 4) return { score: 2, label: 'Medium', color: '#F97316' }
+    return { score: 3, label: 'Strong', color: BRAND }
   }
 
   const strength = getPasswordStrength()
 
-  // Step 1 Validation
   const validateStep1 = (): boolean => {
     setErrorMsg(null)
     if (!fullName.trim() || fullName.trim().length < 3) {
       setErrorMsg('Full name must be at least 3 characters long.')
       return false
     }
-    // if (!nid || !/^\d{16}$/.test(nid)) {
-    //   setErrorMsg('National ID must be exactly 16 numeric digits.')
-    //   return false
-    // }
     if (!dob) {
       setErrorMsg('Date of birth is required.')
       return false
     }
-    // Age check: minimum 16 years
     const birthDate = new Date(dob)
     const today = new Date()
     let age = today.getFullYear() - birthDate.getFullYear()
@@ -108,7 +101,6 @@ export default function PatientRegister() {
     return true
   }
 
-  // Step 2 Validation
   const validateStep2 = (): boolean => {
     setErrorMsg(null)
     if (!email.trim()) {
@@ -131,7 +123,6 @@ export default function PatientRegister() {
     return true
   }
 
-  // Final submit handler
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -140,7 +131,6 @@ export default function PatientRegister() {
     try {
       await AuthApi.registerPatient({
         fullName,
-        // nid,
         dob,
         gender,
         phone,
@@ -152,8 +142,9 @@ export default function PatientRegister() {
       setTimeout(() => {
         navigate('/login')
       }, 1500)
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Registration failed. Please try again.')
+    } catch (err) {
+      const e = err as Error & { message?: string }
+      setErrorMsg(e.message || 'Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -174,72 +165,125 @@ export default function PatientRegister() {
     }
   }
 
+  const inputBase =
+    'block w-full pl-11 pr-4 py-[12px] border border-[#E5E7EB] rounded-[16px] bg-[#FFFFFF] shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-0 transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal hover:border-gray-300 focus:bg-white'
+
+  const focusHandlers = (hasError: boolean) => ({
+    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+      if (!hasError) {
+        e.currentTarget.style.borderColor = BRAND
+        e.currentTarget.style.boxShadow = focusRing
+      }
+    },
+    onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+      e.currentTarget.style.borderColor = hasError ? '#FCA5A5' : 'transparent'
+      e.currentTarget.style.boxShadow = 'none'
+    },
+  })
+
   return (
     <AuthLayout
-      title="Patient Registration"
-      subtitle="Register a secure citizen account to access medicine search and reservation."
+      title="Create your account"
+      subtitle="Register a secure patient account to access medicine search and reservation."
     >
       <form onSubmit={handleFinalSubmit}>
-        {/* Visual Stepper */}
-        <div className="mb-6 bg-gray-50 border border-gray-150 rounded-xl p-3 max-w-sm mx-auto flex items-center justify-around">
+        {/* Step indicator */}
+        <div
+          className="mb-6 rounded-2xl p-4 max-w-sm mx-auto flex items-center justify-around"
+          style={{
+            backgroundColor: '#F0FDF4',
+            border: '1px solid rgba(14,139,97,0.15)',
+          }}
+        >
           {[
             { num: 1, label: 'Personal' },
-            { num: 2, label: 'Account' }
+            { num: 2, label: 'Account' },
           ].map((s, idx) => (
             <React.Fragment key={s.num}>
               <div className="flex items-center space-x-2">
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
-                    currentStep === s.num
-                      ? 'bg-health-primary text-white ring-2 ring-emerald-100 scale-105'
-                      : currentStep > s.num
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-gray-200 text-gray-400'
-                  }`}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+                  style={{
+                    backgroundColor:
+                      currentStep === s.num
+                        ? BRAND
+                        : currentStep > s.num
+                          ? BRAND
+                          : '#E5E7EB',
+                    color:
+                      currentStep === s.num || currentStep > s.num ? '#FFFFFF' : '#6B7280',
+                    boxShadow:
+                      currentStep === s.num ? `0 0 0 4px ${BRAND}15` : 'none',
+                    transform: currentStep === s.num ? 'scale(1.05)' : 'scale(1)',
+                  }}
                 >
-                  {currentStep > s.num ? <Check className="w-3 h-3" /> : s.num}
+                  {currentStep > s.num ? <Check className="w-4 h-4" /> : s.num}
                 </div>
                 <span
-                  className={`text-[11px] font-bold ${
-                    currentStep === s.num ? 'text-health-primary' : 'text-gray-450'
-                  }`}
+                  className="text-sm font-semibold"
+                  style={{
+                    color: currentStep === s.num ? BRAND : '#6B7280',
+                    fontFamily: SERIF,
+                    letterSpacing: '-0.005em',
+                  }}
                 >
                   {s.label}
                 </span>
               </div>
-              {idx < 2 && <span className="text-gray-300 text-xs">&rarr;</span>}
+              {idx < 1 && (
+                <span style={{ color: '#D1D5DB', fontSize: '12px' }}>&rarr;</span>
+              )}
             </React.Fragment>
           ))}
         </div>
 
         {errorMsg && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs mb-4">
+          <div
+            className="flex items-start rounded-2xl p-4 text-sm mb-5 shadow-sm"
+            style={{
+              gap: '12px',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
+              color: '#991B1B',
+            }}
+          >
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <span>{errorMsg}</span>
+            <span className="font-medium">{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-250 rounded-lg p-3 flex items-start space-x-2 text-emerald-800 text-xs mb-4">
+          <div
+            className="flex items-start rounded-2xl p-4 text-sm mb-5 shadow-sm"
+            style={{
+              gap: '12px',
+              backgroundColor: '#ECFDF5',
+              border: '1px solid #A7F3D0',
+              color: '#065F46',
+            }}
+          >
             <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <span>{successMsg}</span>
+            <span className="font-medium">{successMsg}</span>
           </div>
         )}
 
-        {/* Step 1: Personal Details */}
         {currentStep === 1 && (
-          <div className="space-y-4 font-semibold text-xs text-gray-700">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Full Name */}
-            <div>
+            <div className="group">
               <label
                 htmlFor="fullName"
-                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
+                className="block mb-2"
+                style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937' }}
               >
                 Full Name
               </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-4 w-4 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <User
+                    className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors"
+                    style={{ color: BRAND }}
+                  />
                 </div>
                 <input
                   id="fullName"
@@ -247,46 +291,30 @@ export default function PatientRegister() {
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
+                  style={{ borderRadius: inputBorderRadius, backgroundColor: INPUT_BG }}
+                  className={inputBase}
                   placeholder="e.g. Mugisha Jean"
+                  {...focusHandlers(false)}
                 />
               </div>
             </div>
 
-            {/* National ID */}
-            {/* <div>
-            <label htmlFor="nid" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-              National ID Number (16 Digits)
-            </label>
-            <div className="relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <CreditCard className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                id="nid"
-                type="text"
-                required
-                maxLength={16}
-                value={nid}
-                onChange={(e) => setNid(e.target.value.replace(/\D/g, ''))}
-                className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-mono font-bold"
-                placeholder="1YYYY7XXXXXXXXXXXXXXXX"
-              />
-            </div>
-          </div> */}
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* Date of Birth */}
-              <div>
+            <div className="grid grid-cols-2" style={{ gap: '16px' }}>
+              {/* DOB */}
+              <div className="group">
                 <label
                   htmlFor="dob"
-                  className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
+                  className="block mb-2"
+                  style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937' }}
                 >
                   Date of Birth
                 </label>
-                <div className="relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-4 w-4 text-gray-400" />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Calendar
+                      className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors"
+                      style={{ color: BRAND }}
+                    />
                   </div>
                   <input
                     id="dob"
@@ -294,45 +322,71 @@ export default function PatientRegister() {
                     required
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
+                    style={{ borderRadius: inputBorderRadius, backgroundColor: INPUT_BG }}
+                    className={inputBase}
+                    {...focusHandlers(false)}
                   />
                 </div>
               </div>
 
               {/* Gender */}
-              <div>
+              <div className="group">
                 <label
                   htmlFor="gender"
-                  className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
+                  className="block mb-2"
+                  style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937' }}
                 >
                   Gender
                 </label>
-                <select
-                  id="gender"
-                  required
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
-                >
-                  <option value="">Select...</option>
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
-                  <option value="OTHER">Other</option>
-                </select>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <User
+                      className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors"
+                      style={{ color: BRAND }}
+                    />
+                  </div>
+                  <select
+                    id="gender"
+                    required
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    style={{
+                      borderRadius: inputBorderRadius,
+                      backgroundColor: INPUT_BG,
+                      backgroundImage:
+                        'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%236b7280\' stroke-width=\'2\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 1.25rem center',
+                      backgroundSize: '1.25rem',
+                      appearance: 'none' as const,
+                    }}
+                    className={inputBase + ' pr-10'}
+                    {...focusHandlers(false)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* Phone Number */}
-            <div>
+            {/* Phone */}
+            <div className="group">
               <label
                 htmlFor="phone"
-                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
+                className="block mb-2"
+                style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937' }}
               >
                 Phone Number
               </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Smartphone className="h-4 w-4 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Smartphone
+                    className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors"
+                    style={{ color: BRAND }}
+                  />
                 </div>
                 <input
                   id="phone"
@@ -341,17 +395,24 @@ export default function PatientRegister() {
                   maxLength={10}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                  className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-mono font-bold"
+                  style={{ borderRadius: inputBorderRadius, backgroundColor: INPUT_BG }}
+                  className={inputBase}
                   placeholder="07XXXXXXXX"
+                  {...focusHandlers(false)}
                 />
               </div>
             </div>
 
-            {/* Next Button */}
             <button
               type="button"
               onClick={goNext}
-              className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none transition-colors mt-2"
+              className="w-full flex justify-center items-center py-[13px] px-4 border border-transparent rounded-full shadow-lg text-sm font-bold text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl active:scale-[0.99] mt-2"
+              style={{
+                backgroundColor: BRAND,
+                boxShadow: `0 10px 24px -10px ${BRAND}AA, 0 4px 10px -4px ${BRAND}55`,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BRAND_HOVER)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BRAND)}
             >
               <span>Continue to Account Details</span>
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -359,20 +420,23 @@ export default function PatientRegister() {
           </div>
         )}
 
-        {/* Step 2: Account Security */}
         {currentStep === 2 && (
-          <div className="space-y-4 font-semibold text-xs text-gray-700">
-            {/* Email Address */}
-            <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Email */}
+            <div className="group">
               <label
                 htmlFor="email"
-                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
+                className="block mb-2"
+                style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937' }}
               >
                 Email Address (Required)
               </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail
+                    className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors"
+                    style={{ color: BRAND }}
+                  />
                 </div>
                 <input
                   id="email"
@@ -380,23 +444,29 @@ export default function PatientRegister() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
+                  style={{ borderRadius: inputBorderRadius, backgroundColor: INPUT_BG }}
+                  className={inputBase}
                   placeholder="e.g. user@domain.rw"
+                  {...focusHandlers(false)}
                 />
               </div>
             </div>
 
             {/* Password */}
-            <div>
+            <div className="group">
               <label
                 htmlFor="pass"
-                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
+                className="block mb-2"
+                style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937' }}
               >
                 Password
               </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock
+                    className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors"
+                    style={{ color: BRAND }}
+                  />
                 </div>
                 <input
                   id="pass"
@@ -404,111 +474,103 @@ export default function PatientRegister() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
+                  style={{ borderRadius: inputBorderRadius, backgroundColor: INPUT_BG }}
+                  className={inputBase + ' pr-12'}
                   placeholder="••••••••"
+                  {...focusHandlers(false)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-650"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center transition-colors"
+                  style={{ color: '#9CA3AF' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = BRAND)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-[18px] h-[18px]" />
+                  ) : (
+                    <Eye className="w-[18px] h-[18px]" />
+                  )}
                 </button>
               </div>
 
-              {/* Strength indicator */}
               {password && (
-                <div className="mt-2 space-y-1.5">
+                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500 font-medium">Strength:</span>
-                    <span className="font-bold text-gray-700">{strength.label}</span>
+                    <span style={{ color: '#6B7280', fontWeight: 500 }}>Strength:</span>
+                    <span style={{ fontWeight: 700, color: '#374151' }}>{strength.label}</span>
                   </div>
-                  <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className="w-full h-2 rounded-full overflow-hidden"
+                    style={{ backgroundColor: '#E5E7EB' }}
+                  >
                     <div
-                      className={`h-full transition-all duration-300 ${strength.color}`}
-                      style={{ width: `${(strength.score / 3) * 100}%` }}
+                      className="h-full transition-all duration-300"
+                      style={{
+                        width: `${(strength.score / 3) * 100}%`,
+                        backgroundColor: strength.color,
+                      }}
                     />
                   </div>
                 </div>
               )}
 
-              {/* Validation Checklist */}
-              <div className="mt-3 bg-gray-50 border border-gray-250 p-3 rounded-lg text-xs space-y-1.5 font-medium text-gray-600">
-                <span className="font-bold text-gray-700 block mb-1">Password Requirements:</span>
-                <div className="flex items-center space-x-2">
+              {password && (
+                <div
+                  className="mt-3.5 p-4 rounded-2xl text-xs space-y-2 font-medium"
+                  style={{
+                    backgroundColor: '#F9FAFB',
+                    border: '1px solid #E5E7EB',
+                    color: '#6B7280',
+                  }}
+                >
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.length ? 'bg-emerald-500' : 'bg-gray-300'}`}
-                  />
-                  <span
-                    className={
-                      passwordCriteria.length ? 'text-emerald-805 font-bold' : 'text-gray-500'
-                    }
+                    className="block mb-1.5"
+                    style={{ fontWeight: 700, color: '#374151', fontFamily: SERIF, fontSize: '13.5px' }}
                   >
-                    Minimum 8 characters
+                    Password Requirements:
                   </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.uppercase ? 'bg-emerald-500' : 'bg-gray-300'}`}
-                  />
-                  <span
-                    className={
-                      passwordCriteria.uppercase ? 'text-emerald-805 font-bold' : 'text-gray-500'
+                  {(['length', 'uppercase', 'lowercase', 'number', 'special'] as const).map((k) => {
+                    const labels: Record<string, string> = {
+                      length: 'Minimum 8 characters',
+                      uppercase: 'At least one uppercase letter',
+                      lowercase: 'At least one lowercase letter',
+                      number: 'At least one number',
+                      special: 'At least one special character (@$!%*?&)',
                     }
-                  >
-                    At least one uppercase letter
-                  </span>
+                    const ok = passwordCriteria[k]
+                    return (
+                      <div key={k} className="flex items-center space-x-2.5">
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: ok ? BRAND : '#D1D5DB' }}
+                        />
+                        <span style={{ color: ok ? BRAND : '#6B7280', fontWeight: ok ? 700 : 500 }}>
+                          {labels[k]}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.lowercase ? 'bg-emerald-500' : 'bg-gray-300'}`}
-                  />
-                  <span
-                    className={
-                      passwordCriteria.lowercase ? 'text-emerald-805 font-bold' : 'text-gray-500'
-                    }
-                  >
-                    At least one lowercase letter
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.number ? 'bg-emerald-500' : 'bg-gray-300'}`}
-                  />
-                  <span
-                    className={
-                      passwordCriteria.number ? 'text-emerald-805 font-bold' : 'text-gray-500'
-                    }
-                  >
-                    At least one number
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${passwordCriteria.special ? 'bg-emerald-500' : 'bg-gray-300'}`}
-                  />
-                  <span
-                    className={
-                      passwordCriteria.special ? 'text-emerald-805 font-bold' : 'text-gray-500'
-                    }
-                  >
-                    At least one special character (@$!%*?&)
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Confirm Password */}
-            <div>
+            <div className="group">
               <label
                 htmlFor="confirmPass"
-                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1"
+                className="block mb-2"
+                style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937' }}
               >
                 Confirm Password
               </label>
-              <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock
+                    className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors"
+                    style={{ color: BRAND }}
+                  />
                 </div>
                 <input
                   id="confirmPass"
@@ -516,22 +578,28 @@ export default function PatientRegister() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
+                  style={{ borderRadius: inputBorderRadius, backgroundColor: INPUT_BG }}
+                  className={inputBase}
                   placeholder="••••••••"
+                  {...focusHandlers(false)}
                 />
               </div>
               {password && confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-red-655 font-bold">Passwords do not match.</p>
+                <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  Passwords do not match.
+                </p>
               )}
             </div>
-      
           </div>
         )}
 
         {currentStep === 2 && (
           <>
-            {/* Terms & Privacy checkboxes */}
-            <div className="space-y-2 pt-2 border-t border-gray-150 font-medium text-gray-600">
+            <div
+              className="space-y-2.5 pt-3 mt-4"
+              style={{ borderTop: '1px solid #F1F5F9', fontWeight: 500, color: '#6B7280' }}
+            >
               <div className="flex items-start">
                 <input
                   id="terms"
@@ -539,14 +607,21 @@ export default function PatientRegister() {
                   required
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded mt-0.5 cursor-pointer"
+                  className="h-4 w-4 rounded border-gray-300 mt-0.5 cursor-pointer"
+                  style={{ accentColor: BRAND, color: BRAND }}
                 />
                 <label
                   htmlFor="terms"
-                  className="ml-2 block text-xs text-gray-650 leading-normal cursor-pointer"
+                  className="ml-2.5 block text-sm leading-normal cursor-pointer"
+                  style={{ color: '#4B5563' }}
                 >
                   I accept the{' '}
-                  <a href="#" className="font-semibold text-health-primary hover:underline">
+                  <a
+                    href="#"
+                    style={{ fontWeight: 600, color: BRAND }}
+                    onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                    onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                  >
                     Terms of Service
                   </a>{' '}
                   for the Rwanda National Health System.
@@ -560,14 +635,21 @@ export default function PatientRegister() {
                   required
                   checked={acceptPrivacy}
                   onChange={(e) => setAcceptPrivacy(e.target.checked)}
-                  className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded mt-0.5 cursor-pointer"
+                  className="h-4 w-4 rounded border-gray-300 mt-0.5 cursor-pointer"
+                  style={{ accentColor: BRAND, color: BRAND }}
                 />
                 <label
                   htmlFor="privacy"
-                  className="ml-2 block text-xs text-gray-650 leading-normal cursor-pointer"
+                  className="ml-2.5 block text-sm leading-normal cursor-pointer"
+                  style={{ color: '#4B5563' }}
                 >
                   I agree to the{' '}
-                  <a href="#" className="font-semibold text-health-primary hover:underline">
+                  <a
+                    href="#"
+                    style={{ fontWeight: 600, color: BRAND }}
+                    onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                    onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                  >
                     Privacy Policy
                   </a>{' '}
                   regarding my health and medical records data processing.
@@ -575,21 +657,29 @@ export default function PatientRegister() {
               </div>
             </div>
 
-            {/* Buttons */}
-            <div className="flex space-x-3 pt-2">
+            <div className="flex pt-3" style={{ gap: '12px' }}>
               <button
                 type="button"
                 disabled={isLoading}
                 onClick={goBack}
-                className="w-1/3 flex items-center justify-center py-2.5 border border-gray-300 rounded-lg text-sm font-bold text-gray-650 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="w-1/3 flex items-center justify-center py-3 border rounded-full text-sm font-bold transition-colors disabled:opacity-50"
+                style={{ borderColor: '#E5E7EB', color: '#4B5563', backgroundColor: '#FFFFFF' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F9FAFB')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
               >
-                <ArrowLeft className="w-4 h-4 mr-1" />
+                <ArrowLeft className="w-4 h-4 mr-1.5" />
                 <span>Back</span>
               </button>
               <button
                 type="submit"
                 disabled={isLoading || !acceptTerms || !acceptPrivacy}
-                className="w-2/3 flex items-center justify-center py-2.5 text-white bg-health-primary hover:bg-health-secondary focus:outline-none rounded-lg text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                className="w-2/3 flex items-center justify-center py-3.5 text-white rounded-full text-sm font-bold shadow-sm transition-all duration-200 disabled:opacity-50 hover:shadow-lg active:scale-[0.99]"
+                style={{
+                  backgroundColor: BRAND,
+                  boxShadow: `0 10px 24px -10px ${BRAND}AA, 0 4px 10px -4px ${BRAND}55`,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BRAND_HOVER)}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BRAND)}
               >
                 {isLoading ? (
                   <>
@@ -603,10 +693,17 @@ export default function PatientRegister() {
             </div>
           </>
         )}
-        {/* Footer Link */}
-        <div className="text-center text-xs mt-6 pt-4 border-t border-gray-150">
-          <span className="text-gray-500 font-semibold">Already have an account? </span>
-          <Link to="/login" className="font-bold text-health-primary hover:underline">
+        <div
+          className="text-center text-sm mt-6 pt-4"
+          style={{ borderTop: '1px solid #F3F4F6' }}
+        >
+          <span style={{ color: '#6B7280', fontWeight: 500 }}>Already have an account? </span>
+          <Link
+            to="/login"
+            style={{ fontWeight: 700, color: BRAND }}
+            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+          >
             Sign In
           </Link>
         </div>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AuthLayout from '@/layouts/AuthLayout'
 import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
-import { AlertCircle, CheckCircle2, Loader2, Eye, EyeOff } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2, Eye, EyeOff, Lock } from 'lucide-react'
 
 export default function ChangePassword() {
   const navigate = useNavigate()
@@ -12,13 +12,13 @@ export default function ChangePassword() {
   const [currentPass, setCurrentPass] = useState('')
   const [newPass, setNewPass] = useState('')
   const [confirmPass, setConfirmPass] = useState('')
-  const [showPass, setShowPass] = useState(false)
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
 
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  // Password criteria checks
   const criteria = {
     length: newPass.length >= 8,
     uppercase: /[A-Z]/.test(newPass),
@@ -57,15 +57,12 @@ export default function ChangePassword() {
     setSuccessMsg(null)
 
     try {
-      // Call mock auth api
       await AuthApi.changePassword(user.username, currentPass, newPass)
       setSuccessMsg('Password updated successfully! Redirecting to portal...')
       
-      // Update state in Zustand store
       const updatedUser = { ...user, firstLogin: false }
       login(updatedUser, token || 'mock_token')
 
-      // Redirect to correct dashboard
       setTimeout(() => {
         switch (user.role) {
           case 'PATIENT':
@@ -98,70 +95,82 @@ export default function ChangePassword() {
   return (
     <AuthLayout title="Update Temporary Password" subtitle="For security compliance, first-time users must configure a new secure account password.">
       {errorMsg && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs mb-4">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start space-x-3 text-red-800 text-sm mb-5 shadow-sm">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <span>{errorMsg}</span>
+          <span className="font-medium">{errorMsg}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="bg-emerald-50 border border-emerald-250 rounded-lg p-3 flex items-start space-x-2 text-emerald-800 text-xs mb-4">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start space-x-3 text-emerald-800 text-sm mb-5 shadow-sm">
           <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <span>{successMsg}</span>
+          <span className="font-medium">{successMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Temporary Password */}
-        <div>
-          <label htmlFor="tempPass" className="block text-sm font-semibold text-gray-700">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="group">
+          <label htmlFor="tempPass" className="text-[13px] font-semibold text-gray-800 mb-2 block">
             Current Temporary Password
           </label>
-          <input
-            id="tempPass"
-            type="password"
-            required
-            disabled={isLoading}
-            value={currentPass}
-            onChange={(e) => setCurrentPass(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
-            placeholder="••••••••"
-          />
-        </div>
-
-        {/* New Password */}
-        <div>
-          <label htmlFor="newPass" className="block text-sm font-semibold text-gray-700">
-            New Password
-          </label>
-          <div className="mt-1 relative rounded-md shadow-sm">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Lock className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors" />
+            </div>
             <input
-              id="newPass"
-              type={showPass ? 'text' : 'password'}
+              id="tempPass"
+              type={showCurrent ? 'text' : 'password'}
               required
               disabled={isLoading}
-              value={newPass}
-              onChange={(e) => setNewPass(e.target.value)}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
+              value={currentPass}
+              onChange={(e) => setCurrentPass(e.target.value)}
+              className="block w-full pl-11 pr-12 py-[13px] bg-white border-2 rounded-2xl focus:outline-none focus:ring-0 focus:border-health-primary focus:shadow-[0_0_0_4px_rgba(35,83,71,0.08)] transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal border-gray-200 hover:border-gray-300"
               placeholder="••••••••"
             />
             <button
               type="button"
-              onClick={() => setShowPass(!showPass)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-650"
+              onClick={() => setShowCurrent(!showCurrent)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
             >
-              {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showCurrent ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="group">
+          <label htmlFor="newPass" className="text-[13px] font-semibold text-gray-800 mb-2 block">
+            New Password
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Lock className="h-[18px] w-[18px] text-gray-400 group-focus-within:text-health-primary transition-colors" />
+            </div>
+            <input
+              id="newPass"
+              type={showNew ? 'text' : 'password'}
+              required
+              disabled={isLoading}
+              value={newPass}
+              onChange={(e) => setNewPass(e.target.value)}
+              className="block w-full pl-11 pr-12 py-[13px] bg-white border-2 rounded-2xl focus:outline-none focus:ring-0 focus:border-health-primary focus:shadow-[0_0_0_4px_rgba(35,83,71,0.08)] transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal border-gray-200 hover:border-gray-300"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNew(!showNew)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {showNew ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
 
-          {/* Strength meter */}
           {newPass && (
-            <div className="mt-2 space-y-1.5">
+            <div className="mt-2.5 space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-500">Strength:</span>
+                <span className="text-gray-500 font-medium">Strength:</span>
                 <span className="font-bold text-gray-700">{strength.label}</span>
               </div>
-              <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                 <div 
                   className={`h-full transition-all duration-300 ${strength.color}`} 
                   style={{ width: `${(strength.score / 3) * 100}%` }}
@@ -170,57 +179,62 @@ export default function ChangePassword() {
             </div>
           )}
 
-          {/* Validation Checklist */}
-          <div className="mt-3 bg-gray-50 border border-gray-250 p-3 rounded-lg text-xs space-y-1.5">
-            <span className="font-bold text-gray-700 block mb-1">Password Requirements:</span>
-            <div className="flex items-center space-x-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${criteria.length ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-              <span className={criteria.length ? 'text-emerald-800' : 'text-gray-500'}>Minimum 8 characters</span>
+          <div className="mt-3.5 bg-gray-50 border border-gray-200 p-4 rounded-2xl text-xs space-y-2 font-medium text-gray-600">
+            <span className="font-bold text-gray-700 block mb-1.5">Password Requirements:</span>
+            <div className="flex items-center space-x-2.5">
+              <span className={`w-2 h-2 rounded-full ${criteria.length ? 'bg-health-primary' : 'bg-gray-300'}`} />
+              <span className={criteria.length ? 'text-health-primary font-bold' : 'text-gray-500'}>Minimum 8 characters</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${criteria.uppercase ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-              <span className={criteria.uppercase ? 'text-emerald-800' : 'text-gray-500'}>At least one uppercase letter</span>
+            <div className="flex items-center space-x-2.5">
+              <span className={`w-2 h-2 rounded-full ${criteria.uppercase ? 'bg-health-primary' : 'bg-gray-300'}`} />
+              <span className={criteria.uppercase ? 'text-health-primary font-bold' : 'text-gray-500'}>At least one uppercase letter</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${criteria.lowercase ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-              <span className={criteria.lowercase ? 'text-emerald-800' : 'text-gray-500'}>At least one lowercase letter</span>
+            <div className="flex items-center space-x-2.5">
+              <span className={`w-2 h-2 rounded-full ${criteria.lowercase ? 'bg-health-primary' : 'bg-gray-300'}`} />
+              <span className={criteria.lowercase ? 'text-health-primary font-bold' : 'text-gray-500'}>At least one lowercase letter</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${criteria.number ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-              <span className={criteria.number ? 'text-emerald-800' : 'text-gray-500'}>At least one number</span>
+            <div className="flex items-center space-x-2.5">
+              <span className={`w-2 h-2 rounded-full ${criteria.number ? 'bg-health-primary' : 'bg-gray-300'}`} />
+              <span className={criteria.number ? 'text-health-primary font-bold' : 'text-gray-500'}>At least one number</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${criteria.special ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-              <span className={criteria.special ? 'text-emerald-800' : 'text-gray-500'}>At least one special character (@$!%*?&)</span>
+            <div className="flex items-center space-x-2.5">
+              <span className={`w-2 h-2 rounded-full ${criteria.special ? 'bg-health-primary' : 'bg-gray-300'}`} />
+              <span className={criteria.special ? 'text-health-primary font-bold' : 'text-gray-500'}>At least one special character (@$!%*?&)</span>
             </div>
           </div>
         </div>
 
-        {/* Confirm Password */}
-        <div>
-          <label htmlFor="confirmPass" className="block text-sm font-semibold text-gray-700">
+        <div className="group">
+          <label htmlFor="confirmPass" className="text-[13px] font-semibold text-gray-800 mb-2 block">
             Confirm New Password
           </label>
-          <input
-            id="confirmPass"
-            type="password"
-            required
-            disabled={isLoading}
-            value={confirmPass}
-            onChange={(e) => setConfirmPass(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900"
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Lock className={`h-[18px] w-[18px] transition-colors ${newPass && confirmPass && newPass !== confirmPass ? 'text-red-400' : 'text-gray-400 group-focus-within:text-health-primary'}`} />
+            </div>
+            <input
+              id="confirmPass"
+              type="password"
+              required
+              disabled={isLoading}
+              value={confirmPass}
+              onChange={(e) => setConfirmPass(e.target.value)}
+              className={`block w-full pl-11 pr-4 py-[13px] bg-white border-2 rounded-2xl focus:outline-none focus:ring-0 transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal ${newPass && confirmPass && newPass !== confirmPass ? 'border-red-300 focus:border-red-500 focus:shadow-[0_0_0_4px_rgba(220,38,38,0.08)]' : 'border-gray-200 hover:border-gray-300 focus:border-health-primary focus:shadow-[0_0_0_4px_rgba(35,83,71,0.08)]'}`}
+              placeholder="••••••••"
+            />
+          </div>
           {newPass && confirmPass && newPass !== confirmPass && (
-            <p className="mt-1 text-xs text-red-650">Passwords do not match.</p>
+            <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5" />
+              Passwords do not match.
+            </p>
           )}
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={isLoading || !meetsAllCriteria || newPass !== confirmPass}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors"
+          className="w-full flex justify-center py-[13px] px-4 border border-transparent rounded-2xl shadow-lg shadow-health-primary/20 text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-health-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl hover:shadow-health-primary/25 active:scale-[0.99]"
         >
           {isLoading ? (
             <>
