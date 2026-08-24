@@ -653,28 +653,18 @@ export default function Login() {
 
           {/* Account links — clean single-line registration prompt */}
           <div
-            className="text-center pt-1"
+            className="text-center pt-1 font-sans"
             style={{ fontSize: '14px' }}
           >
             <span style={{ color: '#6B7280', fontWeight: 500 }}>Don&apos;t have an account? </span>
             <Link
-              to="/register/patient"
+              to="/register"
               className="font-semibold transition-colors"
               style={{ color: BRAND }}
               onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
               onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
             >
-              Sign up
-            </Link>
-            <span style={{ color: '#D1D5DB', margin: '0 6px' }}>·</span>
-            <Link
-              to="/register/pharmacy"
-              className="font-semibold transition-colors"
-              style={{ color: BRAND }}
-              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-            >
-              Onboard Pharmacy
+              Register
             </Link>
           </div>
         </form>

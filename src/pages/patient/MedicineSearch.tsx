@@ -16,6 +16,7 @@ import {
 import { useMedicineSearch } from '@/hooks/useMedicineSearch'
 import { Medicine, PharmacyStock, Reservation } from '@/types'
 import { MedicineApi } from '@/services/medicine-api'
+import { insuranceApi } from '@/services/insurance-api'
 import MedicineSearchBar from '@/components/patient/MedicineSearchBar'
 import MedicineCard from '@/components/patient/MedicineCard'
 import PharmacyAvailabilityTable from '@/components/patient/PharmacyAvailabilityTable'
@@ -41,7 +42,24 @@ export default function MedicineSearch() {
 
   // Search filter states
   const { user } = useAuthStore()
-  const [selectedInsurance, setSelectedInsurance] = useState<string>(user?.insuranceProvider || 'RSSB')
+  const [selectedInsurance, setSelectedInsurance] = useState<string>(user?.insuranceProvider || 'None')
+  const [providers, setProviders] = useState<any[]>([
+    { id: '1', code: 'RSSB', name: 'RSSB (Rwanda Social Security Board)', defaultCoveragePercentage: 0.85, isActive: true },
+    { id: '2', code: 'MMI', name: 'MMI (Military Medical Insurance)', defaultCoveragePercentage: 0.90, isActive: true },
+    { id: '3', code: 'SANLAM', name: 'SANLAM', defaultCoveragePercentage: 0.75, isActive: true },
+    { id: '4', code: 'Radiant', name: 'Radiant Insurance', defaultCoveragePercentage: 0.70, isActive: true },
+  ])
+
+  useEffect(() => {
+    insuranceApi.getProviders()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProviders(data.filter((p: any) => p.isActive !== false))
+        }
+      })
+      .catch((err) => console.error('Error fetching registered insurance providers in search:', err))
+  }, [])
+
   const [query, setQuery] = useState(initialQuery)
   const [category, setCategory] = useState('')
   const [inStockOnly, setInStockOnly] = useState(false)
@@ -303,7 +321,12 @@ export default function MedicineSearch() {
       }
 
       const isAccepted = selectedPharmacy.insuranceAccepted.includes(selectedInsurance) && selectedInsurance !== 'None'
-      const coverageRate = isAccepted ? (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0) : 0
+      const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
+      const coverageRate = isAccepted 
+        ? (matchedProvider 
+            ? (matchedProvider.defaultCoveragePercentage > 1 ? matchedProvider.defaultCoveragePercentage / 100 : matchedProvider.defaultCoveragePercentage)
+            : (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0))
+        : 0
       const totalCost = selectedPharmacy.price * quantity
       const insurancePays = Math.round(totalCost * coverageRate)
       const patientPays = totalCost - insurancePays
@@ -673,6 +696,7 @@ export default function MedicineSearch() {
                   onToggleBookmarkPharmacy={handleToggleBookmarkPharmacy}
                   insuranceProvider={selectedInsurance}
                   onInsuranceChange={setSelectedInsurance}
+                  providers={providers}
                 />
               )}
             </div>
@@ -775,16 +799,30 @@ export default function MedicineSearch() {
                     </div>
                     {selectedPharmacy.insuranceAccepted.includes(selectedInsurance) && selectedInsurance !== 'None' ? (
                       <>
-                        <div className="flex justify-between items-center text-emerald-800 font-semibold">
-                          <span>Insurance Pays ({selectedInsurance} - {Math.round((INSURANCE_COVERAGE_RATES[selectedInsurance] || 0) * 100)}%):</span>
-                          <span>-{Math.round(selectedPharmacy.price * quantity * (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0))} RWF</span>
-                        </div>
-                        <div className="flex justify-between items-center text-gray-950 font-black pt-1.5 border-t border-dashed border-gray-200">
-                          <span>Your Estimated Co-Pay:</span>
-                          <span className="text-health-primary text-sm">
-                            {(selectedPharmacy.price * quantity) - Math.round(selectedPharmacy.price * quantity * (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0))} RWF
-                          </span>
-                        </div>
+                        {(() => {
+                          const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
+                          const coverageRate = matchedProvider 
+                            ? (matchedProvider.defaultCoveragePercentage > 1 ? matchedProvider.defaultCoveragePercentage / 100 : matchedProvider.defaultCoveragePercentage)
+                            : (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0)
+                          const displayCoverage = Math.round(coverageRate * 100)
+                          const insuranceAmount = Math.round(selectedPharmacy.price * quantity * coverageRate)
+                          const patientAmount = (selectedPharmacy.price * quantity) - insuranceAmount
+
+                          return (
+                            <>
+                              <div className="flex justify-between items-center text-emerald-800 font-semibold">
+                                <span>Insurance Pays ({selectedInsurance} - {displayCoverage}%):</span>
+                                <span>-{insuranceAmount} RWF</span>
+                              </div>
+                              <div className="flex justify-between items-center text-gray-955 font-black pt-1.5 border-t border-dashed border-gray-200">
+                                <span>Your Estimated Co-Pay:</span>
+                                <span className="text-health-primary text-sm">
+                                  {patientAmount} RWF
+                                </span>
+                              </div>
+                            </>
+                          )
+                        })()}
                       </>
                     ) : (
                       <div className="flex justify-between items-center text-gray-955 font-black pt-1.5 border-t border-dashed border-gray-200">

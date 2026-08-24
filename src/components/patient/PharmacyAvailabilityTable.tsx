@@ -13,6 +13,7 @@ interface PharmacyAvailabilityTableProps {
   onToggleBookmarkPharmacy?: (pharmId: string) => void
   insuranceProvider: string
   onInsuranceChange?: (ins: string) => void
+  providers?: any[]
 }
 
 export default function PharmacyAvailabilityTable({
@@ -24,7 +25,8 @@ export default function PharmacyAvailabilityTable({
   bookmarkedPharmacies = [],
   onToggleBookmarkPharmacy,
   insuranceProvider,
-  onInsuranceChange
+  onInsuranceChange,
+  providers = []
 }: PharmacyAvailabilityTableProps) {
 
   const renderStockBadge = (status: string, count: number) => {
@@ -70,10 +72,11 @@ export default function PharmacyAvailabilityTable({
               onChange={(e) => onInsuranceChange?.(e.target.value)}
               className="bg-white border border-gray-300 rounded px-2.5 py-1 text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
-              <option value="RSSB">RSSB (Rwanda Social Security Board)</option>
-              <option value="MMI">MMI (Military Medical Insurance)</option>
-              <option value="SANLAM">SANLAM</option>
-              <option value="Radiant">Radiant Insurance</option>
+              {providers.map((prov) => (
+                <option key={prov.id} value={prov.code || prov.name}>
+                  {prov.name} ({prov.code || prov.name})
+                </option>
+              ))}
               <option value="None">None (Paying Cash)</option>
             </select>
           </div>
@@ -98,8 +101,12 @@ export default function PharmacyAvailabilityTable({
         {pharmacies.map((pharm) => {
           const isFav = bookmarkedPharmacies.includes(pharm.pharmacyId)
           const isAccepted = pharm.insuranceAccepted.includes(insuranceProvider) && insuranceProvider !== 'None'
-          const coverage = isAccepted ? Math.round((INSURANCE_COVERAGE_RATES[insuranceProvider] || 0) * 100) : 0
-          const insurancePays = isAccepted ? Math.round(pharm.price * (INSURANCE_COVERAGE_RATES[insuranceProvider] || 0)) : 0
+          const matchedProvider = providers.find(p => p.code === insuranceProvider || p.name === insuranceProvider)
+          const coverageRate = matchedProvider 
+            ? (matchedProvider.defaultCoveragePercentage > 1 ? matchedProvider.defaultCoveragePercentage / 100 : matchedProvider.defaultCoveragePercentage)
+            : (INSURANCE_COVERAGE_RATES[insuranceProvider] || 0)
+          const coverage = isAccepted ? Math.round(coverageRate * 100) : 0
+          const insurancePays = isAccepted ? Math.round(pharm.price * coverageRate) : 0
           const patientPays = pharm.price - insurancePays
 
           return (

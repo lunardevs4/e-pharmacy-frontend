@@ -51,6 +51,7 @@ import {
   X,
   Send,
   Landmark,
+  Shield,
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -1063,7 +1064,7 @@ export default function LandingPage() {
       {/* Registration Option Modal */}
       {isRegisterModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-xl border border-gray-150 border-t-4 border-t-health-primary shadow-2xl w-full max-w-2xl overflow-hidden relative animate-scaleIn">
+          <div className="bg-white rounded-xl border border-gray-150 border-t-4 border-t-health-primary shadow-2xl w-full max-w-4xl overflow-hidden relative animate-scaleIn">
             <button
               onClick={() => setIsRegisterModalOpen(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-all focus:outline-none"
@@ -1084,7 +1085,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Patient / Citizen Card */}
                 <Link
                   to="/register/patient"
@@ -1131,6 +1132,30 @@ export default function LandingPage() {
 
                   <div className="text-xs font-bold text-emerald-700 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
                     <span>Store Portal Setup</span>
+                    <span>&rarr;</span>
+                  </div>
+                </Link>
+
+                {/* Insurance Provider Card */}
+                <Link
+                  to="/register/insurance"
+                  onClick={() => setIsRegisterModalOpen(false)}
+                  className="group p-6 bg-white rounded-lg border border-gray-250 hover:border-health-primary hover:shadow-xl transition-all duration-200 flex flex-col justify-between h-56 text-left relative overflow-hidden"
+                >
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-blue-50 text-blue-700 group-hover:bg-blue-700 group-hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200">
+                      <Shield className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mt-4 group-hover:text-blue-700 transition-colors">
+                      Register as Insurance
+                    </h4>
+                    <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-[200px]">
+                      Register a digital insurance portal account to process claims, verify policies, and view co-pay reports.
+                    </p>
+                  </div>
+
+                  <div className="text-xs font-bold text-blue-700 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
+                    <span>Insurance Portal Setup</span>
                     <span>&rarr;</span>
                   </div>
                 </Link>

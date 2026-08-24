@@ -343,6 +343,26 @@ export const AuthApi = {
   },
 
 
+  registerInsurance: async (insuranceData: {
+    fullname: string
+    email: string
+    phone: string
+    passwordHash: string
+  }): Promise<unknown> => {
+    try {
+      const response = await apiClient.post('/auth/register-insurance', {
+        fullname: insuranceData.fullname,
+        email: insuranceData.email,
+        phone: insuranceData.phone,
+        password: insuranceData.passwordHash,
+      })
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  },
+
+
   getAllPharmacies: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/pharmacies')

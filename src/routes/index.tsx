@@ -7,8 +7,10 @@ import SidebarLayout from '@/layouts/SidebarLayout'
 // Public Pages
 import LandingPage from '@/pages/public/Landing'
 import Login from '@/pages/public/Login'
+import RegisterSelector from '@/pages/public/RegisterSelector'
 import PatientRegister from '@/pages/public/PatientRegister'
 import PharmacyRegister from '@/pages/public/PharmacyRegister'
+import InsuranceRegister from '@/pages/public/InsuranceRegister'
 import ForgotPassword from '@/pages/public/ForgotPassword'
 import ChangePassword from '@/pages/public/ChangePassword'
 import VerifyEmail from '@/pages/public/VerifyEmail'
@@ -75,8 +77,10 @@ export default function AppRoutes() {
       {/* Public Routes (Guests only, redirects if authenticated) */}
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<RegisterSelector />} />
         <Route path="/register/patient" element={<PatientRegister />} />
         <Route path="/register/pharmacy" element={<PharmacyRegister />} />
+        <Route path="/register/insurance" element={<InsuranceRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/check-email" element={<CheckEmail />} />

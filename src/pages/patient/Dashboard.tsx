@@ -2,16 +2,77 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
+import { AuthApi } from '@/services/auth-api'
+import { insuranceApi } from '@/services/insurance-api'
 import { Reservation, Medicine, PharmacyStock, Notification, SearchHistoryItem } from '@/types'
 import {
   Search, ClipboardList, Clock, CheckCircle2, XCircle, AlertTriangle,
   ShieldCheck, History, ArrowRight, Trash2, Bell, Heart, MapPin, 
-  TrendingUp, DollarSign, Package, Calendar
+  TrendingUp, DollarSign, Package, Calendar, Shield, Save, RefreshCw
 } from 'lucide-react'
 
 export default function PatientDashboard() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user, updateProfile } = useAuthStore()
+
+  // Insurance Widget states
+  const [isEditingInsurance, setIsEditingInsurance] = useState(false)
+  const [selectedInsurance, setSelectedInsurance] = useState(user?.insuranceProvider || 'None')
+  const [insuranceSaveLoading, setInsuranceSaveLoading] = useState(false)
+  const [insuranceSaveError, setInsuranceSaveError] = useState<string | null>(null)
+  const [insuranceSaveSuccess, setInsuranceSaveSuccess] = useState(false)
+  const [providers, setProviders] = useState<any[]>([
+    { id: '1', code: 'RSSB', name: 'RSSB (Rwanda Social Security Board)', defaultCoveragePercentage: 0.85, isActive: true },
+    { id: '2', code: 'MMI', name: 'MMI (Military Medical Insurance)', defaultCoveragePercentage: 0.90, isActive: true },
+    { id: '3', code: 'SANLAM', name: 'SANLAM', defaultCoveragePercentage: 0.75, isActive: true },
+    { id: '4', code: 'Radiant', name: 'Radiant Insurance', defaultCoveragePercentage: 0.70, isActive: true },
+  ])
+
+  useEffect(() => {
+    insuranceApi.getProviders()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProviders(data.filter((p: any) => p.isActive !== false))
+        }
+      })
+      .catch((err) => console.error('Error loading dynamic insurance providers:', err))
+  }, [])
+
+  useEffect(() => {
+    if (user?.insuranceProvider) {
+      setSelectedInsurance(user.insuranceProvider)
+    }
+  }, [user?.insuranceProvider])
+
+  const handleSaveInsurance = async () => {
+    setInsuranceSaveError(null)
+    setInsuranceSaveSuccess(false)
+    setInsuranceSaveLoading(true)
+    try {
+      const updated = await AuthApi.updateProfile(user?.username || 'patient', {
+        firstName: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        insuranceProvider: selectedInsurance,
+        province: user?.province || '',
+        district: user?.district || '',
+        sector: user?.sector || '',
+        cell: user?.cell || '',
+        village: user?.village || '',
+        emergencyContact: user?.emergencyContact || '',
+        preferredPharmacy: user?.preferredPharmacy || '',
+        medicalNotes: user?.medicalNotes || ''
+      })
+      updateProfile(updated)
+      setInsuranceSaveSuccess(true)
+      setIsEditingInsurance(false)
+      setTimeout(() => setInsuranceSaveSuccess(false), 3000)
+    } catch (err: any) {
+      setInsuranceSaveError(err.message || 'Failed to update insurance provider.')
+    } finally {
+      setInsuranceSaveLoading(false)
+    }
+  }
 
   // Data states
   const [reservations, setReservations] = useState<Reservation[]>([])
@@ -245,31 +306,103 @@ export default function PatientDashboard() {
           </form>
         </div>
 
-        {/* Completion Progress widget */}
-        <div className="flex-shrink-0 bg-emerald-50/60 border border-emerald-200/60 p-4 rounded-xl text-center space-y-2.5 max-w-[200px] w-full">
-          <span className="text-[10px] text-emerald-800 block uppercase tracking-wider font-bold">Health Profile Score</span>
+        {/* Linked Insurance Widget (in Welcome Banner) */}
+        <div className="flex-shrink-0 bg-emerald-50/60 border border-emerald-200/60 p-4 rounded-xl text-center space-y-2.5 max-w-[210px] w-full relative z-10 font-sans">
+          <span className="text-[10px] text-emerald-800 block uppercase tracking-wider font-bold">Linked Insurance</span>
 
-          {/* Progress Circle Ring */}
-          <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
-            <svg className="w-full h-full transform -rotate-90">
-              <circle cx="32" cy="32" r="28" stroke="rgba(15,81,50,0.15)" strokeWidth="4" fill="transparent" />
-              <circle
-                cx="32" cy="32" r="28"
-                stroke="#0f5132" strokeWidth="4" fill="transparent"
-                strokeDasharray={176}
-                strokeDashoffset={176 - (176 * completionPercent) / 100}
-              />
-            </svg>
-            <span className="absolute text-xs font-black text-emerald-950">{completionPercent}%</span>
-          </div>
+          {insuranceSaveSuccess && (
+            <div className="bg-emerald-100 border border-emerald-200 text-emerald-800 py-1 px-2 rounded text-[9px] font-bold animate-fadeIn">
+              Saved!
+            </div>
+          )}
 
-          <button
-            type="button"
-            onClick={() => navigate('/patient/profile')}
-            className="text-[10px] text-emerald-800 hover:text-emerald-950 font-bold block mx-auto hover:underline"
-          >
-            Complete profile &rarr;
-          </button>
+          {insuranceSaveError && (
+            <div className="bg-red-50 border border-red-200 text-red-800 py-1 px-2 rounded text-[9px] font-bold animate-fadeIn truncate" title={insuranceSaveError}>
+              Error saving
+            </div>
+          )}
+
+          {isEditingInsurance ? (
+            <div className="space-y-2">
+              <select
+                value={selectedInsurance}
+                onChange={(e) => setSelectedInsurance(e.target.value)}
+                className="w-full bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                {providers.map((prov) => (
+                  <option key={prov.id} value={prov.code || prov.name}>
+                    {prov.code || prov.name}
+                  </option>
+                ))}
+                <option value="None">None (Cash)</option>
+              </select>
+              <div className="flex items-center space-x-1.5">
+                <button
+                  type="button"
+                  disabled={insuranceSaveLoading}
+                  onClick={handleSaveInsurance}
+                  className="flex-grow bg-health-primary hover:bg-emerald-800 text-white text-[9px] font-bold py-1 px-1.5 rounded transition-colors flex items-center justify-center space-x-0.5 cursor-pointer"
+                >
+                  {insuranceSaveLoading ? '...' : 'Save'}
+                </button>
+                <button
+                  type="button"
+                  disabled={insuranceSaveLoading}
+                  onClick={() => {
+                    setIsEditingInsurance(false)
+                    setSelectedInsurance(user?.insuranceProvider || 'None')
+                    setInsuranceSaveError(null)
+                  }}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-[9px] font-bold py-1 px-1.5 rounded transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {user?.insuranceProvider && user.insuranceProvider !== 'None' ? (
+                <>
+                  <div className="flex items-center justify-center space-x-1 text-emerald-700">
+                    <Shield className="w-4 h-4 fill-emerald-100" />
+                    <span className="text-xs font-black">{user.insuranceProvider} Active</span>
+                  </div>
+                  <span className="block text-[10px] text-emerald-750 font-semibold leading-none">
+                    {(() => {
+                      const matched = providers.find(p => p.code === user.insuranceProvider || p.name === user.insuranceProvider)
+                      if (matched) {
+                        const pct = matched.defaultCoveragePercentage
+                        const display = pct > 1 ? pct : Math.round(pct * 100)
+                        return `${display}% cost covered`
+                      }
+                      return 'Discount active'
+                    })()}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingInsurance(true)}
+                    className="text-[9px] text-emerald-800 hover:text-emerald-950 font-bold block mx-auto hover:underline cursor-pointer"
+                  >
+                    Change Provider &rarr;
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-center space-x-1 text-amber-600">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="text-xs font-black">Paying Cash</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingInsurance(true)}
+                    className="text-[9px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-2 py-1 rounded shadow-xs transition-colors block mx-auto cursor-pointer"
+                  >
+                    Link Insurance
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
       </div>
@@ -320,14 +453,14 @@ export default function PatientDashboard() {
       </div>
 
       {/* Additional stats row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
           <div className="p-2.5 bg-rose-50 rounded-lg text-rose-700">
             <Bell className="w-5 h-5" />
           </div>
           <div>
             <span className="text-[10px] text-gray-400 block uppercase font-bold">Active Reminders</span>
-            <span className="text-lg font-black text-gray-950">{activeRemindersCount} medications</span>
+            <span className="text-lg font-black text-gray-955">{activeRemindersCount} medications</span>
             <span className="text-[10px] text-gray-400 block">{todayDosesCount} doses today</span>
           </div>
         </div>
@@ -350,7 +483,38 @@ export default function PatientDashboard() {
           </div>
           <div>
             <span className="text-[10px] text-gray-400 block uppercase font-bold">Unread Updates</span>
-            <span className="text-lg font-black text-gray-950">{unreadCount} alerts</span>
+            <span className="text-lg font-black text-gray-955">{unreadCount} alerts</span>
+          </div>
+        </div>
+
+        {/* Profile completion percentage stats card */}
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs font-sans">
+          {/* Progress circle ring inside smaller card */}
+          <div className="relative w-10 h-10 flex-shrink-0 flex items-center justify-center">
+            <svg className="w-full h-full transform -rotate-90">
+              <circle cx="20" cy="20" r="16" stroke="rgba(15,81,50,0.1)" strokeWidth="2.5" fill="transparent" />
+              <circle
+                cx="20"
+                cy="20"
+                r="16"
+                stroke="#0f5132"
+                strokeWidth="2.5"
+                fill="transparent"
+                strokeDasharray={100}
+                strokeDashoffset={100 - completionPercent}
+              />
+            </svg>
+            <span className="absolute text-[9px] font-black text-emerald-955">{completionPercent}%</span>
+          </div>
+          <div>
+            <span className="text-[10px] text-gray-400 block uppercase font-bold">Profile Score</span>
+            <button
+              type="button"
+              onClick={() => navigate('/patient/profile')}
+              className="text-[10px] text-health-primary hover:text-emerald-900 font-bold block hover:underline text-left mt-0.5 cursor-pointer"
+            >
+              Complete Profile &rarr;
+            </button>
           </div>
         </div>
       </div>
@@ -471,7 +635,7 @@ export default function PatientDashboard() {
           {/* Notifications widget preview */}
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
-              <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
+              <h3 className="font-black text-gray-955 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <Bell className="w-4 h-4 text-emerald-700" />
                 <span>Recent Notifications</span>
               </h3>
@@ -579,48 +743,6 @@ export default function PatientDashboard() {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Favourite Medicines widget card */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
-            <div className="flex justify-between items-center pb-2 border-b border-gray-150">
-              <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
-                <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
-                <span>Bookmarked Medicines</span>
-              </h3>
-            </div>
-
-            {favMedicines.length === 0 ? (
-              <div className="text-center py-4 text-xs text-gray-400">
-                Bookmark drugs on the search catalog for quick access.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {favMedicines.map((med) => (
-                  <div
-                    key={med.id}
-                    onClick={() => navigate(`/patient/search?q=${encodeURIComponent(med.name)}`)}
-                    className="border border-gray-200 hover:border-rose-300 p-3 rounded-lg flex items-center justify-between text-xs transition-all cursor-pointer bg-white"
-                  >
-                    <div>
-                      <span className="font-bold text-gray-900 block">{med.name}</span>
-                      <span className="text-[10px] text-gray-400 block font-semibold">{med.category} &bull; {med.manufacturer}</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRemoveFavMedicine(e, med.id)
-                      }}
-                      className="p-1 hover:bg-red-50 text-rose-600 rounded transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Favourite Pharmacies widget card */}

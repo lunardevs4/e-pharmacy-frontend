@@ -352,8 +352,8 @@ export default function SidebarLayout() {
               </button>
             )}
 
-            <span className="hidden sm:block text-sm text-gray-550 font-medium">
-              Rwanda E-Pharmacy &bull; {portalLabel}
+            <span className="hidden sm:block text-sm text-gray-550 font-bold tracking-tight">
+              {portalLabel}
             </span>
           </div>
 
