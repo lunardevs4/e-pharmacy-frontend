@@ -1,56 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { Users, Search, Shield, Loader2, RefreshCw, AlertTriangle } from 'lucide-react'
-import { AuthApi } from '@/services/auth-api'
+import { insuranceApi, InsuredPatient } from '@/services/insurance-api'
 import { useAuthStore } from '@/store/authStore'
 
-interface PolicyHolder {
-  id: string
-  name: string
-  nid: string
-  phone: string
-  insurer: string
-  policyId: string
-  coverage: number
-  activeClaims: number
-  status: 'Active' | 'Inactive' | 'Suspended'
-}
-
-const FALLBACK: PolicyHolder[] = [
-  { id: 'POL-001', name: 'Marie Uwimana',         nid: '1199580048123984', phone: '+250 788 123 456', insurer: 'RSSB',    policyId: 'RSSB-2024-00112', coverage: 85, activeClaims: 1, status: 'Active'    },
-  { id: 'POL-002', name: 'Jean-Pierre Nkurunziza', nid: '1199380092384728', phone: '+250 788 234 567', insurer: 'MMI',     policyId: 'MMI-2025-00892',  coverage: 90, activeClaims: 0, status: 'Active'    },
-  { id: 'POL-003', name: 'Aline Mukamana',         nid: '1199680018374829', phone: '+250 788 345 678', insurer: 'RSSB',    policyId: 'RSSB-2023-00784', coverage: 85, activeClaims: 2, status: 'Active'    },
-  { id: 'POL-004', name: 'Emmanuel Habimana',      nid: '1199080037284729', phone: '+250 788 456 789', insurer: 'SANLAM',  policyId: 'SAL-2024-00341',  coverage: 75, activeClaims: 0, status: 'Inactive'  },
-  { id: 'POL-005', name: 'Clarisse Ingabire',      nid: '1199880018374928', phone: '+250 788 567 890', insurer: 'Radiant', policyId: 'RAD-2026-00021',  coverage: 70, activeClaims: 0, status: 'Active'    },
-  { id: 'POL-006', name: 'Robert Uwera',           nid: '1198980028384920', phone: '+250 788 678 901', insurer: 'RSSB',    policyId: 'RSSB-2022-00223', coverage: 85, activeClaims: 1, status: 'Suspended' },
-  { id: 'POL-007', name: 'Jean-Paul Mutabazi',     nid: '1199180028374829', phone: '+250 788 789 012', insurer: 'MMI',     policyId: 'MMI-2024-00234',  coverage: 90, activeClaims: 1, status: 'Active'    },
-  { id: 'POL-008', name: 'Divine Uwera',           nid: '1199480038472918', phone: '+250 788 890 123', insurer: 'MMI',     policyId: 'MMI-2023-00123',  coverage: 90, activeClaims: 0, status: 'Active'    },
-]
-
 const STATUS_STYLE: Record<string, string> = {
-  Active:    'text-emerald-700 bg-emerald-50 border-emerald-200',
-  Inactive:  'text-gray-500 bg-gray-100 border-gray-200',
-  Suspended: 'text-red-700 bg-red-50 border-red-200',
-}
-
-const normalizePolicyHolder = (item: any): PolicyHolder => {
-  const user = item.user || item.patient?.user || {}
-  return {
-    id: item.id || item.policyId || `POL-${Math.random().toString(36).substr(2, 8)}`,
-    name: [user.firstName, user.lastName].filter(Boolean).join(' ') || item.name || 'Policyholder',
-    nid: user.nid || item.nid || '—',
-    phone: user.phone || item.phone || '—',
-    insurer: item.insurer || item.insuranceProvider || 'Unknown',
-    policyId: item.policyId || item.id || '—',
-    coverage: Number(item.coverage || 0),
-    activeClaims: Number(item.activeClaims || 0),
-    status: user.isActive === false ? 'Inactive' : item.status === 'SUSPENDED' ? 'Suspended' : 'Active',
-  }
+  ACTIVE:    'text-emerald-700 bg-emerald-50 border-emerald-200',
+  INACTIVE:  'text-gray-500 bg-gray-100 border-gray-200',
+  SUSPENDED: 'text-red-700 bg-red-50 border-red-200',
 }
 
 export default function InsurancePatients() {
   const { user } = useAuthStore()
-  const insurer = user?.insuranceProvider || 'RSSB'
-  const [patients, setPatients] = useState<PolicyHolder[]>(FALLBACK)
+  const [patients, setPatients] = useState<InsuredPatient[]>([])
   const [search, setSearch] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -59,13 +20,13 @@ export default function InsurancePatients() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      const data = await AuthApi.getInsurancePatients()
-      if (data.length > 0) {
-        setPatients(data.map(normalizePolicyHolder))
-      }
+      const response = await insuranceApi.getPatients()
+      // The API returns { data: InsuredPatient[], meta: any }
+      const patientsArray = Array.isArray(response?.data) ? response.data : []
+      setPatients(patientsArray)
     } catch (error: any) {
-      console.warn('Using fallback patients data due to error:', error)
-      setErrorMsg(error?.message || 'Unable to load patients from backend. Using fallback data.')
+      setErrorMsg(error?.message || 'Unable to load patients from backend.')
+      setPatients([])
     } finally {
       setIsLoading(false)
     }
@@ -75,12 +36,12 @@ export default function InsurancePatients() {
     loadPatients()
   }, [])
 
-  const filtered = patients.filter(p => {
+  const filtered = Array.isArray(patients) ? patients.filter(p => {
     const q = search.toLowerCase()
-    const pInsurer = p.insurer || ''
-    return pInsurer.toUpperCase() === insurer.toUpperCase() &&
-      (p.name.toLowerCase().includes(q) || p.nid.includes(q) || p.policyId.toLowerCase().includes(q))
-  })
+    return (p.fullName.toLowerCase().includes(q) || 
+           p.nationalId.includes(q) || 
+           p.policyNumber.toLowerCase().includes(q))
+  }) : []
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -112,12 +73,6 @@ export default function InsurancePatients() {
               value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold" />
           </div>
-          <div className="bg-white border border-gray-300 rounded-lg px-3.5 py-2 text-xs text-gray-600 font-extrabold flex items-center gap-1.5 shadow-xs">
-            <span>Insurer:</span>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-              insurer === 'MMI' ? 'bg-emerald-100 text-emerald-900 border border-emerald-250' : 'bg-blue-100 text-blue-900 border border-blue-250'
-            }`}>{insurer}</span>
-          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -142,22 +97,22 @@ export default function InsurancePatients() {
                   <td className="px-5 py-3">
                     <div className="flex items-center space-x-2">
                       <div aria-hidden="true" className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-600 flex-shrink-0">
-                        {p.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        {p.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                       </div>
-                      <span className="font-bold text-gray-900">{p.name}</span>
+                      <span className="font-bold text-gray-900">{p.fullName}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-3 font-mono text-gray-500">{p.nid}</td>
-                  <td className="px-5 py-3 text-gray-600">{p.phone}</td>
+                  <td className="px-5 py-3 font-mono text-gray-500">{p.nationalId}</td>
+                  <td className="px-5 py-3 text-gray-600">{p.phone || '—'}</td>
                   <td className="px-5 py-3">
                     <span className="inline-flex items-center space-x-1 font-bold text-gray-700">
                       <Shield className="w-3 h-3 text-emerald-600" aria-hidden="true" />
-                      <span>{p.insurer}</span>
+                      <span>{p.insurance?.name || 'Unknown'}</span>
                     </span>
                   </td>
-                  <td className="px-5 py-3 font-mono text-gray-700">{p.policyId}</td>
-                  <td className="px-5 py-3 text-center font-black text-emerald-700">{p.coverage}%</td>
-                  <td className="px-5 py-3 text-center font-black text-gray-900">{p.activeClaims}</td>
+                  <td className="px-5 py-3 font-mono text-gray-700">{p.policyNumber}</td>
+                  <td className="px-5 py-3 text-center font-black text-emerald-700">{p.coveragePercentage || 0}%</td>
+                  <td className="px-5 py-3 text-center font-black text-gray-900">{p.claims?.length || 0}</td>
                   <td className="px-5 py-3">
                     <span className={`inline-flex text-[10px] font-bold border px-2 py-0.5 rounded ${STATUS_STYLE[p.status]}`}>{p.status}</span>
                   </td>

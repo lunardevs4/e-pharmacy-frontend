@@ -1,24 +1,40 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement,
   ArcElement, Title, Tooltip, Legend
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
-import { Download, RefreshCw, BarChart2 } from 'lucide-react'
-import { useState } from 'react'
+import { Download, RefreshCw, BarChart2, Loader2, AlertTriangle } from 'lucide-react'
+import { insuranceApi, DashboardSummary } from '@/services/insurance-api'
 import { useAuthStore } from '@/store/authStore'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend)
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
-
 export default function InsuranceReports() {
   const { user } = useAuthStore()
   const insurer = user?.insuranceProvider || 'RSSB'
-  const isMMI = insurer === 'MMI'
-
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+
+  const loadSummary = async () => {
+    setIsLoading(true)
+    setErrorMsg(null)
+    try {
+      const data = await insuranceApi.getDashboardSummary()
+      setSummary(data)
+    } catch (error: any) {
+      setErrorMsg(error?.message || 'Unable to load report data from backend.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadSummary()
+  }, [])
 
   const download = (name: string) => {
     setLoading(name)
@@ -26,19 +42,22 @@ export default function InsuranceReports() {
   }
 
   const claimsVolumeData = {
-    labels: MONTHS,
+    labels: ['Pending', 'Approved', 'Rejected', 'Paid'],
     datasets: [
       {
-        label: 'Approved Claims',
-        data: isMMI ? [45, 52, 58, 65, 70, 78, 85] : [142, 165, 178, 190, 210, 225, 248],
-        backgroundColor: 'rgba(15,81,50,0.75)',
-        borderRadius: 6,
-        borderSkipped: false
-      },
-      {
-        label: 'Rejected Claims',
-        data: isMMI ? [4, 3, 5, 2, 4, 3, 2] : [12,  9,  14,  11,  8,  10,   7],
-        backgroundColor: 'rgba(220,53,69,0.55)',
+        label: 'Claims by Status',
+        data: summary ? [
+          summary.pendingClaims,
+          summary.approvedClaims,
+          summary.rejectedClaims,
+          summary.paidClaims
+        ] : [0, 0, 0, 0],
+        backgroundColor: [
+          'rgba(245, 158, 11, 0.75)',
+          'rgba(16, 185, 129, 0.75)',
+          'rgba(239, 68, 68, 0.55)',
+          'rgba(59, 130, 246, 0.75)'
+        ],
         borderRadius: 6,
         borderSkipped: false
       },
@@ -46,23 +65,31 @@ export default function InsuranceReports() {
   }
 
   const payoutData = {
-    labels: MONTHS,
+    labels: ['Pending', 'Approved', 'Rejected', 'Paid'],
     datasets: [{
-      label: 'Total Payout (RWF)',
-      data: isMMI 
-        ? [1100000, 1300000, 1400000, 1600000, 1700000, 1900000, 2100000]
-        : [3200000, 3700000, 4000000, 4200000, 4600000, 4800000, 5100000],
-      backgroundColor: isMMI ? 'rgba(16,185,129,0.65)' : 'rgba(37,99,235,0.65)',
+      label: 'Amount by Status (RWF)',
+      data: summary ? [
+        summary.pendingClaimsAmount,
+        summary.approvedClaimsAmount,
+        summary.rejectedClaimsAmount,
+        summary.paidClaimsAmount
+      ] : [0, 0, 0, 0],
+      backgroundColor: 'rgba(16,185,129,0.65)',
       borderRadius: 6,
       borderSkipped: false,
     }],
   }
 
   const statusDistributionData = {
-    labels: ['Approved', 'Paid', 'Pending', 'Rejected'],
+    labels: ['Pending', 'Approved', 'Rejected', 'Paid'],
     datasets: [{
-      data: isMMI ? [60, 25, 10, 5] : [50, 30, 15, 5],
-      backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+      data: summary ? [
+        summary.pendingClaims,
+        summary.approvedClaims,
+        summary.rejectedClaims,
+        summary.paidClaims
+      ] : [0, 0, 0, 0],
+      backgroundColor: ['#f59e0b', '#10b981', '#ef4444', '#3b82f6'],
       borderWidth: 2, borderColor: '#fff', hoverOffset: 8,
     }],
   }
@@ -77,10 +104,10 @@ export default function InsuranceReports() {
   }
 
   const reports = [
-    { name: `${insurer} Monthly Claims Summary — Jul 2026`, type: 'PDF' },
-    { name: `${insurer} Pharmacy Payout Register — Jul 2026`, type: 'CSV' },
-    { name: `${insurer} Rejection Analysis Report`,           type: 'PDF' },
-    { name: `${insurer} Insured Patient Coverage Audit`,      type: 'CSV' },
+    { name: `${insurer} Monthly Claims Summary`, type: 'PDF' },
+    { name: `${insurer} Pharmacy Payout Register`, type: 'CSV' },
+    { name: `${insurer} Rejection Analysis Report`, type: 'PDF' },
+    { name: `${insurer} Insured Patient Coverage Audit`, type: 'CSV' },
   ]
 
   return (
@@ -91,24 +118,35 @@ export default function InsuranceReports() {
         </div>
       )}
 
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
       {/* Header card */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center gap-3">
-        <div className={`p-2.5 rounded-lg ${isMMI ? 'bg-[#e8f5e9] text-[#2d6a4f]' : 'bg-[#eff6ff] text-[#3b82f6]'}`}>
+        <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-700">
           <BarChart2 className="w-6 h-6" />
         </div>
         <div>
           <h1 className="text-xl font-black text-gray-900">{insurer} Analytics & Audit Reports</h1>
           <p className="text-xs text-gray-500">Visual payouts, claim volumes, status distributions, and downloadable accounting reports for {insurer}.</p>
         </div>
+        <button onClick={loadSummary} disabled={isLoading} className="ml-auto flex items-center space-x-1.5 border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 font-bold px-3 py-2 rounded-lg text-xs transition-colors disabled:opacity-50">
+          {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
-          <div><h3 className="text-sm font-black text-gray-900">Claims Volume</h3><p className="text-[10px] text-gray-400">Approved vs Rejected</p></div>
+          <div><h3 className="text-sm font-black text-gray-900">Claims Volume</h3><p className="text-[10px] text-gray-400">Claims by status</p></div>
           <Bar data={claimsVolumeData} options={barOpts} />
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
-          <div><h3 className="text-sm font-black text-gray-900">Monthly Payout</h3><p className="text-[10px] text-gray-400">Total RWF disbursed</p></div>
+          <div><h3 className="text-sm font-black text-gray-900">Claims Amount</h3><p className="text-[10px] text-gray-400">Total RWF by status</p></div>
           <Bar data={payoutData} options={{
             ...barOpts,
             plugins: { legend: { display: false } },

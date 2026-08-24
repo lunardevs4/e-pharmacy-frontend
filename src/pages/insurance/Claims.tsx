@@ -1,59 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { FileText, Search, CheckCircle2, XCircle, Clock, AlertTriangle, Loader2, RefreshCw } from 'lucide-react'
-import { AuthApi } from '@/services/auth-api'
+import { insuranceApi, InsuranceClaim } from '@/services/insurance-api'
 import { useAuthStore } from '@/store/authStore'
 
-type ClaimStatus = 'Pending' | 'Approved' | 'Rejected' | 'Paid'
-
-interface Claim {
-  id: string
-  pharmacy: string
-  patientNid: string
-  medicine: string
-  qty: number
-  total: number
-  insurancePays: number
-  patientPays: number
-  insurer: string
-  submittedAt: string
-  status: ClaimStatus
-}
-
-
+type ClaimStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID'
 
 const STATUS_STYLE: Record<ClaimStatus, string> = {
-  Pending:  'text-amber-700 bg-amber-50 border-amber-200',
-  Approved: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-  Rejected: 'text-red-700 bg-red-50 border-red-200',
-  Paid:     'text-blue-700 bg-blue-50 border-blue-200',
-}
-
-const normalizeClaim = (item: any): Claim => {
-  const statusStr = String(item.status || item.claimStatus || 'PENDING').toUpperCase()
-  let status: ClaimStatus = 'Pending'
-  if (statusStr.includes('APPROVE')) status = 'Approved'
-  else if (statusStr.includes('REJECT')) status = 'Rejected'
-  else if (statusStr.includes('PAID')) status = 'Paid'
-
-  return {
-    id: item.id || item.claimId || `CLM-${Math.random().toString(36).substr(2, 8)}`,
-    pharmacy: item.pharmacy?.name || item.pharmacyName || item.pharmacy || 'Unknown Pharmacy',
-    patientNid: item.patientNid || item.patient?.nid || item.patientId || '—',
-    medicine: item.medicine?.name || item.medicineName || item.medicine || 'Unknown Medicine',
-    qty: item.quantity || item.qty || 1,
-    total: Number(item.total || item.totalCost || item.amount || 0),
-    insurancePays: Number(item.insurancePays || item.insurancePay || 0),
-    patientPays: Number(item.patientPays || item.patientPay || 0),
-    insurer: item.insurer || item.insuranceProvider || 'Unknown',
-    submittedAt: item.submittedAt || item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : '—',
-    status,
-  }
+  PENDING:  'text-amber-700 bg-amber-50 border-amber-200',
+  APPROVED: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  REJECTED: 'text-red-700 bg-red-50 border-red-200',
+  PAID:     'text-blue-700 bg-blue-50 border-blue-200',
 }
 
 export default function InsuranceClaims() {
   const { user } = useAuthStore()
-  const insurer = user?.insuranceProvider || 'RSSB'
-  const [claims, setClaims] = useState<Claim[]>([])
+  const [claims, setClaims] = useState<InsuranceClaim[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ClaimStatus | ''>('')
   const [isLoading, setIsLoading] = useState(true)
@@ -64,13 +25,13 @@ export default function InsuranceClaims() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      const data = await AuthApi.getInsuranceClaims()
-      if (data.length > 0) {
-        setClaims(data.map(normalizeClaim))
-      }
+      const response = await insuranceApi.getClaims()
+      // The API returns { data: InsuranceClaim[], meta: any }
+      const claimsArray = response?.data || []
+      setClaims(claimsArray)
     } catch (error: any) {
-      console.warn('Using fallback claims data due to error:', error)
-      setErrorMsg(error?.message || 'Unable to load claims from backend. Using fallback data.')
+      setErrorMsg(error?.message || 'Unable to load claims from backend.')
+      setClaims([])
     } finally {
       setIsLoading(false)
     }
@@ -87,33 +48,31 @@ export default function InsuranceClaims() {
 
   const update = async (id: string, status: ClaimStatus) => {
     try {
-      await AuthApi.updateInsuranceClaimStatus(id, status)
+      await insuranceApi.updateClaimStatus(id, { status })
       triggerToast(`Claim ${id} status updated to ${status}`)
       await loadClaims()
     } catch (error: any) {
-      console.warn('Failed to update claim on backend, updating in-memory:', error)
-      setClaims(prev => prev.map(c => c.id === id ? { ...c, status } : c))
-      triggerToast(`Claim ${id} status updated to ${status} (Local Mock Mode)`)
+      setErrorMsg(error?.message || 'Failed to update claim status.')
     }
   }
 
-  const filtered = claims.filter(c => {
+  const filtered = Array.isArray(claims) ? claims.filter(c => {
     const q = search.toLowerCase()
-    const cInsurer = c.insurer || ''
-    return cInsurer.toUpperCase() === insurer.toUpperCase() &&
-      (c.id.toLowerCase().includes(q) || c.pharmacy.toLowerCase().includes(q) || c.medicine.toLowerCase().includes(q)) &&
+    return (c.claimNumber.toLowerCase().includes(q) || 
+           c.pharmacy?.name?.toLowerCase().includes(q) || 
+           c.medicine?.tradeName?.toLowerCase().includes(q)) &&
       (statusFilter ? c.status === statusFilter : true)
-  })
+  }) : []
 
   const totals = useMemo(() => {
-    const insurerClaims = claims.filter(c => (c.insurer || '').toUpperCase() === insurer.toUpperCase())
+    const claimsArray = Array.isArray(claims) ? claims : []
     return {
-      pending: insurerClaims.filter(c => c.status === 'Pending').length,
-      approved: insurerClaims.filter(c => c.status === 'Approved').length,
-      paid:     insurerClaims.filter(c => c.status === 'Paid').length,
-      rejected: insurerClaims.filter(c => c.status === 'Rejected').length,
+      pending: claimsArray.filter(c => c.status === 'PENDING').length,
+      approved: claimsArray.filter(c => c.status === 'APPROVED').length,
+      paid:     claimsArray.filter(c => c.status === 'PAID').length,
+      rejected: claimsArray.filter(c => c.status === 'REJECTED').length,
     }
-  }, [claims, insurer])
+  }, [claims])
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -160,10 +119,10 @@ export default function InsuranceClaims() {
           <select aria-label="Filter by status" value={statusFilter} onChange={e => setStatusFilter(e.target.value as ClaimStatus | '')}
             className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
             <option value="">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Paid">Paid</option>
-            <option value="Rejected">Rejected</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="PAID">Paid</option>
+            <option value="REJECTED">Rejected</option>
           </select>
           <button onClick={loadClaims} disabled={isLoading} className="flex items-center space-x-1.5 border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 font-bold px-3 py-2 rounded-lg text-xs transition-colors disabled:opacity-50">
             {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
@@ -192,33 +151,33 @@ export default function InsuranceClaims() {
                 <tr><td colSpan={10} className="text-center py-10 text-gray-400 text-xs">Loading claims...</td></tr>
               ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3 font-mono font-bold text-gray-900">{c.id}</td>
-                  <td className="px-5 py-3 font-semibold text-gray-800">{c.pharmacy}</td>
-                  <td className="px-5 py-3 font-mono text-gray-500">{c.patientNid}</td>
-                  <td className="px-5 py-3">{c.medicine}</td>
-                  <td className="px-5 py-3 font-black text-gray-900">RWF {c.total.toLocaleString()}</td>
-                  <td className="px-5 py-3 text-emerald-700 font-bold">RWF {c.insurancePays.toLocaleString()}</td>
-                  <td className="px-5 py-3 text-gray-700 font-semibold">RWF {c.patientPays.toLocaleString()}</td>
-                  <td className="px-5 py-3 font-mono text-gray-400">{c.submittedAt}</td>
+                  <td className="px-5 py-3 font-mono font-bold text-gray-900">{c.claimNumber}</td>
+                  <td className="px-5 py-3 font-semibold text-gray-800">{c.pharmacy?.name || 'Pharmacy'}</td>
+                  <td className="px-5 py-3 font-mono text-gray-500">{c.insuredPatientId}</td>
+                  <td className="px-5 py-3">{c.medicine?.tradeName || c.medicine?.genericName || 'Medicine'}</td>
+                  <td className="px-5 py-3 font-black text-gray-900">RWF {c.totalAmount.toLocaleString()}</td>
+                  <td className="px-5 py-3 text-emerald-700 font-bold">RWF {c.insuranceAmount.toLocaleString()}</td>
+                  <td className="px-5 py-3 text-gray-700 font-semibold">RWF {c.patientAmount.toLocaleString()}</td>
+                  <td className="px-5 py-3 font-mono text-gray-400">{new Date(c.claimedAt).toLocaleDateString()}</td>
                   <td className="px-5 py-3">
                     <span className={`inline-flex text-[10px] font-bold border px-2 py-0.5 rounded ${STATUS_STYLE[c.status]}`}>{c.status}</span>
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end space-x-1.5">
-                      {c.status === 'Pending' && (
+                      {c.status === 'PENDING' && (
                         <>
-                          <button onClick={() => update(c.id, 'Approved')} aria-label={`Approve claim ${c.id}`}
+                          <button onClick={() => update(c.id, 'APPROVED')} aria-label={`Approve claim ${c.id}`}
                             className="text-[10px] font-bold px-2 py-1 rounded border border-emerald-200 text-emerald-700 hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600">
                             Approve
                           </button>
-                          <button onClick={() => update(c.id, 'Rejected')} aria-label={`Reject claim ${c.id}`}
+                          <button onClick={() => update(c.id, 'REJECTED')} aria-label={`Reject claim ${c.id}`}
                             className="text-[10px] font-bold px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400">
                             Reject
                           </button>
                         </>
                       )}
-                      {c.status === 'Approved' && (
-                        <button onClick={() => update(c.id, 'Paid')} aria-label={`Mark claim ${c.id} as paid`}
+                      {c.status === 'APPROVED' && (
+                        <button onClick={() => update(c.id, 'PAID')} aria-label={`Mark claim ${c.id} as paid`}
                           className="text-[10px] font-bold px-2 py-1 rounded border border-blue-200 text-blue-700 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400">
                           Mark Paid
                         </button>

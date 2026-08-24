@@ -237,7 +237,7 @@ export default function MedicineSearch() {
     getUserLocation()
     
     try {
-      const list = await getMedicineAvailability(med.id)
+      const list = await getMedicineAvailability(med.id, selectedInsurance !== 'None' ? selectedInsurance : null)
       
       // Calculate distances from user location
       if (userLocation) {
@@ -320,16 +320,26 @@ export default function MedicineSearch() {
         })
       }
 
-      const isAccepted = selectedPharmacy.insuranceAccepted.includes(selectedInsurance) && selectedInsurance !== 'None'
-      const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
-      const coverageRate = isAccepted 
-        ? (matchedProvider 
-            ? (matchedProvider.defaultCoveragePercentage > 1 ? matchedProvider.defaultCoveragePercentage / 100 : matchedProvider.defaultCoveragePercentage)
-            : (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0))
-        : 0
+      // Use real insurance coverage data if available, otherwise fall back to provider data
+      const hasCoverage = selectedPharmacy.insuranceCoverage?.isCovered && selectedPharmacy.insuranceCoverage?.hasAgreement
       const totalCost = selectedPharmacy.price * quantity
-      const insurancePays = Math.round(totalCost * coverageRate)
-      const patientPays = totalCost - insurancePays
+      let insurancePays = 0
+      let patientPays = totalCost
+
+      if (hasCoverage) {
+        insurancePays = Math.round((selectedPharmacy.insuranceCoverage?.insurancePays || 0) * quantity)
+        patientPays = Math.round((selectedPharmacy.insuranceCoverage?.patientPays || selectedPharmacy.price) * quantity)
+      } else if (selectedInsurance !== 'None') {
+        const isAccepted = selectedPharmacy.insuranceAccepted.includes(selectedInsurance)
+        if (isAccepted) {
+          const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
+          const coverageRate = matchedProvider 
+            ? (matchedProvider.defaultCoveragePercentage > 1 ? matchedProvider.defaultCoveragePercentage / 100 : matchedProvider.defaultCoveragePercentage)
+            : (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0)
+          insurancePays = Math.round(totalCost * coverageRate)
+          patientPays = totalCost - insurancePays
+        }
+      }
 
       const res = await createReservation({
         medicineId: selectedMedicine.id,
@@ -694,7 +704,7 @@ export default function MedicineSearch() {
                   onSelectPharmacy={handleSelectPharmacyMap}
                   bookmarkedPharmacies={bookmarkedPharmacies}
                   onToggleBookmarkPharmacy={handleToggleBookmarkPharmacy}
-                  insuranceProvider={selectedInsurance}
+                  selectedInsurance={selectedInsurance}
                   onInsuranceChange={setSelectedInsurance}
                   providers={providers}
                 />
