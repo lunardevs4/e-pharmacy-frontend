@@ -23,7 +23,7 @@ import MedicineDetails from '@/pages/patient/MedicineDetails'
 import Reservations from '@/pages/patient/Reservations'
 import PatientHistory from '@/pages/patient/History'
 import PatientReminders from '@/pages/patient/Reminders'
-import PatientNotifications from '@/pages/patient/Notifications'
+import SharedNotifications from '@/pages/common/Notifications'
 import PatientProfile from '@/pages/patient/Profile'
 
 // Pharmacy Pages
@@ -36,7 +36,6 @@ import PharmacyStaff from '@/pages/pharmacy/StaffManagement'
 import PharmacyAudit from '@/pages/pharmacy/AuditTrail'
 import PharmacyReports from '@/pages/pharmacy/Reports'
 import PharmacySettings from '@/pages/pharmacy/Settings'
-import PharmacyNotifications from '@/pages/pharmacy/Notifications'
 import PharmacyProfile from '@/pages/pharmacy/Profile'
 
 
@@ -101,7 +100,7 @@ export default function AppRoutes() {
           <Route path="reservations" element={<Reservations />} />
           <Route path="history" element={<PatientHistory />} />
           <Route path="reminders" element={<PatientReminders />} />
-          <Route path="notifications" element={<PatientNotifications />} />
+          <Route path="notifications" element={<SharedNotifications />} />
           <Route path="profile" element={<PatientProfile />} />
         </Route>
       </Route>
@@ -123,7 +122,7 @@ export default function AppRoutes() {
 
           <Route path="reports" element={<PharmacyReports />} />
           <Route path="settings" element={<PharmacySettings />} />
-          <Route path="notifications" element={<PharmacyNotifications />} />
+          <Route path="notifications" element={<SharedNotifications />} />
           <Route path="profile" element={<PharmacyProfile />} />
         </Route>
       </Route>
@@ -142,6 +141,7 @@ export default function AppRoutes() {
           <Route path="province-analytics" element={<ProvinceAnalytics />} />
           <Route path="compliance" element={<GovernmentCompliance />} />
           <Route path="reports" element={<GovernmentReports />} />
+          <Route path="notifications" element={<SharedNotifications />} />
         </Route>
       </Route>
 
@@ -154,6 +154,7 @@ export default function AppRoutes() {
           <Route path="payments" element={<InsurancePayments />} />
           <Route path="reports" element={<InsuranceReports />} />
           <Route path="tariffs" element={<InsuranceTariffs />} />
+          <Route path="notifications" element={<SharedNotifications />} />
         </Route>
       </Route>
 
@@ -165,6 +166,7 @@ export default function AppRoutes() {
           <Route path="roles" element={<AdminRoles />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="audit" element={<AdminAuditLogs />} />
+          <Route path="notifications" element={<SharedNotifications />} />
         </Route>
       </Route>
 

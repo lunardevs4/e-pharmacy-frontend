@@ -46,6 +46,8 @@ export default function SidebarLayout() {
       case 'PHARMACY_OWNER':
       case 'PHARMACIST': return '/pharmacy/notifications'
       case 'INSURANCE':  return '/insurance/notifications'
+      case 'GOVERNMENT': return '/government/notifications'
+      case 'ADMIN':      return '/admin/notifications'
       default:           return null
     }
   }
