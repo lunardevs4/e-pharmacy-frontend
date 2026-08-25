@@ -530,7 +530,7 @@ export default function AuthLayout({
             RIGHT — FORM PANEL
         ======================================================= */}
         <section
-          className="
+          className={`
             relative
             w-full
             lg:w-1/2
@@ -538,16 +538,15 @@ export default function AuthLayout({
             lg:min-h-0
             bg-white
             flex
-            items-center
+            ${computedMode === 'register' ? 'items-start pt-20 md:pt-28 pb-12' : 'items-center py-10 lg:py-16'}
             justify-center
             px-6
-            py-5
             sm:px-10
             md:px-16
             lg:px-14
             xl:px-20
             overflow-y-auto
-          "
+          `}
         >
           {/* Go Back button */}
           <button

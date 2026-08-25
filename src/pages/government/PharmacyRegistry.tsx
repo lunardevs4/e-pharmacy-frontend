@@ -252,7 +252,7 @@ export default function PharmacyRegistry() {
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
       {/* Toast alert popup */}
       {toastMsg && (
-        <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-250 text-emerald-805 px-4.5 py-3 rounded-lg shadow-xl animate-fadeIn flex items-center space-x-2 text-xs font-bold">
+        <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-250 text-emerald-805 px-5 py-3 rounded-lg shadow-xl animate-fadeIn flex items-center space-x-2 text-xs font-bold">
           <CheckCircle2 className="w-5 h-5 text-emerald-600" />
           <span>{toastMsg}</span>
         </div>
@@ -587,7 +587,7 @@ export default function PharmacyRegistry() {
                       type="button"
                       disabled={isSubmittingAction}
                       onClick={handleApprove}
-                      className="bg-health-primary hover:bg-health-secondary text-white font-bold px-4.5 py-2 rounded-lg shadow-sm transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
+                      className="bg-health-primary hover:bg-health-secondary text-white font-bold px-5 py-2 rounded-lg shadow-sm transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
                     >
                       {isSubmittingAction ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-4 h-4" />}
                       <span>Approve &amp; Activate</span>
@@ -601,7 +601,7 @@ export default function PharmacyRegistry() {
                       setActiveModal('SUSPEND')
                       setModalComment('')
                     }}
-                    className="bg-rose-50 border border-rose-205 hover:bg-rose-100 text-rose-800 font-bold px-3.5 py-2 rounded-lg transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
+                    className="bg-rose-50 border border-rose-205 hover:bg-rose-100 text-rose-800 font-bold px-4 py-2 rounded-lg transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
                   >
                     <AlertTriangle className="w-4 h-4" />
                     <span>Suspend License</span>
@@ -612,7 +612,7 @@ export default function PharmacyRegistry() {
                     type="button"
                     disabled={isSubmittingAction}
                     onClick={handleReactivate}
-                    className="bg-health-primary hover:bg-health-secondary text-white font-bold px-4.5 py-2 rounded-lg shadow-sm transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
+                    className="bg-health-primary hover:bg-health-secondary text-white font-bold px-5 py-2 rounded-lg shadow-sm transition-colors focus:outline-none flex items-center gap-1 cursor-pointer"
                   >
                     {isSubmittingAction ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-4 h-4" />}
                     <span>Reactivate Store License</span>
