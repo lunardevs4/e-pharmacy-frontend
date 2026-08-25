@@ -129,7 +129,7 @@ export default function SidebarLayout() {
         }
         links.push(
           { path: '/pharmacy/reports',       label: 'Reports',        icon: BarChart2       },
-          { path: '/pharmacy/settings',      label: 'Settings',       icon: Settings        },
+          { path: '/pharmacy/settings',      label: 'Profile',        icon: User            },
         )
         return links
       }
@@ -160,7 +160,7 @@ export default function SidebarLayout() {
           { path: '/admin/users',    label: 'Users',       icon: Users           },
           
           { path: '/admin/roles',    label: 'Roles',       icon: ShieldAlert     },
-          { path: '/admin/settings', label: 'Settings',    icon: Settings        },
+          { path: '/admin/settings', label: 'Profile',     icon: User            },
           { path: '/admin/audit',    label: 'Audit Logs',  icon: FileLock2       },
         ]
       default:

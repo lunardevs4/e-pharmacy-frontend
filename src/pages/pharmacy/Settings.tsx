@@ -75,7 +75,7 @@ export default function PharmacySettings() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-16">
       <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Pharmacy Portal Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Pharmacy Portal Profile</h1>
         
         {/* Navigation Tabs */}
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">

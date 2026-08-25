@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Settings, Save, CheckCircle2, Globe, Clock, Shield, Server, Loader2, ShieldAlert } from 'lucide-react'
+import { User, Save, CheckCircle2, Globe, Clock, Shield, Server, Loader2, ShieldAlert } from 'lucide-react'
 import { apiClient } from '@/api/client'
 
 interface SystemSettings {
@@ -74,9 +74,9 @@ export default function AdminSettings() {
     <div className="space-y-6 max-w-2xl mx-auto pb-16">
 
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center space-x-2">
-        <Settings className="w-5 h-5 text-emerald-700" aria-hidden="true" />
+        <User className="w-5 h-5 text-emerald-700" aria-hidden="true" />
         <div>
-          <h1 className="text-xl font-black text-gray-900">System Settings</h1>
+          <h1 className="text-xl font-black text-gray-900">System Profile</h1>
           <p className="text-xs text-gray-500">Platform-wide configuration. Changes take effect immediately.</p>
         </div>
       </div>
