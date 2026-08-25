@@ -1,10 +1,14 @@
 import React from 'react'
 import { Star, MapPin, Check, Shield } from 'lucide-react'
-import { PharmacyStock } from '@/types'
-import { insuranceApi, InsuranceProvider } from '@/services/insurance-api'
+import {
+  getPharmacyInsurancePrice,
+  getInsuranceTariff,
+  calculatePatientCopay
+} from '@/utils/insuranceCalculator'
 
 interface PharmacyAvailabilityTableProps {
   pharmacies: PharmacyStock[]
+  medicineId: string
   onReserve: (pharm: PharmacyStock) => void
   sortBy: string
   onSortChange: (val: string) => void
@@ -18,6 +22,7 @@ interface PharmacyAvailabilityTableProps {
 
 export default function PharmacyAvailabilityTable({
   pharmacies,
+  medicineId,
   onReserve,
   sortBy,
   onSortChange,
@@ -110,28 +115,26 @@ export default function PharmacyAvailabilityTable({
         {pharmacies.map((pharm) => {
           const isFav = bookmarkedPharmacies.includes(pharm.pharmacyId)
           const insurance = selectedInsurance || 'None'
-          const isAccepted = pharm.insuranceAccepted.includes(insurance) && insurance !== 'None'
           
-          // Use insurance coverage from backend if available, otherwise fall back to provider data
-          const hasCoverage = pharm.insuranceCoverage?.isCovered && pharm.insuranceCoverage?.hasAgreement
-          const coveragePercentage = hasCoverage 
-            ? (pharm.insuranceCoverage?.coveragePercentage || 0) 
-            : (() => {
-                const matchedProvider = providers.find(p => p.code === insurance || p.name === insurance)
-                if (matchedProvider) {
-                  const rate = matchedProvider.defaultCoveragePercentage > 1 
-                    ? matchedProvider.defaultCoveragePercentage / 100 
-                    : matchedProvider.defaultCoveragePercentage
-                  return Math.round(rate * 100)
-                }
-                return 0
-              })()
-          const insurancePays = hasCoverage 
-            ? (pharm.insuranceCoverage?.insurancePays || 0) 
-            : (isAccepted ? Math.round(pharm.price * (coveragePercentage / 100)) : 0)
-          const patientPays = hasCoverage 
-            ? (pharm.insuranceCoverage?.patientPays || pharm.price) 
-            : (pharm.price - insurancePays)
+          // Resolve provider ID
+          const matchedProvider = providers.find(p => p.code === insurance || p.name === insurance)
+          const insuranceId = matchedProvider?.id || null
+          const isAccepted = insuranceId ? pharm.insuranceAccepted.includes(insurance) : false
+
+          // Resolve dynamic price set by pharmacy
+          const priceInfo = getPharmacyInsurancePrice(pharm.pharmacyId, medicineId, insuranceId, pharm.price)
+          const resolvedPrice = priceInfo.price
+
+          // Resolve custom tariff configured by insurer
+          const tariff = insuranceId ? getInsuranceTariff(insuranceId, medicineId) : null
+
+          // Calculate copay split
+          const copay = calculatePatientCopay(resolvedPrice, tariff)
+
+          const hasCoverage = isAccepted && copay.isCovered
+          const coveragePercentage = copay.coveragePercentage
+          const insurancePays = copay.insurancePays
+          const patientPays = copay.patientPays
 
           return (
             <div
@@ -197,31 +200,42 @@ export default function PharmacyAvailabilityTable({
                     <div className="bg-emerald-50 border border-emerald-150 rounded-xl p-2.5 text-right shadow-xs">
                       <span className="block text-[9px] font-bold text-emerald-800 uppercase tracking-wider leading-none flex items-center justify-end gap-1">
                         <Shield className="w-3 h-3" />
-                        With {pharm.insuranceCoverage?.insuranceName || insurance} ({coveragePercentage}% off)
+                        With {insurance} ({coveragePercentage}% off)
                       </span>
-                      <span className="text-sm font-black text-emerald-700 block mt-1">
+                      {isAccepted && !priceInfo.isCustom && (
+                        <span className="block text-[8px] text-amber-600 font-bold uppercase tracking-wider mt-0.5">
+                          (Cash Price Fallback)
+                        </span>
+                      )}
+                      <span className="text-sm font-black text-emerald-700 block mt-1 font-mono">
                         {patientPays} RWF
                       </span>
                       <span className="block text-[9px] text-emerald-600 font-semibold mt-0.5">
-                        Co-pay / Retail: <span className="line-through text-gray-400">{pharm.price} RWF</span>
+                        Co-pay / Retail: <span className="line-through text-gray-400 font-mono">{resolvedPrice} RWF</span>
                       </span>
-                      <span className="block text-[9px] text-emerald-600 font-semibold">
+                      <span className="block text-[9px] text-emerald-600 font-semibold font-mono">
                         Insurance pays: {insurancePays} RWF
                       </span>
                     </div>
                   ) : (
                     <div className="bg-gray-55 border border-gray-200 rounded-xl p-2.5 text-right shadow-xs">
                       {insurance !== 'None' ? (
-                        <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1 py-0.5 uppercase tracking-wider mb-1.5">
-                          {insurance} Not Accepted
-                        </span>
+                        !isAccepted ? (
+                          <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 uppercase tracking-wider mb-1.5">
+                            {insurance} Not Accepted
+                          </span>
+                        ) : (
+                          <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 uppercase tracking-wider mb-1.5">
+                            Not Covered by {insurance}
+                          </span>
+                        )
                       ) : (
                         <span className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider leading-none">
                           Retail Price
                         </span>
                       )}
-                      <span className="text-base font-black text-gray-950 block">
-                        {pharm.price} RWF
+                      <span className="text-base font-black text-gray-950 block font-mono">
+                        {resolvedPrice} RWF
                       </span>
                     </div>
                   )}

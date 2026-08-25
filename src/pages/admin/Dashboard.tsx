@@ -8,6 +8,7 @@ import {
   LineElement, PointElement, Title, Tooltip, Legend, Filler,
 } from 'chart.js'
 import { Bar, Doughnut, Line } from 'react-chartjs-2'
+import '@/utils/chartTheme'
 import {
   Users, Package, ShieldCheck, FileLock2, Activity, CheckCircle2,
   AlertTriangle, Server, Clock, UserCheck, UserX, RefreshCw,
@@ -119,7 +120,8 @@ export default function AdminDashboard() {
       fill: true,
       tension: 0.4,
       borderWidth: 2,
-      pointRadius: 4,
+      pointRadius: 0,
+      pointHoverRadius: 5,
       pointBackgroundColor: '#0f5132',
     }],
   }
@@ -134,7 +136,8 @@ export default function AdminDashboard() {
       fill: true,
       tension: 0.4,
       borderWidth: 2,
-      pointRadius: 4,
+      pointRadius: 0,
+      pointHoverRadius: 5,
       pointBackgroundColor: '#2563eb',
     }],
   }
@@ -308,7 +311,7 @@ export default function AdminDashboard() {
             <Line data={userGrowthData} options={{
               responsive: true,
               interaction: { mode: 'index', intersect: false },
-              elements: { line: { tension: 0.5 }, point: { radius: 4, hoverRadius: 6, borderWidth: 2, borderColor: '#fff' } },
+              elements: { line: { tension: 0.45, borderWidth: 3 }, point: { radius: 0, hoverRadius: 5, borderWidth: 2, borderColor: '#fff' } },
               plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
               scales: {
                 y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
@@ -327,7 +330,7 @@ export default function AdminDashboard() {
             <Line data={reservationTrendData} options={{
               responsive: true,
               interaction: { mode: 'index', intersect: false },
-              elements: { line: { tension: 0.5 }, point: { radius: 4, hoverRadius: 6, borderWidth: 2, borderColor: '#fff' } },
+              elements: { line: { tension: 0.45, borderWidth: 3 }, point: { radius: 0, hoverRadius: 5, borderWidth: 2, borderColor: '#fff' } },
               plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
               scales: {
                 y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },

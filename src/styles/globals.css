@@ -80,7 +80,7 @@ body {
    surrounding application feel like one intentional product. */
 #root {
   min-height: 100vh;
-  background: linear-gradient(135deg, #daf1de 0%, #8eb69b 48%, #235347 100%);
+  background: #f8fafc;
 }
 
 /* Editorial serif headings for the health/pharmacy premium feel */
@@ -152,7 +152,7 @@ h1, h2, h3, h4, h5, h6 {
   min-width: 0;
   min-height: 100vh;
   box-sizing: border-box;
-  background: linear-gradient(145deg, #0B2B26 0%, #163832 45%, #235347 100%);
+  background: linear-gradient(145deg, #022c22 0%, #043e2f 45%, #064e3b 100%);
 }
 
 /* Inner content wrapper for the promotional copy. Keeps everything
@@ -450,36 +450,37 @@ h1, h2, h3, h4, h5, h6 {
 
 
 /* --------------------------------------------------------------------------
-   9. CUSTOM SCROLLBAR
+   9. GLOBAL CUSTOM SCROLLBAR
    -------------------------------------------------------------------------- */
 
-/* Elegant health-green themed thin scrollbar. Apply .custom-scrollbar to
-   dashboard sidebars, audit-log tables, medicine modals, etc. */
+/* Elegant health-green themed thin scrollbar applied globally.
+   Ensures that everywhere we have a scrollbar (window, panels, dashboards),
+   it is styled with a beautiful green theme matching the application concept. */
 
 /* WebKit (Chrome, Edge, Safari) */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+::-webkit-scrollbar {
+  width: 8px; /* thin but not too thin, easy to see and interact with */
+  height: 8px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 81, 50, 0.05); /* very light health-primary */
+::-webkit-scrollbar-track {
+  background: rgba(15, 81, 50, 0.04); /* very subtle health-primary background */
   border-radius: 9999px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-health-accent, #198754);
+::-webkit-scrollbar-thumb {
+  background: #059669; /* E-Pharmacy concept green */
   border-radius: 9999px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-health-primary, #0f5132);
+::-webkit-scrollbar-thumb:hover {
+  background: #047857; /* darker emerald green hover */
 }
 
 /* Firefox scrollbar support */
-.custom-scrollbar {
+* {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-health-accent, #198754) rgba(15, 81, 50, 0.05);
+  scrollbar-color: #059669 rgba(15, 81, 50, 0.04);
 }
 
 

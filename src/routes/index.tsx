@@ -58,6 +58,7 @@ import InsuranceClaims from '@/pages/insurance/Claims'
 import InsurancePatients from '@/pages/insurance/Patients'
 import InsurancePayments from '@/pages/insurance/Payments'
 import InsuranceReports from '@/pages/insurance/Reports'
+import InsuranceTariffs from '@/pages/insurance/Tariffs'
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard'
@@ -152,6 +153,7 @@ export default function AppRoutes() {
           <Route path="patients" element={<InsurancePatients />} />
           <Route path="payments" element={<InsurancePayments />} />
           <Route path="reports" element={<InsuranceReports />} />
+          <Route path="tariffs" element={<InsuranceTariffs />} />
         </Route>
       </Route>
 

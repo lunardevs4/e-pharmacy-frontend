@@ -24,6 +24,11 @@ import PrescriptionUploader from '@/components/patient/PrescriptionUploader'
 import { CardSkeleton } from '@/components/patient/LoadingSkeleton'
 import { useAuthStore } from '@/store/authStore'
 import { INSURANCE_COVERAGE_RATES } from '@/config/insurance-rates'
+import {
+  getPharmacyInsurancePrice,
+  getInsuranceTariff,
+  calculatePatientCopay
+} from '@/utils/insuranceCalculator'
 
 export default function MedicineSearch() {
   const location = useLocation()
@@ -320,25 +325,29 @@ export default function MedicineSearch() {
         })
       }
 
-      // Use real insurance coverage data if available, otherwise fall back to provider data
-      const hasCoverage = selectedPharmacy.insuranceCoverage?.isCovered && selectedPharmacy.insuranceCoverage?.hasAgreement
-      const totalCost = selectedPharmacy.price * quantity
+      // Resolve provider ID
+      const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
+      const insuranceId = matchedProvider?.id || null
+      const isAccepted = insuranceId ? selectedPharmacy.insuranceAccepted.includes(selectedInsurance) : false
+
+      // Resolve dynamic price set by pharmacy
+      const priceInfo = getPharmacyInsurancePrice(selectedPharmacy.pharmacyId, selectedMedicine.id, insuranceId, selectedPharmacy.price)
+      const resolvedPrice = priceInfo.price
+
+      // Resolve custom tariff configured by insurer
+      const tariff = insuranceId ? getInsuranceTariff(insuranceId, selectedMedicine.id) : null
+
+      // Calculate copay split
+      const copay = calculatePatientCopay(resolvedPrice, tariff)
+
+      const hasCoverage = isAccepted && copay.isCovered
+      const totalCost = resolvedPrice * quantity
       let insurancePays = 0
       let patientPays = totalCost
 
       if (hasCoverage) {
-        insurancePays = Math.round((selectedPharmacy.insuranceCoverage?.insurancePays || 0) * quantity)
-        patientPays = Math.round((selectedPharmacy.insuranceCoverage?.patientPays || selectedPharmacy.price) * quantity)
-      } else if (selectedInsurance !== 'None') {
-        const isAccepted = selectedPharmacy.insuranceAccepted.includes(selectedInsurance)
-        if (isAccepted) {
-          const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
-          const coverageRate = matchedProvider 
-            ? (matchedProvider.defaultCoveragePercentage > 1 ? matchedProvider.defaultCoveragePercentage / 100 : matchedProvider.defaultCoveragePercentage)
-            : (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0)
-          insurancePays = Math.round(totalCost * coverageRate)
-          patientPays = totalCost - insurancePays
-        }
+        insurancePays = Math.round(copay.insurancePays * quantity)
+        patientPays = Math.round(copay.patientPays * quantity)
       }
 
       const res = await createReservation({
@@ -695,6 +704,7 @@ export default function MedicineSearch() {
               ) : (
                 <PharmacyAvailabilityTable
                   pharmacies={sortedPharmacies}
+                  medicineId={selectedMedicine.id}
                   sortBy={sortBy}
                   onSortChange={setSortBy}
                   onReserve={(pharm) => {

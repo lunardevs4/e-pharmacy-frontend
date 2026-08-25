@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
+import { getActivePharmacyInsurances, getPharmacyInsurancePrice } from '@/utils/insuranceCalculator'
+import { insuranceApi, InsuranceProvider } from '@/services/insurance-api'
 import { Medicine, PharmacyStock } from '@/types'
 import {
   Plus,
@@ -84,7 +86,7 @@ export default function PharmacyInventory() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
 
   // Edit stock/price states
-  const [editPrice, setEditPrice] = useState(0)
+  const [editPrices, setEditPrices] = useState<Record<string, number>>({ CASH: 0 })
   const [editStock, setEditStock] = useState(0)
   const [editStatus, setEditStatus] = useState(true)
 
@@ -103,8 +105,10 @@ export default function PharmacyInventory() {
   const [medExpiry, setMedExpiry] = useState('')
 
   const [medCost, setMedCost] = useState('')
-  const [medPrice, setMedPrice] = useState('')
+  const [medPrices, setMedPrices] = useState<Record<string, string>>({ CASH: '' })
   const [medStock, setMedStock] = useState('')
+
+  const [activeInsurances, setActiveInsurances] = useState<InsuranceProvider[]>([])
 
   const [medStorageConditions, setMedStorageConditions] = useState('')
   const [medMinTemperature, setMedMinTemperature] = useState('')
@@ -178,76 +182,86 @@ export default function PharmacyInventory() {
     setError(null)
 
     try {
-      const rawItems = await MedicineApi.getPharmacyInventory(pharmacyId)
+        const activeProviders = await insuranceApi.getProviders()
+        const workingIds = getActivePharmacyInsurances(pharmacyId, activeProviders)
+        const working = activeProviders.filter(p => workingIds.includes(p.id))
+        setActiveInsurances(working)
 
-      const [catList, mfrList] = await Promise.all([
-        MedicineApi.getCategories(),
-        MedicineApi.getManufacturers(),
-      ])
+        const rawItems = await MedicineApi.getPharmacyInventory(pharmacyId)
 
-      setCategories(catList)
-      setManufacturers(mfrList)
+        const [catList, mfrList] = await Promise.all([
+          MedicineApi.getCategories(),
+          MedicineApi.getManufacturers(),
+        ])
 
-      if (catList.length && !medCategory) {
-        setMedCategory(catList[0].name)
-      }
+        setCategories(catList)
+        setManufacturers(mfrList)
 
-      const items: InventoryItem[] = rawItems.map((item: any) => {
-        const med = item.medicine || {}
-
-        const categoryName = med.category?.name || med.category || 'Uncategorized'
-
-        const manufacturerName = med.manufacturer?.name || med.manufacturer || 'Unknown'
-
-        const batch =
-          (med.batches || []).find(
-            (candidate: any) =>
-              candidate.batchNumber === item.batchNumber ||
-              candidate.lotNumber === item.batchNumber,
-          ) || med.batches?.[0]
-
-        const medicine: Medicine = {
-          id: med.id,
-          name: med.tradeName,
-          genericName: med.genericName || '',
-          tradeNames: [med.tradeName],
-          category: categoryName,
-          manufacturer: manufacturerName,
-          prescriptionRequired: med.prescriptionRequired || false,
-          uses: '',
-          dosage: '',
-          warnings: '',
-          sideEffects: '',
-          interactions: '',
-          storage: med.storage || 'Room Temperature (<30°C)',
+        if (catList.length && !medCategory) {
+          setMedCategory(catList[0].name)
         }
 
-        const stock = item.quantity ?? 0
+        const items: InventoryItem[] = rawItems.map((item: any) => {
+          const med = item.medicine || {}
 
-        let stockStatus: PharmacyStock['stockStatus'] = 'HIGH'
+          const categoryName = med.category?.name || med.category || 'Uncategorized'
 
-        if (stock === 0) {
-          stockStatus = 'OUT_OF_STOCK'
-        } else if (stock < 10) {
-          stockStatus = 'ALMOST_OUT'
-        } else if (stock < 35) {
-          stockStatus = 'LIMITED'
-        }
+          const manufacturerName = med.manufacturer?.name || med.manufacturer || 'Unknown'
 
-        const stockInfo: PharmacyStock = {
-          pharmacyId: item.pharmacyId,
-          pharmacyName: pharmacyName,
-          rating: 4.5,
-          isOpen: item.isActive !== false,
-          distance: 1.0,
-          price: Number(item.price),
-          stock,
-          stockStatus,
-          insuranceAccepted: ['RSSB', 'MMI'],
-          lat: -1.94,
-          lng: 30.06,
-          locationText: 'Kigali City',
-        }
+          const batch =
+            (med.batches || []).find(
+              (candidate: any) =>
+                candidate.batchNumber === item.batchNumber ||
+                candidate.lotNumber === item.batchNumber,
+            ) || med.batches?.[0]
+
+          const medicine: Medicine = {
+            id: med.id,
+            name: med.tradeName,
+            genericName: med.genericName || '',
+            tradeNames: [med.tradeName],
+            category: categoryName,
+            manufacturer: manufacturerName,
+            prescriptionRequired: med.prescriptionRequired || false,
+            uses: '',
+            dosage: '',
+            warnings: '',
+            sideEffects: '',
+            interactions: '',
+            storage: med.storage || 'Room Temperature (<30°C)',
+          }
+
+          const stock = item.quantity ?? 0
+
+          let stockStatus: PharmacyStock['stockStatus'] = 'HIGH'
+
+          if (stock === 0) {
+            stockStatus = 'OUT_OF_STOCK'
+          } else if (stock < 10) {
+            stockStatus = 'ALMOST_OUT'
+          } else if (stock < 35) {
+            stockStatus = 'LIMITED'
+          }
+
+          // Fetch price mapping
+          const savedPrices = localStorage.getItem(`epharmacy_prices_${pharmacyId}_${med.id}`)
+          const pricesMap: Record<string, number> = savedPrices ? JSON.parse(savedPrices) : { CASH: Number(item.price) }
+          const resolvedPrice = pricesMap.CASH ?? Number(item.price)
+
+          const stockInfo: PharmacyStock = {
+            pharmacyId: item.pharmacyId,
+            pharmacyName: pharmacyName,
+            rating: 4.5,
+            isOpen: item.isActive !== false,
+            distance: 1.0,
+            price: resolvedPrice,
+            stock,
+            stockStatus,
+            insuranceAccepted: working.map((p) => p.code),
+            lat: -1.94,
+            lng: 30.06,
+            locationText: 'Kigali City',
+          }
 
         return {
           medicine,
@@ -282,10 +296,29 @@ export default function PharmacyInventory() {
     if (!selectedItem) return
 
     try {
+      const cashPrice = editPrices.CASH || 0
+      if (cashPrice <= 0) {
+        alert('Cash price must be a valid positive number.')
+        return
+      }
+
+      for (const key of Object.keys(editPrices)) {
+        if (editPrices[key] < 0) {
+          alert('Prices cannot be negative.')
+          return
+        }
+      }
+
+      // Save custom prices mapping to localStorage
+      localStorage.setItem(
+        `epharmacy_prices_${pharmacyId}_${selectedItem.medicine.id}`,
+        JSON.stringify(editPrices),
+      )
+
       await MedicineApi.updatePharmacyInventory(
         pharmacyId,
         selectedItem.medicine.id,
-        editPrice,
+        cashPrice,
         editStock,
         editStatus,
       )
@@ -296,7 +329,7 @@ export default function PharmacyInventory() {
 
       const extras = savedExtras ? JSON.parse(savedExtras) : {}
 
-      extras.costPrice = Math.round(editPrice * 0.75)
+      extras.costPrice = Math.round(cashPrice * 0.75)
 
       localStorage.setItem(
         `epharmacy_extras_${pharmacyId}_${selectedItem.medicine.id}`,
@@ -336,7 +369,7 @@ export default function PharmacyInventory() {
     }
 
     const costNum = parseFloat(medCost)
-    const priceNum = parseFloat(medPrice)
+    const priceNum = parseFloat(medPrices.CASH || '')
     const stockNum = parseInt(medStock, 10)
     const minTemperature = medMinTemperature.trim() ? parseFloat(medMinTemperature) : undefined
     const maxTemperature = medMaxTemperature.trim() ? parseFloat(medMaxTemperature) : undefined
@@ -347,18 +380,32 @@ export default function PharmacyInventory() {
     }
 
     if (isNaN(priceNum) || priceNum <= 0) {
-      setFormError('Selling price must be a valid positive number.')
+      setFormError('Cash selling price must be a valid positive number.')
       return
     }
 
     if (priceNum < costNum) {
-      setFormError('Selling price cannot be less than cost price.')
+      setFormError('Cash selling price cannot be less than cost price.')
       return
     }
 
     if (isNaN(stockNum) || stockNum < 0) {
       setFormError('Initial stock must be a non-negative integer.')
       return
+    }
+
+    // Validate and build multi-insurance prices record
+    const finalPricesMap: Record<string, number> = { CASH: priceNum }
+    for (const p of activeInsurances) {
+      const pVal = medPrices[p.id]
+      if (pVal && pVal.trim() !== '') {
+        const valNum = parseFloat(pVal)
+        if (isNaN(valNum) || valNum < 0) {
+          setFormError(`Price for ${p.name} must be a valid non-negative number.`)
+          return
+        }
+        finalPricesMap[p.id] = valNum
+      }
     }
 
     if (
@@ -421,6 +468,12 @@ export default function PharmacyInventory() {
       // Keep the pharmacy-specific stock record linked to the new medicine.
       await MedicineApi.updatePharmacyInventory(pharmacyId, newMedId, priceNum, stockNum, true)
 
+      // Save custom prices mapping to localStorage
+      localStorage.setItem(
+        `epharmacy_prices_${pharmacyId}_${newMedId}`,
+        JSON.stringify(finalPricesMap),
+      )
+
       // Audit Log
       const logs = JSON.parse(localStorage.getItem('pharmacy_audit_logs') || '[]')
 
@@ -458,7 +511,7 @@ export default function PharmacyInventory() {
     setMedLotNumber('')
     setMedExpiry('')
     setMedCost('')
-    setMedPrice('')
+    setMedPrices({ CASH: '' })
     setMedStock('')
     setMedStorageConditions('')
     setMedMinTemperature('')
@@ -472,7 +525,15 @@ export default function PharmacyInventory() {
 
   const openEditModal = (item: InventoryItem) => {
     setSelectedItem(item)
-    setEditPrice(item.stockInfo.price)
+    
+    // Retrieve prices mapping
+    const savedMapping = localStorage.getItem(`epharmacy_prices_${pharmacyId}_${item.medicine.id}`)
+    const parsed: Record<string, number> = savedMapping ? JSON.parse(savedMapping) : { CASH: item.stockInfo.price }
+    if (parsed.CASH === undefined) {
+      parsed.CASH = item.stockInfo.price
+    }
+
+    setEditPrices(parsed)
     setEditStock(item.stockInfo.stock)
     setEditStatus(item.stockInfo.isOpen)
     setShowEditModal(true)
@@ -1036,10 +1097,10 @@ export default function PharmacyInventory() {
             </div>
 
             <form onSubmit={handleUpdateStock} className="p-5 space-y-4">
-              {/* Price */}
+              {/* Cash Price */}
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Selling Price (RWF)
+                  Cash / No Insurance Price (RWF) *
                 </label>
 
                 <div className="relative rounded-md shadow-sm">
@@ -1050,12 +1111,50 @@ export default function PharmacyInventory() {
                   <input
                     type="number"
                     required
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="block w-full pl-12 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    min="0"
+                    step="0.01"
+                    value={editPrices.CASH ?? ''}
+                    onChange={(e) => setEditPrices(prev => ({ ...prev, CASH: Math.max(0, parseFloat(e.target.value) || 0) }))}
+                    className="block w-full pl-12 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
                   />
                 </div>
               </div>
+
+              {/* Insurance Prices */}
+              {activeInsurances.map((p) => (
+                <div key={p.id}>
+                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    {p.name} Price (RWF)
+                  </label>
+
+                  <div className="relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-400 text-xs">RWF</span>
+                    </div>
+
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Uses Cash price fallback"
+                      value={editPrices[p.id] ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value.trim() === '' ? undefined : Math.max(0, parseFloat(e.target.value) || 0)
+                        setEditPrices(prev => {
+                          const copy = { ...prev }
+                          if (val === undefined) {
+                            delete copy[p.id]
+                          } else {
+                            copy[p.id] = val
+                          }
+                          return copy
+                        })
+                      }}
+                      className="block w-full pl-12 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                    />
+                  </div>
+                </div>
+              ))}
 
               {/* Stock */}
               <div>
@@ -1465,10 +1564,10 @@ export default function PharmacyInventory() {
                       />
                     </div>
 
-                    {/* Selling Price */}
+                    {/* Cash Selling Price */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Unit Selling Price (RWF) *
+                        Cash Selling Price (RWF) *
                       </label>
 
                       <input
@@ -1476,13 +1575,47 @@ export default function PharmacyInventory() {
                         required
                         min="0"
                         step="0.01"
-                        value={medPrice}
-                        onChange={(e) => setMedPrice(e.target.value)}
+                        value={medPrices.CASH ?? ''}
+                        onChange={(e) => setMedPrices(prev => ({ ...prev, CASH: e.target.value }))}
                         placeholder="e.g. 150"
-                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
                       />
                     </div>
                   </div>
+
+                  {/* Insurance Custom Prices */}
+                  {activeInsurances.length > 0 && (
+                    <div className="bg-gray-50 border border-gray-150 rounded-lg p-3 space-y-3">
+                      <span className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider">
+                        Insurance Custom Prices (Optional)
+                      </span>
+                      <p className="text-[9px] text-gray-400">
+                        Leave blank to automatically default to the Cash price.
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        {activeInsurances.map((p) => (
+                          <div key={p.id}>
+                            <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1 font-semibold">
+                              {p.name} (RWF)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={medPrices[p.id] ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                setMedPrices(prev => ({ ...prev, [p.id]: val }))
+                              }}
+                              placeholder="Default fallback"
+                              className="block w-full px-2.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Profit Margin */}
                   {medCost && medPrice && parseFloat(medPrice) >= parseFloat(medCost) && (

@@ -7,7 +7,7 @@ import {
   Menu, X, LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
   ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2, MapPin,
-  CheckSquare, Trash2, Clock, AlarmClock, PanelLeft
+  CheckSquare, Trash2, Clock, AlarmClock, PanelLeft, Percent
 } from 'lucide-react'
 
 export default function SidebarLayout() {
@@ -136,6 +136,7 @@ export default function SidebarLayout() {
           { path: '/insurance',              label: 'Dashboard',      icon: LayoutDashboard },
           { path: '/insurance/claims',       label: 'Claims',         icon: FileText        },
           { path: '/insurance/payments',     label: 'Payments',       icon: DollarSign      },
+          { path: '/insurance/tariffs',      label: 'Medicine Discounts', icon: Percent         },
           { path: '/insurance/reports',      label: 'Reports',        icon: BarChart2       },
           { path: '/insurance/patients',     label: 'Insured Patients',icon: Users          },
         ]
@@ -173,35 +174,11 @@ export default function SidebarLayout() {
   const isInsurance = user?.role === 'INSURANCE'
   const insurer = user?.insuranceProvider || ''
 
-  const sidebarBg = isInsurance
-    ? insurer === 'MMI'
-      ? 'bg-[#1b4332]' // Deep military green
-      : 'bg-[#1e293b]' // Deep slate/blue for RSSB
-    : 'bg-slate-900'
-
-  const activeLinkClass = isInsurance
-    ? insurer === 'MMI'
-      ? 'bg-emerald-950/35 text-white font-bold border-l-4 border-emerald-500 pl-2 pr-3'
-      : 'bg-slate-950/35 text-white font-bold border-l-4 border-emerald-500 pl-2 pr-3'
-    : 'bg-black/25 text-white font-bold border-l-4 border-health-primary pl-2 pr-3'
-
-  const hoverLinkClass = isInsurance
-    ? insurer === 'MMI'
-      ? 'text-emerald-100/80 hover:bg-white/5 hover:text-white pl-3 pr-3'
-      : 'text-slate-200/80 hover:bg-white/5 hover:text-white pl-3 pr-3'
-    : 'text-slate-400 hover:bg-white/5 hover:text-white pl-3 pr-3'
-
-  const borderClass = isInsurance
-    ? insurer === 'MMI'
-      ? 'border-[#2d6a4f]'
-      : 'border-slate-700'
-    : 'border-slate-800'
-
-  const footerBg = isInsurance
-    ? insurer === 'MMI'
-      ? 'bg-[#1b4332]/70'
-      : 'bg-[#1e293b]/70'
-    : 'bg-slate-950/40'
+  const sidebarBg = 'bg-[#064e3b]'
+  const activeLinkClass = 'bg-[#022c22]/45 text-white font-bold border-l-4 border-emerald-400 pl-2 pr-3'
+  const hoverLinkClass = 'text-emerald-100/80 hover:bg-[#022c22]/30 hover:text-white pl-3 pr-3'
+  const borderClass = 'border-[#022c22]/50'
+  const footerBg = 'bg-[#022c22]/45'
 
   const portalLabel = isInsurance
     ? insurer === 'MMI'
@@ -215,17 +192,8 @@ export default function SidebarLayout() {
       : 'RSSB Insurance'
     : 'E-Pharmacy'
 
-  const headerBg = isInsurance
-    ? insurer === 'MMI'
-      ? 'bg-[#e8f5e9]/95' // Very light green
-      : 'bg-[#eff6ff]/95' // Very light blue
-    : 'bg-white'
-
-  const headerBorder = isInsurance
-    ? insurer === 'MMI'
-      ? 'border-emerald-100'
-      : 'border-blue-100'
-    : 'border-gray-200'
+  const headerBg = 'bg-white'
+  const headerBorder = 'border-gray-200'
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -255,7 +223,7 @@ export default function SidebarLayout() {
             </div>
             <div className="min-w-0">
               <span className="font-black text-sm leading-none block text-white tracking-wide">Rwanda</span>
-              <span className="block text-[9px] text-emerald-400 tracking-widest font-bold uppercase mt-0.5">
+              <span className="block text-[9px] text-emerald-300 tracking-widest font-bold uppercase mt-0.5">
                 {portalSub}
               </span>
             </div>
@@ -275,7 +243,7 @@ export default function SidebarLayout() {
           aria-label={`${portalLabel} navigation`}
           className="flex-grow py-5 px-3 space-y-0.5 overflow-y-auto"
         >
-          <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 mb-3">
+          <p className="text-[10px] font-bold tracking-wider text-emerald-200/70 uppercase px-3 mb-3">
             {portalLabel}
           </p>
           {navLinks.map((link) => {
@@ -294,10 +262,10 @@ export default function SidebarLayout() {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} aria-hidden="true" />
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-200/70'}`} aria-hidden="true" />
                   <span>{link.label}</span>
                 </div>
-                {isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" aria-hidden="true" />}
+                {isActive && <ChevronRight className="w-3.5 h-3.5 text-emerald-200/70 flex-shrink-0" aria-hidden="true" />}
               </Link>
             )
           })}
@@ -308,19 +276,19 @@ export default function SidebarLayout() {
           <div className="flex items-center space-x-3 overflow-hidden">
             <div
               aria-hidden="true"
-              className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 flex-shrink-0"
+              className="w-9 h-9 rounded-full bg-emerald-950 flex items-center justify-center text-xs font-bold text-emerald-100 flex-shrink-0"
             >
               {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
             </div>
             <div className="overflow-hidden">
               <span className="block font-bold text-xs text-white truncate">{user?.name || 'User'}</span>
-              <span className="block text-[10px] text-slate-400 truncate">{isInsurance ? `${insurer} Auditor` : user?.role}</span>
+              <span className="block text-[10px] text-emerald-200/70 truncate">{isInsurance ? `${insurer} Auditor` : user?.role}</span>
             </div>
           </div>
           <button
             onClick={handleLogout}
             aria-label="Sign out"
-            className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
+            className="p-2 text-emerald-200/70 hover:text-red-300 rounded-lg hover:bg-emerald-800/70 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
           >
             <LogOut className="w-4 h-4" aria-hidden="true" />
           </button>
@@ -340,13 +308,7 @@ export default function SidebarLayout() {
               <button
                 onClick={() => setSidebarOpen(true)}
                 aria-label="Open navigation menu"
-                className={`p-2 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 mr-2 ${
-                  isInsurance
-                    ? insurer === 'MMI'
-                      ? 'text-[#1b4332] hover:bg-[#1b4332]/10'
-                      : 'text-[#1e293b] hover:bg-[#1e293b]/10'
-                    : 'text-slate-900 hover:bg-slate-100'
-                }`}
+                className="p-2 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 mr-2 text-slate-900 hover:bg-slate-100"
               >
                 <PanelLeft className="w-6 h-6" aria-hidden="true" />
               </button>

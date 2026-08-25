@@ -37,22 +37,22 @@ export default function CheckEmail() {
       : 'Your account was created. Check your inbox for the verification link before signing in.'
 
   return (
-    <AuthLayout title={title} subtitle="Complete your e-Pharmacy account setup.">
-      <div className="text-center space-y-4">
-        {expired ? <AlertCircle className="w-10 h-10 mx-auto text-red-600" /> : <Mail className="w-10 h-10 mx-auto text-health-primary" />}
+    <AuthLayout mode="reset" title={title} subtitle="Complete your e-Pharmacy account setup.">
+      <div className="text-center space-y-4 font-sans">
+        {expired ? <AlertCircle className="w-10 h-10 mx-auto text-red-605" /> : <Mail className="w-10 h-10 mx-auto text-[#059669]" />}
         <p className="text-sm text-gray-700">{description}</p>
         {email && <p className="text-sm font-bold text-gray-900 break-all">{email}</p>}
 
-        {message && <div className="flex items-center justify-center gap-2 text-sm text-emerald-700"><CheckCircle2 className="w-4 h-4" />{message}</div>}
-        {error && <div className="flex items-center justify-center gap-2 text-sm text-red-700"><AlertCircle className="w-4 h-4" />{error}</div>}
+        {message && <div className="flex items-center justify-center gap-2 text-sm text-emerald-700 font-bold"><CheckCircle2 className="w-4 h-4" />{message}</div>}
+        {error && <div className="flex items-center justify-center gap-2 text-sm text-red-700 font-bold"><AlertCircle className="w-4 h-4" />{error}</div>}
 
         {!expired && email && (
-          <button type="button" onClick={resend} disabled={isLoading} className="w-full py-2.5 rounded-lg bg-health-primary text-white font-bold disabled:opacity-50">
+          <button type="button" onClick={resend} disabled={isLoading} className="w-full text-sm font-bold text-white disabled:opacity-50 auth-button">
             {isLoading ? <><Loader2 className="inline w-4 h-4 mr-2 animate-spin" />Sending...</> : 'Resend verification email'}
           </button>
         )}
 
-        <button type="button" onClick={() => navigate('/login')} className="inline-block font-bold text-health-primary hover:underline">
+        <button type="button" onClick={() => navigate('/login')} className="inline-block font-bold hover:underline" style={{ color: '#059669' }}>
           Continue to sign in
         </button>
         {expired && <p className="text-xs text-gray-500">You can create a new account from the registration page.</p>}

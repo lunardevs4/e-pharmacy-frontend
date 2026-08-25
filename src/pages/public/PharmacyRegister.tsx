@@ -15,12 +15,12 @@ import {
   Smartphone,
 } from 'lucide-react'
 
-const BRAND = '#006846'
-const BRAND_HOVER = '#005238'
-const INPUT_BG = '#FFFFFF'
+const BRAND = '#059669'
+const BRAND_HOVER = '#047857'
+const INPUT_BG = '#F7F8FA'
 const SERIF = "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif"
-const focusRing = `0 0 0 4px ${BRAND}14`
-const inputBorderRadius = '16px'
+const focusRing = '0 0 0 3px rgba(5, 150, 105, 0.15)'
+const inputBorderRadius = '4px'
 
 export default function PharmacyRegister() {
   const navigate = useNavigate()
@@ -97,23 +97,13 @@ export default function PharmacyRegister() {
   }
 
   const inputBase =
-    'block w-full pl-11 pr-4 py-[12px] border border-[#E5E7EB] rounded-[16px] bg-[#FFFFFF] shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-0 transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal hover:border-gray-300 focus:bg-white'
+    'block w-full pl-11 pr-4 py-[12px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input'
 
-  const focusHandlers = (hasError: boolean) => ({
-    onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
-      if (!hasError) {
-        e.currentTarget.style.borderColor = BRAND
-        e.currentTarget.style.boxShadow = focusRing
-      }
-    },
-    onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
-      e.currentTarget.style.borderColor = hasError ? '#FCA5A5' : 'transparent'
-      e.currentTarget.style.boxShadow = 'none'
-    },
-  })
+  const focusHandlers = (hasError: boolean) => ({})
 
   return (
     <AuthLayout
+      mode="register"
       title="Create Pharmacy Account"
       subtitle="Register a pharmacy owner account to manage store inventories, prescriptions, and staff."
     >
@@ -344,17 +334,7 @@ export default function PharmacyRegister() {
         <button
           type="submit"
           disabled={isLoading || !meetsAllCriteria || password !== confirmPassword}
-          className="w-full flex justify-center items-center py-[13px] px-4 border border-transparent rounded-full shadow-lg text-sm font-bold text-white disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-200 hover:shadow-xl active:scale-[0.99] mt-2"
-          style={{
-            backgroundColor: BRAND,
-            boxShadow: `0 10px 24px -10px ${BRAND}AA, 0 4px 10px -4px ${BRAND}55`,
-          }}
-          onMouseEnter={(e) => {
-            if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = BRAND_HOVER
-          }}
-          onMouseLeave={(e) => {
-            if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = BRAND
-          }}
+          className="w-full flex justify-center items-center py-[13px] px-4 border border-transparent text-sm font-bold text-white disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-200 active:scale-[0.99] mt-2 auth-button"
         >
           {isLoading ? (
             <>

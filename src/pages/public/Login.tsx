@@ -44,9 +44,9 @@ interface PharmacyStatusData {
 }
 
 
-const BRAND = '#006846'
-const BRAND_HOVER = '#005238'
-const INPUT_BG = '#FFFFFF'
+const BRAND = '#059669'
+const BRAND_HOVER = '#047857'
+const INPUT_BG = '#F7F8FA'
 const SERIF = "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif"
 
 
@@ -266,11 +266,10 @@ export default function Login() {
 
 
         <div
-          className="flex flex-col items-center rounded-2xl p-5 text-center"
+          className="flex flex-col items-center rounded-lg p-5 text-center auth-card"
           style={{
             gap: '12px',
             backgroundColor: '#F9FAFB',
-            border: '1px solid #E5E7EB',
           }}
         >
           <div
@@ -291,7 +290,7 @@ export default function Login() {
             >
               {current.message}
             </p>
-            <p className="text-[11px] font-medium leading-relaxed px-2 pt-1 text-gray-500">
+            <p className="text-[11px] font-medium leading-relaxed px-2 pt-1 text-gray-550">
               {current.desc}
             </p>
           </div>
@@ -299,7 +298,7 @@ export default function Login() {
 
           {data.statusNotes && (
             <div
-              className="w-full rounded-xl p-3.5 mt-2 text-left"
+              className="w-full rounded-md p-3.5 mt-2 text-left"
               style={{
                 gap: '4px',
                 backgroundColor: '#FFFFFF',
@@ -318,7 +317,7 @@ export default function Login() {
 
 
         <div
-          className="grid grid-cols-2 p-4 rounded-xl text-left"
+          className="grid grid-cols-2 p-4 rounded-lg text-left"
           style={{
             gap: '16px',
             backgroundColor: 'rgba(249,250,251,0.5)',
@@ -346,7 +345,7 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setPharmacyStatusData(null)}
-            className="w-1/2 flex items-center justify-center py-2.5 border rounded-xl text-sm font-bold transition-colors"
+            className="w-1/2 flex items-center justify-center py-2.5 border rounded-md text-sm font-bold transition-colors"
             style={{
               borderColor: '#D1D5DB',
               color: '#4B5563',
@@ -363,7 +362,7 @@ export default function Login() {
             type="button"
             disabled={isRefreshingStatus}
             onClick={handleRefreshStatus}
-            className="w-1/2 flex items-center justify-center py-2.5 rounded-xl text-sm font-bold shadow-md transition-all disabled:opacity-50"
+            className="w-1/2 flex items-center justify-center py-2.5 rounded-md text-sm font-bold shadow-md transition-all disabled:opacity-50"
             style={{ backgroundColor: BRAND, color: '#FFFFFF' }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BRAND_HOVER)}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BRAND)}
@@ -395,6 +394,7 @@ export default function Login() {
 
   return (
     <AuthLayout
+      mode="login"
       title={pharmacyStatusData ? 'Registration Status' : 'Welcome back!'}
       subtitle={pharmacyStatusData ? undefined : 'Enter your email and password to sign in to your account'}
     >
@@ -466,21 +466,10 @@ export default function Login() {
                   type="email"
                   disabled={isLoading}
                   {...register('email')}
-                  style={inputStyle}
-                  className={`block w-full pl-11 pr-3.5 py-[12px] border shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200 placeholder:text-gray-400 font-normal ${
-                    errors.email ? 'border-red-300' : 'border-[#E5E7EB] hover:border-gray-300'
-                  } focus:outline-none focus:bg-white disabled:bg-gray-50 disabled:cursor-not-allowed`}
+                  className={`block w-full pl-11 pr-3.5 py-[12px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input ${
+                    errors.email ? 'error' : ''
+                  }`}
                   placeholder="Enter your email"
-                  onFocus={(e) => {
-                    if (!errors.email) {
-                      e.currentTarget.style.borderColor = BRAND
-                      e.currentTarget.style.boxShadow = focusRing
-                    }
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = errors.email ? '#FCA5A5' : '#E5E7EB'
-                    e.currentTarget.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.05)'
-                  }}
                 />
               </div>
             </div>
@@ -513,21 +502,10 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   disabled={isLoading}
                   {...register('password')}
-                  style={inputStyle}
-                  className={`block w-full pl-11 pr-11 py-[12px] border shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200 placeholder:text-gray-400 font-normal ${
-                    errors.password ? 'border-red-300' : 'border-[#E5E7EB] hover:border-gray-300'
-                  } focus:outline-none focus:bg-white disabled:bg-gray-50 disabled:cursor-not-allowed`}
+                  className={`block w-full pl-11 pr-11 py-[12px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input ${
+                    errors.password ? 'error' : ''
+                  }`}
                   placeholder="Enter your password"
-                  onFocus={(e) => {
-                    if (!errors.password) {
-                      e.currentTarget.style.borderColor = BRAND
-                      e.currentTarget.style.boxShadow = focusRing
-                    }
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = errors.password ? '#FCA5A5' : '#E5E7EB'
-                    e.currentTarget.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.05)'
-                  }}
                 />
                 <button
                   type="button"
@@ -588,24 +566,11 @@ export default function Login() {
           </div>
 
 
-          {/* Sign In Button — cute pill shape */}
+          {/* Sign In Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-[12.5px] px-4 border border-transparent rounded-full shadow-lg focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99]"
-            style={{
-              backgroundColor: BRAND,
-              color: '#FFFFFF',
-              fontWeight: 700,
-              fontSize: '14.5px',
-              boxShadow: `0 10px 24px -10px ${BRAND}AA, 0 4px 10px -4px ${BRAND}55`,
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) e.currentTarget.style.backgroundColor = BRAND_HOVER
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = isLoading ? BRAND : BRAND
-            }}
+            className="w-full flex justify-center py-[12.5px] px-4 border border-transparent text-sm font-bold focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99] auth-button"
           >
             {isLoading ? (
               <>
@@ -631,19 +596,18 @@ export default function Login() {
           </div>
 
 
-          {/* Sign in as Pharmacist / Staff — cute outline pill with Shield */}
+          {/* Sign in as Pharmacist / Staff — clean outline */}
           <button
             type="button"
             onClick={() => setIsStaffLogin(!isStaffLogin)}
-            className={`w-full flex justify-center items-center gap-2 py-[12px] px-4 rounded-full text-sm font-semibold transition-all duration-200 active:scale-[0.99]`}
+            className="w-full flex justify-center items-center gap-2 py-[12px] px-4 rounded-md text-sm font-semibold transition-all duration-200 active:scale-[0.99]"
             style={{
               borderWidth: '1.5px',
               borderStyle: 'solid',
-              borderColor: isStaffLogin ? BRAND : '#B7F0D0',
+              borderColor: isStaffLogin ? BRAND : '#E5E7EB',
               color: BRAND,
-              backgroundColor: isStaffLogin ? `${BRAND}0B` : '#ffffff',
-              fontSize: '14.5px',
-              boxShadow: isStaffLogin ? `0 0 0 4px ${BRAND}10` : 'none',
+              backgroundColor: isStaffLogin ? 'rgba(5, 150, 105, 0.05)' : '#ffffff',
+              fontSize: '14px',
             }}
           >
             <ShieldCheck className="w-[18px] h-[18px]" />

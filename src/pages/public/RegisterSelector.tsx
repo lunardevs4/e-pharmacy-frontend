@@ -8,8 +8,8 @@ import {
   ArrowRight,
 } from 'lucide-react'
 
-const BRAND = '#006846'
-const BRAND_HOVER = '#005238'
+const BRAND = '#059669'
+const BRAND_HOVER = '#047857'
 
 export default function RegisterSelector() {
   const options = [
@@ -39,14 +39,15 @@ export default function RegisterSelector() {
       desc: 'Register a digital insurance portal account to process claims, verify policies, and view co-pay reports.',
       link: '/register/insurance',
       icon: Shield,
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-700',
-      accentColor: '#1d4ed8',
+      bgColor: 'bg-emerald-50',
+      iconColor: 'text-health-primary',
+      accentColor: '#064e3b',
     },
   ]
 
   return (
     <AuthLayout
+      mode="register"
       title="Create an Account"
       subtitle="Select your role below to access the national medicine inventory, search, and reservation systems."
     >
@@ -57,7 +58,7 @@ export default function RegisterSelector() {
             <Link
               key={idx}
               to={opt.link}
-              className="group p-5 bg-white rounded-2xl border border-gray-200 hover:border-health-primary hover:shadow-lg transition-all duration-200 flex items-start gap-4 text-left relative overflow-hidden"
+              className="group p-5 bg-white rounded-lg border border-gray-200 hover:border-[#059669] hover:shadow-md transition-all duration-200 flex items-start gap-4 text-left relative overflow-hidden auth-card"
               style={{
                 borderColor: '#E5E7EB',
                 borderWidth: '1px',
@@ -70,21 +71,21 @@ export default function RegisterSelector() {
               }}
             >
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${opt.bgColor} ${opt.iconColor} group-hover:bg-health-primary group-hover:text-white`}
+                className={`w-12 h-12 rounded-md flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${opt.bgColor} ${opt.iconColor} group-hover:bg-[#059669] group-hover:text-white`}
               >
                 <Icon className="w-6 h-6" />
               </div>
               <div className="flex-grow">
-                <span className="block text-[11px] font-black uppercase tracking-wider text-gray-400 group-hover:text-health-primary transition-colors">
+                <span className="block text-[11px] font-black uppercase tracking-wider text-gray-400 group-hover:text-[#059669] transition-colors">
                   {opt.subtitle}
                 </span>
-                <h4 className="text-base font-bold text-gray-900 mt-0.5 group-hover:text-health-primary transition-colors">
+                <h4 className="text-base font-bold text-gray-900 mt-0.5 group-hover:text-[#059669] transition-colors">
                   {opt.title}
                 </h4>
                 <p className="text-gray-500 text-xs mt-1.5 leading-relaxed font-medium">
                   {opt.desc}
                 </p>
-                <div className="text-[11px] font-bold text-health-primary group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 mt-3">
+                <div className="text-[11px] font-bold text-[#059669] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 mt-3">
                   <span>Onboard Portal</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>

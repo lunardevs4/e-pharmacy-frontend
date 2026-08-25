@@ -65,7 +65,6 @@ export default function LandingPage() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [showResults, setShowResults] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(1) // Item 1 (How do I find a medicine near me?) is expanded by default
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
 
   const [showChat, setShowChat] = useState(false)
   const [chatInput, setChatInput] = useState('')
@@ -310,12 +309,12 @@ export default function LandingPage() {
             >
               Log In
             </Link>
-            <button
-              onClick={() => setIsRegisterModalOpen(true)}
+            <Link
+              to="/register"
               className="bg-health-primary hover:bg-health-secondary text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
             >
               <span>Register</span>
-            </button>
+            </Link>
           </div>
         </div>
       </header>{' '}
@@ -1061,126 +1060,7 @@ export default function LandingPage() {
           {showChat ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
         </button>
       </div>
-      {/* Registration Option Modal */}
-      {isRegisterModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-xl border border-gray-150 border-t-4 border-t-health-primary shadow-2xl w-full max-w-4xl overflow-hidden relative animate-scaleIn">
-            <button
-              onClick={() => setIsRegisterModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-all focus:outline-none"
-              aria-label="Close modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
 
-            <div className="p-8">
-              <div className="text-center mb-8">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-health-light-text border border-emerald-100 mb-2">
-                  Rwanda E-Pharmacy Portal
-                </span>
-                <h3 className="text-2xl font-black text-gray-900">Create an Account</h3>
-                <p className="text-gray-500 text-sm mt-1.5 max-w-md mx-auto">
-                  Select your role below to access the national medicine inventory, search, and
-                  reservation systems.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Patient / Citizen Card */}
-                <Link
-                  to="/register/patient"
-                  onClick={() => setIsRegisterModalOpen(false)}
-                  className="group p-6 bg-white rounded-lg border border-gray-250 hover:border-health-primary hover:shadow-xl transition-all duration-200 flex flex-col justify-between h-56 text-left relative overflow-hidden"
-                >
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-emerald-50 text-health-primary group-hover:bg-health-primary group-hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200">
-                      <UserIcon className="w-6 h-6" />
-                    </div>
-                    <h4 className="text-lg font-bold text-gray-900 mt-4 group-hover:text-health-primary transition-colors">
-                      Register as Patient
-                    </h4>
-                    <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-[200px]">
-                      Search medicines, check local pharmacy stocks, and reserve items using your
-                      National ID.
-                    </p>
-                  </div>
-
-                  <div className="text-xs font-bold text-health-primary group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
-                    <span>Citizen Portal Setup</span>
-                    <span>&rarr;</span>
-                  </div>
-                </Link>
-
-                {/* Pharmacy / Pharmacist Card */}
-                <Link
-                  to="/register/pharmacy"
-                  onClick={() => setIsRegisterModalOpen(false)}
-                  className="group p-6 bg-white rounded-lg border border-gray-250 hover:border-health-primary hover:shadow-xl transition-all duration-200 flex flex-col justify-between h-56 text-left relative overflow-hidden"
-                >
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-teal-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200">
-                      <PharmacyIcon className="w-6 h-6" />
-                    </div>
-                    <h4 className="text-lg font-bold text-gray-900 mt-4 group-hover:text-emerald-700 transition-colors">
-                      Register as Pharmacy
-                    </h4>
-                    <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-[200px]">
-                      Register a pharmacy store owner account to manage inventories, staff, and
-                      verify prescriptions.
-                    </p>
-                  </div>
-
-                  <div className="text-xs font-bold text-emerald-700 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
-                    <span>Store Portal Setup</span>
-                    <span>&rarr;</span>
-                  </div>
-                </Link>
-
-                {/* Insurance Provider Card */}
-                <Link
-                  to="/register/insurance"
-                  onClick={() => setIsRegisterModalOpen(false)}
-                  className="group p-6 bg-white rounded-lg border border-gray-250 hover:border-health-primary hover:shadow-xl transition-all duration-200 flex flex-col justify-between h-56 text-left relative overflow-hidden"
-                >
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-blue-50 text-blue-700 group-hover:bg-blue-700 group-hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200">
-                      <Shield className="w-6 h-6" />
-                    </div>
-                    <h4 className="text-lg font-bold text-gray-900 mt-4 group-hover:text-blue-700 transition-colors">
-                      Register as Insurance
-                    </h4>
-                    <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-[200px]">
-                      Register a digital insurance portal account to process claims, verify policies, and view co-pay reports.
-                    </p>
-                  </div>
-
-                  <div className="text-xs font-bold text-blue-700 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1.5 mt-auto relative z-10">
-                    <span>Insurance Portal Setup</span>
-                    <span>&rarr;</span>
-                  </div>
-                </Link>
-              </div>
-
-              {/* Other Options / Footnote */}
-              <div className="mt-8 pt-6 border-t border-gray-150 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-sans">
-                <span className="text-gray-500 font-bold">
-                  Other roles (Government, MoH Inspector)?
-                </span>
-                <span className="text-gray-450 font-medium">
-                  Created by administrators. Contact support at{' '}
-                  <a
-                    href="mailto:support@epharmacy.rw"
-                    className="text-health-primary hover:underline font-bold"
-                  >
-                    support@epharmacy.rw
-                  </a>
-                  .
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

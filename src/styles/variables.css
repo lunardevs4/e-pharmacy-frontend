@@ -29,15 +29,15 @@
   /* ---- A.1 Health / Pharmacy Brand Palette ----------------------------- */
   /* Deep emerald → forest → mint gradient. Aligns with tailwind health.*
      tokens and the E-Pharmacy logo green + blue complementary colors. */
-  --color-health-primary:    #235347;   /* Main brand emerald — buttons, focus rings */
-  --color-health-secondary:  #0b2b26;   /* Deep forest green — hover states, headings */
-  --color-health-accent:     #8eb69b;   /* Soft sage/mint green — accents, dividers, scrollbar */
-  --color-health-light-bg:   #daf1de;   /* Pale mint surface — card backgrounds */
-  --color-health-light-text: #163832;   /* Plummy dark green for text on light bg */
+  --color-health-primary:    #064e3b;   /* Deep emerald green requested by user */
+  --color-health-secondary:  #022c22;   /* Darker companion forest green for active hover states */
+  --color-health-accent:     #6ee7b7;   /* Vibrant emerald-300 accent */
+  --color-health-light-bg:   #f8fafc;   /* Soft slate-50 surface */
+  --color-health-light-text: #334155;   /* Dark slate-700 text for readability */
 
   /* ---- A.2 Neutral Palette --------------------------------------------- */
   --color-neutral-white:      #ffffff;   /* Pure white */
-  --color-neutral-light-gray: #daf1de;   /* Body fallback background (matches health-light-bg) */
+  --color-neutral-light-gray: #f8fafc;   /* Body fallback background (slate-50) */
   --color-neutral-border:     #e9ecef;   /* Input/card border gray */
   --color-neutral-text:       #212529;   /* Primary body text */
   --color-neutral-muted:      #6c757d;   /* Secondary / helper text */

@@ -5,6 +5,7 @@ import {
   PointElement, Title, Tooltip, Legend, Filler
 } from 'chart.js'
 import { Bar, Line } from 'react-chartjs-2'
+import '@/utils/chartTheme'
 import { Package, TrendingDown, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react'
 import { AuthApi } from '@/services/auth-api'
 import { MedicineApi } from '@/services/medicine-api'
@@ -163,7 +164,7 @@ export default function MedicineAnalytics() {
             <Line data={usageTrend} options={{
               responsive: true,
               interaction: { mode: 'index', intersect: false },
-              elements: { line: { tension: 0.5 }, point: { radius: 4, hoverRadius: 6, borderWidth: 2, borderColor: '#fff' } },
+              elements: { line: { tension: 0.45, borderWidth: 3 }, point: { radius: 0, hoverRadius: 5, borderWidth: 2, borderColor: '#fff' } },
               plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 } } },
               scales: {
                 y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
@@ -182,7 +183,7 @@ export default function MedicineAnalytics() {
             <Line data={stockIndex} options={{
               responsive: true,
               interaction: { mode: 'index', intersect: false },
-              elements: { line: { tension: 0.5 }, point: { radius: 4, hoverRadius: 6, borderWidth: 2, borderColor: '#fff' } },
+              elements: { line: { tension: 0.45, borderWidth: 3 }, point: { radius: 0, hoverRadius: 5, borderWidth: 2, borderColor: '#fff' } },
               plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
               scales: {
                 y: { min: 85, max: 100, border: { display: false }, ticks: { callback: (v: any) => `${v}%`, font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },

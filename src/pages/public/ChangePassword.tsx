@@ -93,16 +93,16 @@ export default function ChangePassword() {
   }
 
   return (
-    <AuthLayout title="Update Temporary Password" subtitle="For security compliance, first-time users must configure a new secure account password.">
+    <AuthLayout mode="reset" title="Update Temporary Password" subtitle="For security compliance, first-time users must configure a new secure account password.">
       {errorMsg && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start space-x-3 text-red-800 text-sm mb-5 shadow-sm">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-start space-x-3 text-red-800 text-sm mb-5 shadow-sm">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span className="font-medium">{errorMsg}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start space-x-3 text-emerald-800 text-sm mb-5 shadow-sm">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4 flex items-start space-x-3 text-emerald-800 text-sm mb-5 shadow-sm">
           <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <span className="font-medium">{successMsg}</span>
         </div>
@@ -124,7 +124,7 @@ export default function ChangePassword() {
               disabled={isLoading}
               value={currentPass}
               onChange={(e) => setCurrentPass(e.target.value)}
-              className="block w-full pl-11 pr-12 py-[13px] bg-white border-2 rounded-2xl focus:outline-none focus:ring-0 focus:border-health-primary focus:shadow-[0_0_0_4px_rgba(35,83,71,0.08)] transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal border-gray-200 hover:border-gray-300"
+              className="block w-full pl-11 pr-12 py-[13px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input"
               placeholder="••••••••"
             />
             <button
@@ -152,7 +152,7 @@ export default function ChangePassword() {
               disabled={isLoading}
               value={newPass}
               onChange={(e) => setNewPass(e.target.value)}
-              className="block w-full pl-11 pr-12 py-[13px] bg-white border-2 rounded-2xl focus:outline-none focus:ring-0 focus:border-health-primary focus:shadow-[0_0_0_4px_rgba(35,83,71,0.08)] transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal border-gray-200 hover:border-gray-300"
+              className="block w-full pl-11 pr-12 py-[13px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input"
               placeholder="••••••••"
             />
             <button
@@ -179,7 +179,7 @@ export default function ChangePassword() {
             </div>
           )}
 
-          <div className="mt-3.5 bg-gray-50 border border-gray-200 p-4 rounded-2xl text-xs space-y-2 font-medium text-gray-600">
+          <div className="mt-3.5 bg-gray-50 border border-gray-200 p-4 rounded-md text-xs space-y-2 font-medium text-gray-600">
             <span className="font-bold text-gray-700 block mb-1.5">Password Requirements:</span>
             <div className="flex items-center space-x-2.5">
               <span className={`w-2 h-2 rounded-full ${criteria.length ? 'bg-health-primary' : 'bg-gray-300'}`} />
@@ -219,7 +219,7 @@ export default function ChangePassword() {
               disabled={isLoading}
               value={confirmPass}
               onChange={(e) => setConfirmPass(e.target.value)}
-              className={`block w-full pl-11 pr-4 py-[13px] bg-white border-2 rounded-2xl focus:outline-none focus:ring-0 transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal ${newPass && confirmPass && newPass !== confirmPass ? 'border-red-300 focus:border-red-500 focus:shadow-[0_0_0_4px_rgba(220,38,38,0.08)]' : 'border-gray-200 hover:border-gray-300 focus:border-health-primary focus:shadow-[0_0_0_4px_rgba(35,83,71,0.08)]'}`}
+              className={`block w-full pl-11 pr-4 py-[13px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input ${newPass && confirmPass && newPass !== confirmPass ? 'error' : ''}`}
               placeholder="••••••••"
             />
           </div>
@@ -234,7 +234,7 @@ export default function ChangePassword() {
         <button
           type="submit"
           disabled={isLoading || !meetsAllCriteria || newPass !== confirmPass}
-          className="w-full flex justify-center py-[13px] px-4 border border-transparent rounded-2xl shadow-lg shadow-health-primary/20 text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-health-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl hover:shadow-health-primary/25 active:scale-[0.99]"
+          className="w-full flex justify-center py-[13px] px-4 border border-transparent text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99] auth-button"
         >
           {isLoading ? (
             <>

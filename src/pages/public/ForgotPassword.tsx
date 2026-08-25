@@ -126,7 +126,7 @@ export default function ForgotPassword() {
   const strength = getPasswordStrength()
 
   return (
-    <AuthLayout title={getStepTitle()} subtitle={getStepSubtitle()}>
+    <AuthLayout mode="reset" title={getStepTitle()} subtitle={getStepSubtitle()}>
       {errorMsg && (
         <div className="rounded-2xl p-4 flex items-start space-x-3 text-sm mb-5 shadow-sm bg-red-50 border border-red-200 text-red-800">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -151,7 +151,7 @@ export default function ForgotPassword() {
                 disabled={isLoading}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-11 pr-4 py-[13px] bg-white border-2 rounded-2xl focus:outline-none focus:ring-0 focus:border-health-primary focus:shadow-[0_0_0_4px_rgba(35,83,71,0.08)] transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal border-gray-200 hover:border-gray-300"
+                className="block w-full pl-11 pr-4 py-[13px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input"
                 placeholder="e.g. user@epharmacy.rw"
               />
             </div>
@@ -160,7 +160,7 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-[13px] px-4 border border-transparent rounded-2xl shadow-lg shadow-health-primary/20 text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-health-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl hover:shadow-health-primary/25 active:scale-[0.99]"
+            className="w-full flex justify-center py-[13px] px-4 border border-transparent text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99] auth-button"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Verification Code'}
           </button>
@@ -191,7 +191,7 @@ export default function ForgotPassword() {
                 disabled={isLoading}
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="block w-full pl-11 pr-4 py-[13px] bg-white border-2 rounded-2xl focus:outline-none focus:ring-0 focus:border-health-primary focus:shadow-[0_0_0_4px_rgba(35,83,71,0.08)] transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal border-gray-200 hover:border-gray-300 tracking-widest text-center font-mono"
+                className="block w-full pl-11 pr-4 py-[13px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed tracking-widest text-center font-mono auth-input"
                 placeholder="123456"
               />
             </div>
@@ -203,7 +203,7 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-[13px] px-4 border border-transparent rounded-2xl shadow-lg shadow-health-primary/20 text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-health-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl hover:shadow-health-primary/25 active:scale-[0.99]"
+            className="w-full flex justify-center py-[13px] px-4 border border-transparent text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99] auth-button"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify Code'}
           </button>
@@ -244,7 +244,7 @@ export default function ForgotPassword() {
                 disabled={isLoading}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-health-primary focus:border-transparent text-sm text-gray-900 font-medium placeholder:text-gray-400"
+                className="block w-full pl-11 pr-11 py-3 placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input"
                 placeholder="••••••••"
               />
               <button
@@ -311,7 +311,7 @@ export default function ForgotPassword() {
                 disabled={isLoading}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-health-primary focus:border-transparent text-sm text-gray-900 font-medium placeholder:text-gray-400"
+                className="block w-full pl-11 pr-4 py-3 placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input"
                 placeholder="••••••••"
               />
             </div>
@@ -323,7 +323,7 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={isLoading || !meetsAllCriteria || password !== confirmPassword}
-            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none focus:ring-2 focus:ring-health-primary disabled:opacity-50 transition-all duration-200 hover:shadow-lg hover:shadow-health-primary/25"
+            className="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold text-white disabled:opacity-50 transition-all duration-200 active:scale-[0.99] auth-button"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Reset Password'}
           </button>
@@ -340,7 +340,7 @@ export default function ForgotPassword() {
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-health-primary hover:bg-health-secondary focus:outline-none focus:ring-2 focus:ring-health-primary transition-all duration-200 hover:shadow-lg hover:shadow-health-primary/25"
+            className="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold text-white transition-all duration-200 active:scale-[0.99] auth-button"
           >
             Sign In Now
           </button>

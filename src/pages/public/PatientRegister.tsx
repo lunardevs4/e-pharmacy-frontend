@@ -19,12 +19,12 @@ import {
   Check,
 } from 'lucide-react'
 
-const BRAND = '#006846'
-const BRAND_HOVER = '#005238'
-const INPUT_BG = '#FFFFFF'
+const BRAND = '#059669'
+const BRAND_HOVER = '#047857'
+const INPUT_BG = '#F7F8FA'
 const SERIF = "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif"
-const focusRing = `0 0 0 4px ${BRAND}14`
-const inputBorderRadius = '16px'
+const focusRing = '0 0 0 3px rgba(5, 150, 105, 0.15)'
+const inputBorderRadius = '4px'
 
 type RegStep = 1 | 2 | 3
 
@@ -165,23 +165,13 @@ export default function PatientRegister() {
   }
 
   const inputBase =
-    'block w-full pl-11 pr-4 py-[12px] border border-[#E5E7EB] rounded-[16px] bg-[#FFFFFF] shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-0 transition-all duration-200 text-[14px] text-gray-900 placeholder:text-gray-400 font-normal hover:border-gray-300 focus:bg-white'
+    'block w-full pl-11 pr-4 py-[12px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input'
 
-  const focusHandlers = (hasError: boolean) => ({
-    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-      if (!hasError) {
-        e.currentTarget.style.borderColor = BRAND
-        e.currentTarget.style.boxShadow = focusRing
-      }
-    },
-    onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-      e.currentTarget.style.borderColor = hasError ? '#FCA5A5' : 'transparent'
-      e.currentTarget.style.boxShadow = 'none'
-    },
-  })
+  const focusHandlers = (hasError: boolean) => ({})
 
   return (
     <AuthLayout
+      mode="register"
       title="Create your account"
       subtitle="Register a secure patient account to access medicine search and reservation."
     >
@@ -349,18 +339,8 @@ export default function PatientRegister() {
                     required
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    style={{
-                      borderRadius: inputBorderRadius,
-                      backgroundColor: INPUT_BG,
-                      backgroundImage:
-                        'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%236b7280\' stroke-width=\'2\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 1.25rem center',
-                      backgroundSize: '1.25rem',
-                      appearance: 'none' as const,
-                    }}
-                    className={inputBase + ' pr-10'}
-                    {...focusHandlers(false)}
+                    style={{ borderRadius: inputBorderRadius, backgroundColor: INPUT_BG }}
+                    className={inputBase}
                   >
                     <option value="">Select...</option>
                     <option value="MALE">Male</option>
@@ -405,13 +385,7 @@ export default function PatientRegister() {
             <button
               type="button"
               onClick={goNext}
-              className="w-full flex justify-center items-center py-[13px] px-4 border border-transparent rounded-full shadow-lg text-sm font-bold text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl active:scale-[0.99] mt-2"
-              style={{
-                backgroundColor: BRAND,
-                boxShadow: `0 10px 24px -10px ${BRAND}AA, 0 4px 10px -4px ${BRAND}55`,
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BRAND_HOVER)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BRAND)}
+              className="w-full flex justify-center items-center py-[13px] px-4 border border-transparent text-sm font-bold text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99] mt-2 auth-button"
             >
               <span>Continue to Account Details</span>
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -661,7 +635,7 @@ export default function PatientRegister() {
                 type="button"
                 disabled={isLoading}
                 onClick={goBack}
-                className="w-1/3 flex items-center justify-center py-3 border rounded-full text-sm font-bold transition-colors disabled:opacity-50"
+                className="w-1/3 flex items-center justify-center py-3 border rounded-md text-sm font-bold transition-colors disabled:opacity-50"
                 style={{ borderColor: '#E5E7EB', color: '#4B5563', backgroundColor: '#FFFFFF' }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F9FAFB')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
@@ -672,13 +646,7 @@ export default function PatientRegister() {
               <button
                 type="submit"
                 disabled={isLoading || !acceptTerms || !acceptPrivacy}
-                className="w-2/3 flex items-center justify-center py-3.5 text-white rounded-full text-sm font-bold shadow-sm transition-all duration-200 disabled:opacity-50 hover:shadow-lg active:scale-[0.99]"
-                style={{
-                  backgroundColor: BRAND,
-                  boxShadow: `0 10px 24px -10px ${BRAND}AA, 0 4px 10px -4px ${BRAND}55`,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BRAND_HOVER)}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BRAND)}
+                className="w-2/3 flex items-center justify-center py-3.5 text-white text-sm font-bold transition-all duration-200 disabled:opacity-50 active:scale-[0.99] auth-button"
               >
                 {isLoading ? (
                   <>

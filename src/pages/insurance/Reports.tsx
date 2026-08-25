@@ -4,6 +4,7 @@ import {
   ArcElement, Title, Tooltip, Legend
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
+import '@/utils/chartTheme'
 import { Download, RefreshCw, BarChart2, Loader2, AlertTriangle } from 'lucide-react'
 import { insuranceApi, DashboardSummary } from '@/services/insurance-api'
 import { useAuthStore } from '@/store/authStore'
@@ -141,11 +142,11 @@ export default function InsuranceReports() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
           <div><h3 className="text-sm font-black text-gray-900">Claims Volume</h3><p className="text-[10px] text-gray-400">Claims by status</p></div>
           <Bar data={claimsVolumeData} options={barOpts} />
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
           <div><h3 className="text-sm font-black text-gray-900">Claims Amount</h3><p className="text-[10px] text-gray-400">Total RWF by status</p></div>
           <Bar data={payoutData} options={{
             ...barOpts,
@@ -156,7 +157,7 @@ export default function InsuranceReports() {
             },
           }} />
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
           <div><h3 className="text-sm font-black text-gray-900">Claims Status Distribution</h3><p className="text-[10px] text-gray-400">% share of claims by status</p></div>
           <Doughnut data={statusDistributionData} options={{ responsive: true, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } } } }} />
         </div>

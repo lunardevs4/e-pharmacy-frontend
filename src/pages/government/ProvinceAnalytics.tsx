@@ -5,6 +5,7 @@ import {
   Title, Tooltip, Legend
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
+import '@/utils/chartTheme'
 import { MapPin, Users, Package, ChevronRight, RefreshCw, AlertTriangle } from 'lucide-react'
 import { AuthApi } from '@/services/auth-api'
 
@@ -219,7 +220,7 @@ export default function ProvinceAnalytics() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
           <div>
             <h3 className="text-sm font-black text-gray-900">Active Pharmacies by Province</h3>
             <p className="text-[10px] text-gray-400">Approved store count</p>
@@ -227,7 +228,7 @@ export default function ProvinceAnalytics() {
           <Bar data={pharmacyCountData} options={barOpts} />
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
           <div>
             <h3 className="text-sm font-black text-gray-900">Stock Coverage Comparison</h3>
             <p className="text-[10px] text-gray-400">Average % essential drugs available</p>
@@ -241,7 +242,7 @@ export default function ProvinceAnalytics() {
           }} />
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
           <div>
             <h3 className="text-sm font-black text-gray-900">Reservation Share by Province</h3>
             <p className="text-[10px] text-gray-400">Monthly reservations distribution</p>
