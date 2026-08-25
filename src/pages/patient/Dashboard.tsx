@@ -90,8 +90,8 @@ export default function PatientDashboard() {
     setLoading(true)
     try {
       const [resData, notData, histData, reportData, medHistoryData, remindersData] = await Promise.all([
-        MedicineApi.getReservationHistory(),
-        MedicineApi.getNotifications(),
+        MedicineApi.getReservationHistory().catch(() => []),
+        MedicineApi.getNotifications().catch(() => []),
         MedicineApi.getSearchHistory(),
         MedicineApi.getPatientDashboardReport().catch(() => null),
         MedicineApi.getMedicineHistory().catch(() => []),

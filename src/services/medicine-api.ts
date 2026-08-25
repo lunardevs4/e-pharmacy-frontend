@@ -198,75 +198,97 @@ export const MedicineApi = {
     return response.data
   },
 
-  // Resolves pharmacy stock levels dynamically for any medicine ID
-  getMedicineAvailability: async (medicineId: string, insuranceId?: string | null): Promise<PharmacyStock[]> => {
-    const pharmaciesResponse = await apiClient.get('/pharmacies', {
-      params: { limit: 100, status: 'APPROVED' },
-    })
-    const pharmacies = extractArrayPayload(pharmaciesResponse.data).filter(
-      (pharm: any) => pharm.isActive !== false,
-    )
-    const stocks = await Promise.all(
-      pharmacies.map(async (pharm: any) => {
-        try {
-          const inventoryResponse = await apiClient.get(`/pharmacies/${pharm.id}/inventory`)
-          const inventory = extractArrayPayload(inventoryResponse.data)
-          const item = inventory.find(
-            (record: any) => record.medicineId === medicineId || record.medicine?.id === medicineId,
-          )
-          const stock = Number(item?.quantity || 0)
-          const price = Number(item?.price || 0)
-          
-          // Get insurance coverage if insuranceId is provided
-          let insuranceCoverage = undefined
-          if (insuranceId && price > 0) {
-            try {
-              const coverageResponse = await apiClient.get('/search/medicines', {
-                params: { 
-                  medicineId,
-                  insuranceId,
-                  pharmacyId: pharm.id
-                }
-              })
-              const searchResults = extractArrayPayload(coverageResponse.data)
-              const pharmacyResult = searchResults.find((r: any) => r.pharmacyId === pharm.id)
-              if (pharmacyResult?.insuranceCoverage) {
-                insuranceCoverage = pharmacyResult.insuranceCoverage
-              }
-            } catch (e) {
-              // If insurance calculation fails, continue without coverage
-              console.warn('Insurance coverage calculation failed', e)
+  // Resolves pharmacy stock levels via the dedicated availability endpoint
+  // (single request instead of N+1 per-pharmacy inventory fetches)
+  getMedicineAvailability: async (
+    medicineId: string,
+    insuranceId?: string | null,
+    latitude?: number,
+    longitude?: number,
+    radius?: number,
+  ): Promise<PharmacyStock[]> => {
+    const params: Record<string, any> = {}
+    if (insuranceId) params.insuranceId = insuranceId
+    if (latitude !== undefined) params.latitude = latitude
+    if (longitude !== undefined) params.longitude = longitude
+    if (radius !== undefined) params.radius = radius
+
+    try {
+      const response = await apiClient.get(`/medicines/${medicineId}/availability`, { params })
+      const payload = response?.data?.data ?? response?.data ?? {}
+      const items = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+
+      return items.map((item: any) => ({
+        pharmacyId: item.pharmacy?.id || '',
+        pharmacyName: item.pharmacy?.name || 'Pharmacy',
+        rating: 0,
+        isOpen: true,
+        distance:
+          item.distance !== null && item.distance !== undefined
+            ? Math.round(item.distance * 10) / 10
+            : 0,
+        price: Number(item.price || 0),
+        stock: Number(item.quantity || 0),
+        stockStatus:
+          item.quantity === 0
+            ? 'OUT_OF_STOCK'
+            : item.quantity < 10
+              ? 'ALMOST_OUT'
+              : item.quantity < 35
+                ? 'LIMITED'
+                : 'HIGH',
+        insuranceAccepted: [],
+        lat: Number(item.pharmacy?.latitude || 0),
+        lng: Number(item.pharmacy?.longitude || 0),
+        locationText: item.pharmacy?.address || '',
+        insuranceCoverage: item.insuranceCoverage,
+      }))
+    } catch {
+      // Fallback to legacy N+1 approach if the availability endpoint fails
+      const pharmaciesResponse = await apiClient.get('/pharmacies', {
+        params: { limit: 100, status: 'APPROVED' },
+      })
+      const pharmacies = extractArrayPayload(pharmaciesResponse.data).filter(
+        (pharm: any) => pharm.isActive !== false,
+      )
+      const stocks = await Promise.all(
+        pharmacies.map(async (pharm: any) => {
+          try {
+            const inventoryResponse = await apiClient.get(`/pharmacies/${pharm.id}/inventory`)
+            const inventory = extractArrayPayload(inventoryResponse.data)
+            const item = inventory.find(
+              (record: any) => record.medicineId === medicineId || record.medicine?.id === medicineId,
+            )
+            const stock = Number(item?.quantity || 0)
+            const price = Number(item?.price || 0)
+            return {
+              pharmacyId: pharm.id,
+              pharmacyName: pharm.name,
+              rating: 0,
+              isOpen: pharm.isActive !== false,
+              distance: 0,
+              price,
+              stock,
+              stockStatus:
+                stock === 0
+                  ? 'OUT_OF_STOCK'
+                  : stock < 10
+                    ? 'ALMOST_OUT'
+                    : stock < 35
+                      ? 'LIMITED'
+                      : 'HIGH',
+              insuranceAccepted: [],
+              lat: Number(pharm.latitude || 0),
+              lng: Number(pharm.longitude || 0),
+              locationText: pharm.address || '',
             }
+          } catch {
+            return null
           }
-          
-          return {
-            pharmacyId: pharm.id,
-            pharmacyName: pharm.name,
-            rating: 0,
-            isOpen: pharm.isActive !== false,
-            distance: 0,
-            price,
-            stock,
-            stockStatus:
-              stock === 0
-                ? 'OUT_OF_STOCK'
-                : stock < 10
-                  ? 'ALMOST_OUT'
-                  : stock < 35
-                    ? 'LIMITED'
-                    : 'HIGH',
-            insuranceAccepted: [],
-            lat: Number(pharm.latitude || 0),
-            lng: Number(pharm.longitude || 0),
-            locationText: pharm.address || '',
-            insuranceCoverage
-          }
-        } catch {
-          return null
-        }
-      }),
-    )
-    return stocks.filter(Boolean) as PharmacyStock[]
+        }),
+      )
+      return stocks.filter(Boolean) as PharmacyStock[]
+    }
   },
 
   // Update dynamic pharmacy stock levels (for pharmacy manager pages)
@@ -294,6 +316,26 @@ export const MedicineApi = {
         price,
       })
     return true
+  },
+
+  // Import inventory from a CSV or Excel spreadsheet (row-level validation report)
+  importInventorySpreadsheet: async (
+    pharmacyId: string,
+    file: File,
+  ): Promise<{
+    total: number
+    imported: number
+    failed: number
+    errors: { row: number; error: string; data: any }[]
+  }> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post(
+      `/pharmacies/${pharmacyId}/inventory/import`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    )
+    return response?.data?.data ?? response?.data
   },
 
   // Calculate dynamic insurance cost splits
@@ -362,22 +404,19 @@ export const MedicineApi = {
   },
 
   // Create pickup reservation
+  // Note: the backend Reservation schema has no insurance columns — coverage
+  // splits are display-only on the client, so only whitelisted fields are sent.
   createReservation: async (data: {
     medicineId: string
     pharmacyId: string
     quantity: number
-    insuranceProvider?: string
-    insurancePays?: number
-    patientPays?: number
+    expiresAt?: string
   }): Promise<Reservation> => {
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    const expiresAt = data.expiresAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     const response = await apiClient.post('/reservations', {
       medicineId: data.medicineId,
       pharmacyId: data.pharmacyId,
       quantity: data.quantity,
-      insuranceProvider: data.insuranceProvider,
-      insurancePays: data.insurancePays,
-      patientPays: data.patientPays,
       expiresAt,
     })
     return normalizeReservation(response.data)

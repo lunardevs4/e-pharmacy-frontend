@@ -3,6 +3,8 @@ import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
 import { useNotificationStore } from '@/store/notificationStore'
 import { useEffect, useRef, useState } from 'react'
+import PharmacyRegistrationGate, { isPharmacyGated } from '@/components/pharmacy/PharmacyRegistrationGate'
+import { Lock } from 'lucide-react'
 import {
   Menu, X, LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
@@ -170,6 +172,10 @@ export default function SidebarLayout() {
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
   const currentRole = user?.role ? (['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user.role) ? 'PHARMACY' : user.role) : ''
 
+  // Pharmacy owners must register their store and receive MOH approval before
+  // any portal section becomes usable.
+  const portalGated = isPharmacyGated(user)
+
   // Dynamic theme colors and branding based on insurance provider
   const isInsurance = user?.role === 'INSURANCE'
   const insurer = user?.insuranceProvider || ''
@@ -249,23 +255,33 @@ export default function SidebarLayout() {
           {navLinks.map((link) => {
             const Icon = link.icon
             const isActive = location.pathname === link.path
+            const locked = portalGated
             return (
               <Link
                 key={link.path}
-                to={link.path}
+                to={locked ? location.pathname : link.path}
+                onClick={(e) => {
+                  if (locked) e.preventDefault()
+                }}
                 aria-current={isActive ? 'page' : undefined}
+                aria-disabled={locked || undefined}
+                title={locked ? 'Register and get MOH approval to unlock this section' : undefined}
                 className={`flex items-center justify-between py-2.5 rounded-none text-sm font-medium transition-all
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 ${
                   isActive
                     ? activeLinkClass
                     : hoverLinkClass
-                }`}
+                } ${locked ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex items-center space-x-3">
                   <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-200/70'}`} aria-hidden="true" />
                   <span>{link.label}</span>
                 </div>
-                {isActive && <ChevronRight className="w-3.5 h-3.5 text-emerald-200/70 flex-shrink-0" aria-hidden="true" />}
+                {locked ? (
+                  <Lock className="w-3 h-3 text-emerald-300/70 flex-shrink-0" aria-label="Locked" />
+                ) : (
+                  isActive && <ChevronRight className="w-3.5 h-3.5 text-emerald-200/70 flex-shrink-0" />
+                )}
               </Link>
             )
           })}
@@ -470,7 +486,13 @@ export default function SidebarLayout() {
         {/* Page content */}
         <main id="main-content" className="flex-grow p-4 sm:p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
-            <Outlet />
+            {portalGated ? (
+              <PharmacyRegistrationGate>
+                <Outlet />
+              </PharmacyRegistrationGate>
+            ) : (
+              <Outlet />
+            )}
           </div>
         </main>
       </div>

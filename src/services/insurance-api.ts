@@ -1,5 +1,8 @@
 import { apiClient } from '@/api/client'
 
+// Backend responses are wrapped by TransformInterceptor as { success, data, timestamp }
+const unwrap = (response: any) => response?.data?.data ?? response?.data
+
 export interface InsuranceProvider {
   id: string
   name: string
@@ -36,8 +39,8 @@ export interface InsuranceClaim {
   claimNumber: string
   insuranceId: string
   pharmacyId: string
-  insuredPatientId: string
-  medicineId: string
+  insuredPatientId?: string
+  medicineId?: string
   quantity: number
   unitPrice: number
   totalAmount: number
@@ -55,6 +58,16 @@ export interface InsuranceClaim {
   pharmacy?: {
     name: string
   }
+  insuredPatient?: {
+    fullName: string
+    policyNumber: string
+  }
+  patient?: {
+    user?: {
+      firstName: string
+      lastName: string
+    }
+  }
 }
 
 export interface PharmacyAgreement {
@@ -71,6 +84,10 @@ export interface PharmacyAgreement {
   pharmacy?: {
     name: string
     address: string
+    phone?: string
+    email?: string
+    district?: string
+    province?: string
   }
 }
 
@@ -117,10 +134,12 @@ export interface DashboardSummary {
   paidClaims: number
   paidClaimsAmount: number
   totalPatients: number
+  newPatientsThisMonth: number
   totalAgreements: number
   totalTariffs: number
-  claimsThisMonth: number
-  claimsAmountThisMonth: number
+  outstandingPaymentsAmount: number
+  approvalPercentage: number
+  claimsGrowthPercentage: number
   recentClaims: InsuranceClaim[]
   claimsByStatus: {
     PENDING: number
@@ -136,11 +155,48 @@ export interface DashboardSummary {
 }
 
 export const insuranceApi = {
-  // Dashboard
+  // Dashboard — maps the backend summary payload onto the DashboardSummary shape
   async getDashboardSummary(insuranceId?: string): Promise<DashboardSummary> {
     const params = insuranceId ? { insuranceId } : {}
     const response = await apiClient.get('/insurance/summary', { params })
-    return response.data
+    const raw = unwrap(response) ?? {}
+    const s = raw?.summary ?? raw ?? {}
+    const cbs = raw?.claimsByStatus ?? {}
+    const trend = raw?.monthlyTrend ?? []
+
+    return {
+      totalClaims:
+        s.totalClaimsCount ??
+        (cbs.PENDING ?? 0) + (cbs.APPROVED ?? 0) + (cbs.REJECTED ?? 0) + (cbs.PAID ?? 0),
+      totalClaimsAmount: s.totalClaimsAmountThisMonth ?? 0,
+      approvedClaims: s.approvedClaimsCount ?? cbs.APPROVED ?? 0,
+      approvedClaimsAmount: s.approvedClaimsAmount ?? 0,
+      pendingClaims: s.pendingClaimsCount ?? cbs.PENDING ?? 0,
+      pendingClaimsAmount: s.pendingClaimsAmount ?? 0,
+      rejectedClaims: s.rejectedClaimsCount ?? cbs.REJECTED ?? 0,
+      rejectedClaimsAmount: s.rejectedClaimsAmount ?? 0,
+      paidClaims: s.paidClaimsCount ?? cbs.PAID ?? 0,
+      paidClaimsAmount: s.paidClaimsAmount ?? 0,
+      totalPatients: s.totalInsuredPatients ?? 0,
+      newPatientsThisMonth: s.newPatientsThisMonth ?? 0,
+      totalAgreements: s.totalActiveAgreements ?? s.pharmaciesAwaitingPayout ?? 0,
+      totalTariffs: s.totalCoveredTariffs ?? 0,
+      outstandingPaymentsAmount: s.outstandingPaymentsAmount ?? 0,
+      approvalPercentage: s.approvalPercentage ?? 0,
+      claimsGrowthPercentage: s.claimsGrowthPercentage ?? 0,
+      recentClaims: raw?.recentClaims ?? [],
+      claimsByStatus: {
+        PENDING: cbs.PENDING ?? 0,
+        APPROVED: cbs.APPROVED ?? 0,
+        REJECTED: cbs.REJECTED ?? 0,
+        PAID: cbs.PAID ?? 0,
+      },
+      claimsTrend: trend.map((t: any) => ({
+        month: t.month,
+        count: t.volume ?? 0,
+        amount: t.value ?? 0,
+      })),
+    }
   },
 
   // Claims
@@ -154,40 +210,52 @@ export const insuranceApi = {
     limit?: number
   }): Promise<{ data: InsuranceClaim[]; meta: any }> {
     const response = await apiClient.get('/insurance/claims', { params })
-    return response.data
+    const raw = unwrap(response) ?? {}
+    if (Array.isArray(raw)) return { data: raw, meta: {} }
+    if (Array.isArray(raw?.data)) return { data: raw.data, meta: raw.meta ?? {} }
+    return { data: [], meta: {} }
   },
 
   async getClaimById(id: string): Promise<InsuranceClaim> {
     const response = await apiClient.get(`/insurance/claims/${id}`)
-    return response.data
+    return unwrap(response)
   },
 
   async createClaim(data: {
     insuranceId: string
     pharmacyId: string
-    insuredPatientId: string
+    insuredPatientId?: string
+    patientId?: string
+    prescriptionId?: string
+    reservationId?: string
     medicineId: string
     quantity: number
     unitPrice: number
+    notes?: string
   }): Promise<InsuranceClaim> {
     const response = await apiClient.post('/insurance/claims', data)
-    return response.data
+    return unwrap(response)
   },
 
-  async updateClaimStatus(id: string, data: { status: string; rejectionReason?: string }): Promise<InsuranceClaim> {
+  async updateClaimStatus(
+    id: string,
+    data: { status: string; rejectionReason?: string },
+  ): Promise<InsuranceClaim> {
     const response = await apiClient.patch(`/insurance/claims/${id}/status`, data)
-    return response.data
+    return unwrap(response)
   },
 
-  async batchPayClaims(data: { claimIds: string[] }): Promise<{ success: number; failed: number }> {
+  async batchPayClaims(data: {
+    claimIds: string[]
+  }): Promise<{ total: number; successful: number; failed: number; results: any[] }> {
     const response = await apiClient.post('/insurance/claims/batch-pay', data)
-    return response.data
+    return unwrap(response)
   },
 
-  async getOutstandingPayments(pharmacyId?: string): Promise<any[]> {
+  async getOutstandingPayments(pharmacyId?: string): Promise<any> {
     const params = pharmacyId ? { pharmacyId } : {}
     const response = await apiClient.get('/insurance/claims/outstanding', { params })
-    return response.data
+    return unwrap(response)
   },
 
   // Pharmacy Agreements
@@ -197,12 +265,13 @@ export const insuranceApi = {
     status?: string
   }): Promise<PharmacyAgreement[]> {
     const response = await apiClient.get('/insurance/pharmacies', { params })
-    return response.data
+    const raw = unwrap(response)
+    return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
   },
 
   async getAgreementById(id: string): Promise<PharmacyAgreement> {
     const response = await apiClient.get(`/insurance/pharmacies/agreements/${id}`)
-    return response.data
+    return unwrap(response)
   },
 
   async createAgreement(data: {
@@ -215,22 +284,22 @@ export const insuranceApi = {
     endDate?: string
   }): Promise<PharmacyAgreement> {
     const response = await apiClient.post('/insurance/pharmacies/agreement', data)
-    return response.data
+    return unwrap(response)
   },
 
   async updateAgreement(id: string, data: Partial<any>): Promise<PharmacyAgreement> {
     const response = await apiClient.patch(`/insurance/pharmacies/agreements/${id}`, data)
-    return response.data
+    return unwrap(response)
   },
 
   async getPharmacyClaimsSummary(pharmacyId: string): Promise<any> {
     const response = await apiClient.get(`/insurance/pharmacies/${pharmacyId}/claims-summary`)
-    return response.data
+    return unwrap(response)
   },
 
   async syncTariffUpdates(insuranceId: string): Promise<{ synced: number; failed: number }> {
     const response = await apiClient.post(`/insurance/pharmacies/sync-tariffs/${insuranceId}`)
-    return response.data
+    return unwrap(response)
   },
 
   // Tariffs
@@ -240,12 +309,13 @@ export const insuranceApi = {
     status?: string
   }): Promise<MedicineTariff[]> {
     const response = await apiClient.get('/insurance/tariffs', { params })
-    return response.data
+    const raw = unwrap(response)
+    return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
   },
 
   async getTariffById(id: string): Promise<MedicineTariff> {
     const response = await apiClient.get(`/insurance/tariffs/${id}`)
-    return response.data
+    return unwrap(response)
   },
 
   async setTariff(data: {
@@ -260,7 +330,7 @@ export const insuranceApi = {
     effectiveDate: string
   }): Promise<MedicineTariff> {
     const response = await apiClient.post('/insurance/tariffs', data)
-    return response.data
+    return unwrap(response)
   },
 
   async batchUpdateTariffs(data: {
@@ -273,19 +343,23 @@ export const insuranceApi = {
     }>
   }): Promise<{ updated: number; failed: number }> {
     const response = await apiClient.post('/insurance/tariffs/batch', data)
-    return response.data
+    return unwrap(response)
   },
 
   async updateTariff(id: string, data: Partial<any>): Promise<MedicineTariff> {
     const response = await apiClient.patch(`/insurance/tariffs/${id}`, data)
-    return response.data
+    return unwrap(response)
   },
 
-  async calculateCopay(insuranceId: string, medicineId: string, retailPrice: number): Promise<InsuranceCoverage> {
+  async calculateCopay(
+    insuranceId: string,
+    medicineId: string,
+    retailPrice: number,
+  ): Promise<InsuranceCoverage> {
     const response = await apiClient.get('/insurance/tariffs/calculate-copay', {
-      params: { insuranceId, medicineId, retailPrice }
+      params: { insuranceId, medicineId, retailPrice },
     })
-    return response.data
+    return unwrap(response)
   },
 
   // Patients
@@ -297,12 +371,15 @@ export const insuranceApi = {
     limit?: number
   }): Promise<{ data: InsuredPatient[]; meta: any }> {
     const response = await apiClient.get('/insurance/patients', { params })
-    return response.data
+    const raw = unwrap(response) ?? {}
+    if (Array.isArray(raw)) return { data: raw, meta: {} }
+    if (Array.isArray(raw?.data)) return { data: raw.data, meta: raw.meta ?? {} }
+    return { data: [], meta: {} }
   },
 
   async getPatientById(id: string): Promise<InsuredPatient> {
     const response = await apiClient.get(`/insurance/patients/${id}`)
-    return response.data
+    return unwrap(response)
   },
 
   async registerPatient(data: {
@@ -321,28 +398,30 @@ export const insuranceApi = {
     dependentRelationship?: string
   }): Promise<InsuredPatient> {
     const response = await apiClient.post('/insurance/patients', data)
-    return response.data
+    return unwrap(response)
   },
 
   async updatePatient(id: string, data: Partial<any>): Promise<InsuredPatient> {
     const response = await apiClient.patch(`/insurance/patients/${id}`, data)
-    return response.data
+    return unwrap(response)
   },
 
   async verifyPolicy(policyNumber: string, nationalId?: string): Promise<any> {
     const data = nationalId ? { policyNumber, nationalId } : { policyNumber }
     const response = await apiClient.post('/insurance/patients/verify', data)
-    return response.data
+    return unwrap(response)
   },
 
   async searchByNationalId(nationalId: string): Promise<InsuredPatient[]> {
     const response = await apiClient.get(`/insurance/patients/search/national-id/${nationalId}`)
-    return response.data
+    const raw = unwrap(response)
+    return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
   },
 
   // Providers
   async getProviders(): Promise<InsuranceProvider[]> {
     const response = await apiClient.get('/insurance/providers')
-    return response.data
-  }
+    const raw = unwrap(response)
+    return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
+  },
 }
