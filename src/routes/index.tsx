@@ -121,9 +121,8 @@ export default function AppRoutes() {
           </Route>
 
           <Route path="reports" element={<PharmacyReports />} />
-          <Route path="settings" element={<PharmacySettings />} />
+          <Route path="profile" element={<PharmacySettings />} />
           <Route path="notifications" element={<SharedNotifications />} />
-          <Route path="profile" element={<PharmacyProfile />} />
         </Route>
       </Route>
 
@@ -164,7 +163,7 @@ export default function AppRoutes() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="roles" element={<AdminRoles />} />
-          <Route path="settings" element={<AdminSettings />} />
+          <Route path="profile" element={<AdminSettings />} />
           <Route path="audit" element={<AdminAuditLogs />} />
           <Route path="notifications" element={<SharedNotifications />} />
         </Route>

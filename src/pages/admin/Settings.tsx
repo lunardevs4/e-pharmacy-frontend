@@ -91,7 +91,7 @@ export default function AdminSettings() {
       {saved && (
         <div role="status" aria-live="polite" className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3 flex items-center space-x-2 text-xs font-bold">
           <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-          <span>Settings saved successfully.</span>
+          <span>Profile saved successfully.</span>
         </div>
       )}
 
@@ -191,7 +191,7 @@ export default function AdminSettings() {
           className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm flex items-center justify-center space-x-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}
-          <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
+          <span>{isSaving ? 'Saving...' : 'Save Profile'}</span>
         </button>
       </form>
     </div>

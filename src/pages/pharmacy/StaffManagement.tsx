@@ -133,7 +133,7 @@ export default function StaffManagement() {
           {/* Col 1 */}
           <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">
             <span className="font-bold text-gray-950 block">Pharmacy Owner</span>
-            <p className="text-gray-500">🟢 Full access — manage pharmacy, staff, inventory, reports, settings</p>
+            <p className="text-gray-500">🟢 Full access — manage pharmacy, staff, inventory, reports, profile</p>
           </div>
           {/* Col 2 */}
           <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">

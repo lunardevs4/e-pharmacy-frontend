@@ -29,7 +29,7 @@ const ROLES = [
       'Manage staff accounts within own pharmacy',
       'View pharmacy-level audit trail',
       'Generate pharmacy sales reports',
-      'Update pharmacy profile & settings',
+      'Update pharmacy profile',
     ],
   },
 
@@ -57,7 +57,7 @@ const ROLES = [
       'Manage medicine catalogue',
       'Configure role-based access policies',
       'View system-wide security audit logs',
-      'Manage platform settings & API config',
+      'Manage platform profile & API config',
       'Monitor system health and performance',
       'Export any system data',
     ],

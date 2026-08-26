@@ -194,7 +194,7 @@ export default function InsuranceTariffs() {
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-emerald-600" />
             <div>
-              <h2 className="text-sm font-bold text-gray-900">General Insurance Discounts Settings</h2>
+              <h2 className="text-sm font-bold text-gray-900">General Insurance Discounts Profile</h2>
               <p className="text-[11px] text-gray-400">
                 Configure your general baseline coverage and co-pay splits. Newly covered medicines will default to these rates.
               </p>
@@ -212,7 +212,7 @@ export default function InsuranceTariffs() {
         {generalSaveSuccess && (
           <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg flex items-center gap-2">
             <Check className="w-4 h-4 flex-shrink-0" />
-            <span className="font-semibold">General settings saved successfully!</span>
+            <span className="font-semibold">General profile saved successfully!</span>
           </div>
         )}
 
@@ -260,7 +260,7 @@ export default function InsuranceTariffs() {
             className="flex items-center gap-1.5 px-4 py-2 bg-health-primary text-white font-bold text-xs rounded-lg hover:bg-health-secondary transition-colors"
           >
             <Save className="w-4 h-4" />
-            <span>Save General Settings</span>
+            <span>Save General Profile</span>
           </button>
         </div>
       </div>
