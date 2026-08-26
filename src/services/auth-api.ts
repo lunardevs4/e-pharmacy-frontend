@@ -516,9 +516,9 @@ export const AuthApi = {
 
   requestMoreInformation: async (pharmacyId: string, details: string): Promise<unknown> => {
     try {
+      // Backend does not support MORE_INFO_REQUESTED or details yet, using PENDING.
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, {
-        status: 'MORE_INFO_REQUESTED',
-        details,
+        status: 'PENDING',
       })
       return response.data
     } catch (error: unknown) {

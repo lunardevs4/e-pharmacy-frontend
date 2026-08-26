@@ -42,6 +42,7 @@ export default function AdminUsers() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState<SystemUser | null>(null)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [modalError, setModalError] = useState<string | null>(null)
 
   // Add form states
   const [name, setName] = useState('')
@@ -82,12 +83,13 @@ export default function AdminUsers() {
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault()
+    setModalError(null)
     if (!name || !email || !phone) return
 
     // Validate email
     const emailValidation = validateEmail(email)
     if (!emailValidation.isValid) {
-      triggerToast(emailValidation.error || 'Please provide a valid email address.')
+      setModalError(emailValidation.error || 'Please provide a valid email address.')
       return
     }
 
@@ -110,7 +112,7 @@ export default function AdminUsers() {
       setRole('PATIENT')
       await loadUsers()
     } catch (error: any) {
-      triggerToast(error?.message || 'Unable to create user.')
+      setModalError(error?.message || 'Unable to create user.')
     }
   }
 
@@ -370,6 +372,11 @@ export default function AdminUsers() {
               </button>
             </div>
             <form onSubmit={handleAddUser} className="p-6 space-y-4 text-xs">
+              {modalError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-700 font-medium">
+                  {modalError}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2 space-y-1">
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full Name *</label>

@@ -138,10 +138,7 @@ export default function PatientRegister() {
         password,
       })
 
-      setSuccessMsg('Patient account created successfully! Redirecting to login...')
-      setTimeout(() => {
-        navigate('/login')
-      }, 1500)
+      navigate(`/check-email?email=${encodeURIComponent(email.trim())}`)
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration failed. Please try again.')
     } finally {

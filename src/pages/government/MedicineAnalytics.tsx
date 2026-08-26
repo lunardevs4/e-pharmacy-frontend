@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale, BarElement, LineElement,
@@ -81,35 +81,94 @@ export default function MedicineAnalytics() {
     loadMedicineAnalytics()
   }, [])
 
-  const usageTrend = {
-    labels: MONTHS,
-    datasets: [
-      { label: 'Antimalarials', data: [4200, 3800, 4100, 5200, 6100, 5800, 6400], borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.1)', fill: false, tension: 0.4, borderWidth: 2, pointRadius: 3 },
-      { label: 'Antibiotics', data: [3100, 3400, 3200, 3600, 3800, 4000, 4200], borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', fill: false, tension: 0.4, borderWidth: 2, pointRadius: 3 },
-      { label: 'Antidiabetics', data: [1800, 1900, 2100, 2200, 2400, 2500, 2700], borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.1)', fill: false, tension: 0.4, borderWidth: 2, pointRadius: 3 },
-    ],
-  }
+  const categories = useMemo(() => {
+    return [...new Set(essentialMedicines.map((m) => m.category))]
+  }, [essentialMedicines])
 
-  const stockIndex = {
-    labels: MONTHS,
-    datasets: [{
-      label: 'National Drug Availability Index (%)',
-      data: [91.2, 90.8, 91.5, 92.0, 93.2, 93.8, 94.2],
-      borderColor: '#0f5132',
-      backgroundColor: 'rgba(15,81,50,0.12)',
-      fill: true,
-      tension: 0.4,
-      borderWidth: 2.5,
-      pointRadius: 4,
-      pointBackgroundColor: '#0f5132',
-    }],
-  }
+  const usageTrend = useMemo(() => {
+    if (essentialMedicines.length === 0) {
+      return { labels: MONTHS, datasets: [] }
+    }
+
+    const categoryStats = categories.slice(0, 2).map((cat, index) => {
+      const catMeds = essentialMedicines.filter(m => m.category === cat)
+      const avgStock = catMeds.reduce((acc, m) => acc + m.nationalStock, 0) / (catMeds.length || 1)
+      
+      const data = MONTHS.map((_, i) => {
+         const base = 2000 + (avgStock * 20)
+         const variation = Math.sin(i + index) * 800
+         return Math.round(base + variation)
+      })
+
+      const isFirst = index === 0;
+      const color = isFirst ? '#059669' : '#34d399';
+
+      return {
+        label: cat,
+        data,
+        borderColor: color,
+        backgroundColor: (context: any) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+          gradient.addColorStop(0, isFirst ? 'rgba(5, 150, 105, 0.5)' : 'rgba(52, 211, 153, 0.5)');
+          gradient.addColorStop(1, isFirst ? 'rgba(5, 150, 105, 0.0)' : 'rgba(52, 211, 153, 0.0)');
+          return gradient;
+        },
+        fill: true,
+        tension: 0.5,
+        borderWidth: 3,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: color,
+        pointBorderWidth: 2,
+      }
+    })
+
+    return {
+      labels: MONTHS,
+      datasets: categoryStats
+    }
+  }, [essentialMedicines, categories])
+
+  const stockIndex = useMemo(() => {
+    const currentAvg = essentialMedicines.length > 0 
+      ? essentialMedicines.reduce((a, m) => a + m.nationalStock, 0) / essentialMedicines.length
+      : 92
+
+    const data = MONTHS.map((_, i) => {
+      const variation = Math.cos(i) * 3
+      return Math.max(0, Math.min(100, currentAvg - 5 + variation + (i * 0.8)))
+    })
+
+    return {
+      labels: MONTHS,
+      datasets: [{
+        label: 'National Drug Availability Index (%)',
+        data,
+        borderColor: '#10b981',
+        backgroundColor: (context: any) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+          gradient.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
+          gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+          return gradient;
+        },
+        fill: true,
+        tension: 0.5,
+        borderWidth: 3,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#10b981',
+        pointBorderWidth: 2,
+      }],
+    }
+  }, [essentialMedicines])
 
   const filtered = essentialMedicines.filter((m) =>
     categoryFilter ? m.category === categoryFilter : true
   )
-
-  const categories = [...new Set(essentialMedicines.map((m) => m.category))]
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -163,9 +222,10 @@ export default function MedicineAnalytics() {
           <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
             <Line data={usageTrend} options={{
               responsive: true,
+              animation: { duration: 0 },
+              hover: { animationDuration: 0 },
               interaction: { mode: 'index', intersect: false },
-              elements: { line: { tension: 0.45, borderWidth: 3 }, point: { radius: 0, hoverRadius: 5, borderWidth: 2, borderColor: '#fff' } },
-              plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 } } },
+              plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { animation: false, backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
               scales: {
                 y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
                 x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },
@@ -182,9 +242,10 @@ export default function MedicineAnalytics() {
           <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
             <Line data={stockIndex} options={{
               responsive: true,
+              animation: { duration: 0 },
+              hover: { animationDuration: 0 },
               interaction: { mode: 'index', intersect: false },
-              elements: { line: { tension: 0.45, borderWidth: 3 }, point: { radius: 0, hoverRadius: 5, borderWidth: 2, borderColor: '#fff' } },
-              plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
+              plugins: { legend: { display: false }, tooltip: { animation: false, backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
               scales: {
                 y: { min: 85, max: 100, border: { display: false }, ticks: { callback: (v: any) => `${v}%`, font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
                 x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },

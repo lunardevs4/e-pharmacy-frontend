@@ -1,4 +1,5 @@
 import { apiClient } from '@/api/client'
+import { AxiosError } from 'axios'
 
 export interface AdminUser {
     id: string
@@ -26,24 +27,54 @@ const unwrapApiResponse = (response: any): any[] => {
     return []
 }
 
+const getErrorMessage = (error: unknown): string => {
+  if (typeof error === 'object' && error !== null) {
+    const axiosError = error as AxiosError
+    const responseData = axiosError.response?.data as any
+    if (responseData?.message) {
+      if (typeof responseData.message === 'string') return responseData.message
+      if (Array.isArray(responseData.message)) return (responseData.message as string[]).join(' · ')
+    }
+    if (responseData?.error && typeof responseData.error === 'string') return responseData.error
+  }
+  if (error instanceof Error) return error.message
+  return 'Request failed. Please try again.'
+}
+
 export const UserApi = {
     getUsers: async (page = 1, limit = 50): Promise<AdminUser[]> => {
-        const response = await apiClient.get('/users', { params: { page, limit } })
-        return unwrapApiResponse(response)
+        try {
+            const response = await apiClient.get('/users', { params: { page, limit } })
+            return unwrapApiResponse(response)
+        } catch (error) {
+            throw new Error(getErrorMessage(error))
+        }
     },
 
     createUser: async (data: { firstName: string; lastName: string; email: string; phone: string; role: string }) => {
-        const response = await apiClient.post('/auth/managed-users', data)
-        return response.data
+        try {
+            const response = await apiClient.post('/auth/managed-users', data)
+            return response.data
+        } catch (error) {
+            throw new Error(getErrorMessage(error))
+        }
     },
 
     updateUserStatus: async (id: string, isActive: boolean) => {
-        const response = await apiClient.patch(`/users/${id}/status`, { isActive })
-        return response.data
+        try {
+            const response = await apiClient.patch(`/users/${id}/status`, { isActive })
+            return response.data
+        } catch (error) {
+            throw new Error(getErrorMessage(error))
+        }
     },
 
     deleteUser: async (id: string) => {
-        const response = await apiClient.delete(`/users/${id}`)
-        return response.data
+        try {
+            const response = await apiClient.delete(`/users/${id}`)
+            return response.data
+        } catch (error) {
+            throw new Error(getErrorMessage(error))
+        }
     },
 }
