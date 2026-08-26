@@ -33,36 +33,36 @@ export default function InsuranceTariffs() {
     const init = async () => {
       setLoading(true)
       try {
-        const [providersList, medsList] = await Promise.all([
-          insuranceApi.getProviders(),
-          MedicineApi.searchMedicines('', '', false)
-        ])
-
+        const providersList = await insuranceApi.getProviders()
         const matched = providersList.find(p => p.code === insurerName || p.name === insurerName)
         const id = matched?.id || '1'
         const name = matched?.name || insurerName
         setInsuranceId(id)
         setInsuranceName(name)
 
-        // Load general discount settings
-        const savedSettings = localStorage.getItem(`epharmacy_provider_settings_${id}`)
-        if (savedSettings) {
-          const parsed = JSON.parse(savedSettings)
-          setDefaultCoverage(parsed.defaultCoveragePercentage ?? 80)
-        } else {
-          if (matched) {
-            const pct = matched.defaultCoveragePercentage
-            setDefaultCoverage(pct <= 1 ? Math.round(pct * 100) : pct)
-          }
+        // Load general discount settings from backend provider
+        if (matched) {
+          const pct = matched.defaultCoveragePercentage
+          setDefaultCoverage(pct <= 1 ? Math.round(pct * 100) : pct)
         }
+
+        const [medsList, tariffsList] = await Promise.all([
+          MedicineApi.searchMedicines('', '', false),
+          insuranceApi.getTariffs({ insuranceId: id })
+        ])
 
         setMedicines(medsList)
 
-        // Load tariffs from localStorage
+        // Load tariffs from backend API
         const initialTariffs: Record<string, CustomTariff> = {}
         for (const med of medsList) {
-          const t = getInsuranceTariff(id, med.id)
-          initialTariffs[med.id] = t || {
+          const backendTariff = tariffsList.find(t => t.medicineId === med.id)
+          initialTariffs[med.id] = backendTariff ? {
+            medicineId: med.id,
+            covered: backendTariff.isCovered,
+            coveragePercentage: backendTariff.coveragePercentage,
+            maximumCoveredPrice: backendTariff.coveredPrice || null
+          } : {
             medicineId: med.id,
             covered: false,
             coveragePercentage: 0,
@@ -94,7 +94,7 @@ export default function InsuranceTariffs() {
     })
   }
 
-  const handleSaveGeneralSettings = () => {
+  const handleSaveGeneralSettings = async () => {
     setGeneralSaveSuccess(false)
     setGeneralSaveError(null)
 
@@ -103,12 +103,18 @@ export default function InsuranceTariffs() {
       return
     }
 
-    localStorage.setItem(
-      `epharmacy_provider_settings_${insuranceId}`,
-      JSON.stringify({ defaultCoveragePercentage: defaultCoverage })
-    )
-    setGeneralSaveSuccess(true)
-    setTimeout(() => setGeneralSaveSuccess(false), 3000)
+    try {
+      // Update insurance provider settings via backend
+      const providerData: any = {
+        defaultCoveragePercentage: defaultCoverage / 100,
+        defaultCopayPercentage: (100 - defaultCoverage) / 100,
+      }
+      await (insuranceApi as any).updateProvider(insuranceId, providerData)
+      setGeneralSaveSuccess(true)
+      setTimeout(() => setGeneralSaveSuccess(false), 3000)
+    } catch (err: any) {
+      setGeneralSaveError(err.message || 'Failed to update provider settings')
+    }
   }
 
   const handlePercentageChange = (medId: string, value: string) => {
@@ -152,15 +158,24 @@ export default function InsuranceTariffs() {
         }
       }
 
-      // Save to localStorage
-      saveInsuranceTariff(insuranceId, medId, tariff)
+      // Save to backend API
+      await insuranceApi.setTariff({
+        insuranceId,
+        medicineId: medId,
+        coveredPrice: tariff.maximumCoveredPrice || 0,
+        coveragePercentage: tariff.coveragePercentage,
+        copayPercentage: 100 - tariff.coveragePercentage,
+        isCovered: tariff.covered,
+        requiresPreAuth: false,
+        effectiveDate: new Date().toISOString(),
+      })
       
       setSuccessMsgs(prev => ({ ...prev, [medId]: 'Saved!' }))
       setTimeout(() => {
         setSuccessMsgs(prev => ({ ...prev, [medId]: '' }))
       }, 2000)
     } catch (err: any) {
-      setErrorMsgs(prev => ({ ...prev, [medId]: err.message || 'Failed' }))
+      setErrorMsgs(prev => ({ ...prev, [medId]: err.message || 'Failed to save tariff to backend' }))
     } finally {
       setSaveLoading(prev => ({ ...prev, [medId]: false }))
     }

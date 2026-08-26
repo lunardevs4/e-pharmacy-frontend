@@ -48,14 +48,11 @@ export default function MedicineSearch() {
   // Search filter states
   const { user } = useAuthStore()
   const [selectedInsurance, setSelectedInsurance] = useState<string>(user?.insuranceProvider || 'None')
-  const [providers, setProviders] = useState<any[]>([
-    { id: '1', code: 'RSSB', name: 'RSSB (Rwanda Social Security Board)', defaultCoveragePercentage: 0.85, isActive: true },
-    { id: '2', code: 'MMI', name: 'MMI (Military Medical Insurance)', defaultCoveragePercentage: 0.90, isActive: true },
-    { id: '3', code: 'SANLAM', name: 'SANLAM', defaultCoveragePercentage: 0.75, isActive: true },
-    { id: '4', code: 'Radiant', name: 'Radiant Insurance', defaultCoveragePercentage: 0.70, isActive: true },
-  ])
+  const [providers, setProviders] = useState<any[]>([])
+  const [providersLoading, setProvidersLoading] = useState(true)
 
   useEffect(() => {
+    setProvidersLoading(true)
     insuranceApi.getProviders()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
@@ -63,6 +60,7 @@ export default function MedicineSearch() {
         }
       })
       .catch((err) => console.error('Error fetching registered insurance providers in search:', err))
+      .finally(() => setProvidersLoading(false))
   }, [])
 
   const [query, setQuery] = useState(initialQuery)
@@ -242,7 +240,11 @@ export default function MedicineSearch() {
     getUserLocation()
     
     try {
-      const list = await getMedicineAvailability(med.id, selectedInsurance !== 'None' ? selectedInsurance : null)
+      // Map selected insurance code/name to provider UUID
+      const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
+      const insuranceId = selectedInsurance !== 'None' ? (matchedProvider?.id || null) : null
+      
+      const list = await getMedicineAvailability(med.id, insuranceId)
       
       // Calculate distances from user location
       if (userLocation) {

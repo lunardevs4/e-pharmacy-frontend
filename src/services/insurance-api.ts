@@ -51,6 +51,7 @@ export interface InsuranceClaim {
   processedAt?: string
   paidAt?: string
   rejectionReason?: string
+  medicineName?: string
   medicine?: {
     tradeName: string
     genericName: string
@@ -423,5 +424,25 @@ export const insuranceApi = {
     const response = await apiClient.get('/insurance/providers')
     const raw = unwrap(response)
     return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
+  },
+
+  async getProviderById(id: string): Promise<InsuranceProvider> {
+    const response = await apiClient.get(`/insurance/providers/${id}`)
+    return unwrap(response)
+  },
+
+  async updateProvider(id: string, data: {
+    name?: string
+    logoUrl?: string
+    email?: string
+    phone?: string
+    address?: string
+    defaultCoveragePercentage?: number
+    defaultCopayPercentage?: number
+    status?: string
+    isActive?: boolean
+  }): Promise<InsuranceProvider> {
+    const response = await apiClient.patch(`/insurance/providers/${id}`, data)
+    return unwrap(response)
   },
 }

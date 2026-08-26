@@ -237,7 +237,7 @@ export const MedicineApi = {
               : item.quantity < 35
                 ? 'LIMITED'
                 : 'HIGH',
-        insuranceAccepted: [],
+        insuranceAccepted: item.insuranceCoverage?.hasAgreement ? [item.insuranceCoverage.insuranceCode] : [],
         lat: Number(item.pharmacy?.latitude || 0),
         lng: Number(item.pharmacy?.longitude || 0),
         locationText: item.pharmacy?.address || '',
@@ -277,7 +277,7 @@ export const MedicineApi = {
                     : stock < 35
                       ? 'LIMITED'
                       : 'HIGH',
-              insuranceAccepted: [],
+              insuranceAccepted: pharm.insuranceAccepted || [],
               lat: Number(pharm.latitude || 0),
               lng: Number(pharm.longitude || 0),
               locationText: pharm.address || '',

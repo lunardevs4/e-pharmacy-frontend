@@ -17,22 +17,27 @@ export default function PharmacySettings() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  // Load all registered insurance providers and existing working agreements
+  // Load all registered insurance providers and existing Working agreements from backend
   useEffect(() => {
     if (activeTab === 'agreements') {
       setLoading(true)
       setErrorMsg(null)
-      insuranceApi
-        .getProviders()
-        .then((data) => {
-          const activeProviders = (data || []).filter((p) => p.isActive !== false)
+      Promise.all([
+        insuranceApi.getProviders(),
+        fetch(`/api/v1/pharmacies/${pharmacyId}/insurance`).then(r => r.json())
+      ])
+        .then(([providersData, agreementsData]) => {
+          const activeProviders = (providersData || []).filter((p) => p.isActive !== false)
           setProviders(activeProviders)
-          const activeAgreements = getActivePharmacyInsurances(pharmacyId, activeProviders)
-          setSelectedIds(activeAgreements)
+          // Get IDs of insurance providers with active agreements
+          const activeAgreementIds = (agreementsData?.data || agreementsData || [])
+            .filter((a: any) => a.status === 'ACTIVE')
+            .map((a: any) => a.insuranceId)
+          setSelectedIds(activeAgreementIds)
         })
         .catch((err) => {
           console.error(err)
-          setErrorMsg('Failed to load insurance providers from the system.')
+          setErrorMsg('Failed to load insurance providers or agreements from the system.')
         })
         .finally(() => setLoading(false))
     }
@@ -44,29 +49,60 @@ export default function PharmacySettings() {
     )
   }
 
-  const handleSaveAgreements = () => {
+  const handleSaveAgreements = async () => {
     setSaveLoading(true)
     setSuccessMsg(null)
     setErrorMsg(null)
     try {
-      saveActivePharmacyInsurances(pharmacyId, selectedIds)
+      // Get existing agreements from pharmacy endpoint
+      const agreementsResponse = await fetch(`/api/v1/pharmacies/${pharmacyId}/insurance`)
+      const agreementsData = await agreementsResponse.json()
+      const existingAgreements = agreementsData?.data || agreementsData || []
       
-      // Save details to audit logs if possible
-      const logs = JSON.parse(localStorage.getItem('pharmacy_audit_logs') || '[]')
-      logs.unshift({
-        time: new Date().toLocaleString(),
-        staff: user?.name || 'Eric Mugisha',
-        role: user?.role || 'Pharmacy Manager',
-        action: `Updated working insurance agreements (Enabled ${selectedIds.length} providers)`,
-        ip: '197.243.12.90',
-        status: 'Success',
-      })
-      localStorage.setItem('pharmacy_audit_logs', JSON.stringify(logs))
-
+      // Create new agreements for selected providers that don't have one
+      const createPromises = selectedIds
+        .filter(id => !existingAgreements.find((a: any) => a.insuranceId === id))
+        .map(insuranceId => 
+          fetch(`/api/v1/pharmacies/${pharmacyId}/insurance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              insuranceId,
+              contractNumber: `AGR-${pharmacyId}-${insuranceId}-${Date.now()}`,
+              discountRate: 0,
+              startDate: new Date().toISOString(),
+            }),
+          })
+        )
+      
+      // Deactivate agreements for providers that were deselected
+      const deactivatePromises = existingAgreements
+        .filter((a: any) => a.status === 'ACTIVE' && !selectedIds.includes(a.insuranceId))
+        .map((a: any) => 
+          fetch(`/api/v1/pharmacies/${pharmacyId}/insurance/${a.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'INACTIVE' }),
+          })
+        )
+      
+      // Reactivate agreements for providers that were re-selected
+      const reactivatePromises = existingAgreements
+        .filter((a: any) => a.status !== 'ACTIVE' && selectedIds.includes(a.insuranceId))
+        .map((a: any) => 
+          fetch(`/api/v1/pharmacies/${pharmacyId}/insurance/${a.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'ACTIVE' }),
+          })
+        )
+      
+      await Promise.all([...createPromises, ...deactivatePromises, ...reactivatePromises])
+      
       setSuccessMsg('Insurance working agreements saved successfully!')
       setTimeout(() => setSuccessMsg(null), 3000)
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to save agreements.')
+      setErrorMsg(err.message || 'Failed to save agreements to backend.')
     } finally {
       setSaveLoading(false)
     }
