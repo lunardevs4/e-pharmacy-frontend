@@ -3,6 +3,13 @@ import { useAuthStore } from '@/store/authStore'
 import { PharmacyApi } from '@/services/pharmacy-api'
 import { Users, Search, ChevronRight } from 'lucide-react'
 
+const cleanPatientName = (firstName?: string, lastName?: string) => {
+  const parts = [firstName, lastName].filter(Boolean).join(' ').split(/\s+/)
+  return parts
+    .filter((part, index) => index === 0 || part.toLowerCase() !== parts[index - 1].toLowerCase())
+    .join(' ') || 'Patient'
+}
+
 interface PatientRecord {
   id: string
   name: string
@@ -31,7 +38,7 @@ export default function PharmacyPatients() {
         const id = patient.id || account.id || reservation.patientId
         if (!id) return
         const current = grouped.get(id) || {
-          id, name: [account.firstName, account.lastName].filter(Boolean).join(' ') || 'Patient',
+          id, name: cleanPatientName(account.firstName, account.lastName),
           email: account.email || '—', phone: account.phone || '—', nationalId: account.nid || '—',
           activeReservations: 0, totalClaims: 0,
         }

@@ -9,7 +9,7 @@ import {
   Menu, X, LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
   ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2, MapPin,
-  CheckSquare, Trash2, Clock, AlarmClock, PanelLeft, Percent
+  CheckSquare, Trash2, Clock, AlarmClock, PanelLeft, Percent, ShieldCheck
 } from 'lucide-react'
 
 export default function SidebarLayout() {
@@ -122,6 +122,7 @@ export default function SidebarLayout() {
           { path: '/pharmacy/reservations',  label: 'Reservations',   icon: ClipboardList   },
           { path: '/pharmacy/patients',      label: 'Patients',       icon: Users           },
           { path: '/pharmacy/claims',        label: 'Billing',        icon: DollarSign      },
+          { path: '/pharmacy/insurance',     label: 'Insurance Partners', icon: ShieldCheck   },
         ]
         if (isOwner) {
           links.push(

@@ -37,6 +37,7 @@ import PharmacyAudit from '@/pages/pharmacy/AuditTrail'
 import PharmacyReports from '@/pages/pharmacy/Reports'
 import PharmacySettings from '@/pages/pharmacy/Settings'
 import PharmacyProfile from '@/pages/pharmacy/Profile'
+import PharmacyInsurance from '@/pages/pharmacy/Insurance'
 
 
 
@@ -113,6 +114,9 @@ export default function AppRoutes() {
           <Route path="reservations" element={<PharmacyReservations />} />
           <Route path="patients" element={<PharmacyPatients />} />
           <Route path="claims" element={<PharmacyInsuranceClaims />} />
+          <Route element={<ProtectedRoute allowedRoles={['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST']} />}>
+            <Route path="insurance" element={<PharmacyInsurance />} />
+          </Route>
           
           {/* Owner Only Routes */}
           <Route element={<ProtectedRoute allowedRoles={['PHARMACY', 'PHARMACY_OWNER']} />}>

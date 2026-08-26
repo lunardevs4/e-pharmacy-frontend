@@ -14,7 +14,6 @@ export default function InsuranceTariffs() {
   const [insuranceId, setInsuranceId] = useState<string>('1') // default to RSSB ID
   const [insuranceName, setInsuranceName] = useState<string>('RSSB')
   const [medicines, setMedicines] = useState<Medicine[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [saveLoading, setSaveLoading] = useState<Record<string, boolean>>({})
 
@@ -47,15 +46,31 @@ export default function InsuranceTariffs() {
         }
 
         const [medsList, tariffsList] = await Promise.all([
-          MedicineApi.searchMedicines('', '', false),
+          // Load the complete catalogue. The API returns it newest-first.
+          MedicineApi.getMedicines(1, 1000, false),
           insuranceApi.getTariffs({ insuranceId: id })
         ])
 
-        setMedicines(medsList)
+        const normalizedMedicines: Medicine[] = medsList.map((item: any) => ({
+          id: item.id,
+          name: item.tradeName || item.name || 'Unnamed medicine',
+          genericName: item.genericName || '',
+          tradeNames: [],
+          category: item.category?.name || item.category || '',
+          manufacturer: item.manufacturer?.name || item.manufacturer || '',
+          prescriptionRequired: false,
+          uses: '',
+          dosage: '',
+          warnings: '',
+          sideEffects: '',
+          interactions: '',
+          storage: '',
+        }))
+        setMedicines(normalizedMedicines)
 
         // Load tariffs from backend API
         const initialTariffs: Record<string, CustomTariff> = {}
-        for (const med of medsList) {
+        for (const med of normalizedMedicines) {
           const backendTariff = tariffsList.find(t => t.medicineId === med.id)
           initialTariffs[med.id] = backendTariff ? {
             medicineId: med.id,
@@ -181,13 +196,6 @@ export default function InsuranceTariffs() {
     }
   }
 
-  const filteredMedicines = medicines.filter(
-    m =>
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.genericName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.category.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
       {/* Header Banner */}
@@ -282,22 +290,11 @@ export default function InsuranceTariffs() {
 
       {/* Main Content Card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Filter Toolbar */}
-        <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <div className="relative w-full sm:max-w-md">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="w-4 h-4 text-gray-400" />
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search registry by trade name, generic name, or category..."
-              className="block w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
+        {/* Catalogue summary */}
+        <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center gap-3">
+          <p className="text-xs text-gray-500">All medicines in the system catalogue, with newly added medicines first.</p>
           <div className="text-[10px] text-gray-400 font-bold uppercase">
-            Showing {filteredMedicines.length} of {medicines.length} Medicines
+            {medicines.length} Medicines
           </div>
         </div>
 
@@ -320,7 +317,7 @@ export default function InsuranceTariffs() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredMedicines.map((m) => {
+                {medicines.map((m) => {
                   const tariff = tariffs[m.id] || {
                     medicineId: m.id,
                     covered: false,
@@ -419,7 +416,7 @@ export default function InsuranceTariffs() {
               </tbody>
             </table>
 
-            {filteredMedicines.length === 0 && !loading && (
+            {medicines.length === 0 && !loading && (
               <div className="py-20 text-center text-gray-400">
                 <Search className="w-8 h-8 text-gray-200 mx-auto mb-2" />
                 <p className="text-sm font-semibold">No medicines found in the system registry.</p>
