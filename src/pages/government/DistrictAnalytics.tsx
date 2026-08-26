@@ -17,6 +17,23 @@ interface District {
 
 const PROVINCES = ['All Provinces', 'Kigali City', 'Northern Province', 'Southern Province', 'Eastern Province', 'Western Province']
 
+// Normalize raw province strings from the DB to match the PROVINCES labels above.
+// The rwanda-geo-data package stores provinces as short ALLCAPS codes:
+//   KIGALI, SOUTH, WEST, NORTH, EAST
+// Pharmacies may also store longer variants: "Western Province", "northern", etc.
+function normalizeProvince(raw: string | undefined | null): string {
+  if (!raw) return 'Unknown'
+  const s = raw.trim().toLowerCase()
+  // Short codes from rwanda-geo-data: KIGALI, WEST, EAST, NORTH, SOUTH
+  if (s === 'kigali' || s.includes('kigali')) return 'Kigali City'
+  if (s === 'north' || s.includes('northern')) return 'Northern Province'
+  if (s === 'south' || s.includes('southern')) return 'Southern Province'
+  if (s === 'east' || s.includes('eastern')) return 'Eastern Province'
+  if (s === 'west' || s.includes('western')) return 'Western Province'
+  // Return original trimmed if no match
+  return raw.trim()
+}
+
 // ── Heat level helper ─────────────────────────────────────────────────────────
 
 function heatClass(stock: number): string {
@@ -106,7 +123,7 @@ export default function DistrictAnalytics() {
         districtMap.set(item.district, {
           id: `dist-${item.district}`,
           name: item.district,
-          province: item.province || 'Unknown',
+          province: normalizeProvince(item.province),
           pharmacies: Number(item.approvedPharmacies ?? 0),
           activeStock: Number(item.coverage ?? 0),
           criticalDrugs: [],
@@ -205,11 +222,10 @@ export default function DistrictAnalytics() {
             <button
               key={p}
               onClick={() => { setProvinceFilter(p); setSelectedDistrict(null) }}
-              className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${
-                provinceFilter === p
+              className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${provinceFilter === p
                   ? 'bg-health-primary text-white border-health-primary shadow-sm'
                   : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
-              }`}
+                }`}
             >
               {p}
             </button>
@@ -268,11 +284,10 @@ export default function DistrictAnalytics() {
                   <button
                     key={d.id}
                     onClick={() => setSelectedDistrict(isSelected ? null : d)}
-                    className={`relative rounded-xl p-2.5 text-left transition-all border-2 focus:outline-none group ${
-                      isSelected
+                    className={`relative rounded-xl p-2.5 text-left transition-all border-2 focus:outline-none group ${isSelected
                         ? 'border-slate-900 shadow-md scale-105'
                         : 'border-gray-200 hover:border-emerald-300 hover:shadow-sm hover:scale-102'
-                    }`}
+                      }`}
                     style={{ background: 'transparent' }}
                     title={`${d.name} — ${d.activeStock}% stock`}
                   >
@@ -382,8 +397,8 @@ export default function DistrictAnalytics() {
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Category Coverage</span>
                   {[
                     { label: 'Antimalarials', pct: Math.min(100, selectedDistrict.activeStock + 5) },
-                    { label: 'Antibiotics',   pct: Math.min(100, selectedDistrict.activeStock - 2) },
-                    { label: 'Analgesics',    pct: Math.min(100, selectedDistrict.activeStock + 8) },
+                    { label: 'Antibiotics', pct: Math.min(100, selectedDistrict.activeStock - 2) },
+                    { label: 'Analgesics', pct: Math.min(100, selectedDistrict.activeStock + 8) },
                     { label: 'Antidiabetics', pct: Math.min(100, selectedDistrict.activeStock - 10) },
                   ].map((bar) => (
                     <div key={bar.label} className="space-y-0.5">
@@ -416,7 +431,7 @@ export default function DistrictAnalytics() {
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Province Summary</span>
             {['Kigali City', 'Northern Province', 'Southern Province', 'Eastern Province', 'Western Province'].map((prov) => {
               const provDistricts = districts.filter((d) => d.province === prov)
-              const avgStock = provDistricts.length > 0 
+              const avgStock = provDistricts.length > 0
                 ? Math.round(provDistricts.reduce((a, d) => a + d.activeStock, 0) / provDistricts.length)
                 : 0
               return (

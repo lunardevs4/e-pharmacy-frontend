@@ -121,8 +121,8 @@ export default function InsuranceTariffs() {
     try {
       // Update insurance provider settings via backend
       const providerData: any = {
-        defaultCoveragePercentage: defaultCoverage / 100,
-        defaultCopayPercentage: (100 - defaultCoverage) / 100,
+        defaultCoveragePercentage: defaultCoverage,
+        defaultCopayPercentage: 100 - defaultCoverage,
       }
       await (insuranceApi as any).updateProvider(insuranceId, providerData)
       setGeneralSaveSuccess(true)
@@ -177,7 +177,7 @@ export default function InsuranceTariffs() {
       await insuranceApi.setTariff({
         insuranceId,
         medicineId: medId,
-        coveredPrice: tariff.maximumCoveredPrice || 0,
+        coveredPrice: tariff.maximumCoveredPrice !== null && tariff.maximumCoveredPrice > 0 ? tariff.maximumCoveredPrice : 999999999,
         coveragePercentage: tariff.coveragePercentage,
         copayPercentage: 100 - tariff.coveragePercentage,
         isCovered: tariff.covered,
