@@ -350,15 +350,14 @@ export default function MedicineSearch() {
         patientPays = Math.round(copay.patientPays * quantity)
       }
 
+      // Insurance fields below are display-only — the reservation API accepts
+      // only medicineId/pharmacyId/quantity/expiresAt.
       const res = await createReservation({
         medicineId: selectedMedicine.id,
         pharmacyId: selectedPharmacy.pharmacyId,
         quantity,
-        insuranceProvider: selectedInsurance !== 'None' ? selectedInsurance : '',
-        insurancePays,
-        patientPays,
       })
-      setCreatedReservation(res)
+      setCreatedReservation({ ...res, insurancePays, patientPays })
 
       setStockList((prev) =>
         prev.map((s) =>

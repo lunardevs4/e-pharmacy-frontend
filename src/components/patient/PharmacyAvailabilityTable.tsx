@@ -1,5 +1,6 @@
 import React from 'react'
 import { Star, MapPin, Check, Shield } from 'lucide-react'
+import type { PharmacyStock } from '@/types'
 import {
   getPharmacyInsurancePrice,
   getInsuranceTariff,
@@ -112,7 +113,14 @@ export default function PharmacyAvailabilityTable({
 
       {/* Grid wrapper stacked cards on mobile and side elements on desktop */}
       <div className="space-y-3">
-        {pharmacies.map((pharm) => {
+        {pharmacies
+          .filter((pharm) => {
+            const insurance = selectedInsurance || 'None'
+            if (insurance === 'None') return true
+            const coverage = pharm.insuranceCoverage
+            return !!(coverage && coverage.isCovered)
+          })
+          .map((pharm) => {
           const isFav = bookmarkedPharmacies.includes(pharm.pharmacyId)
           const insurance = selectedInsurance || 'None'
           

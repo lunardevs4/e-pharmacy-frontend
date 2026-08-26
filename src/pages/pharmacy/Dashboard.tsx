@@ -2,9 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
-import { AuthApi } from '@/services/auth-api'
 import { PharmacyApi } from '@/services/pharmacy-api'
-import LocationSelector from '@/components/LocationSelector'
 import { 
   Bookmark, Box, Users, TrendingUp, ChevronRight, Activity, 
   AlertTriangle, CheckCircle, XCircle, Loader2, ArrowRight, Clock,
@@ -31,35 +29,12 @@ interface PharmacyDashboardAuditLog {
 }
 
 export default function PharmacyDashboard() {
-  const { user, updateProfile } = useAuthStore()
+  const { user } = useAuthStore()
   const [reservations, setReservations] = useState<PharmacyDashboardReservation[]>([])
   const [inventory, setInventory] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<PharmacyDashboardAuditLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-
-  // Status/Approval state
-  const isApproved = user?.pharmacy?.status === 'APPROVED'
-  const needsRegistration = user?.pharmacy?.licenseNumber === 'PENDING' || user?.pharmacy?.address === 'Pending Address'
-
-  // Company Details Form States
-  const [pharmacyName, setPharmacyName] = useState('')
-  const [licenseNumber, setLicenseNumber] = useState('')
-  const [category, setCategory] = useState('')
-  const [ownershipType, setOwnershipType] = useState('')
-  
-  // Location States
-  const [province, setProvince] = useState('')
-  const [district, setDistrict] = useState('')
-  const [sector, setSector] = useState('')
-  const [cell, setCell] = useState('')
-  const [village, setVillage] = useState('')
-  const [streetAddress, setStreetAddress] = useState('')
-
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [statusLoading, setStatusLoading] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [formSuccess, setFormSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -97,12 +72,12 @@ export default function PharmacyDashboard() {
       }
     }
 
-    if (isApproved && (user?.pharmacy?.id || user?.pharmacyId)) {
+    if (user?.pharmacy?.id || user?.pharmacyId) {
       loadData()
     } else {
       setIsLoading(false)
     }
-  }, [user?.pharmacy?.id, user?.pharmacyId, isApproved])
+  }, [user?.pharmacy?.id, user?.pharmacyId])
 
   const summary = useMemo(() => {
     const now = new Date()
@@ -154,98 +129,10 @@ export default function PharmacyDashboard() {
     CANCELLED: 'Cancelled',
   }[status] || status || 'Unknown')
 
-  const handleRegisterCompany = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormError(null)
-
-    if (!pharmacyName.trim() || pharmacyName.trim().length < 3) {
-      setFormError('Pharmacy Name is required (minimum 3 characters).')
-      return
-    }
-    if (!licenseNumber.trim()) {
-      setFormError('MOH Operating License Number is required.')
-      return
-    }
-    if (!category) {
-      setFormError('Please select a pharmacy category.')
-      return
-    }
-    if (!ownershipType) {
-      setFormError('Please select ownership style.')
-      return
-    }
-    if (!province || !district || !sector || !cell || !village) {
-      setFormError('Please complete all administrative location fields.')
-      return
-    }
-
-    setIsSubmitting(true)
-    const formattedAddress = [province, district, sector, cell, village, streetAddress.trim()].filter(Boolean).join(', ')
-
-    try {
-      const pharmacyId = user?.pharmacy?.id
-      if (!pharmacyId) throw new Error('No pharmacy reference found in your account.')
-
-      await AuthApi.updatePharmacy(pharmacyId, {
-        name: pharmacyName,
-        address: formattedAddress,
-        licenseNumber,
-        category,
-        ownershipType,
-        province,
-        district
-      })
-
-      setFormSuccess('Pharmacy details updated successfully and submitted for MoH review!')
-      
-      // Update local Zustand auth store with the new pharmacy info
-      if (user) {
-        updateProfile({
-          pharmacy: {
-            ...user.pharmacy,
-            name: pharmacyName,
-            address: formattedAddress,
-            licenseNumber,
-            category,
-            ownershipType,
-            province,
-            district,
-            status: 'PENDING'
-          }
-        })
-      }
-    } catch (err: any) {
-      setFormError(err.message || 'Submission failed. Please try again.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleCheckStatus = async () => {
-    setStatusLoading(true)
-    setFormError(null)
-    try {
-      const latestUser = await AuthApi.getProfile(user?.email || '')
-      updateProfile(latestUser)
-      setFormSuccess('Dashboard status refreshed successfully!')
-      setTimeout(() => setFormSuccess(null), 3000)
-    } catch (err: any) {
-      setFormError('Failed to refresh status. Please try again.')
-    } finally {
-      setStatusLoading(false)
-    }
-  }
-
   return (
     <div className="relative min-h-screen pb-16">
       
-      {/* 
-        Blur and Grayscale Filter Backdrop container 
-        Greys out and disables the entire underlying dashboard if the pharmacy is not approved
-      */}
-      <div className={`space-y-6 max-w-7xl mx-auto transition-all duration-300 ${
-        !isApproved ? 'filter blur-xs grayscale opacity-35 pointer-events-none select-none' : ''
-      }`}>
+      <div className="space-y-6 max-w-7xl mx-auto transition-all duration-300">
 
         {errorMsg && (
           <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm font-semibold text-red-800">
@@ -433,222 +320,6 @@ export default function PharmacyDashboard() {
           </div>
         </div>
       </div>
-
-      {/* 
-        Interactive overlay blocks shown ONLY if the pharmacy is not approved.
-        Positions a beautiful activation form or MoH pending card at the center of the viewport
-      */}
-      {!isApproved && (
-        <div className="absolute inset-0 flex items-start justify-center bg-slate-900/10 backdrop-blur-xs z-50 p-6 overflow-y-auto">
-          {needsRegistration ? (
-            
-            /* Company details registration form */
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 max-w-xl w-full shadow-2xl space-y-5 my-8">
-              <div className="flex items-center space-x-3 pb-3 border-b border-gray-150">
-                <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100 flex-shrink-0">
-                  <Building className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-gray-900">Activate Your Pharmacy Store</h2>
-                  <p className="text-xs text-gray-500 font-medium">Please enter your company registration details for MOH authorization.</p>
-                </div>
-              </div>
-
-              {formError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
-                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span className="font-semibold">{formError}</span>
-                </div>
-              )}
-
-              {formSuccess && (
-                <div className="bg-emerald-50 border border-emerald-250 rounded-lg p-3 flex items-start space-x-2 text-emerald-805 text-xs">
-                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span className="font-semibold">{formSuccess}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleRegisterCompany} className="space-y-4 text-xs font-bold text-gray-700">
-                <div>
-                  <label className="block text-gray-500 uppercase tracking-wider mb-1">Pharmacy Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={pharmacyName}
-                    onChange={(e) => setPharmacyName(e.target.value)}
-                    className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
-                    placeholder="e.g. Nyarugenge Pharmacy Plaza"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-500 uppercase tracking-wider mb-1">MOH Operating Licence Number</label>
-                    <input
-                      type="text"
-                      required
-                      value={licenseNumber}
-                      onChange={(e) => setLicenseNumber(e.target.value)}
-                      className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-mono font-bold"
-                      placeholder="e.g. LIC-KIG-82038"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-500 uppercase tracking-wider mb-1">Pharmacy Category</label>
-                    <select
-                      required
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
-                    >
-                      <option value="">Select...</option>
-                      <option value="Retail">Retail Pharmacy</option>
-                      <option value="Wholesale">Wholesale Pharmacy</option>
-                      <option value="Hospital">Hospital Pharmacy</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-gray-500 uppercase tracking-wider mb-1">Pharmacy Ownership Style</label>
-                  <select
-                    required
-                    value={ownershipType}
-                    onChange={(e) => setOwnershipType(e.target.value)}
-                    className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm text-gray-900 font-bold"
-                  >
-                    <option value="">Select...</option>
-                    <option value="Sole Proprietorship">Sole Proprietorship</option>
-                    <option value="Partnership">Partnership</option>
-                    <option value="Corporation">Corporation / LLC</option>
-                  </select>
-                </div>
-
-                {/* Location selector fields */}
-                <div className="border-t border-gray-150 pt-3 space-y-3.5">
-                  <span className="block text-[10px] tracking-wider text-slate-400 uppercase font-black">Store Location Details</span>
-                  
-                  <LocationSelector
-                    onLocationChange={(location) => {
-                      setProvince(location.province)
-                      setDistrict(location.district)
-                      setSector(location.sector)
-                      setCell(location.cell)
-                      setVillage(location.village)
-                    }}
-                    initialLocation={{
-                      province: (user?.pharmacy as any)?.province,
-                      district: (user?.pharmacy as any)?.district,
-                      sector: (user?.pharmacy as any)?.sector,
-                      cell: (user?.pharmacy as any)?.cell,
-                      village: (user?.pharmacy as any)?.village,
-                    }}
-                    disabled={isSubmitting}
-                    required={true}
-                  />
-
-                  <div>
-                    <label className="block text-gray-500 uppercase tracking-wider mb-1">Street / Landmark Address (Optional)</label>
-                    <input
-                      type="text"
-                      value={streetAddress}
-                      onChange={(e) => setStreetAddress(e.target.value)}
-                      className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs text-gray-900 font-bold"
-                      placeholder="e.g. KN 27 St, Opp. Nyarugenge Market"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-health-primary hover:bg-health-secondary disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors mt-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      <span>Submitting details...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Submit for MOH Approval</span>
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          ) : (
-            
-            /* Waiting for government approval card */
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-6 my-8 text-center">
-              <div className="flex flex-col items-center space-y-3">
-                <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-full border border-amber-250 flex items-center justify-center animate-pulse">
-                  <Clock className="w-8 h-8" />
-                </div>
-                <h2 className="text-base font-black text-gray-900">Application Pending MOH Review</h2>
-                <p className="text-xs text-gray-500 font-medium max-w-xs mx-auto">
-                  Your pharmacy registry application has been successfully submitted. Ministry of Health officers are reviewing your operating licence and details. Access will be unlocked once approved.
-                </p>
-              </div>
-
-              {formError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-2.5 text-red-800 text-xs text-left">
-                  <span className="font-semibold block text-center">{formError}</span>
-                </div>
-              )}
-
-              {formSuccess && (
-                <div className="bg-emerald-50 border border-emerald-250 rounded-lg p-2.5 text-emerald-805 text-xs text-left">
-                  <span className="font-semibold block text-center">{formSuccess}</span>
-                </div>
-              )}
-
-              {/* Submitted Details Review Card */}
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left text-xs font-semibold text-gray-600 space-y-2">
-                <span className="block text-[10px] tracking-wider text-slate-400 uppercase font-black mb-1 border-b border-gray-200 pb-1">
-                  Submitted Company Profile
-                </span>
-                <div className="flex justify-between items-center">
-                  <span>Store Name:</span>
-                  <span className="text-gray-900 font-bold">{user?.pharmacy?.name}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Category:</span>
-                  <span className="text-gray-900 font-bold">{user?.pharmacy?.category || 'Retail'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Ownership Type:</span>
-                  <span className="text-gray-900 font-bold">{user?.pharmacy?.ownershipType || 'Sole Proprietorship'}</span>
-                </div>
-                <div className="pt-1 border-t border-gray-150 flex items-start space-x-1">
-                  <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-500 text-[11px] font-medium leading-tight">{user?.pharmacy?.address}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <button
-                  type="button"
-                  onClick={handleCheckStatus}
-                  disabled={statusLoading}
-                  className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-xs font-bold text-white bg-health-primary hover:bg-health-secondary disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                >
-                  {statusLoading ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-                      <span>Checking Approval Status...</span>
-                    </>
-                  ) : (
-                    <span>Refresh Approval Status</span>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
     </div>
   )

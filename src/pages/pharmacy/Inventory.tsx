@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { MedicineApi } from '@/services/medicine-api'
-import { getActivePharmacyInsurances, getPharmacyInsurancePrice } from '@/utils/insuranceCalculator'
-import { insuranceApi, InsuranceProvider } from '@/services/insurance-api'
+import { apiClient } from '@/api/client'
+import { getPharmacyInsurancePrice } from '@/utils/insuranceCalculator'
+import { InsuranceProvider } from '@/services/insurance-api'
 import { Medicine, PharmacyStock } from '@/types'
 import {
   Plus,
@@ -25,6 +26,8 @@ import {
   Info,
   Loader2,
   Package,
+  Upload,
+  FileSpreadsheet,
 } from 'lucide-react'
 
 interface InventoryItem {
@@ -62,8 +65,11 @@ export interface CreateMedicinePayload {
 
 export default function PharmacyInventory() {
   const { user } = useAuthStore()
-  const pharmacyId = user?.pharmacyId || 'ph-001'
-  const pharmacyName = user?.pharmacyName || 'Kigali National Pharmacy'
+  // Resolve the real pharmacy context — never fall back to a fake ID,
+  // otherwise every inventory API call fails with an invalid UUID.
+  const pharmacyId = user?.pharmacy?.id || user?.pharmacyId || ''
+  const pharmacyName = user?.pharmacy?.name || user?.pharmacyName || 'Your Pharmacy'
+  const hasPharmacyContext = Boolean(pharmacyId)
 
   const [inventoryList, setInventoryList] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,6 +90,18 @@ export default function PharmacyInventory() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
+
+  // Spreadsheet import states
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [isImporting, setIsImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [importResult, setImportResult] = useState<{
+    total: number
+    imported: number
+    failed: number
+    errors: { row: number; error: string; data: any }[]
+  } | null>(null)
 
   // Edit stock/price states
   const [editPrices, setEditPrices] = useState<Record<string, number>>({ CASH: 0 })
@@ -178,13 +196,35 @@ export default function PharmacyInventory() {
 
   // Load Inventory Data
   const loadInventory = async () => {
+    if (!hasPharmacyContext) {
+      setLoading(false)
+      setError('No pharmacy is linked to your account. Complete your pharmacy registration first.')
+      return
+    }
     setLoading(true)
     setError(null)
 
     try {
-        const activeProviders = await insuranceApi.getProviders()
-        const workingIds = getActivePharmacyInsurances(pharmacyId, activeProviders)
-        const working = activeProviders.filter(p => workingIds.includes(p.id))
+        // Real pharmacy-insurance agreements from the backend (not local config)
+        let working: InsuranceProvider[] = []
+        try {
+          const agreementsResponse = await apiClient.get(`/pharmacies/${pharmacyId}/insurance`)
+          const rawAgreements = agreementsResponse?.data?.data ?? agreementsResponse?.data ?? []
+          working = (Array.isArray(rawAgreements) ? rawAgreements : []).map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            code: a.code,
+            email: a.email ?? '',
+            phone: a.phone ?? '',
+            address: a.address ?? '',
+            defaultCoveragePercentage: Number(a.defaultCoveragePercentage ?? 85),
+            defaultCopayPercentage: Number(a.defaultCopayPercentage ?? 15),
+            status: a.status ?? 'ACTIVE',
+            isActive: a.isActive !== false,
+          }))
+        } catch {
+          working = []
+        }
         setActiveInsurances(working)
 
         const rawItems = await MedicineApi.getPharmacyInventory(pharmacyId)
@@ -360,7 +400,7 @@ export default function PharmacyInventory() {
       !medLotNumber ||
       !medExpiry ||
       !medCost ||
-      !medPrice ||
+      !medPrices.CASH?.trim() ||
       medStock === '' ||
       !medStorageConditions
     ) {
@@ -432,6 +472,13 @@ export default function PharmacyInventory() {
       return
     }
 
+    if (!hasPharmacyContext) {
+      setFormError(
+        'No pharmacy is linked to your account. Complete your pharmacy registration and get MOH approval first.',
+      )
+      return
+    }
+
     try {
       const matchedCat = categories.find(
         (c) => c.name.trim().toLowerCase() === medCategory.trim().toLowerCase(),
@@ -466,7 +513,22 @@ export default function PharmacyInventory() {
       const newMedId = createdMedicine.id
 
       // Keep the pharmacy-specific stock record linked to the new medicine.
-      await MedicineApi.updatePharmacyInventory(pharmacyId, newMedId, priceNum, stockNum, true)
+      // If catalog creation succeeded but stocking fails, say exactly that —
+      // the medicine exists and a retry must not duplicate it.
+      try {
+        await MedicineApi.updatePharmacyInventory(pharmacyId, newMedId, priceNum, stockNum, true)
+      } catch (stockErr: any) {
+        const stockMsg =
+          stockErr?.response?.data?.message ||
+          stockErr?.message ||
+          'Unknown stocking error'
+        setFormError(
+          `Medicine "${medName.trim()}" was registered in the national catalog, but linking stock to your pharmacy failed: ${
+            typeof stockMsg === 'string' ? stockMsg : JSON.stringify(stockMsg)
+          }. Reopen this form with the SAME details to retry — the catalog entry will be reused.`,
+        )
+        return
+      }
 
       // Save custom prices mapping to localStorage
       localStorage.setItem(
@@ -479,10 +541,9 @@ export default function PharmacyInventory() {
 
       logs.unshift({
         time: new Date().toLocaleString(),
-        staff: user?.name || 'Eric Mugisha',
-        role: user?.role || 'Pharmacy Manager',
+        staff: user?.name || 'Pharmacy staff',
+        role: user?.role || 'PHARMACY',
         action: `Added medicine ${medName} to inventory (${stockNum} units at RWF ${priceNum})`,
-        ip: '197.243.12.90',
         status: 'Success',
       })
 
@@ -496,7 +557,17 @@ export default function PharmacyInventory() {
         loadInventory()
       }, 1500)
     } catch (err: any) {
-      setFormError(err.message || 'Failed to add medicine.')
+      const backendMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to add medicine.'
+      setFormError(
+        typeof backendMessage === 'string'
+          ? backendMessage
+          : Array.isArray(backendMessage)
+            ? backendMessage.join(' · ')
+            : 'Failed to add medicine.',
+      )
     }
   }
 
@@ -653,13 +724,41 @@ export default function PharmacyInventory() {
   // Calculate dynamic profit margin helper
   const getProfitMargin = () => {
     const cost = parseFloat(medCost)
-    const sell = parseFloat(medPrice)
+    const sell = parseFloat(medPrices.CASH || '')
 
     if (isNaN(cost) || isNaN(sell) || sell <= 0) {
       return 0
     }
 
     return (((sell - cost) / sell) * 100).toFixed(1)
+  }
+
+  // ── Spreadsheet import handler ───────────────────────────────────────────
+  const handleImportSpreadsheet = async () => {
+    if (!importFile) {
+      setImportError('Please choose a CSV or Excel file first.')
+      return
+    }
+    const validExtensions = ['.csv', '.xlsx', '.xls']
+    const ext = importFile.name.substring(importFile.name.lastIndexOf('.')).toLowerCase()
+    if (!validExtensions.includes(ext)) {
+      setImportError('Unsupported file type. Please upload a .csv, .xlsx or .xls file.')
+      return
+    }
+
+    setIsImporting(true)
+    setImportError(null)
+    try {
+      const result = await MedicineApi.importInventorySpreadsheet(pharmacyId, importFile)
+      setImportResult(result)
+      await loadInventory()
+    } catch (err: any) {
+      setImportError(
+        err?.response?.data?.message || err?.message || 'Import failed. Please check the file format.',
+      )
+    } finally {
+      setIsImporting(false)
+    }
   }
 
   return (
@@ -686,6 +785,19 @@ export default function PharmacyInventory() {
         >
           <Plus className="w-4 h-4" />
           <span>Add Medication</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setImportFile(null)
+            setImportResult(null)
+            setImportError(null)
+            setShowImportModal(true)
+          }}
+          className="flex items-center justify-center space-x-2 py-2.5 px-4 border border-health-primary text-health-primary hover:bg-emerald-50 font-bold rounded-lg text-sm transition-colors"
+        >
+          <Upload className="w-4 h-4" />
+          <span>Import CSV/Excel</span>
         </button>
       </div>
 
@@ -1618,7 +1730,7 @@ export default function PharmacyInventory() {
                   )}
 
                   {/* Profit Margin */}
-                  {medCost && medPrice && parseFloat(medPrice) >= parseFloat(medCost) && (
+                  {medCost && medPrices.CASH && parseFloat(medPrices.CASH) >= parseFloat(medCost) && (
                     <div className="p-3 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-100 flex items-center justify-between text-xs font-semibold">
                       <div className="flex items-center space-x-1.5">
                         <Percent className="w-4 h-4 text-emerald-600" />
@@ -1751,6 +1863,182 @@ export default function PharmacyInventory() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          IMPORT SPREADSHEET MODAL (CSV / Excel)
+          ============================================================ */}
+      {showImportModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Import inventory spreadsheet"
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm overflow-y-auto"
+        >
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl w-full max-w-xl my-8">
+            {/* Header */}
+            <div className="flex items-start justify-between p-5 border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-gray-900">Import Inventory Spreadsheet</h2>
+                  <p className="text-xs text-gray-500 font-medium mt-0.5">
+                    Bulk-add stock from a CSV or Excel (.xlsx) file. Rows are validated individually.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowImportModal(false)}
+                aria-label="Close import dialog"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Format guide */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-[11px] font-semibold text-gray-600 space-y-1.5">
+                <span className="block text-[10px] tracking-wider text-slate-400 uppercase font-black mb-1">
+                  Required columns
+                </span>
+                <p><span className="font-mono text-emerald-700">tradeName</span>, <span className="font-mono text-emerald-700">quantity</span>, <span className="font-mono text-emerald-700">price</span></p>
+                <span className="block text-[10px] tracking-wider text-slate-400 uppercase font-black pt-1">
+                  Optional columns
+                </span>
+                <p>
+                  <span className="font-mono">genericName</span>,{' '}
+                  <span className="font-mono">category</span>,{' '}
+                  <span className="font-mono">manufacturer</span>,{' '}
+                  <span className="font-mono">batchNumber</span>,{' '}
+                  <span className="font-mono">lotNumber</span>,{' '}
+                  <span className="font-mono">expiryDate</span> (YYYY-MM-DD),{' '}
+                  <span className="font-mono">unitCost</span>
+                </p>
+                <p className="text-[10px] text-gray-400 pt-1">
+                  Existing medicines are topped up; new ones are registered automatically with their category and manufacturer.
+                </p>
+              </div>
+
+              {importError && (
+                <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 text-red-800 text-xs">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span className="font-semibold">{importError}</span>
+                </div>
+              )}
+
+              {/* File input */}
+              {!importResult && (
+                <>
+                  <label className="block">
+                    <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                      Spreadsheet file (.csv, .xlsx, .xls)
+                    </span>
+                    <input
+                      type="file"
+                      accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      onChange={(e) => {
+                        setImportFile(e.target.files?.[0] ?? null)
+                        setImportError(null)
+                      }}
+                      disabled={isImporting}
+                      className="block w-full text-xs text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 file:mr-3 file:py-2 file:px-3 file:border-0 file:bg-health-primary file:text-white file:font-bold file:text-xs file:cursor-pointer"
+                    />
+                  </label>
+                  {importFile && (
+                    <p className="text-[11px] text-gray-500 font-medium pl-1">
+                      Selected: <span className="font-bold text-gray-800">{importFile.name}</span>{' '}
+                      ({Math.max(1, Math.round(importFile.size / 1024))} KB)
+                    </p>
+                  )}
+                </>
+              )}
+
+              {/* Import summary report */}
+              {importResult && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl py-3">
+                      <p className="text-xl font-black text-emerald-700">{importResult.imported}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Imported</p>
+                    </div>
+                    <div className="bg-red-50 border border-red-100 rounded-xl py-3">
+                      <p className="text-xl font-black text-red-700">{importResult.failed}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">Failed</p>
+                    </div>
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl py-3">
+                      <p className="text-xl font-black text-gray-800">{importResult.total}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total rows</p>
+                    </div>
+                  </div>
+
+                  {importResult.errors.length > 0 && (
+                    <div className="border border-red-200 rounded-xl overflow-hidden">
+                      <p className="text-[10px] font-black text-red-700 uppercase tracking-wider bg-red-50 px-4 py-2 border-b border-red-100">
+                        Row-level validation errors
+                      </p>
+                      <ul className="max-h-44 overflow-y-auto divide-y divide-red-50 text-xs">
+                        {importResult.errors.map((rowError, index) => (
+                          <li key={index} className="px-4 py-2 flex items-start gap-2 text-gray-700">
+                            <span className="flex-shrink-0 font-mono font-bold text-red-600 bg-red-50 border border-red-100 rounded px-1.5">
+                              Row {rowError.row}
+                            </span>
+                            <span className="font-medium">{rowError.error}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer actions */}
+            <div className="flex justify-end gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50/60 rounded-b-2xl">
+              {importResult ? (
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  className="py-2.5 px-5 bg-health-primary hover:bg-health-secondary text-white font-bold rounded-lg text-xs transition-colors"
+                >
+                  Done
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowImportModal(false)}
+                    disabled={isImporting}
+                    className="py-2.5 px-5 border border-gray-300 text-gray-600 rounded-lg text-xs font-bold hover:bg-white disabled:opacity-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportSpreadsheet}
+                    disabled={!importFile || isImporting}
+                    className="py-2.5 px-5 bg-health-primary hover:bg-health-secondary text-white font-bold rounded-lg text-xs transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isImporting ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Importing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        Upload &amp; Import
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

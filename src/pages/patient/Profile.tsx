@@ -25,7 +25,7 @@ export default function PatientProfile() {
   
   // Extra fields
   const [emergencyContact, setEmergencyContact] = useState(user?.emergencyContact || '')
-  const [preferredPharmacy, setPreferredPharmacy] = useState(user?.preferredPharmacy || 'Kigali National Pharmacy')
+  const [preferredPharmacy, setPreferredPharmacy] = useState(user?.preferredPharmacy || '')
   const [medicalNotes, setMedicalNotes] = useState(user?.medicalNotes || '')
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '')
 
@@ -305,11 +305,7 @@ export default function PatientProfile() {
                   onChange={(e) => setPreferredPharmacy(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2 text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
-                  <option value="Kigali National Pharmacy">Kigali National Pharmacy</option>
-                  <option value="Remera City Medical">Remera City Medical</option>
-                  <option value="Nyarugenge Health Pharmacy">Nyarugenge Health Pharmacy</option>
-                  <option value="Gikondo District Pharmacy">Gikondo District Pharmacy</option>
-                  <option value="MedPlus Kigali Heights">MedPlus Kigali Heights</option>
+                  <option value="">Select a pharmacy</option>
                 </select>
               </div>
 

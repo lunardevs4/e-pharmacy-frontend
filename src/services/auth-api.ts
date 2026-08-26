@@ -112,7 +112,7 @@ const normalizeUser = (payload: unknown): AuthUser => {
   const username =
     toString(userObj.username) || toString(userObj.email) || [firstName, lastName].filter(Boolean).join('.').toLowerCase() || 'user'
   const patientObj = getObject(userObj.patient)
-  const pharmacyObj = getObject(userObj.pharmacy)
+  const pharmacyObj = getObject(userObj.pharmacy ?? getObject(userObj.pharmacyOwner).pharmacy)
 
   return {
     id: toString(userObj.id) || '',
@@ -680,6 +680,26 @@ export const AuthApi = {
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
+  },
+
+  /**
+   * Re-fetches the current user profile from the backend and updates both the
+   * persisted session and the auth store. Used by the pharmacy registration
+   * gate to pick up MOH approval status changes.
+   */
+  refreshSession: async (): Promise<AuthUser> => {
+    const latest = await AuthApi.getProfile('')
+    const session = localStorage.getItem(CURRENT_USER_KEY)
+    if (session) {
+      try {
+        const parsed = JSON.parse(session) as AuthResponse
+        parsed.user = latest
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(parsed))
+      } catch {
+        // Session payload unreadable — leave as-is; store update below still applies
+      }
+    }
+    return latest
   },
 
   // Insurance-specific API functions
