@@ -219,9 +219,10 @@ export default function MedicineAnalytics() {
             <h3 className="text-sm font-black text-gray-900">Drug Dispensing Volume Trends</h3>
             <p className="text-[10px] text-gray-400">Monthly units dispensed by category</p>
           </div>
-          <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
+          <div className="relative h-64 rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
             <Line data={usageTrend} options={{
               responsive: true,
+              maintainAspectRatio: false,
               animation: { duration: 0 },
               hover: { animationDuration: 0 },
               interaction: { mode: 'index', intersect: false },
@@ -239,9 +240,10 @@ export default function MedicineAnalytics() {
             <h3 className="text-sm font-black text-gray-900">National Drug Availability Index</h3>
             <p className="text-[10px] text-gray-400">% of essential medicines in adequate stock</p>
           </div>
-          <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
+          <div className="relative h-64 rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
             <Line data={stockIndex} options={{
               responsive: true,
+              maintainAspectRatio: false,
               animation: { duration: 0 },
               hover: { animationDuration: 0 },
               interaction: { mode: 'index', intersect: false },
