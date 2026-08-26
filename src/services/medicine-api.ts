@@ -9,6 +9,18 @@ const extractArrayPayload = (payload: any): any[] => {
   return []
 }
 
+const normalizePersonName = (...values: unknown[]): string => {
+  const parts = values
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .join(' ')
+    .trim()
+    .split(/\s+/)
+
+  return parts
+    .filter((part, index) => index === 0 || part.toLowerCase() !== parts[index - 1].toLowerCase())
+    .join(' ')
+}
+
 const normalizeReservation = (payload: any): Reservation => {
   const medicine = payload.medicine || {}
   const pharmacy = payload.pharmacy || {}
@@ -20,9 +32,10 @@ const normalizeReservation = (payload: any): Reservation => {
     medicineName: medicine.name || payload.medicineName || 'Medication',
     patientId: payload.patient?.id || payload.patientId || '',
     patientName:
-      [payload.patient?.user?.firstName, payload.patient?.user?.lastName]
-        .filter(Boolean)
-        .join(' ') || payload.patient?.user?.name || payload.patient?.name || 'Patient',
+      normalizePersonName(payload.patient?.user?.firstName, payload.patient?.user?.lastName) ||
+      payload.patient?.user?.name ||
+      payload.patient?.name ||
+      'Patient',
     pharmacyId: pharmacy.id || payload.pharmacyId || '',
     pharmacyName: pharmacy.name || payload.pharmacyName || 'Pharmacy',
     quantity: payload.quantity ?? 1,

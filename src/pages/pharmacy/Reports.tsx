@@ -7,7 +7,14 @@ import { PharmacyApi } from '@/services/pharmacy-api'
 import { DollarSign, Package, Users, TrendingUp } from 'lucide-react'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Tooltip, Legend, Filler)
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const cleanPatientName = (firstName?: string, lastName?: string) => {
+  const parts = [firstName, lastName].filter(Boolean).join(' ').split(/\s+/)
+  return parts
+    .filter((part, index) => index === 0 || part.toLowerCase() !== parts[index - 1].toLowerCase())
+    .join(' ') || 'Patient'
+}
 
 export default function PharmacyReports() {
   const { user } = useAuthStore()
@@ -20,7 +27,11 @@ export default function PharmacyReports() {
   }, [user?.pharmacy?.id, user?.pharmacyId])
 
   const reservations = report?.reservations || []
-  const monthly = useMemo(() => months.map((_, index) => reservations.filter((r: any) => new Date(r.createdAt).getMonth() === index).reduce((sum: number, r: any) => sum + Number(r.quantity || 0), 0)), [reservations])
+  const currentYear = new Date().getFullYear()
+  const monthly = useMemo(() => months.map((_, index) => reservations.filter((r: any) => {
+    const date = new Date(r.createdAt)
+    return date.getFullYear() === currentYear && date.getMonth() === index
+  }).reduce((sum: number, r: any) => sum + Number(r.quantity || 0), 0)), [reservations, currentYear])
   const categories = useMemo(() => { const result: Record<string, number> = {}; reservations.forEach((r: any) => { const key = r.medicine?.category?.name || 'Other'; result[key] = (result[key] || 0) + Number(r.quantity || 0) }); return result }, [reservations])
   const summary = [
     { label: 'Reservations', value: report?.totalReservations ?? '—', icon: Package },
@@ -44,6 +55,6 @@ export default function PharmacyReports() {
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><h3 className="font-black mb-1 text-slate-900">Reservation Activity</h3><p className="text-[10px] text-slate-400 mb-3">Monthly units reserved</p><div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3"><Line data={lineData} options={chartOptions} /></div></div>
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><h3 className="font-black mb-1 text-slate-900">Units by Medicine Category</h3><p className="text-[10px] text-slate-400 mb-3">Distribution across categories</p>{Object.keys(categories).length ? <Doughnut data={categoryData} options={chartOptions} /> : <p className="py-20 text-center text-gray-400">No reservation data yet.</p>}</div>
     </div>
-    <div className="bg-white border border-gray-200 rounded-xl p-5"><h3 className="font-black mb-3">Recent Reservations</h3><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="text-[10px] uppercase text-slate-500"><th className="py-2">Date</th><th>Medicine</th><th>Patient</th><th>Quantity</th><th>Status</th></tr></thead><tbody className="divide-y">{reservations.map((r: any) => <tr key={r.id}><td className="py-3">{new Date(r.createdAt).toLocaleDateString()}</td><td>{r.medicine?.name || 'Medication'}</td><td>{[r.patient?.user?.firstName, r.patient?.user?.lastName].filter(Boolean).join(' ') || 'Patient'}</td><td>{r.quantity}</td><td>{r.status}</td></tr>)}</tbody></table></div></div>
+    <div className="bg-white border border-gray-200 rounded-xl p-5"><h3 className="font-black mb-3">Recent Reservations</h3><div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr className="text-[10px] uppercase text-slate-500"><th className="py-2">Date</th><th>Medicine</th><th>Patient</th><th>Quantity</th><th>Status</th></tr></thead><tbody className="divide-y">{reservations.map((r: any) => <tr key={r.id}><td className="py-3">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td><td>{r.medicine?.tradeName || r.medicine?.name || 'Medication'}</td><td>{cleanPatientName(r.patient?.user?.firstName, r.patient?.user?.lastName)}</td><td>{r.quantity}</td><td>{r.status}</td></tr>)}</tbody></table></div></div>
   </div>
 }
