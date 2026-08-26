@@ -48,14 +48,11 @@ export default function MedicineSearch() {
   // Search filter states
   const { user } = useAuthStore()
   const [selectedInsurance, setSelectedInsurance] = useState<string>(user?.insuranceProvider || 'None')
-  const [providers, setProviders] = useState<any[]>([
-    { id: '1', code: 'RSSB', name: 'RSSB (Rwanda Social Security Board)', defaultCoveragePercentage: 0.85, isActive: true },
-    { id: '2', code: 'MMI', name: 'MMI (Military Medical Insurance)', defaultCoveragePercentage: 0.90, isActive: true },
-    { id: '3', code: 'SANLAM', name: 'SANLAM', defaultCoveragePercentage: 0.75, isActive: true },
-    { id: '4', code: 'Radiant', name: 'Radiant Insurance', defaultCoveragePercentage: 0.70, isActive: true },
-  ])
+  const [providers, setProviders] = useState<any[]>([])
+  const [providersLoading, setProvidersLoading] = useState(true)
 
   useEffect(() => {
+    setProvidersLoading(true)
     insuranceApi.getProviders()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
@@ -63,7 +60,14 @@ export default function MedicineSearch() {
         }
       })
       .catch((err) => console.error('Error fetching registered insurance providers in search:', err))
+      .finally(() => setProvidersLoading(false))
   }, [])
+
+  // Keep the search and reservation flow aligned with the provider saved in
+  // the patient's profile.
+  useEffect(() => {
+    setSelectedInsurance(user?.insuranceProvider || 'None')
+  }, [user?.insuranceProvider])
 
   const [query, setQuery] = useState(initialQuery)
   const [category, setCategory] = useState('')
@@ -233,7 +237,7 @@ export default function MedicineSearch() {
   }
 
   // Load pharmacy availability details
-  const handleViewAvailability = async (med: Medicine) => {
+  const handleViewAvailability = async (med: Medicine, insuranceOverride?: string) => {
     setSelectedMedicine(med)
     setStockLoading(true)
     setExpandedClinical(false)
@@ -242,7 +246,12 @@ export default function MedicineSearch() {
     getUserLocation()
     
     try {
-      const list = await getMedicineAvailability(med.id, selectedInsurance !== 'None' ? selectedInsurance : null)
+      // Map selected insurance code/name to provider UUID
+      const insurance = insuranceOverride ?? selectedInsurance
+      const matchedProvider = providers.find(p => p.code === insurance || p.name === insurance)
+      const insuranceId = insurance !== 'None' ? (matchedProvider?.id || null) : null
+      
+      const list = await getMedicineAvailability(med.id, insuranceId)
       
       // Calculate distances from user location
       if (userLocation) {
@@ -328,7 +337,13 @@ export default function MedicineSearch() {
       // Resolve provider ID
       const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
       const insuranceId = matchedProvider?.id || null
-      const isAccepted = insuranceId ? selectedPharmacy.insuranceAccepted.includes(selectedInsurance) : false
+      const backendCoverage = selectedPharmacy.insuranceCoverage as any
+      const isAccepted = Boolean(
+        insuranceId && (
+          backendCoverage?.hasAgreement ||
+          selectedPharmacy.insuranceAccepted.includes(selectedInsurance)
+        ),
+      )
 
       // Resolve dynamic price set by pharmacy
       const priceInfo = getPharmacyInsurancePrice(selectedPharmacy.pharmacyId, selectedMedicine.id, insuranceId, selectedPharmacy.price)
@@ -340,14 +355,18 @@ export default function MedicineSearch() {
       // Calculate copay split
       const copay = calculatePatientCopay(resolvedPrice, tariff)
 
-      const hasCoverage = isAccepted && copay.isCovered
+      const hasCoverage = isAccepted && (backendCoverage?.isCovered ?? copay.isCovered)
       const totalCost = resolvedPrice * quantity
       let insurancePays = 0
       let patientPays = totalCost
 
       if (hasCoverage) {
-        insurancePays = Math.round(copay.insurancePays * quantity)
-        patientPays = Math.round(copay.patientPays * quantity)
+        insurancePays = Math.round(
+          (backendCoverage?.insurancePays ?? copay.insurancePays) * quantity,
+        )
+        patientPays = Math.round(
+          (backendCoverage?.patientPays ?? copay.patientPays) * quantity,
+        )
       }
 
       // Insurance fields below are display-only — the reservation API accepts
@@ -357,7 +376,7 @@ export default function MedicineSearch() {
         pharmacyId: selectedPharmacy.pharmacyId,
         quantity,
       })
-      setCreatedReservation({ ...res, insurancePays, patientPays })
+      setCreatedReservation({ ...res, insuranceProvider: selectedInsurance, insurancePays, patientPays })
 
       setStockList((prev) =>
         prev.map((s) =>
@@ -714,7 +733,10 @@ export default function MedicineSearch() {
                   bookmarkedPharmacies={bookmarkedPharmacies}
                   onToggleBookmarkPharmacy={handleToggleBookmarkPharmacy}
                   selectedInsurance={selectedInsurance}
-                  onInsuranceChange={setSelectedInsurance}
+                  onInsuranceChange={(insurance) => {
+                    setSelectedInsurance(insurance)
+                    void handleViewAvailability(selectedMedicine, insurance)
+                  }}
                   providers={providers}
                 />
               )}
@@ -808,33 +830,36 @@ export default function MedicineSearch() {
                         {selectedPharmacy.pharmacyName}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-gray-700">
-                      <span>Unit Retail Price:</span>
-                      <span className="font-bold text-gray-900">{selectedPharmacy.price} RWF</span>
-                    </div>
-                    <div className="flex justify-between items-center text-gray-700 pt-1.5 border-t border-gray-200">
-                      <span>Total Retail Price:</span>
-                      <span className="font-bold text-gray-900">{selectedPharmacy.price * quantity} RWF</span>
-                    </div>
-                    {selectedPharmacy.insuranceAccepted.includes(selectedInsurance) && selectedInsurance !== 'None' ? (
+                    {(
+                      (
+                        selectedPharmacy.insuranceCoverage?.hasAgreement &&
+                        selectedPharmacy.insuranceCoverage?.isCovered
+                      ) || selectedPharmacy.insuranceAccepted.includes(selectedInsurance)
+                    ) && selectedInsurance !== 'None' ? (
                       <>
                         {(() => {
                           const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
-                          const coverageRate = matchedProvider 
+                          const coverageRate = selectedPharmacy.insuranceCoverage?.coveragePercentage
+                            ? selectedPharmacy.insuranceCoverage.coveragePercentage / 100
+                            : matchedProvider 
                             ? (matchedProvider.defaultCoveragePercentage > 1 ? matchedProvider.defaultCoveragePercentage / 100 : matchedProvider.defaultCoveragePercentage)
                             : (INSURANCE_COVERAGE_RATES[selectedInsurance] || 0)
                           const displayCoverage = Math.round(coverageRate * 100)
-                          const insuranceAmount = Math.round(selectedPharmacy.price * quantity * coverageRate)
-                          const patientAmount = (selectedPharmacy.price * quantity) - insuranceAmount
+                          const insuranceAmount = Math.round((selectedPharmacy.insuranceCoverage?.insurancePays ?? selectedPharmacy.price * coverageRate) * quantity)
+                          const patientAmount = Math.round((selectedPharmacy.insuranceCoverage?.patientPays ?? selectedPharmacy.price - selectedPharmacy.price * coverageRate) * quantity)
 
                           return (
                             <>
+                              <div className="flex justify-between items-center text-gray-700">
+                                <span>Your price per unit:</span>
+                                <span className="font-bold text-gray-900">{Math.round(patientAmount / quantity)} RWF</span>
+                              </div>
                               <div className="flex justify-between items-center text-emerald-800 font-semibold">
                                 <span>Insurance Pays ({selectedInsurance} - {displayCoverage}%):</span>
                                 <span>-{insuranceAmount} RWF</span>
                               </div>
                               <div className="flex justify-between items-center text-gray-955 font-black pt-1.5 border-t border-dashed border-gray-200">
-                                <span>Your Estimated Co-Pay:</span>
+                                <span>Total you pay:</span>
                                 <span className="text-health-primary text-sm">
                                   {patientAmount} RWF
                                 </span>
@@ -845,7 +870,7 @@ export default function MedicineSearch() {
                       </>
                     ) : (
                       <div className="flex justify-between items-center text-gray-955 font-black pt-1.5 border-t border-dashed border-gray-200">
-                        <span>Total Out-of-Pocket:</span>
+                        <span>Your total to pay:</span>
                         <span className="text-health-primary text-sm">{selectedPharmacy.price * quantity} RWF</span>
                       </div>
                     )}
@@ -921,6 +946,15 @@ export default function MedicineSearch() {
                         {createdReservation.pickupDeadline}
                       </span>
                     </div>
+                    <div className="flex justify-between items-center text-emerald-800 font-black pt-2 border-t border-gray-200">
+                      <span>Total you pay:</span>
+                      <span>{createdReservation.patientPays.toLocaleString()} RWF</span>
+                    </div>
+                    {createdReservation.insuranceProvider && createdReservation.insuranceProvider !== 'None' && (
+                      <div className="text-[10px] text-gray-500">
+                        {createdReservation.insuranceProvider} coverage applied
+                      </div>
+                    )}
                   </div>
 
                   <p className="text-[11px] text-gray-400 leading-normal max-w-xs mx-auto">

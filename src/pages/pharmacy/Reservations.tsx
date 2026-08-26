@@ -12,6 +12,9 @@ type ReservationApiItem = {
   pickupDeadline?: string
   insuranceProvider?: string
   insuranceId?: string
+  unitPrice?: number
+  totalPrice?: number
+  insurancePays?: number
   patientPays?: number
   patient?: {
     user?: {
@@ -22,6 +25,7 @@ type ReservationApiItem = {
   }
   medicine?: {
     name?: string
+    tradeName?: string
     prescriptionRequired?: boolean
   }
 }
@@ -69,18 +73,26 @@ const normalizeReservation = (item: ReservationApiItem): Reservation => {
   const patient = item.patient || {}
   const user = patient.user || {}
   const medicine = item.medicine || {}
+  const nameParts = [user.firstName, user.lastName].filter(Boolean) as string[]
+  const patientName = nameParts
+    .join(' ')
+    .split(/\s+/)
+    .filter((part, index, parts) => index === 0 || part.toLowerCase() !== parts[index - 1].toLowerCase())
+    .join(' ')
+  const quantity = Number(item.quantity || 1)
+  const totalPrice = Number(item.totalPrice ?? (item.unitPrice ?? 0) * quantity)
 
   return {
     id: item.id || `RES-${Math.random().toString(36).slice(2, 10)}`,
-    patient: [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Patient',
+    patient: patientName || 'Patient',
     nationalId: user.nid || '—',
-    medicine: medicine.name || 'Medication',
-    qty: Number(item.quantity || 1),
+    medicine: medicine.tradeName || medicine.name || 'Medication',
+    qty: quantity,
     date: item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : '—',
     pickupDeadline: item.pickupDeadline || '—',
     insurance: !!(item.insuranceProvider || item.insuranceId),
     insurer: item.insuranceProvider || item.insuranceId || undefined,
-    patientPays: Number(item.patientPays || 0),
+    patientPays: Number(item.patientPays ?? totalPrice),
     status,
     prescriptionRequired: medicine.prescriptionRequired || false,
   }

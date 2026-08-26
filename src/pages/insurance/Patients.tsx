@@ -20,7 +20,13 @@ export default function InsurancePatients() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      const response = await insuranceApi.getPatients()
+      // Get insurance provider ID from user
+      const providers = await insuranceApi.getProviders()
+      const insurer = user?.insuranceProvider || 'RSSB'
+      const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
+      const insuranceId = matchedProvider?.id
+      
+      const response = await insuranceApi.getPatients({ insuranceId })
       // The API returns { data: InsuredPatient[], meta: any }
       const patientsArray = Array.isArray(response?.data) ? response.data : []
       setPatients(patientsArray)

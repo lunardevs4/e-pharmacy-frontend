@@ -7,6 +7,7 @@ export interface InsuranceProvider {
   id: string
   name: string
   code: string
+  logoUrl?: string
   email: string
   phone: string
   address: string
@@ -51,6 +52,7 @@ export interface InsuranceClaim {
   processedAt?: string
   paidAt?: string
   rejectionReason?: string
+  medicineName?: string
   medicine?: {
     tradeName: string
     genericName: string
@@ -89,6 +91,12 @@ export interface PharmacyAgreement {
     district?: string
     province?: string
   }
+}
+
+export interface PharmacyInsuranceOption {
+  provider: Pick<InsuranceProvider, 'id' | 'name' | 'code' | 'logoUrl'>
+  agreement: PharmacyAgreement | null
+  enabled: boolean
 }
 
 export interface MedicineTariff {
@@ -155,6 +163,17 @@ export interface DashboardSummary {
 }
 
 export const insuranceApi = {
+  async getPharmacyInsuranceOptions(): Promise<PharmacyInsuranceOption[]> {
+    const response = await apiClient.get('/insurance/pharmacy/insurances')
+    const raw = unwrap(response)
+    return Array.isArray(raw) ? raw : []
+  },
+
+  async setPharmacyInsurance(insuranceId: string, enabled: boolean): Promise<unknown> {
+    const response = await apiClient.patch(`/insurance/pharmacy/insurances/${insuranceId}`, { enabled })
+    return unwrap(response)
+  },
+
   // Dashboard — maps the backend summary payload onto the DashboardSummary shape
   async getDashboardSummary(insuranceId?: string): Promise<DashboardSummary> {
     const params = insuranceId ? { insuranceId } : {}
@@ -423,5 +442,25 @@ export const insuranceApi = {
     const response = await apiClient.get('/insurance/providers')
     const raw = unwrap(response)
     return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
+  },
+
+  async getProviderById(id: string): Promise<InsuranceProvider> {
+    const response = await apiClient.get(`/insurance/providers/${id}`)
+    return unwrap(response)
+  },
+
+  async updateProvider(id: string, data: {
+    name?: string
+    logoUrl?: string
+    email?: string
+    phone?: string
+    address?: string
+    defaultCoveragePercentage?: number
+    defaultCopayPercentage?: number
+    status?: string
+    isActive?: boolean
+  }): Promise<InsuranceProvider> {
+    const response = await apiClient.patch(`/insurance/providers/${id}`, data)
+    return unwrap(response)
   },
 }

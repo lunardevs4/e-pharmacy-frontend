@@ -153,12 +153,15 @@ export default function Login() {
           setErrorMsg('Failed to parse pharmacy registration details.')
         }
       } else {
-        if (error.message?.toLowerCase().includes('verification link expired')) {
+        const message = error.message?.toLowerCase() || ''
+        if (message.includes('verification link expired')) {
           navigate(`/check-email?email=${encodeURIComponent(data.email)}&expired=1`)
-        } else if (error.message?.toLowerCase().includes('verify your email')) {
+        } else if (message.includes('verify your email')) {
           navigate(`/check-email?email=${encodeURIComponent(data.email)}&reason=login`)
+        } else if (message.includes('account is not active')) {
+          setErrorMsg('Your account exists, but it is not active yet. Please wait for approval or contact an administrator.')
         } else {
-          setErrorMsg(error.message || 'Authentication failed. Please check your credentials.')
+          setErrorMsg(error.message || 'We could not sign you in. Please check your credentials or try again later.')
         }
       }
     } finally {

@@ -1,11 +1,6 @@
 import React from 'react'
 import { Star, MapPin, Check, Shield } from 'lucide-react'
 import type { PharmacyStock } from '@/types'
-import {
-  getPharmacyInsurancePrice,
-  getInsuranceTariff,
-  calculatePatientCopay
-} from '@/utils/insuranceCalculator'
 
 interface PharmacyAvailabilityTableProps {
   pharmacies: PharmacyStock[]
@@ -76,7 +71,8 @@ export default function PharmacyAvailabilityTable({
             <select
               value={selectedInsurance || 'None'}
               onChange={(e) => onInsuranceChange?.(e.target.value)}
-              className="bg-white border border-gray-300 rounded px-2.5 py-1 text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              disabled={providers.length === 0}
+              className="bg-white border border-gray-300 rounded px-2.5 py-1 text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-gray-100"
             >
               {providers && providers.length > 0 ? (
                 providers.map((prov) => (
@@ -85,12 +81,7 @@ export default function PharmacyAvailabilityTable({
                   </option>
                 ))
               ) : (
-                <>
-                  <option value="RSSB">RSSB (Rwanda Social Security Board)</option>
-                  <option value="MMI">MMI (Military Medical Insurance)</option>
-                  <option value="SANLAM">SANLAM</option>
-                  <option value="Radiant">Radiant Insurance</option>
-                </>
+                <option value="">Loading insurance providers...</option>
               )}
               <option value="None">None (Paying Cash)</option>
             </select>
@@ -113,36 +104,22 @@ export default function PharmacyAvailabilityTable({
 
       {/* Grid wrapper stacked cards on mobile and side elements on desktop */}
       <div className="space-y-3">
-        {pharmacies
-          .filter((pharm) => {
-            const insurance = selectedInsurance || 'None'
-            if (insurance === 'None') return true
-            const coverage = pharm.insuranceCoverage
-            return !!(coverage && coverage.isCovered)
-          })
-          .map((pharm) => {
+        {pharmacies.map((pharm) => {
           const isFav = bookmarkedPharmacies.includes(pharm.pharmacyId)
           const insurance = selectedInsurance || 'None'
           
           // Resolve provider ID
           const matchedProvider = providers.find(p => p.code === insurance || p.name === insurance)
           const insuranceId = matchedProvider?.id || null
-          const isAccepted = insuranceId ? pharm.insuranceAccepted.includes(insurance) : false
-
-          // Resolve dynamic price set by pharmacy
-          const priceInfo = getPharmacyInsurancePrice(pharm.pharmacyId, medicineId, insuranceId, pharm.price)
-          const resolvedPrice = priceInfo.price
-
-          // Resolve custom tariff configured by insurer
-          const tariff = insuranceId ? getInsuranceTariff(insuranceId, medicineId) : null
-
-          // Calculate copay split
-          const copay = calculatePatientCopay(resolvedPrice, tariff)
-
-          const hasCoverage = isAccepted && copay.isCovered
-          const coveragePercentage = copay.coveragePercentage
-          const insurancePays = copay.insurancePays
-          const patientPays = copay.patientPays
+          
+          // Use backend-calculated insurance coverage when available
+          const backendCoverage = pharm.insuranceCoverage
+          const isAccepted = backendCoverage?.hasAgreement ?? false
+          const hasCoverage = backendCoverage?.isCovered ?? false
+          const insurancePays = backendCoverage?.insurancePays ?? 0
+          const patientPays = backendCoverage?.patientPays ?? 0
+          const coveragePercentage = backendCoverage?.coveragePercentage ?? 0
+          const insuranceName = backendCoverage?.insuranceName ?? insurance
 
           return (
             <div
@@ -192,11 +169,11 @@ export default function PharmacyAvailabilityTable({
                 <div className="flex items-center space-x-2.5 pt-1 flex-wrap gap-y-1">
                   {renderStockBadge(pharm.stockStatus, pharm.stock)}
                   <div className="flex gap-1">
-                    {pharm.insuranceAccepted.map((ins) => (
-                      <span key={ins} className="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.25 rounded">
-                        {ins} Accepted
+                    {isAccepted && (
+                      <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.25 rounded">
+                        {insuranceName} Accepted
                       </span>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -208,18 +185,13 @@ export default function PharmacyAvailabilityTable({
                     <div className="bg-emerald-50 border border-emerald-150 rounded-xl p-2.5 text-right shadow-xs">
                       <span className="block text-[9px] font-bold text-emerald-800 uppercase tracking-wider leading-none flex items-center justify-end gap-1">
                         <Shield className="w-3 h-3" />
-                        With {insurance} ({coveragePercentage}% off)
+                        With {insuranceName} ({coveragePercentage}% off)
                       </span>
-                      {isAccepted && !priceInfo.isCustom && (
-                        <span className="block text-[8px] text-amber-600 font-bold uppercase tracking-wider mt-0.5">
-                          (Cash Price Fallback)
-                        </span>
-                      )}
                       <span className="text-sm font-black text-emerald-700 block mt-1 font-mono">
                         {patientPays} RWF
                       </span>
                       <span className="block text-[9px] text-emerald-600 font-semibold mt-0.5">
-                        Co-pay / Retail: <span className="line-through text-gray-400 font-mono">{resolvedPrice} RWF</span>
+                        Co-pay / Retail: <span className="line-through text-gray-400 font-mono">{pharm.price} RWF</span>
                       </span>
                       <span className="block text-[9px] text-emerald-600 font-semibold font-mono">
                         Insurance pays: {insurancePays} RWF
@@ -230,11 +202,11 @@ export default function PharmacyAvailabilityTable({
                       {insurance !== 'None' ? (
                         !isAccepted ? (
                           <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 uppercase tracking-wider mb-1.5">
-                            {insurance} Not Accepted
+                            {insuranceName} Not Accepted
                           </span>
                         ) : (
                           <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 uppercase tracking-wider mb-1.5">
-                            Not Covered by {insurance}
+                            Not Covered by {insuranceName}
                           </span>
                         )
                       ) : (
@@ -243,7 +215,7 @@ export default function PharmacyAvailabilityTable({
                         </span>
                       )}
                       <span className="text-base font-black text-gray-950 block font-mono">
-                        {resolvedPrice} RWF
+                        {pharm.price} RWF
                       </span>
                     </div>
                   )}

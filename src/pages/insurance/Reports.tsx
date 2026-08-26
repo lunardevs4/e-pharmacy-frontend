@@ -24,7 +24,12 @@ export default function InsuranceReports() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      const data = await insuranceApi.getDashboardSummary()
+      // Get insurance provider ID from user
+      const providers = await insuranceApi.getProviders()
+      const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
+      const insuranceId = matchedProvider?.id
+      
+      const data = await insuranceApi.getDashboardSummary(insuranceId)
       setSummary(data)
     } catch (error: any) {
       setErrorMsg(error?.message || 'Unable to load report data from backend.')

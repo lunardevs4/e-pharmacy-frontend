@@ -14,7 +14,6 @@ export default function InsuranceTariffs() {
   const [insuranceId, setInsuranceId] = useState<string>('1') // default to RSSB ID
   const [insuranceName, setInsuranceName] = useState<string>('RSSB')
   const [medicines, setMedicines] = useState<Medicine[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [saveLoading, setSaveLoading] = useState<Record<string, boolean>>({})
 
@@ -33,36 +32,52 @@ export default function InsuranceTariffs() {
     const init = async () => {
       setLoading(true)
       try {
-        const [providersList, medsList] = await Promise.all([
-          insuranceApi.getProviders(),
-          MedicineApi.searchMedicines('', '', false)
-        ])
-
+        const providersList = await insuranceApi.getProviders()
         const matched = providersList.find(p => p.code === insurerName || p.name === insurerName)
         const id = matched?.id || '1'
         const name = matched?.name || insurerName
         setInsuranceId(id)
         setInsuranceName(name)
 
-        // Load general discount settings
-        const savedSettings = localStorage.getItem(`epharmacy_provider_settings_${id}`)
-        if (savedSettings) {
-          const parsed = JSON.parse(savedSettings)
-          setDefaultCoverage(parsed.defaultCoveragePercentage ?? 80)
-        } else {
-          if (matched) {
-            const pct = matched.defaultCoveragePercentage
-            setDefaultCoverage(pct <= 1 ? Math.round(pct * 100) : pct)
-          }
+        // Load general discount settings from backend provider
+        if (matched) {
+          const pct = matched.defaultCoveragePercentage
+          setDefaultCoverage(pct <= 1 ? Math.round(pct * 100) : pct)
         }
 
-        setMedicines(medsList)
+        const [medsList, tariffsList] = await Promise.all([
+          // Load the complete catalogue. The API returns it newest-first.
+          MedicineApi.getMedicines(1, 1000, false),
+          insuranceApi.getTariffs({ insuranceId: id })
+        ])
 
-        // Load tariffs from localStorage
+        const normalizedMedicines: Medicine[] = medsList.map((item: any) => ({
+          id: item.id,
+          name: item.tradeName || item.name || 'Unnamed medicine',
+          genericName: item.genericName || '',
+          tradeNames: [],
+          category: item.category?.name || item.category || '',
+          manufacturer: item.manufacturer?.name || item.manufacturer || '',
+          prescriptionRequired: false,
+          uses: '',
+          dosage: '',
+          warnings: '',
+          sideEffects: '',
+          interactions: '',
+          storage: '',
+        }))
+        setMedicines(normalizedMedicines)
+
+        // Load tariffs from backend API
         const initialTariffs: Record<string, CustomTariff> = {}
-        for (const med of medsList) {
-          const t = getInsuranceTariff(id, med.id)
-          initialTariffs[med.id] = t || {
+        for (const med of normalizedMedicines) {
+          const backendTariff = tariffsList.find(t => t.medicineId === med.id)
+          initialTariffs[med.id] = backendTariff ? {
+            medicineId: med.id,
+            covered: backendTariff.isCovered,
+            coveragePercentage: backendTariff.coveragePercentage,
+            maximumCoveredPrice: backendTariff.coveredPrice || null
+          } : {
             medicineId: med.id,
             covered: false,
             coveragePercentage: 0,
@@ -94,7 +109,7 @@ export default function InsuranceTariffs() {
     })
   }
 
-  const handleSaveGeneralSettings = () => {
+  const handleSaveGeneralSettings = async () => {
     setGeneralSaveSuccess(false)
     setGeneralSaveError(null)
 
@@ -103,12 +118,18 @@ export default function InsuranceTariffs() {
       return
     }
 
-    localStorage.setItem(
-      `epharmacy_provider_settings_${insuranceId}`,
-      JSON.stringify({ defaultCoveragePercentage: defaultCoverage })
-    )
-    setGeneralSaveSuccess(true)
-    setTimeout(() => setGeneralSaveSuccess(false), 3000)
+    try {
+      // Update insurance provider settings via backend
+      const providerData: any = {
+        defaultCoveragePercentage: defaultCoverage,
+        defaultCopayPercentage: 100 - defaultCoverage,
+      }
+      await (insuranceApi as any).updateProvider(insuranceId, providerData)
+      setGeneralSaveSuccess(true)
+      setTimeout(() => setGeneralSaveSuccess(false), 3000)
+    } catch (err: any) {
+      setGeneralSaveError(err.message || 'Failed to update provider settings')
+    }
   }
 
   const handlePercentageChange = (medId: string, value: string) => {
@@ -152,26 +173,28 @@ export default function InsuranceTariffs() {
         }
       }
 
-      // Save to localStorage
-      saveInsuranceTariff(insuranceId, medId, tariff)
+      // Save to backend API
+      await insuranceApi.setTariff({
+        insuranceId,
+        medicineId: medId,
+        coveredPrice: tariff.maximumCoveredPrice !== null && tariff.maximumCoveredPrice > 0 ? tariff.maximumCoveredPrice : 999999999,
+        coveragePercentage: tariff.coveragePercentage,
+        copayPercentage: 100 - tariff.coveragePercentage,
+        isCovered: tariff.covered,
+        requiresPreAuth: false,
+        effectiveDate: new Date().toISOString(),
+      })
       
       setSuccessMsgs(prev => ({ ...prev, [medId]: 'Saved!' }))
       setTimeout(() => {
         setSuccessMsgs(prev => ({ ...prev, [medId]: '' }))
       }, 2000)
     } catch (err: any) {
-      setErrorMsgs(prev => ({ ...prev, [medId]: err.message || 'Failed' }))
+      setErrorMsgs(prev => ({ ...prev, [medId]: err.message || 'Failed to save tariff to backend' }))
     } finally {
       setSaveLoading(prev => ({ ...prev, [medId]: false }))
     }
   }
-
-  const filteredMedicines = medicines.filter(
-    m =>
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.genericName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.category.toLowerCase().includes(searchQuery.toLowerCase())
-  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -267,22 +290,11 @@ export default function InsuranceTariffs() {
 
       {/* Main Content Card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Filter Toolbar */}
-        <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <div className="relative w-full sm:max-w-md">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="w-4 h-4 text-gray-400" />
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search registry by trade name, generic name, or category..."
-              className="block w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
+        {/* Catalogue summary */}
+        <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center gap-3">
+          <p className="text-xs text-gray-500">All medicines in the system catalogue, with newly added medicines first.</p>
           <div className="text-[10px] text-gray-400 font-bold uppercase">
-            Showing {filteredMedicines.length} of {medicines.length} Medicines
+            {medicines.length} Medicines
           </div>
         </div>
 
@@ -305,7 +317,7 @@ export default function InsuranceTariffs() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredMedicines.map((m) => {
+                {medicines.map((m) => {
                   const tariff = tariffs[m.id] || {
                     medicineId: m.id,
                     covered: false,
@@ -404,7 +416,7 @@ export default function InsuranceTariffs() {
               </tbody>
             </table>
 
-            {filteredMedicines.length === 0 && !loading && (
+            {medicines.length === 0 && !loading && (
               <div className="py-20 text-center text-gray-400">
                 <Search className="w-8 h-8 text-gray-200 mx-auto mb-2" />
                 <p className="text-sm font-semibold">No medicines found in the system registry.</p>

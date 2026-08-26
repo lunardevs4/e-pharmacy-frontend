@@ -15,7 +15,12 @@ export default function InsuranceDashboard() {
       setIsLoading(true)
       setErrorMsg(null)
       try {
-        const data = await insuranceApi.getDashboardSummary()
+        // Get insurance provider ID from user
+        const providers = await insuranceApi.getProviders()
+        const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
+        const insuranceId = matchedProvider?.id
+        
+        const data = await insuranceApi.getDashboardSummary(insuranceId)
         setSummary(data)
       } catch (err: any) {
         setErrorMsg(err.message || 'Unable to load insurance dashboard data.')
@@ -25,7 +30,7 @@ export default function InsuranceDashboard() {
     }
 
     loadData()
-  }, [])
+  }, [insurer])
 
   const approvalRate = useMemo(() => {
     if (!summary || summary.totalClaims === 0) return 0
@@ -136,7 +141,7 @@ export default function InsuranceDashboard() {
                 <tr key={claim.id} className="hover:bg-gray-50/50 font-medium">
                   <td className="px-6 py-4 font-bold text-gray-900">{claim.claimNumber}</td>
                   <td className="px-6 py-4 font-semibold text-gray-800">{claim.pharmacy?.name || 'Pharmacy'}</td>
-                  <td className="px-6 py-4">{claim.medicine?.tradeName || claim.medicine?.genericName || 'Medication'}</td>
+                  <td className="px-6 py-4">{claim.medicineName || claim.medicine?.tradeName || claim.medicine?.genericName || 'Unknown Medicine'}</td>
                   <td className="px-6 py-4 font-bold">RWF {claim.totalAmount.toLocaleString()}</td>
                   <td className="px-6 py-4 text-emerald-800 font-extrabold">RWF {claim.insuranceAmount.toLocaleString()}</td>
                   <td className="px-6 py-4 text-gray-500 font-semibold">RWF {claim.patientAmount.toLocaleString()}</td>

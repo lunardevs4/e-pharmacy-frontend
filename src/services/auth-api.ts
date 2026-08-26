@@ -45,6 +45,7 @@ export interface AuthUser {
     gender?: string | null
     createdAt?: string
     updatedAt?: string
+    insuranceProvider?: string | null
   }
   pharmacy?: {
     id?: string
@@ -134,7 +135,8 @@ const normalizeUser = (payload: unknown): AuthUser => {
     deletedAt: userObj.deletedAt === null ? null : toString(userObj.deletedAt),
     nid: toString(userObj.nid),
     licenseNumber: toString(userObj.licenseNumber),
-    insuranceProvider: toString(userObj.insuranceProvider),
+    insuranceProvider:
+      toString(userObj.insuranceProvider) || toString(patientObj.insuranceProvider),
     dob: toString(userObj.dob) || toString(userObj.dateOfBirth),
     gender: toString(userObj.gender),
     province: toString(userObj.province),
@@ -203,10 +205,13 @@ const getErrorMessage = (error: unknown): string => {
       if (Array.isArray(responseData.message)) return (responseData.message as string[]).join(' · ')
     }
     if (responseData?.error && typeof responseData.error === 'string') return responseData.error
-    if (axiosError.response?.status === 400) return 'Invalid credentials or request. Please check your input.'
-    if (axiosError.response?.status === 401) return 'Incorrect username or password.'
-    if (axiosError.response?.status === 403) return 'Access denied.'
+    if (axiosError.response?.status === 400) return 'The request was not valid. Please check your email and password.'
+    if (axiosError.response?.status === 401) return 'Incorrect email or password.'
+    if (axiosError.response?.status === 403) return 'Your account is not allowed to sign in yet.'
     if (axiosError.response?.status === 404) return 'Account not found.'
+    if (axiosError.response?.status && axiosError.response.status >= 500) {
+      return 'The authentication server is temporarily unavailable. Please try again shortly.'
+    }
   }
   if (error instanceof Error) return error.message
   return 'Request failed. Please try again.'
@@ -634,6 +639,7 @@ export const AuthApi = {
         firstName: updatedFields.firstName,
         lastName: updatedFields.lastName,
         phone: updatedFields.phone,
+        insuranceProvider: updatedFields.insuranceProvider,
       })
       const normalized = normalizeUser(response.data)
       const current = localStorage.getItem(CURRENT_USER_KEY)

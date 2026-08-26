@@ -25,7 +25,13 @@ export default function InsuranceClaims() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      const response = await insuranceApi.getClaims()
+      // Get insurance provider ID from user
+      const providers = await insuranceApi.getProviders()
+      const insurer = user?.insuranceProvider || 'RSSB'
+      const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
+      const insuranceId = matchedProvider?.id
+      
+      const response = await insuranceApi.getClaims({ insuranceId })
       // The API returns { data: InsuranceClaim[], meta: any }
       const claimsArray = response?.data || []
       setClaims(claimsArray)
@@ -154,7 +160,7 @@ export default function InsuranceClaims() {
                   <td className="px-5 py-3 font-mono font-bold text-gray-900">{c.claimNumber}</td>
                   <td className="px-5 py-3 font-semibold text-gray-800">{c.pharmacy?.name || 'Pharmacy'}</td>
                   <td className="px-5 py-3 font-mono text-gray-500">{c.insuredPatientId}</td>
-                  <td className="px-5 py-3">{c.medicine?.tradeName || c.medicine?.genericName || 'Medicine'}</td>
+                  <td className="px-5 py-3">{c.medicineName || c.medicine?.tradeName || c.medicine?.genericName || 'Unknown Medicine'}</td>
                   <td className="px-5 py-3 font-black text-gray-900">RWF {c.totalAmount.toLocaleString()}</td>
                   <td className="px-5 py-3 text-emerald-700 font-bold">RWF {c.insuranceAmount.toLocaleString()}</td>
                   <td className="px-5 py-3 text-gray-700 font-semibold">RWF {c.patientAmount.toLocaleString()}</td>

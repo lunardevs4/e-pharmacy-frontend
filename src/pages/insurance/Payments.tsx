@@ -23,9 +23,19 @@ export default function InsurancePayments() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
+      // Get insurance provider ID from user
+      const providers = await insuranceApi.getProviders()
+      const insurer = user?.insuranceProvider || 'RSSB'
+      const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
+      const insuranceId = matchedProvider?.id
+      
       const response = await insuranceApi.getOutstandingPayments()
       const paymentsArray = Array.isArray(response) ? response : (response || [])
-      setOutstandingPayments(paymentsArray)
+      // Filter by insurance provider if the API doesn't support it
+      const filteredPayments = insuranceId 
+        ? paymentsArray.filter((p: any) => p.insuranceId === insuranceId)
+        : paymentsArray
+      setOutstandingPayments(filteredPayments)
     } catch (error: any) {
       setErrorMsg(error?.message || 'Unable to load outstanding payments from backend.')
       setOutstandingPayments([])
