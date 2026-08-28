@@ -346,7 +346,12 @@ export const MedicineApi = {
     const response = await apiClient.post(
       `/pharmacies/${pharmacyId}/inventory/import`,
       formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } },
+      {
+        // Spreadsheet imports can take longer than the short timeout used by
+        // ordinary API requests because each row is validated and persisted.
+        timeout: 120000,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
     )
     return response?.data?.data ?? response?.data
   },
