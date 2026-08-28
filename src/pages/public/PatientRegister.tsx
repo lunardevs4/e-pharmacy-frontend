@@ -22,7 +22,7 @@ import {
 const BRAND = '#059669'
 const BRAND_HOVER = '#047857'
 const INPUT_BG = '#F7F8FA'
-const SERIF = "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif"
+const SERIF = 'var(--font-family-base)'
 const focusRing = '0 0 0 3px rgba(5, 150, 105, 0.15)'
 const inputBorderRadius = '4px'
 
