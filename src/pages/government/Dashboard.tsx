@@ -210,7 +210,7 @@ export default function GovernmentDashboard() {
   if (isLoading) return renderSkeleton()
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-16">
       {errorMsg && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
           <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 animate-pulse" />
@@ -219,100 +219,100 @@ export default function GovernmentDashboard() {
       )}
 
       {/* MoH Rwanda Regulatory Header Banner */}
-      <div className="bg-white text-gray-900 rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-center border border-gray-200 shadow-xs relative overflow-hidden gap-6">
+      <div className="bg-white text-gray-900 rounded-xl p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row justify-between items-center border border-gray-200 shadow-xs relative overflow-hidden gap-4 sm:gap-6">
         <div className="absolute right-0 top-0 w-48 h-48 bg-emerald-50/40 rounded-full blur-2xl pointer-events-none" />
 
         <div className="space-y-2 text-center sm:text-left flex-grow">
           <div className="flex justify-center sm:justify-start items-center space-x-2.5">
-            <Landmark className="w-5 h-5 text-emerald-800" />
-            <span className="text-[9px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50/80 px-2 py-0.5 rounded border border-emerald-200">MoH Regulator Portal</span>
+            <Landmark className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-800" />
+            <span className="text-[8px] sm:text-[9px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50/80 px-2 py-0.5 rounded border border-emerald-200">MoH Regulator Portal</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-950">Ministry of Health Regulator Dashboard</h1>
-          <p className="text-gray-500 text-xs max-w-xl leading-normal font-medium">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950">Ministry of Health Regulator Dashboard</h1>
+          <p className="text-gray-500 text-[10px] sm:text-xs max-w-xl leading-normal font-medium">
             National regulatory oversight of essential drug cataloguing, licensing verification, and district stock availability index tracking across Rwanda.
           </p>
         </div>
 
-        <div className="flex-shrink-0 bg-emerald-50 border border-emerald-200/60 px-5 py-4 rounded-xl text-center min-w-[180px]">
-          <span className="text-[9px] uppercase text-emerald-800 block font-black">Approved pharmacy coverage</span>
+        <div className="flex-shrink-0 bg-emerald-50 border border-emerald-200/60 px-4 sm:px-5 py-3 sm:py-4 rounded-xl text-center min-w-[160px] sm:min-w-[180px]">
+          <span className="text-[8px] sm:text-[9px] uppercase text-emerald-800 block font-black">Approved pharmacy coverage</span>
           <SemiCircularGauge value={approvedCoverage} />
-          <span className="text-[9px] text-gray-450 block font-semibold">of registered pharmacies</span>
+          <span className="text-[8px] sm:text-[9px] text-gray-450 block font-semibold">of registered pharmacies</span>
         </div>
       </div>
 
       {/* Statistics grids */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-emerald-50 text-health-primary rounded-lg">
-            <Users className="w-5 h-5" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-emerald-50 text-health-primary rounded-lg">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold">Approved Stores</span>
-            <span className="text-lg font-black text-gray-950">{approvedCount} total</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Approved Stores</span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{approvedCount} total</span>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-amber-50 text-amber-700 rounded-lg">
-            <FileText className="w-5 h-5" />
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-amber-50 text-amber-700 rounded-lg">
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold">Pending Applications</span>
-            <span className="text-lg font-black text-gray-950">{pendingCount} pending</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Pending Applications</span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{pendingCount} pending</span>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-red-50 text-red-700 rounded-lg">
-            <XCircle className="w-5 h-5" />
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-red-50 text-red-700 rounded-lg">
+            <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold">Rejected Applications</span>
-            <span className="text-lg font-black text-red-650">{rejectedCount} apps</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Rejected Applications</span>
+            <span className="text-base sm:text-lg font-black text-red-650">{rejectedCount} apps</span>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-slate-50 text-slate-700 rounded-lg">
-            <Users className="w-5 h-5" />
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-slate-50 text-slate-700 rounded-lg">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold">Registered Patients</span>
-            <span className="text-lg font-black text-gray-950">{summary?.totalPatients ?? 0}</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Registered Patients</span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{summary?.totalPatients ?? 0}</span>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs">
-          <div className="p-2.5 bg-blue-50 text-blue-700 rounded-lg">
-            <Package className="w-5 h-5" />
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-blue-50 text-blue-700 rounded-lg">
+            <Package className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-gray-400 block uppercase font-bold">Active Medicines</span>
-            <span className="text-lg font-black text-gray-950">{summary?.totalMedicines ?? 0}</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Active Medicines</span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{summary?.totalMedicines ?? 0}</span>
           </div>
         </div>
       </div>
 
       {/* Alert sections & charts splits */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
         {/* Left Column (2/3 width) */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Recent Registrations Onboarding timeline */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-gray-150">
-              <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
-                <FileText className="w-4 h-4 text-emerald-700" />
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-gray-150 gap-2">
+              <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
                 <span>Recent Pharmacy Onboardings</span>
               </h3>
-              <span className="text-[9px] text-gray-400 font-bold font-mono">Verify Application Logs</span>
+              <span className="text-[8px] sm:text-[9px] text-gray-400 font-bold font-mono">Verify Application Logs</span>
             </div>
 
             {recentRegistrations.length === 0 ? (
-              <div className="text-center py-6 text-xs text-gray-400">
+              <div className="text-center py-4 sm:py-6 text-[10px] sm:text-xs text-gray-400">
                 No pharmacy registration applications found.
               </div>
             ) : (
-              <div className="divide-y divide-gray-100 text-xs font-semibold text-gray-700">
+              <div className="divide-y divide-gray-100 text-[10px] sm:text-xs font-semibold text-gray-700">
                 {recentRegistrations.map((lic) => (
                   <div key={lic.id} className="py-3 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                     <div className="space-y-1">
@@ -336,16 +336,16 @@ export default function GovernmentDashboard() {
           </div>
 
           {/* Critical stock levels shortage logs */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-gray-150">
-              <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
-                <AlertTriangle className="w-4 h-4 text-rose-600" />
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-gray-150 gap-2">
+              <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-600" />
                 <span>MOH Critical Stock Shortage Alerts</span>
               </h3>
-              <span className="text-[9px] bg-red-50 text-red-700 font-bold border border-red-200 px-2 py-0.5 rounded-full font-sans">Requires MOH Intervention</span>
+              <span className="text-[8px] sm:text-[9px] bg-red-50 text-red-700 font-bold border border-red-200 px-2 py-0.5 rounded-full font-sans">Requires MOH Intervention</span>
             </div>
 
-            <div className="divide-y divide-gray-100 text-xs">
+            <div className="divide-y divide-gray-100 text-[10px] sm:text-xs">
               {shortageItems.map((s) => (
                 <div key={s.id} className="py-3 flex justify-between items-center gap-4">
                   <div className="space-y-1">
@@ -366,12 +366,12 @@ export default function GovernmentDashboard() {
         </div>
 
         {/* Right Column: Analytics & Demands (1/3 width) */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Province Distribution Table */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4 font-semibold text-xs text-gray-700">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4 font-semibold text-[10px] sm:text-xs text-gray-700">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
-              <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
-                <MapPin className="w-4 h-4 text-emerald-700" />
+              <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
                 <span>Province Distribution</span>
               </h3>
             </div>
@@ -401,15 +401,15 @@ export default function GovernmentDashboard() {
           </div>
 
           {/* National Pharmacy Statistics */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
-              <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
-                <Activity className="w-4 h-4 text-emerald-700" />
+              <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
                 <span>National Pharmacy Statistics</span>
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-gray-500 pt-2">
+            <div className="grid grid-cols-2 gap-2 text-[9px] sm:text-[10px] font-bold text-gray-500 pt-2">
               <div className="flex items-center space-x-1.5 bg-gray-50 p-2 rounded-lg">
                 <span className="w-2.5 h-2.5 bg-health-primary rounded-sm" />
                 <div>

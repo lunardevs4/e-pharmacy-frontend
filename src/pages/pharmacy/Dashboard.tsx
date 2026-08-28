@@ -132,7 +132,7 @@ export default function PharmacyDashboard() {
   return (
     <div className="relative min-h-screen pb-16">
       
-      <div className="space-y-6 max-w-7xl mx-auto transition-all duration-300">
+      <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto transition-all duration-300">
 
         {errorMsg && (
           <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm font-semibold text-red-800">
@@ -142,45 +142,45 @@ export default function PharmacyDashboard() {
         
 
         {/* Quick Metrics Statistics Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Today's Reservations</span>
-              <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.todayReservations.length}</p>
-              <span className="text-[11px] text-gray-400 block font-medium">{summary.ready} confirmed reservation{summary.ready === 1 ? '' : 's'}</span>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">Today's Reservations</span>
+              <p className="text-2xl sm:text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.todayReservations.length}</p>
+              <span className="text-[10px] sm:text-[11px] text-gray-400 block font-medium">{summary.ready} confirmed reservation{summary.ready === 1 ? '' : 's'}</span>
             </div>
             <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100 flex-shrink-0">
               <Bookmark className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total Units</span>
-              <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.totalInventory}</p>
-              <span className="text-[11px] text-gray-400 block font-medium">{summary.lowStock} low stock</span>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total Units</span>
+              <p className="text-2xl sm:text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.totalInventory}</p>
+              <span className="text-[10px] sm:text-[11px] text-gray-400 block font-medium">{summary.lowStock} low stock</span>
             </div>
             <div className="p-2 bg-gray-50 text-gray-600 rounded-lg border border-gray-205 flex-shrink-0">
               <Box className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Patients (Month)</span>
-              <p className="text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.monthPatients.size}</p>
-              <span className="text-[10px] font-black text-emerald-600 block pt-1">Unique patients this month</span>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">Patients (Month)</span>
+              <p className="text-2xl sm:text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.monthPatients.size}</p>
+              <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 block pt-1">Unique patients this month</span>
             </div>
             <div className="p-2 bg-gray-50 text-gray-650 rounded-lg border border-gray-205 flex-shrink-0">
               <Users className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-start justify-between">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Inventory Value</span>
-              <p className="text-2xl font-black text-gray-900 mt-1">{isLoading ? '—' : `${summary.inventoryValue.toLocaleString()} RWF`}</p>
-              <span className="text-[10px] font-black text-emerald-600 block pt-1">Based on current stock and prices</span>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">Inventory Value</span>
+              <p className="text-xl sm:text-2xl font-black text-gray-900 mt-1">{isLoading ? '—' : `${summary.inventoryValue.toLocaleString()} RWF`}</p>
+              <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 block pt-1">Based on current stock and prices</span>
             </div>
             <div className="p-2 bg-gray-50 text-gray-650 rounded-lg border border-gray-205 flex-shrink-0">
               <TrendingUp className="w-4 h-4" />
@@ -189,36 +189,36 @@ export default function PharmacyDashboard() {
         </div>
 
         {/* Main Split Section Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                  <h3 className="text-sm font-black text-gray-900">Recent Reservations</h3>
-                  <Link to="/pharmacy/reservations" className="text-xs font-bold text-health-primary hover:underline flex items-center">
+                  <h3 className="text-xs sm:text-sm font-black text-gray-900">Recent Reservations</h3>
+                  <Link to="/pharmacy/reservations" className="text-[10px] sm:text-xs font-bold text-health-primary hover:underline flex items-center">
                     <span>View all</span>
-                    <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                    <ChevronRight className="w-3 h-3.5 sm:w-3.5 sm:h-3.5 ml-0.5" />
                   </Link>
                 </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs divide-y divide-gray-150">
+                <table className="w-full text-left text-[10px] sm:text-xs divide-y divide-gray-150">
                   <thead>
-                    <tr className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
-                      <th className="py-2.5">Patient</th>
-                      <th className="py-2.5">Medicine</th>
-                      <th className="py-2.5">Date</th>
-                      <th className="py-2.5 text-center">Insur.</th>
-                      <th className="py-2.5">Status</th>
-                      <th className="py-2.5 text-right">Action</th>
+                    <tr className="text-[9px] sm:text-[10px] font-black text-slate-450 uppercase tracking-wider">
+                      <th className="py-2 px-1 sm:px-2.5">Patient</th>
+                      <th className="py-2 px-1 sm:px-2.5">Medicine</th>
+                      <th className="py-2 px-1 sm:px-2.5">Date</th>
+                      <th className="py-2 px-1 sm:px-2.5 text-center">Insur.</th>
+                      <th className="py-2 px-1 sm:px-2.5">Status</th>
+                      <th className="py-2 px-1 sm:px-2.5 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
                     {isLoading && (
-                      <tr><td colSpan={6} className="py-8 text-center text-gray-400">Loading reservations…</td></tr>
+                      <tr><td colSpan={6} className="py-6 sm:py-8 text-center text-gray-400">Loading reservations…</td></tr>
                     )}
                     {!isLoading && reservations.length === 0 && (
-                      <tr><td colSpan={7} className="py-8 text-center text-gray-400">No reservations found.</td></tr>
+                      <tr><td colSpan={7} className="py-6 sm:py-8 text-center text-gray-400">No reservations found.</td></tr>
                     )}
                     {!isLoading && reservations.map((res) => (
                       <tr key={res.id} className="hover:bg-gray-50/50">
@@ -284,14 +284,14 @@ export default function PharmacyDashboard() {
             </div>
           </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
               <div className="flex justify-between items-center pb-2 border-b border-gray-105">
                 <div className="flex items-center space-x-2">
                   <Activity className="w-4 h-4 text-emerald-700" />
-                  <h3 className="text-sm font-black text-gray-900">Recent Staff Activity</h3>
+                  <h3 className="text-xs sm:text-sm font-black text-gray-900">Recent Staff Activity</h3>
                 </div>
               </div>
-              <div className="space-y-3 font-medium text-xs text-gray-600">
+              <div className="space-y-3 font-medium text-[10px] sm:text-xs text-gray-600">
                 {auditLogs.length === 0 ? (
                   <p className="text-gray-400">No staff activity recorded.</p>
                 ) : auditLogs.map((log) => (
@@ -305,10 +305,10 @@ export default function PharmacyDashboard() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Reservation Status</span>
-              <div className="space-y-2 pt-2 text-xs">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5">
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Reservation Status</span>
+              <div className="space-y-2 pt-2 text-[10px] sm:text-xs">
                 {[['Pending', summary.pending, 'bg-amber-400'], ['Confirmed', summary.ready, 'bg-emerald-500'], ['Collected', summary.collected, 'bg-slate-500']].map(([label, count, color]) => (
                   <div key={label as string} className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-gray-600"><span className={`w-2 h-2 rounded-full ${color}`} />{label}</span>

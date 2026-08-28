@@ -171,90 +171,90 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-16">
       {/* Header */}
-      <div className="bg-slate-900 text-white rounded-xl p-6 shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="bg-slate-900 text-white rounded-xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <ShieldCheck className="w-6 h-6 text-emerald-400" />
-            <span className="text-[10px] tracking-widest font-black uppercase bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-400">Super Admin Console</span>
+            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+            <span className="text-[9px] sm:text-[10px] tracking-widest font-black uppercase bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-400">Super Admin Console</span>
           </div>
-          <h1 className="text-2xl font-black text-white">Platform Administration Dashboard</h1>
-          <p className="text-slate-300 text-xs leading-relaxed">
+          <h1 className="text-xl sm:text-2xl font-black text-white">Platform Administration Dashboard</h1>
+          <p className="text-slate-300 text-[10px] sm:text-xs leading-relaxed">
             Complete system oversight: users, pharmacies, medicines, reservations, and compliance monitoring.
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className="text-right text-xs text-slate-400">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="text-right text-[10px] sm:text-xs text-slate-400">
             <div>Last refresh: {lastRefreshed.toLocaleTimeString()}</div>
             <div className="mt-1">System Status: <span className="text-emerald-400 font-bold">Operational</span></div>
           </div>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition-colors flex items-center space-x-2 disabled:opacity-50"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 sm:px-4 py-2 rounded-lg text-[10px] sm:text-xs transition-colors flex items-center space-x-2 disabled:opacity-50"
           >
-            {refreshing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {refreshing ? <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             <span>Refresh</span>
           </button>
         </div>
       </div>
 
       {/* System Status Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3 shadow-xs">
-          <div className="p-2.5 bg-blue-50 text-blue-700 rounded-lg">
-            <Users className="w-5 h-5" />
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-blue-50 text-blue-700 rounded-lg">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-gray-400 block uppercase font-bold">Total Users</span>
-            <span className="text-lg font-black text-gray-950">{totalUsers}</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Total Users</span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{totalUsers}</span>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3 shadow-xs">
-          <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-lg">
-            <Package className="w-5 h-5" />
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-emerald-50 text-emerald-700 rounded-lg">
+            <Package className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-gray-400 block uppercase font-bold">Active Medicines</span>
-            <span className="text-lg font-black text-gray-950">{activeMeds}</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Active Medicines</span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{activeMeds}</span>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3 shadow-xs">
-          <div className="p-2.5 bg-purple-50 text-purple-700 rounded-lg">
-            <Building className="w-5 h-5" />
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-purple-50 text-purple-700 rounded-lg">
+            <Building className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-gray-400 block uppercase font-bold">Approved Pharmacies</span>
-            <span className="text-lg font-black text-gray-950">{approvedPharm}</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Approved Pharmacies</span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{approvedPharm}</span>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3 shadow-xs">
-          <div className="p-2.5 bg-amber-50 text-amber-700 rounded-lg">
-            <AlertTriangle className="w-5 h-5" />
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3 shadow-xs">
+          <div className="p-2 sm:p-2.5 bg-amber-50 text-amber-700 rounded-lg">
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[10px text-gray-400 block uppercase font-bold">Pending Actions</span>
-            <span className="text-lg font-black text-gray-950">{totalPendingActions}</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Pending Actions</span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{totalPendingActions}</span>
           </div>
         </div>
       </div>
 
       {/* Service Health & Role Distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
             <Server className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-sm font-black text-gray-900">Service Health</h3>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">Service Health</h3>
           </div>
           <div className="space-y-2">
             {SERVICES.map((service) => (
-              <div key={service.name} className="flex items-center justify-between text-xs">
+              <div key={service.name} className="flex items-center justify-between text-[10px] sm:text-xs">
                 <div className="flex items-center space-x-2">
-                  <service.icon className="w-4 h-4 text-gray-400" />
+                  <service.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
                   <span className="font-semibold text-gray-700">{service.name}</span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -266,34 +266,34 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
             <Users className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-sm font-black text-gray-900">User Role Distribution</h3>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">User Role Distribution</h3>
           </div>
           <Doughnut data={roleDistribution} options={doughnutOpts} />
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
             <Activity className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-sm font-black text-gray-900">Quick Actions</h3>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">Quick Actions</h3>
           </div>
           <div className="space-y-2">
-            <Link to="/admin/users" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-xs font-bold text-gray-700 transition-colors">
-              <UserCheck className="w-4 h-4 text-gray-500 mr-2" />
+            <Link to="/admin/users" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2.5 sm:p-3 text-[10px] sm:text-xs font-bold text-gray-700 transition-colors">
+              <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 mr-2" />
               Manage Users
             </Link>
-            <Link to="/admin/medicines" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-xs font-bold text-gray-700 transition-colors">
-              <Package className="w-4 h-4 text-gray-500 mr-2" />
+            <Link to="/admin/medicines" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2.5 sm:p-3 text-[10px] sm:text-xs font-bold text-gray-700 transition-colors">
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 mr-2" />
               Medicine Registry
             </Link>
-            <Link to="/admin/roles" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-xs font-bold text-gray-700 transition-colors">
-              <ShieldCheck className="w-4 h-4 text-gray-500 mr-2" />
+            <Link to="/admin/roles" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2.5 sm:p-3 text-[10px] sm:text-xs font-bold text-gray-700 transition-colors">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 mr-2" />
               Role Permissions
             </Link>
-            <Link to="/admin/audit" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-xs font-bold text-gray-700 transition-colors">
-              <FileLock2 className="w-4 h-4 text-gray-500 mr-2" />
+            <Link to="/admin/audit" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2.5 sm:p-3 text-[10px] sm:text-xs font-bold text-gray-700 transition-colors">
+              <FileLock2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 mr-2" />
               Audit Logs
             </Link>
           </div>
@@ -301,11 +301,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div>
-            <h3 className="text-sm font-black text-gray-900">User Growth Trend</h3>
-            <p className="text-[10px] text-gray-400">Monthly active users</p>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">User Growth Trend</h3>
+            <p className="text-[9px] sm:text-[10px] text-gray-400">Monthly active users</p>
           </div>
           <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
             <Line data={userGrowthData} options={{
@@ -321,10 +321,10 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div>
-            <h3 className="text-sm font-black text-gray-900">Reservation Volume</h3>
-            <p className="text-[10px] text-gray-400">Monthly reservation count</p>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">Reservation Volume</h3>
+            <p className="text-[9px] sm:text-[10px] text-gray-400">Monthly reservation count</p>
           </div>
           <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/70 via-white to-emerald-50/70 p-3">
             <Line data={reservationTrendData} options={{
@@ -343,34 +343,34 @@ export default function AdminDashboard() {
 
       {/* Recent Audit Logs */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+        <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div className="flex items-center space-x-2">
             <FileLock2 className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-sm font-black text-gray-900">Recent System Activity</h3>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">Recent System Activity</h3>
           </div>
-          <span className="text-xs text-gray-400 font-bold">{logs.length} recent logs</span>
+          <span className="text-[10px] sm:text-xs text-gray-400 font-bold">{logs.length} recent logs</span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-[10px] sm:text-xs">
             <thead className="bg-gray-50 border-b border-gray-100">
-              <tr className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                <th className="px-5 py-3">Actor</th>
-                <th className="px-5 py-3">Role</th>
-                <th className="px-5 py-3">Action</th>
-                <th className="px-5 py-3">Resource</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Time</th>
+              <tr className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-5 py-2 sm:py-3">Actor</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">Role</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">Action</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">Resource</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">Status</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">Time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
               {logs.slice(0, 8).map((log, idx) => (
                 <tr key={idx} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3 font-semibold text-gray-900">{log.actor || 'System'}</td>
-                  <td className="px-5 py-3">{log.role || '—'}</td>
-                  <td className="px-5 py-3">{log.action || '—'}</td>
-                  <td className="px-5 py-3">{log.resource || '—'}</td>
-                  <td className="px-5 py-3">
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded ${
+                  <td className="px-3 sm:px-5 py-2 sm:py-3 font-semibold text-gray-900">{log.actor || 'System'}</td>
+                  <td className="px-3 sm:px-5 py-2 sm:py-3">{log.role || '—'}</td>
+                  <td className="px-3 sm:px-5 py-2 sm:py-3">{log.action || '—'}</td>
+                  <td className="px-3 sm:px-5 py-2 sm:py-3">{log.resource || '—'}</td>
+                  <td className="px-3 sm:px-5 py-2 sm:py-3">
+                    <span className={`inline-flex items-center text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded ${
                       log.status === 'Success' ? 'bg-emerald-50 text-emerald-700' :
                       log.status === 'Failed' ? 'bg-red-50 text-red-700' :
                       'bg-amber-50 text-amber-700'
@@ -378,7 +378,7 @@ export default function AdminDashboard() {
                       {log.status || '—'}
                     </span>
                   </td>
-                  <td className="px-5 py-3 font-mono text-gray-500">{log.time || '—'}</td>
+                  <td className="px-3 sm:px-5 py-2 sm:py-3 font-mono text-gray-500">{log.time || '—'}</td>
                 </tr>
               ))}
             </tbody>

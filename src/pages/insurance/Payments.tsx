@@ -11,9 +11,16 @@ interface OutstandingPayment {
   insuranceId: string
 }
 
+interface OutstandingPaymentsResponse {
+  totalOutstanding: number
+  claimCount: number
+  claims: any[]
+}
+
 export default function InsurancePayments() {
   const { user } = useAuthStore()
   const [outstandingPayments, setOutstandingPayments] = useState<OutstandingPayment[]>([])
+  const [totalOutstanding, setTotalOutstanding] = useState(0)
   const [search, setSearch] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -28,17 +35,39 @@ export default function InsurancePayments() {
       const insurer = user?.insuranceProvider || 'RSSB'
       const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
       const insuranceId = matchedProvider?.id
-      
-      const response = await insuranceApi.getOutstandingPayments()
-      const paymentsArray = Array.isArray(response) ? response : (response || [])
-      // Filter by insurance provider if the API doesn't support it
-      const filteredPayments = insuranceId 
-        ? paymentsArray.filter((p: any) => p.insuranceId === insuranceId)
-        : paymentsArray
-      setOutstandingPayments(filteredPayments)
+
+      // Backend returns { totalOutstanding, claimCount, claims: [...] }
+      const response: OutstandingPaymentsResponse = await insuranceApi.getOutstandingPayments()
+      const claims: any[] = Array.isArray(response?.claims) ? response.claims : []
+
+      // Filter by insurance provider if needed
+      const filteredClaims = insuranceId
+        ? claims.filter((c: any) => c.insuranceId === insuranceId)
+        : claims
+
+      // Group claims by pharmacy into OutstandingPayment rows
+      const grouped: Record<string, OutstandingPayment> = {}
+      for (const claim of filteredClaims) {
+        const pid = claim.pharmacyId
+        if (!grouped[pid]) {
+          grouped[pid] = {
+            pharmacyId: pid,
+            pharmacyName: claim.pharmacy?.name || pid,
+            claimsCount: 0,
+            totalAmount: 0,
+            insuranceId: claim.insuranceId,
+          }
+        }
+        grouped[pid].claimsCount += 1
+        grouped[pid].totalAmount += Number(claim.insuranceAmount ?? 0)
+      }
+
+      setOutstandingPayments(Object.values(grouped))
+      setTotalOutstanding(Number(response.totalOutstanding ?? 0))
     } catch (error: any) {
       setErrorMsg(error?.message || 'Unable to load outstanding payments from backend.')
       setOutstandingPayments([])
+      setTotalOutstanding(0)
     } finally {
       setIsLoading(false)
     }
@@ -68,11 +97,11 @@ export default function InsurancePayments() {
 
   const totals = useMemo(() => {
     const totalDisbursed = 0 // Would come from paid claims API
-    const totalPending = outstandingPayments.reduce((a, p) => a + p.totalAmount, 0)
+    const totalPending = totalOutstanding || outstandingPayments.reduce((a, p) => a + p.totalAmount, 0)
     const pharmaciesPending = outstandingPayments.length
 
     return { totalDisbursed, totalPending, pharmaciesPending }
-  }, [outstandingPayments])
+  }, [outstandingPayments, totalOutstanding])
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
