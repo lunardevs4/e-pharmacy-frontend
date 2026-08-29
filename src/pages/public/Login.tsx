@@ -386,15 +386,6 @@ export default function Login() {
       </div>
     )
   }
-
-
-  const inputStyle = {
-    borderRadius: '16px',
-    backgroundColor: INPUT_BG,
-  }
-
-  const focusRing = `0 0 0 4px ${BRAND}14`
-
   return (
     <AuthLayout
       mode="login"
@@ -428,8 +419,6 @@ export default function Login() {
           className="w-full text-xs font-bold text-health-primary hover:underline disabled:opacity-50"
         >Resend verification email</button>
       )}
-
-
       {successMsg && (
         <div
           className="flex items-start rounded-2xl p-4 mb-5 text-sm shadow-sm"
@@ -444,13 +433,10 @@ export default function Login() {
           <span className="font-medium leading-relaxed">{successMsg}</span>
         </div>
       )}
-
-
       {pharmacyStatusData ? (
         renderStatusCard(pharmacyStatusData)
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Email Field */}
           <div>
             <label
               htmlFor="email"
@@ -482,9 +468,6 @@ export default function Login() {
               </p>
             )}
           </div>
-
-
-          {/* Password Field */}
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label
@@ -532,9 +515,6 @@ export default function Login() {
               </p>
             )}
           </div>
-
-
-          {/* Remember me + Forgot password */}
           <div
             className="flex items-center justify-between pt-0.5"
             style={{ fontSize: '13px' }}
@@ -567,9 +547,6 @@ export default function Login() {
               Forgot password?
             </Link>
           </div>
-
-
-          {/* Sign In Button */}
           <button
             type="submit"
             disabled={isLoading}
@@ -584,9 +561,6 @@ export default function Login() {
               <span>Sign In</span>
             )}
           </button>
-
-
-          {/* "or" divider */}
           <div className="flex items-center gap-3 py-0.5">
             <div className="flex-1 h-px" style={{ backgroundColor: '#E5E7EB' }} />
             <span
@@ -597,28 +571,7 @@ export default function Login() {
             </span>
             <div className="flex-1 h-px" style={{ backgroundColor: '#E5E7EB' }} />
           </div>
-
-
-          {/* Sign in as Pharmacist / Staff — clean outline */}
-          <button
-            type="button"
-            onClick={() => setIsStaffLogin(!isStaffLogin)}
-            className="w-full flex justify-center items-center gap-2 py-[12px] px-4 rounded-md text-sm font-semibold transition-all duration-200 active:scale-[0.99]"
-            style={{
-              borderWidth: '1.5px',
-              borderStyle: 'solid',
-              borderColor: isStaffLogin ? BRAND : '#E5E7EB',
-              color: BRAND,
-              backgroundColor: isStaffLogin ? 'rgba(5, 150, 105, 0.05)' : '#ffffff',
-              fontSize: '14px',
-            }}
-          >
-            <ShieldCheck className="w-[18px] h-[18px]" />
-            <span>Sign in as Pharmacist / Staff</span>
-          </button>
-
-
-          {/* Account links — clean single-line registration prompt */}
+         
           <div
             className="text-center pt-1 font-sans"
             style={{ fontSize: '14px' }}

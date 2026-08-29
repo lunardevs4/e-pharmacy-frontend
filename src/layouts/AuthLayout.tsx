@@ -65,7 +65,10 @@ export default function AuthLayout({
   const poster = getPosterContent()
 
   return (
-    <div className="auth-layout min-h-screen w-full bg-[#EEF2F4] flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 font-sans">
+    <div
+      className="auth-layout min-h-screen w-full bg-[#EEF2F4] flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12"
+      style={{ fontFamily: 'var(--font-family-base)' }}
+    >
 
       {/* =========================================================
           MAIN AUTH CONTAINER
@@ -95,6 +98,8 @@ export default function AuthLayout({
         ======================================================= */}
         <section
           className="
+            hidden
+            lg:block
             relative
             w-full
             lg:w-1/2

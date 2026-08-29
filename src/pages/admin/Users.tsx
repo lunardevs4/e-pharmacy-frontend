@@ -357,49 +357,50 @@ export default function AdminUsers() {
           onKeyDown={(e) => { if (e.key === 'Escape') setShowAddModal(false) }}
         >
           <div onClick={() => setShowAddModal(false)} aria-hidden="true" className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[9999]">
-            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-[9999]">
+            <div className="bg-emerald-950 text-white px-6 py-5 flex items-center justify-between">
               <div>
-                <h3 id="add-user-title" className="font-black text-sm">Add System User</h3>
-                <p className="text-xs text-slate-400">Create a new user account across any portal</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300 mb-1">User management</p>
+                <h3 id="add-user-title" className="font-black text-lg tracking-tight">Add System User</h3>
+                <p className="text-xs text-emerald-100/70 mt-1">Create a new account for any portal</p>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
                 aria-label="Close add user modal"
-                className="text-slate-400 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 rounded"
+                className="p-1.5 text-emerald-200/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
-            <form onSubmit={handleAddUser} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleAddUser} className="p-6 sm:p-7 space-y-5 text-xs">
               {modalError && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-700 font-medium">
+                <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-red-700 font-medium leading-relaxed">
                   {modalError}
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2 space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full Name *</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Full Name <span className="text-emerald-600">*</span></label>
                   <input required value={name} onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Jean Paul Kagabo"
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold" />
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 font-medium transition-colors" />
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email *</label>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Email <span className="text-emerald-600">*</span></label>
                   <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                     placeholder="user@example.rw"
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold" />
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 font-medium transition-colors" />
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Phone *</label>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone <span className="text-emerald-600">*</span></label>
                   <input required value={phone} onChange={(e) => setPhone(e.target.value)}
                     placeholder="+250 788 000 000"
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold" />
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 font-medium transition-colors" />
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">System Role *</label>
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">System Role <span className="text-emerald-600">*</span></label>
                   <select value={role} onChange={(e) => setRole(e.target.value as UserRole)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none font-semibold">
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 font-semibold transition-colors">
                     {(['PATIENT', 'PHARMACY', 'GOVERNMENT', 'INSURANCE', 'ADMIN'] as UserRole[]).map((r) => (
                       <option key={r} value={r}>{r}</option>
                     ))}
@@ -407,7 +408,7 @@ export default function AdminUsers() {
                 </div>
               </div>
               <button type="submit"
-                className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-lg text-xs transition-colors shadow-sm mt-2">
+                className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow-md mt-1 focus:outline-none focus:ring-4 focus:ring-emerald-500/20">
                 Create User Account
               </button>
             </form>

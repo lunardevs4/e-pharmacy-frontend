@@ -8,7 +8,7 @@ import { PharmacyApi } from '@/services/pharmacy-api'
 interface Employee {
   id: string
   name: string
-  role: 'Pharmacy Owner' | 'Pharmacy Manager' | 'Pharmacist' | 'Inventory Officer' | 'Cashier'
+  role: 'Pharmacy Owner' | 'Pharmacist'
   email: string
   phone: string
   status: 'Active' | 'Inactive'
@@ -26,10 +26,11 @@ export default function StaffManagement() {
     if (!pharmacyId) return
     PharmacyApi.getDetails(pharmacyId).then((pharmacy: any) => {
       const rows = (pharmacy.employees || []).map((employee: any) => {
+        if (!['PHARMACY_OWNER', 'PHARMACIST'].includes(employee.role)) return null
         const account = employee.user || {}
-        const roleMap: Record<string, Employee['role']> = { PHARMACIST: 'Pharmacist', PHARMACY_OWNER: 'Pharmacy Owner', PHARMACY_MANAGER: 'Pharmacy Manager', INVENTORY_OFFICER: 'Inventory Officer', CASHIER: 'Cashier' }
+        const roleMap: Record<string, Employee['role']> = { PHARMACIST: 'Pharmacist', PHARMACY_OWNER: 'Pharmacy Owner' }
         return { id: employee.id, name: [account.firstName, account.lastName].filter(Boolean).join(' ') || account.email, role: roleMap[employee.role] || 'Pharmacist', email: account.email || '—', phone: account.phone || '—', status: account.isActive === false ? 'Inactive' : 'Active', lastLogin: account.updatedAt ? new Date(account.updatedAt).toLocaleString() : '—' }
-      })
+      }).filter(Boolean) as Employee[]
       setEmployees(rows)
     }).catch((err) => setError(err.message || 'Unable to load staff.')).finally(() => setLoading(false))
   }, [user?.pharmacy?.id, user?.pharmacyId])
@@ -42,7 +43,7 @@ export default function StaffManagement() {
   // Add staff modal states
   const [showAddModal, setShowAddModal] = useState(false)
   const [name, setName] = useState('')
-  const [role, setRole] = useState<'Pharmacist' | 'Inventory Officer' | 'Cashier' | 'Pharmacy Manager'>('Pharmacist')
+  const [role, setRole] = useState<'Pharmacist' | 'Pharmacy Owner'>('Pharmacist')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [tempPassword, setTempPassword] = useState('')
@@ -75,7 +76,9 @@ export default function StaffManagement() {
     try {
       await AuthApi.createStaff(pharmacyId, { firstName, lastName: rest.join(' ') || firstName, email, phone, role: roleValue, position: role })
       const pharmacy = await PharmacyApi.getDetails(pharmacyId)
-      setEmployees((pharmacy.employees || []).map((employee: any) => ({ id: employee.id, name: [employee.user?.firstName, employee.user?.lastName].filter(Boolean).join(' ') || employee.user?.email, role: employee.role === 'PHARMACIST' ? 'Pharmacist' : 'Pharmacy Manager', email: employee.user?.email || '—', phone: employee.user?.phone || '—', status: employee.user?.isActive === false ? 'Inactive' : 'Active', lastLogin: employee.user?.updatedAt ? new Date(employee.user.updatedAt).toLocaleString() : '—' })))
+      setEmployees((pharmacy.employees || [])
+        .filter((employee: any) => ['PHARMACY_OWNER', 'PHARMACIST'].includes(employee.role))
+        .map((employee: any) => ({ id: employee.id, name: [employee.user?.firstName, employee.user?.lastName].filter(Boolean).join(' ') || employee.user?.email, role: employee.role === 'PHARMACY_OWNER' ? 'Pharmacy Owner' : 'Pharmacist', email: employee.user?.email || '—', phone: employee.user?.phone || '—', status: employee.user?.isActive === false ? 'Inactive' : 'Active', lastLogin: employee.user?.updatedAt ? new Date(employee.user.updatedAt).toLocaleString() : '—' })))
     } catch (err: any) { setError(err.message || 'Unable to create staff member.'); return }
     setShowCredentialsBanner(true)
 
@@ -129,7 +132,7 @@ export default function StaffManagement() {
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
         <h3 className="text-sm font-black text-gray-900 pb-2 border-b border-gray-150">Staff Roles &amp; Permissions</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-[11px] leading-relaxed">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] leading-relaxed">
           {/* Col 1 */}
           <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">
             <span className="font-bold text-gray-950 block">Pharmacy Owner</span>
@@ -137,23 +140,8 @@ export default function StaffManagement() {
           </div>
           {/* Col 2 */}
           <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">
-            <span className="font-bold text-gray-950 block">Pharmacy Manager</span>
-            <p className="text-gray-500">🟢 Manage inventory, manage reservations, view reports, supervise staff</p>
-          </div>
-          {/* Col 3 */}
-          <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">
             <span className="font-bold text-gray-950 block">Pharmacist</span>
             <p className="text-gray-500">🟢 Dispense medicines, process reservations, update stock after dispensing, send reminders</p>
-          </div>
-          {/* Col 4 */}
-          <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">
-            <span className="font-bold text-gray-950 block">Inventory Officer</span>
-            <p className="text-gray-500">🟢 Add/update stock, record expiry dates, manage suppliers</p>
-          </div>
-          {/* Col 5 */}
-          <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">
-            <span className="font-bold text-gray-950 block">Cashier</span>
-            <p className="text-gray-500">🟢 Process payments, generate receipts, view completed reservations</p>
           </div>
         </div>
       </div>
@@ -180,10 +168,8 @@ export default function StaffManagement() {
               className="bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
               <option value="">All Roles</option>
-              <option value="Pharmacy Manager">Pharmacy Manager</option>
+              <option value="Pharmacy Owner">Pharmacy Owner</option>
               <option value="Pharmacist">Pharmacist</option>
-              <option value="Inventory Officer">Inventory Officer</option>
-              <option value="Cashier">Cashier</option>
             </select>
 
             <select
@@ -310,10 +296,8 @@ export default function StaffManagement() {
                       onChange={(e) => setRole(e.target.value as any)}
                       className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
                     >
-                      <option value="Pharmacist">Pharmacist (Dispense & Reservations)</option>
-                      <option value="Inventory Officer">Inventory Officer (Stock Manage)</option>
-                      <option value="Cashier">Cashier (Process Payments)</option>
-                      <option value="Pharmacy Manager">Pharmacy Manager (Supervise)</option>
+                      <option value="Pharmacist">Pharmacist (Dispense &amp; Reservations)</option>
+                      <option value="Pharmacy Owner">Pharmacy Owner (Full Access)</option>
                     </select>
                   </div>
 

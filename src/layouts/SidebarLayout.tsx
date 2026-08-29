@@ -307,9 +307,10 @@ export default function SidebarLayout() {
           <button
             onClick={handleLogout}
             aria-label="Sign out"
-            className="p-2 text-emerald-200/70 hover:text-red-300 rounded-lg hover:bg-emerald-800/70 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
+            className="flex items-center gap-2 p-2 text-emerald-200/70 hover:text-red-300 rounded-lg hover:bg-emerald-800/70 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
           >
             <LogOut className="w-4 h-4" aria-hidden="true" />
+            <span className="text-xs font-semibold">Sign out</span>
           </button>
         </div>
       </aside>
@@ -483,6 +484,16 @@ export default function SidebarLayout() {
                 </span>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Sign out"
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
+            >
+              <LogOut className="w-4 h-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </div>
         </header>
 

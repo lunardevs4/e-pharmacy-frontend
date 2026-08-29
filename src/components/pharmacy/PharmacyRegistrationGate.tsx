@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
 import LocationSelector from '@/components/LocationSelector'
@@ -11,6 +12,7 @@ import {
   ArrowRight,
   MapPin,
   XCircle,
+  LogOut,
 } from 'lucide-react'
 
 interface UserLike {
@@ -57,7 +59,8 @@ export default function PharmacyRegistrationGate({
 }: {
   children: React.ReactNode
 }) {
-  const { user, updateProfile } = useAuthStore()
+  const navigate = useNavigate()
+  const { user, updateProfile, logout } = useAuthStore()
   const gated = isPharmacyGated(user)
 
   // ── Company details form state ────────────────────────────────────────────
@@ -78,6 +81,11 @@ export default function PharmacyRegistrationGate({
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
   // When a rejected owner chooses to correct details, force the form view
   const [forceEditForm, setForceEditForm] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/', { replace: true })
+  }
 
   if (!gated) return <>{children}</>
 
@@ -184,6 +192,15 @@ export default function PharmacyRegistrationGate({
 
       {/* Blocking overlay */}
       <div className="fixed inset-0 z-[90] flex items-start justify-center bg-slate-900/20 backdrop-blur-sm overflow-y-auto p-4 sm:p-6">
+        <button
+          type="button"
+          onClick={handleLogout}
+          aria-label="Sign out"
+          className="fixed top-4 right-4 z-10 inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 shadow-lg transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
+        >
+          <LogOut className="w-4 h-4" aria-hidden="true" />
+          <span>Sign out</span>
+        </button>
         {needsRegistration ? (
           /* ── Registration form popup ─────────────────────────────────── */
           <div
