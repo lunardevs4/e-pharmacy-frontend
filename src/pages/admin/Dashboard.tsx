@@ -114,7 +114,9 @@ export default function AdminDashboard() {
     labels: MONTHS,
     datasets: [{
       label: 'Active Users',
-      data: [totalUsers - 50, totalUsers - 30, totalUsers - 15, totalUsers - 8, totalUsers - 4, totalUsers - 2, totalUsers],
+      data: [50, 60, 70, 80, 90, 95, 100].map((percentage) =>
+        Math.round((totalUsers * percentage) / 100),
+      ),
       borderColor: '#0f5132',
       backgroundColor: 'rgba(15,81,50,0.1)',
       fill: true,
@@ -173,21 +175,21 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-16">
       {/* Header */}
-      <div className="bg-slate-900 text-white rounded-xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
-            <span className="text-[9px] sm:text-[10px] tracking-widest font-black uppercase bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-400">Super Admin Console</span>
+            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-700" />
+            <span className="text-[9px] sm:text-[10px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Super Admin Console</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-white">Platform Administration Dashboard</h1>
-          <p className="text-slate-300 text-[10px] sm:text-xs leading-relaxed">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900">Platform Administration Dashboard</h1>
+          <p className="text-slate-500 text-[10px] sm:text-xs leading-relaxed">
             Complete system oversight: users, pharmacies, medicines, reservations, and compliance monitoring.
           </p>
         </div>
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <div className="text-right text-[10px] sm:text-xs text-slate-400">
+          <div className="text-right text-[10px] sm:text-xs text-slate-500">
             <div>Last refresh: {lastRefreshed.toLocaleTimeString()}</div>
-            <div className="mt-1">System Status: <span className="text-emerald-400 font-bold">Operational</span></div>
+            <div className="mt-1">System Status: <span className="text-emerald-700 font-bold">Operational</span></div>
           </div>
           <button
             onClick={handleRefresh}
@@ -314,7 +316,7 @@ export default function AdminDashboard() {
               elements: { line: { tension: 0.45, borderWidth: 3 }, point: { radius: 0, hoverRadius: 5, borderWidth: 2, borderColor: '#fff' } },
               plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
               scales: {
-                y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
+                y: { min: 0, beginAtZero: true, border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
                 x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },
               },
             }} />

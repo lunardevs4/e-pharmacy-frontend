@@ -378,14 +378,19 @@ export default function PatientReminders() {
       {/* Add Reminder Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
-          <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-10">
-            <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between">
-              <div>
-                <h3 className="font-black text-sm">Add Medicine Reminder</h3>
-                <p className="text-xs text-emerald-300">Set up your medication schedule</p>
+          <div className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
+          <div className="portal-modal-panel relative w-full max-w-lg bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-10">
+            <div className="bg-white text-gray-900 px-6 py-5 flex items-center justify-between border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100">
+                  <Pill className="w-5 h-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base">Add Medicine Reminder</h3>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Set up your medication schedule</p>
+                </div>
               </div>
-              <button onClick={() => setShowAddModal(false)} className="text-emerald-300 hover:text-white">
+              <button onClick={() => setShowAddModal(false)} aria-label="Close reminder dialog" className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600">
                 <X className="w-5 h-5" />
               </button>
             </div>

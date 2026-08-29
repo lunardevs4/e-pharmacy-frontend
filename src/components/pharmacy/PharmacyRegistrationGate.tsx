@@ -207,7 +207,7 @@ export default function PharmacyRegistrationGate({
             role="dialog"
             aria-modal="true"
             aria-label="Register your pharmacy"
-            className="bg-white border border-gray-200 rounded-2xl p-6 max-w-xl w-full shadow-2xl space-y-5 my-6"
+            className="portal-modal-panel bg-white border border-gray-200 rounded-2xl p-6 max-w-xl w-full shadow-2xl space-y-5 my-6"
           >
             <div className="flex items-center space-x-3 pb-3 border-b border-gray-150">
               <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100 flex-shrink-0">
@@ -370,7 +370,7 @@ export default function PharmacyRegistrationGate({
             role="dialog"
             aria-modal="true"
             aria-label="Application status"
-            className="bg-white border border-gray-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-6 my-6 text-center"
+            className="portal-modal-panel bg-white border border-gray-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-6 my-6 text-center"
           >
             <div className="flex flex-col items-center space-y-3">
               {isRejected ? (

@@ -1187,7 +1187,7 @@ export default function PharmacyInventory() {
             }
           }}
         >
-          <div className="bg-white rounded-xl border border-gray-200 w-full max-w-md shadow-xl overflow-hidden">
+          <div className="portal-modal-panel bg-white rounded-xl border border-gray-200 w-full max-w-md shadow-xl overflow-hidden">
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
               <div>
                 <h3 id="edit-modal-title" className="font-black text-gray-900 text-sm">
@@ -1877,7 +1877,7 @@ export default function PharmacyInventory() {
           aria-label="Import inventory spreadsheet"
           className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm overflow-y-auto"
         >
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl w-full max-w-xl my-8">
+          <div className="portal-modal-panel bg-white border border-gray-200 rounded-2xl shadow-2xl w-full max-w-xl my-8">
             {/* Header */}
             <div className="flex items-start justify-between p-5 border-b border-gray-100">
               <div className="flex items-center space-x-3">

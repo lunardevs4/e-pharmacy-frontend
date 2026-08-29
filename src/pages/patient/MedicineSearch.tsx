@@ -786,10 +786,10 @@ export default function MedicineSearch() {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
           <div
             onClick={resetResWizard}
-            className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
+            className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
           />
 
-          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-gray-255 shadow-2xl overflow-hidden z-[9999] flex flex-col max-h-[90vh]">
+          <div className="portal-modal-panel relative w-full max-w-lg bg-white rounded-2xl border border-gray-255 shadow-2xl overflow-hidden z-[9999] flex flex-col max-h-[90vh]">
             {/* Modal Header */}
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900 flex-shrink-0">
               <div>

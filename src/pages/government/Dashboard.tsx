@@ -170,9 +170,22 @@ export default function GovernmentDashboard() {
   const hospitalCount = pharmacies.filter((p) => p.category === 'Hospital').length
 
   const provinceCounts: Record<string, number> = {}
+  const normalizeProvince = (value: unknown) => {
+    const province = String(value || '').trim().toLowerCase()
+
+    if (province.includes('kigali')) return 'Kigali City'
+    if (province.includes('eastern') || province === 'east') return 'Eastern Province'
+    if (province.includes('western') || province === 'west') return 'Western Province'
+    if (province.includes('northern') || province === 'north') return 'Northern Province'
+    if (province.includes('southern') || province === 'south') return 'Southern Province'
+
+    return String(value || '').trim()
+  }
   pharmacies.forEach((p) => {
-    if (p.status === 'APPROVED' && p.province) {
-      provinceCounts[p.province] = (provinceCounts[p.province] || 0) + 1
+    const status = String(p.status || '').trim().toUpperCase()
+    const province = normalizeProvince(p.province)
+    if (status === 'APPROVED' && province) {
+      provinceCounts[province] = (provinceCounts[province] || 0) + 1
     }
   })
 

@@ -437,6 +437,40 @@ h1, h2, h3, h4, h5, h6 {
   accent-color: #059669;
 }
 
+/* Shared popup shell matching the medication form reference design. */
+.portal-modal-backdrop {
+  background: rgba(15, 23, 42, 0.52) !important;
+  backdrop-filter: blur(6px);
+}
+
+.portal-modal-panel {
+  border: 1px solid #dbe3ea !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2) !important;
+  max-height: calc(100vh - 2rem);
+}
+
+.portal-modal-header {
+  background: #022c22 !important;
+  border-bottom: 1px solid #064e3b !important;
+}
+
+.portal-modal-body {
+  overflow-y: auto;
+  scrollbar-color: #059669 #f1f5f9;
+}
+
+.portal-modal-panel > .portal-form {
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  scrollbar-color: #059669 #f1f5f9;
+}
+
+.portal-modal-footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
 
 
 /* --------------------------------------------------------------------------

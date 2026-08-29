@@ -48,6 +48,20 @@ const ROLES = [
     ],
   },
   {
+    role: 'INSURANCE',
+    color: 'bg-purple-50 border-purple-200 text-purple-800',
+    dot: 'bg-purple-500',
+    description: 'Insurance administrators managing covered patients, claims, payments, and benefit rules.',
+    permissions: [
+      'Register and manage insured patients',
+      'Review and process medicine claims',
+      'Manage claim approvals and rejections',
+      'Track insurance payments and settlements',
+      'Configure medicine coverage tariffs',
+      'View insurance reports and analytics',
+    ],
+  },
+  {
     role: 'ADMIN',
     color: 'bg-red-50 border-red-200 text-red-800',
     dot: 'bg-red-500',

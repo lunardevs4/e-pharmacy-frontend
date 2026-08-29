@@ -370,7 +370,12 @@ export const AuthApi = {
 
   getAllPharmacies: async (): Promise<unknown[]> => {
     try {
-      const response = await apiClient.get('/pharmacies')
+      // Government dashboards need the complete set for totals and province
+      // distribution. The API defaults to only 10 records when no limit is
+      // supplied, which can make an existing pharmacy appear to be missing.
+      const response = await apiClient.get('/pharmacies', {
+        params: { page: 1, limit: 1000 },
+      })
       console.log("PHARMACIES API RESPONSE: ",response.data)
       const payload = response.data
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Users, Search, Plus, X, Check, AlertTriangle,
+  Users, UserPlus, Search, Plus, X, Check, AlertTriangle,
   UserCheck, UserX, Eye, EyeOff
 } from 'lucide-react'
 import { validateEmail } from '@/utils/validation'
@@ -356,18 +356,23 @@ export default function AdminUsers() {
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onKeyDown={(e) => { if (e.key === 'Escape') setShowAddModal(false) }}
         >
-          <div onClick={() => setShowAddModal(false)} aria-hidden="true" className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
-          <div className="relative w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-[9999]">
-            <div className="bg-emerald-950 text-white px-6 py-5 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300 mb-1">User management</p>
-                <h3 id="add-user-title" className="font-black text-lg tracking-tight">Add System User</h3>
-                <p className="text-xs text-emerald-100/70 mt-1">Create a new account for any portal</p>
+          <div onClick={() => setShowAddModal(false)} aria-hidden="true" className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
+          <div className="portal-modal-panel relative w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-[9999]">
+            <div className="px-6 py-5 flex items-center justify-between border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100">
+                  <UserPlus className="w-5 h-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700 mb-1">User management</p>
+                  <h3 id="add-user-title" className="font-black text-base text-gray-900">Add System User</h3>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Create a new account for any portal</p>
+                </div>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
                 aria-label="Close add user modal"
-                className="p-1.5 text-emerald-200/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
@@ -425,8 +430,8 @@ export default function AdminUsers() {
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onKeyDown={(e) => { if (e.key === 'Escape') setShowViewModal(null) }}
         >
-          <div onClick={() => setShowViewModal(null)} aria-hidden="true" className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[9999]">
+          <div onClick={() => setShowViewModal(null)} aria-hidden="true" className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
+          <div className="portal-modal-panel relative w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-[9999]">
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 id="view-user-title" className="font-black text-sm">User Profile</h3>

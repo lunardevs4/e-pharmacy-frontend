@@ -253,70 +253,79 @@ export default function StaffManagement() {
       </div>
       {showAddModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
-          <div onClick={handleCloseAddModal} className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
+          <div onClick={handleCloseAddModal} className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
 
-          <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-[9999] flex flex-col">
-            <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900">
-              <div>
-                <h3 className="font-black text-sm">Add Staff Member</h3>
-                <p className="text-xs text-emerald-300">Set permissions and login credentials</p>
+          <div className="portal-modal-panel relative w-full max-w-md bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-[9999] flex flex-col">
+            <div className="px-6 py-5 flex items-center justify-between border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100">
+                  <Shield className="w-5 h-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-gray-900">Add Staff Member</h3>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Set permissions and login credentials</p>
+                </div>
               </div>
-              <button onClick={handleCloseAddModal} className="text-emerald-300 hover:text-white">
+              <button
+                onClick={handleCloseAddModal}
+                aria-label="Close add staff dialog"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleSaveStaff} className="portal-form p-6 space-y-4">
+            <form onSubmit={handleSaveStaff} className="portal-form p-6 space-y-5">
 
               {!showCredentialsBanner ? (
                 <>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Jean-Paul Kagabo"
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Staff Role</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Staff Role</label>
                     <select
                       value={role}
                       onChange={(e) => setRole(e.target.value as any)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
+                      className="w-full"
                     >
                       <option value="Pharmacist">Pharmacist (Dispense &amp; Reservations)</option>
                       <option value="Pharmacy Owner">Pharmacy Owner (Full Access)</option>
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
                     <input
                       type="email"
                       placeholder="e.g. jp@bralirwa.rw"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Phone Number</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone Number</label>
                     <input
                       type="text"
                       placeholder="e.g. +250 788 123 456"
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
+                      className="w-full"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm mt-2 focus:outline-none"
+                    className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-lg text-xs transition-colors shadow-sm mt-1 focus:outline-none focus:ring-4 focus:ring-emerald-500/20"
                   >
                     Generate Credentials &amp; Add Staff
                   </button>
