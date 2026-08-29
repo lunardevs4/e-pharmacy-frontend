@@ -356,7 +356,7 @@ export const MedicineApi = {
   createPrescription: async (data: {
     documentUrl: string
     pharmacyId: string
-    medicineId: string
+    medicineId?: string
     quantity: number
     dosage?: string
     frequency?: string
@@ -382,7 +382,7 @@ export const MedicineApi = {
   // Note: the backend Reservation schema has no insurance columns — coverage
   // splits are display-only on the client, so only whitelisted fields are sent.
   createReservation: async (data: {
-    medicineId: string
+    medicineId?: string
     pharmacyId: string
     quantity: number
     expiresAt?: string
@@ -541,14 +541,14 @@ export const MedicineApi = {
 
   // Medicine Reminders System
   getReminders: async (): Promise<any[]> => {
-    const response = await apiClient.get('/reminders')
+    const response = await apiClient.get('/reminders/schedules')
     const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
     return payload.map((item: any) => ({
       id: item.id,
       medicineId: item.medicineId,
-      medicineName: item.medicineName || 'Medication',
-      times: item.times || [], // Array of time strings like ["08:00", "12:00", "20:00"]
-      frequency: item.frequency || 'daily', // daily, weekly, as_needed
+      medicineName: item.medicineName || item.medicine?.tradeName || 'Medication',
+      times: item.times || item.timeOfDay || [], // Array of time strings like ["08:00", "12:00", "20:00"]
+      frequency: item.frequency || (item.intervalHours === 168 ? 'weekly' : 'daily'), // daily, weekly, as_needed
       startDate: item.startDate,
       endDate: item.endDate,
       notes: item.notes || '',
@@ -560,7 +560,7 @@ export const MedicineApi = {
   },
 
   createReminder: async (data: {
-    medicineId: string
+    medicineId?: string
     medicineName: string
     times: string[] // Array of time strings in HH:MM format
     frequency: 'daily' | 'weekly' | 'as_needed'
@@ -569,7 +569,7 @@ export const MedicineApi = {
     notes?: string
     pharmacistInstructions?: string
   }): Promise<any> => {
-    const response = await apiClient.post('/reminders', data)
+    const response = await apiClient.post('/reminders/schedules', data)
     return response.data?.data || response.data
   },
 

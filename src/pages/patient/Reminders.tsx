@@ -69,7 +69,7 @@ export default function PatientReminders() {
 
     try {
       await MedicineApi.createReminder({
-        medicineId: medicineId || `med-${Date.now()}`,
+        medicineId: medicineId || undefined,
         medicineName: medicineName.trim(),
         times: times.sort(),
         frequency,
