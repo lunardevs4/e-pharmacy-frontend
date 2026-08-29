@@ -202,7 +202,7 @@ export default function PatientProfile() {
         
         {/* Left Column: Health Profile Form (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
-          <form onSubmit={handleSaveProfile} className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-xs space-y-6">
+          <form onSubmit={handleSaveProfile} className="portal-form bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-xs space-y-6">
             
             {/* Header info */}
             <div className="flex flex-col sm:flex-row items-center justify-between pb-4 border-b border-gray-150 gap-4">
@@ -367,7 +367,7 @@ export default function PatientProfile() {
 
         {/* Right Column: Security Section (1/3 width) */}
         <div className="space-y-6">
-          <form onSubmit={handleSavePassword} className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+          <form onSubmit={handleSavePassword} className="portal-form bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
             
             <div className="flex items-center space-x-2 pb-2 border-b border-gray-150 text-gray-900">
               <Shield className="w-5 h-5 text-health-primary" />

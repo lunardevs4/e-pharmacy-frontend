@@ -246,7 +246,7 @@ export default function PharmacyRegistrationGate({
               </div>
             )}
 
-            <form onSubmit={handleRegisterCompany} className="space-y-4 text-xs font-bold text-gray-700">
+            <form onSubmit={handleRegisterCompany} className="portal-form space-y-4 text-xs font-bold text-gray-700">
               <div>
                 <label className="block text-gray-500 uppercase tracking-wider mb-1">Pharmacy Name</label>
                 <input

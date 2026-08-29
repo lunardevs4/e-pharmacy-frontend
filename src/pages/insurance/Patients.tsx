@@ -290,7 +290,7 @@ export default function InsurancePatients() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleRegister} className="px-6 py-5 space-y-4">
+            <form onSubmit={handleRegister} className="portal-form px-6 py-5 space-y-4">
               {formError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-700 text-xs">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />

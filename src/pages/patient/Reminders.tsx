@@ -390,7 +390,7 @@ export default function PatientReminders() {
               </button>
             </div>
 
-            <form onSubmit={handleAddReminder} className="p-6 space-y-4">
+            <form onSubmit={handleAddReminder} className="portal-form p-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Medicine Name *</label>
                 <input

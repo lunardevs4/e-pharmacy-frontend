@@ -95,7 +95,7 @@ export default function AdminSettings() {
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-5">
+      <form onSubmit={handleSave} className="portal-form space-y-5">
 
         {/* API Config */}
         <section aria-labelledby="api-section" className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">

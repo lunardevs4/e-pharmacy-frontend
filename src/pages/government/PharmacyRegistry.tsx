@@ -645,7 +645,7 @@ export default function PharmacyRegistry() {
               </button>
             </div>
 
-            <form onSubmit={handleModalSubmit} className="p-6 space-y-4">
+                    <form onSubmit={handleModalSubmit} className="portal-form p-6 space-y-4">
               <div className="space-y-1">
                 <label className="block text-gray-400 uppercase tracking-wider text-[9px]">Justification Comments</label>
                 <textarea

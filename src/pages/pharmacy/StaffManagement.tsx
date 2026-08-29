@@ -46,16 +46,13 @@ export default function StaffManagement() {
   const [role, setRole] = useState<'Pharmacist' | 'Pharmacy Owner'>('Pharmacist')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [tempPassword, setTempPassword] = useState('')
   const [showCredentialsBanner, setShowCredentialsBanner] = useState(false)
-
-  // Generate temporary password automatically when modal opens or fields change
-  useEffect(() => {
-    if (showAddModal) {
-      const generated = 'BralirwaStaff2026!'
-      setTempPassword(generated)
-    }
-  }, [showAddModal])
+  const [createdStaff, setCreatedStaff] = useState<{
+    name: string
+    email: string
+    role: 'Pharmacist' | 'Pharmacy Owner'
+    emailSent: boolean
+  } | null>(null)
 
   // Save new staff member and append action to audit trail logs
   const handleSaveStaff = async (e: React.FormEvent) => {
@@ -74,7 +71,8 @@ export default function StaffManagement() {
     const [firstName, ...rest] = name.trim().split(/\s+/)
     const roleValue = role === 'Pharmacist' ? 'PHARMACIST' : 'PHARMACY_OWNER'
     try {
-      await AuthApi.createStaff(pharmacyId, { firstName, lastName: rest.join(' ') || firstName, email, phone, role: roleValue, position: role })
+      const result = await AuthApi.createStaff(pharmacyId, { firstName, lastName: rest.join(' ') || firstName, email, phone, role: roleValue, position: role })
+      setCreatedStaff({ name: name.trim(), email, role, emailSent: result?.emailSent !== false })
       const pharmacy = await PharmacyApi.getDetails(pharmacyId)
       setEmployees((pharmacy.employees || [])
         .filter((employee: any) => ['PHARMACY_OWNER', 'PHARMACIST'].includes(employee.role))
@@ -90,7 +88,7 @@ export default function StaffManagement() {
     setRole('Pharmacist')
     setEmail('')
     setPhone('')
-    setTempPassword('')
+    setCreatedStaff(null)
     setShowCredentialsBanner(false)
   }
 
@@ -253,15 +251,11 @@ export default function StaffManagement() {
           </table>
         </div>
       </div>
-
-      {/* Add Staff Modals component */}
       {showAddModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
           <div onClick={handleCloseAddModal} className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" />
 
           <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-250 shadow-2xl overflow-hidden z-[9999] flex flex-col">
-
-            {/* Modal Header */}
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900">
               <div>
                 <h3 className="font-black text-sm">Add Staff Member</h3>
@@ -271,9 +265,7 @@ export default function StaffManagement() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleSaveStaff} className="p-6 space-y-4">
+            <form onSubmit={handleSaveStaff} className="portal-form p-6 space-y-4">
 
               {!showCredentialsBanner ? (
                 <>
@@ -288,7 +280,6 @@ export default function StaffManagement() {
                       className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
                     />
                   </div>
-
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Staff Role</label>
                     <select
@@ -300,7 +291,6 @@ export default function StaffManagement() {
                       <option value="Pharmacy Owner">Pharmacy Owner (Full Access)</option>
                     </select>
                   </div>
-
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
                     <input
@@ -312,7 +302,6 @@ export default function StaffManagement() {
                       className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
                     />
                   </div>
-
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Phone Number</label>
                     <input
@@ -333,7 +322,6 @@ export default function StaffManagement() {
                   </button>
                 </>
               ) : (
-                /* Generated default credentials banner */
                 <div className="space-y-4 py-2 animate-fadeIn text-center">
                   <div className="w-12 h-12 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mx-auto">
                     <Check className="w-6 h-6" />
@@ -341,20 +329,12 @@ export default function StaffManagement() {
 
                   <div className="space-y-1">
                     <h4 className="font-black text-gray-900 text-sm">Staff Member Registered!</h4>
-                    <p className="text-xs text-gray-500">Provide these default login credentials to the user.</p>
+                    <p className="text-xs text-gray-500">
+                      {createdStaff?.emailSent
+                        ? 'The staff member can sign in with the registered email and the password sent to their inbox.'
+                        : 'The account was created, but the password email could not be delivered.'}
+                    </p>
                   </div>
-
-                  <div className="border border-gray-250 rounded-xl p-4 bg-gray-50 text-left text-xs space-y-2.5 font-bold max-w-sm mx-auto">
-                    <div>
-                      <span className="text-gray-400 block text-[9px] uppercase tracking-widest">Username / Email</span>
-                      <span className="text-gray-900 block font-mono">{email}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block text-[9px] uppercase tracking-widest">Temporary Password</span>
-                      <span className="text-emerald-800 block font-mono">{tempPassword}</span>
-                    </div>
-                  </div>
-
                   <button
                     type="button"
                     onClick={handleCloseAddModal}

@@ -1208,7 +1208,7 @@ export default function PharmacyInventory() {
               </button>
             </div>
 
-            <form onSubmit={handleUpdateStock} className="p-5 space-y-4">
+            <form onSubmit={handleUpdateStock} className="portal-form p-5 space-y-4">
               {/* Cash Price */}
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -1372,7 +1372,7 @@ export default function PharmacyInventory() {
             {/* Form Scroll Area */}
             <form
               onSubmit={handleAddMedicineSubmit}
-              className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6"
+              className="portal-form flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6"
             >
               {/* Error */}
               {formError && (

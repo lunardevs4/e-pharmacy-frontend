@@ -372,7 +372,7 @@ export default function AdminUsers() {
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
-            <form onSubmit={handleAddUser} className="p-6 sm:p-7 space-y-5 text-xs">
+            <form onSubmit={handleAddUser} className="portal-form p-6 sm:p-7 space-y-5 text-xs">
               {modalError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-red-700 font-medium leading-relaxed">
                   {modalError}
