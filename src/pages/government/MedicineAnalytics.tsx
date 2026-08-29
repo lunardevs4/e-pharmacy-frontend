@@ -224,7 +224,6 @@ export default function MedicineAnalytics() {
               responsive: true,
               maintainAspectRatio: false,
               animation: { duration: 0 },
-              hover: { animationDuration: 0 },
               interaction: { mode: 'index', intersect: false },
               plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { animation: false, backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
               scales: {
@@ -245,7 +244,6 @@ export default function MedicineAnalytics() {
               responsive: true,
               maintainAspectRatio: false,
               animation: { duration: 0 },
-              hover: { animationDuration: 0 },
               interaction: { mode: 'index', intersect: false },
               plugins: { legend: { display: false }, tooltip: { animation: false, backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
               scales: {

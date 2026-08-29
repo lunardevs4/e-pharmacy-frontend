@@ -14,18 +14,7 @@ export const PharmacyApi = {
       return unwrap(await apiClient.get(`/pharmacies/${pharmacyId}`))
     } catch (err) {
       if (isNetworkError(err)) {
-        return {
-          id: pharmacyId,
-          name: 'Bralirwa Pharmacy',
-          licenseNumber: 'LIC-KIG-48293-2026',
-          phone: '+250 788 123 456',
-          address: 'KG 123 St, Gasabo, Kigali City',
-          province: 'Kigali City',
-          district: 'Gasabo',
-          status: 'APPROVED',
-          category: 'Retail',
-          ownershipType: 'Sole Proprietorship',
-        }
+        return null
       }
       throw err
     }

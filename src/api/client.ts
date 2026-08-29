@@ -1,8 +1,13 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { TokenStorage } from '@/services/token-storage'
 import { useAuthStore } from '@/store/authStore'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
+
+const MAX_RETRIES = 3
+const RETRY_DELAY = 1000
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -27,14 +32,33 @@ let refreshQueue: Array<(token: string) => void> = []
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-   
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _retryCount?: number }
+
+    // Retry logic for network errors and 5xx errors
+    if (!error.response && originalRequest && !originalRequest._retry) {
+      const retryCount = originalRequest._retryCount || 0
+      if (retryCount < MAX_RETRIES) {
+        originalRequest._retryCount = retryCount + 1
+        await sleep(RETRY_DELAY * Math.pow(2, retryCount))
+        return apiClient(originalRequest)
+      }
+    }
+
+    if (error.response && error.response.status >= 500 && originalRequest && !originalRequest._retry) {
+      const retryCount = originalRequest._retryCount || 0
+      if (retryCount < MAX_RETRIES) {
+        originalRequest._retryCount = retryCount + 1
+        await sleep(RETRY_DELAY * Math.pow(2, retryCount))
+        return apiClient(originalRequest)
+      }
+    }
+
     if (!error.response) {
       return Promise.reject(
         new Error('Oopss Something went wrong. Please try again.')
       )
     }
 
-    const originalRequest = error.config as any   
     const isLoginRequest = originalRequest.url?.includes('/auth/login')
     if (error.response.status === 401 && !isLoginRequest && !originalRequest._retry) {
       const refreshToken = TokenStorage.getRefreshToken()

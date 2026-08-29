@@ -21,12 +21,7 @@ export default function PatientDashboard() {
   const [insuranceSaveLoading, setInsuranceSaveLoading] = useState(false)
   const [insuranceSaveError, setInsuranceSaveError] = useState<string | null>(null)
   const [insuranceSaveSuccess, setInsuranceSaveSuccess] = useState(false)
-  const [providers, setProviders] = useState<any[]>([
-    { id: '1', code: 'RSSB', name: 'RSSB (Rwanda Social Security Board)', defaultCoveragePercentage: 0.85, isActive: true },
-    { id: '2', code: 'MMI', name: 'MMI (Military Medical Insurance)', defaultCoveragePercentage: 0.90, isActive: true },
-    { id: '3', code: 'SANLAM', name: 'SANLAM', defaultCoveragePercentage: 0.75, isActive: true },
-    { id: '4', code: 'Radiant', name: 'Radiant Insurance', defaultCoveragePercentage: 0.70, isActive: true },
-  ])
+  const [providers, setProviders] = useState<any[]>([])
 
   useEffect(() => {
     insuranceApi.getProviders()

@@ -257,50 +257,8 @@ export const MedicineApi = {
         insuranceCoverage: item.insuranceCoverage,
       }))
     } catch {
-      // Fallback to legacy N+1 approach if the availability endpoint fails
-      const pharmaciesResponse = await apiClient.get('/pharmacies', {
-        params: { limit: 100, status: 'APPROVED' },
-      })
-      const pharmacies = extractArrayPayload(pharmaciesResponse.data).filter(
-        (pharm: any) => pharm.isActive !== false,
-      )
-      const stocks = await Promise.all(
-        pharmacies.map(async (pharm: any) => {
-          try {
-            const inventoryResponse = await apiClient.get(`/pharmacies/${pharm.id}/inventory`)
-            const inventory = extractArrayPayload(inventoryResponse.data)
-            const item = inventory.find(
-              (record: any) => record.medicineId === medicineId || record.medicine?.id === medicineId,
-            )
-            const stock = Number(item?.quantity || 0)
-            const price = Number(item?.price || 0)
-            return {
-              pharmacyId: pharm.id,
-              pharmacyName: pharm.name,
-              rating: 0,
-              isOpen: pharm.isActive !== false,
-              distance: 0,
-              price,
-              stock,
-              stockStatus:
-                stock === 0
-                  ? 'OUT_OF_STOCK'
-                  : stock < 10
-                    ? 'ALMOST_OUT'
-                    : stock < 35
-                      ? 'LIMITED'
-                      : 'HIGH',
-              insuranceAccepted: pharm.insuranceAccepted || [],
-              lat: Number(pharm.latitude || 0),
-              lng: Number(pharm.longitude || 0),
-              locationText: pharm.address || '',
-            }
-          } catch {
-            return null
-          }
-        }),
-      )
-      return stocks.filter(Boolean) as PharmacyStock[]
+      // Return empty array on failure - the retry mechanism will handle transient errors
+      return []
     }
   },
 
@@ -356,7 +314,6 @@ export const MedicineApi = {
     provider: string,
     basePrice: number,
   ): Promise<{ percent: number; insurancePays: number; patientPays: number }> => {
-    await new Promise((resolve) => setTimeout(resolve, 200))
     const rate = INSURANCE_COVERAGE_RATES[provider] ?? 0.0
     const insurancePays = Math.round(basePrice * rate)
     const patientPays = basePrice - insurancePays
@@ -487,16 +444,25 @@ export const MedicineApi = {
   },
 
   deleteNotification: async (id: string): Promise<boolean> => {
-    return true
+    try {
+      await apiClient.delete(`/notifications/${id}`)
+      return true
+    } catch (error) {
+      return false
+    }
   },
 
   clearAllNotifications: async (): Promise<boolean> => {
-    return true
+    try {
+      await apiClient.delete('/notifications')
+      return true
+    } catch (error) {
+      return false
+    }
   },
 
   // Favourite Medicines list
   getFavouriteMedicines: async (): Promise<string[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 200))
     const key = 'epharmacy_fav_medicines'
     const data = localStorage.getItem(key)
     return data ? JSON.parse(data) : []
@@ -517,7 +483,6 @@ export const MedicineApi = {
 
   // Favourite Pharmacies list
   getFavouritePharmacies: async (): Promise<string[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 200))
     const key = 'epharmacy_fav_pharmacies'
     const data = localStorage.getItem(key)
     return data ? JSON.parse(data) : []
@@ -538,7 +503,6 @@ export const MedicineApi = {
 
   // Search History tracking (Max 20 searches)
   getSearchHistory: async (): Promise<any[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 200))
     const key = 'epharmacy_search_history'
     const data = localStorage.getItem(key)
     return data ? JSON.parse(data) : []
@@ -572,29 +536,22 @@ export const MedicineApi = {
 
   // Medicine Reminders System
   getReminders: async (): Promise<any[]> => {
-    try {
-      const response = await apiClient.get('/reminders')
-      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
-      return payload.map((item: any) => ({
-        id: item.id,
-        medicineId: item.medicineId,
-        medicineName: item.medicineName || 'Medication',
-        times: item.times || [], // Array of time strings like ["08:00", "12:00", "20:00"]
-        frequency: item.frequency || 'daily', // daily, weekly, as_needed
-        startDate: item.startDate,
-        endDate: item.endDate,
-        notes: item.notes || '',
-        isActive: item.isActive !== false,
-        lastTaken: item.lastTaken,
-        nextDose: item.nextDose,
-        pharmacistInstructions: item.pharmacistInstructions || '',
-      }))
-    } catch (error) {
-      // Fallback to localStorage if backend fails
-      const key = 'epharmacy_reminders'
-      const data = localStorage.getItem(key)
-      return data ? JSON.parse(data) : []
-    }
+    const response = await apiClient.get('/reminders')
+    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    return payload.map((item: any) => ({
+      id: item.id,
+      medicineId: item.medicineId,
+      medicineName: item.medicineName || 'Medication',
+      times: item.times || [], // Array of time strings like ["08:00", "12:00", "20:00"]
+      frequency: item.frequency || 'daily', // daily, weekly, as_needed
+      startDate: item.startDate,
+      endDate: item.endDate,
+      notes: item.notes || '',
+      isActive: item.isActive !== false,
+      lastTaken: item.lastTaken,
+      nextDose: item.nextDose,
+      pharmacistInstructions: item.pharmacistInstructions || '',
+    }))
   },
 
   createReminder: async (data: {
@@ -607,25 +564,8 @@ export const MedicineApi = {
     notes?: string
     pharmacistInstructions?: string
   }): Promise<any> => {
-    try {
-      const response = await apiClient.post('/reminders', data)
-      return response.data?.data || response.data
-    } catch (error) {
-      // Fallback to localStorage
-      const key = 'epharmacy_reminders'
-      const list = await MedicineApi.getReminders()
-      const newReminder = {
-        id: `rem-${Math.random().toString(36).substring(2, 9)}`,
-        ...data,
-        isActive: true,
-        lastTaken: null,
-        nextDose: data.times[0] || null,
-        createdAt: new Date().toISOString(),
-      }
-      const updated = [newReminder, ...list]
-      localStorage.setItem(key, JSON.stringify(updated))
-      return newReminder
-    }
+    const response = await apiClient.post('/reminders', data)
+    return response.data?.data || response.data
   },
 
   updateReminder: async (id: string, data: {
@@ -637,66 +577,18 @@ export const MedicineApi = {
     isActive?: boolean
     pharmacistInstructions?: string
   }): Promise<boolean> => {
-    try {
-      await apiClient.patch(`/reminders/${id}`, data)
-      return true
-    } catch (error) {
-      // Fallback to localStorage
-      const key = 'epharmacy_reminders'
-      const list = await MedicineApi.getReminders()
-      const updated = list.map((item) => 
-        item.id === id ? { ...item, ...data } : item
-      )
-      localStorage.setItem(key, JSON.stringify(updated))
-      return true
-    }
+    await apiClient.patch(`/reminders/${id}`, data)
+    return true
   },
 
   deleteReminder: async (id: string): Promise<boolean> => {
-    try {
-      await apiClient.delete(`/reminders/${id}`)
-      return true
-    } catch (error) {
-      // Fallback to localStorage
-      const key = 'epharmacy_reminders'
-      const list = await MedicineApi.getReminders()
-      const updated = list.filter((item) => item.id !== id)
-      localStorage.setItem(key, JSON.stringify(updated))
-      return true
-    }
+    await apiClient.delete(`/reminders/${id}`)
+    return true
   },
 
   markReminderTaken: async (id: string, time: string): Promise<boolean> => {
-    try {
-      await apiClient.post(`/reminders/${id}/take`, { time })
-      return true
-    } catch (error) {
-      // Fallback to localStorage
-      const key = 'epharmacy_reminders'
-      const list = await MedicineApi.getReminders()
-      const updated = list.map((item) => {
-        if (item.id === id) {
-          const updatedItem = { 
-            ...item, 
-            lastTaken: new Date().toISOString(),
-            takenHistory: [...(item.takenHistory || []), { time, date: new Date().toISOString() }]
-          }
-          // Calculate next dose time
-          if (item.times && item.times.length > 0) {
-            const currentTimeIndex = item.times.indexOf(time)
-            if (currentTimeIndex >= 0 && currentTimeIndex < item.times.length - 1) {
-              updatedItem.nextDose = item.times[currentTimeIndex + 1]
-            } else {
-              updatedItem.nextDose = item.times[0] // Reset to first time for next day
-            }
-          }
-          return updatedItem
-        }
-        return item
-      })
-      localStorage.setItem(key, JSON.stringify(updated))
-      return true
-    }
+    await apiClient.post(`/reminders/${id}/take`, { time })
+    return true
   },
 
   // Medicine Purchase History
@@ -736,39 +628,15 @@ export const MedicineApi = {
 
   // Late pickup notifications
   checkLatePickups: async (): Promise<any[]> => {
-    try {
-      const response = await apiClient.get('/reservations/late')
-      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
-      return payload.map((item: any) => ({
-        reservationId: item.id,
-        medicineName: item.medicineName,
-        pharmacyName: item.pharmacyName,
-        pickupDeadline: item.pickupDeadline,
-        hoursLate: item.hoursLate || 0,
-        status: item.status,
-      }))
-    } catch (error) {
-      // Calculate locally from reservations
-      const reservations = await MedicineApi.getReservationHistory()
-      const now = new Date()
-      return reservations
-        .filter((res) => res.status === 'PENDING' || res.status === 'CONFIRMED')
-        .map((res) => {
-          const deadline = new Date(res.pickupDeadline)
-          const hoursLate = Math.floor((now.getTime() - deadline.getTime()) / (1000 * 60 * 60))
-          if (hoursLate > 0) {
-            return {
-              reservationId: res.id,
-              medicineName: res.medicineName,
-              pharmacyName: res.pharmacyName,
-              pickupDeadline: res.pickupDeadline,
-              hoursLate,
-              status: res.status,
-            }
-          }
-          return null
-        })
-        .filter(Boolean)
-    }
+    const response = await apiClient.get('/reservations/late')
+    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    return payload.map((item: any) => ({
+      reservationId: item.id,
+      medicineName: item.medicineName,
+      pharmacyName: item.pharmacyName,
+      pickupDeadline: item.pickupDeadline,
+      hoursLate: item.hoursLate || 0,
+      status: item.status,
+    }))
   },
 }
