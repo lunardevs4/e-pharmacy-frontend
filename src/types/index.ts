@@ -86,6 +86,8 @@ export interface Medicine {
   sideEffects: string
   interactions: string
   storage: string
+  minTemperature?: number | string | null
+  maxTemperature?: number | string | null
 }
 
 export interface PharmacyStock {
