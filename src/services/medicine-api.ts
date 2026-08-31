@@ -466,6 +466,16 @@ export const MedicineApi = {
     }
   },
 
+  getEmailNotificationPreferences: async (): Promise<Record<string, boolean>> => {
+    const response = await apiClient.get('/notifications/email-preferences')
+    return response.data?.data || response.data
+  },
+
+  updateEmailNotificationPreferences: async (preferences: Record<string, boolean>): Promise<Record<string, boolean>> => {
+    const response = await apiClient.patch('/notifications/email-preferences', preferences)
+    return response.data?.data || response.data
+  },
+
   // Favourite Medicines list
   getFavouriteMedicines: async (): Promise<string[]> => {
     const key = 'epharmacy_fav_medicines'

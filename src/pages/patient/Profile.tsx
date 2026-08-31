@@ -4,7 +4,8 @@ import { AuthApi } from '@/services/auth-api'
 import { validateEmail } from '@/utils/validation'
 import PasswordStrengthMeter from '@/components/patient/PasswordStrengthMeter'
 import LocationSelector from '@/components/LocationSelector'
-import { User, Shield, Key, Eye, EyeOff, Save, RefreshCw, CheckCircle, AlertCircle, Camera } from 'lucide-react'
+import { User, Shield, Key, Eye, EyeOff, Save, RefreshCw, CheckCircle, AlertCircle, Camera, Bell } from 'lucide-react'
+import { MedicineApi } from '@/services/medicine-api'
 
 export default function PatientProfile() {
   const { user, updateProfile } = useAuthStore()
@@ -39,7 +40,30 @@ export default function PatientProfile() {
   // Status states
   const [profileLoading, setProfileLoading] = useState(false)
   const [securityLoading, setSecurityLoading] = useState(false)
+  const [emailPreferences, setEmailPreferences] = useState({ reminders: true, lowStock: true, reservations: false, billing: false, system: false })
+  const [emailPreferencesLoading, setEmailPreferencesLoading] = useState(false)
   const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  useEffect(() => {
+    MedicineApi.getEmailNotificationPreferences()
+      .then((preferences) => setEmailPreferences((current) => ({ ...current, ...preferences })))
+      .catch(() => undefined)
+  }, [])
+
+  const handleEmailPreferences = async (key: keyof typeof emailPreferences) => {
+    const updated = { ...emailPreferences, [key]: !emailPreferences[key] }
+    setEmailPreferences(updated)
+    setEmailPreferencesLoading(true)
+    try {
+      await MedicineApi.updateEmailNotificationPreferences(updated)
+      triggerToast('success', 'Email notification preferences saved.')
+    } catch (err: any) {
+      setEmailPreferences(emailPreferences)
+      triggerToast('error', err.message || 'Failed to save email preferences.')
+    } finally {
+      setEmailPreferencesLoading(false)
+    }
+  }
   
   // Unsaved changes check helper
   const hasUnsavedChanges = 
@@ -363,6 +387,36 @@ export default function PatientProfile() {
             </div>
 
           </form>
+
+          <section className="portal-form bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+            <div className="flex items-center space-x-2 pb-2 border-b border-gray-150 text-gray-900">
+              <Bell className="w-5 h-5 text-health-primary" />
+              <div>
+                <h3 className="font-black text-sm">Email Notifications</h3>
+                <p className="text-[11px] text-gray-500 font-medium">Choose which alerts should also arrive by email.</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {([
+                ['reminders', 'Medication reminders'],
+                ['lowStock', 'Low-stock alerts'],
+                ['reservations', 'Reservation updates'],
+                ['billing', 'Billing and insurance updates'],
+                ['system', 'System announcements'],
+              ] as const).map(([key, label]) => (
+                <label key={key} className="flex items-center justify-between rounded-lg border border-gray-150 px-3 py-2.5 text-xs font-bold text-gray-700 cursor-pointer hover:bg-gray-50">
+                  <span>{label}</span>
+                  <input
+                    type="checkbox"
+                    checked={emailPreferences[key]}
+                    disabled={emailPreferencesLoading}
+                    onChange={() => handleEmailPreferences(key)}
+                    className="h-4 w-4 accent-emerald-700"
+                  />
+                </label>
+              ))}
+            </div>
+          </section>
         </div>
 
         {/* Right Column: Security Section (1/3 width) */}

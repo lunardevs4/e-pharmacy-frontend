@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import PharmacyRegistrationGate, { isPharmacyGated } from '@/components/pharmacy/PharmacyRegistrationGate'
 import { Lock } from 'lucide-react'
 import {
-  Menu, X, LogOut, User, Bell, ChevronRight,
+  LogOut, User, Bell, ChevronRight,
   LayoutDashboard, Search, FileText, History, Settings, ShieldAlert,
   ClipboardList, Package, DollarSign, TrendingUp, BarChart2, Users, FileLock2, MapPin,
   CheckSquare, Trash2, Clock, AlarmClock, PanelLeft, Percent, ShieldCheck
@@ -16,20 +16,16 @@ export default function SidebarLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
-  const { sidebarOpen, setSidebarOpen, toggleSidebar } = useUIStore()
+  const { sidebarOpen, setSidebarOpen } = useUIStore()
   const { items: notifs, unreadCount, load, markRead, markAllRead, remove } = useNotificationStore()
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
-
-  // Load notifications for this role on mount / role change
   useEffect(() => {
     if (user?.role) {
       const normalizedRole = ['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user.role) ? 'PHARMACY' : user.role
       load(normalizedRole)
     }
   }, [user?.role, load])
-
-  // Close notification dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
@@ -40,7 +36,6 @@ export default function SidebarLayout() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Notification page path per role
   const notifPath = () => {
     switch (user?.role) {
       case 'PATIENT':    return '/patient/notifications'
@@ -53,25 +48,18 @@ export default function SidebarLayout() {
       default:           return null
     }
   }
-
-  // Track whether we've done the initial size-based open so resize doesn't override user choice
   const initialised = useRef(false)
-
-  // On first mount: open sidebar if desktop, close if mobile
   useEffect(() => {
     if (!initialised.current) {
       setSidebarOpen(window.innerWidth >= 768)
       initialised.current = true
     }
   }, [setSidebarOpen])
-
-  // On resize: only auto-adjust when crossing the breakpoint boundary
   useEffect(() => {
     let wasDesktop = window.innerWidth >= 768
     const onResize = () => {
       const isDesktop = window.innerWidth >= 768
       if (isDesktop !== wasDesktop) {
-        // Switched breakpoints — snap to expected default
         setSidebarOpen(isDesktop)
         wasDesktop = isDesktop
       }
@@ -80,7 +68,6 @@ export default function SidebarLayout() {
     return () => window.removeEventListener('resize', onResize)
   }, [setSidebarOpen])
 
-  // Close on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && sidebarOpen) setSidebarOpen(false)
@@ -88,8 +75,6 @@ export default function SidebarLayout() {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [sidebarOpen, setSidebarOpen])
-
-  // Close sidebar when navigating on mobile
   useEffect(() => {
     if (window.innerWidth < 768) setSidebarOpen(false)
   }, [location.pathname, setSidebarOpen])
@@ -174,12 +159,7 @@ export default function SidebarLayout() {
   const navLinks = getLinks()
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
   const currentRole = user?.role ? (['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user.role) ? 'PHARMACY' : user.role) : ''
-
-  // Pharmacy owners must register their store and receive MOH approval before
-  // any portal section becomes usable.
   const portalGated = isPharmacyGated(user)
-
-  // Dynamic theme colors and branding based on insurance provider
   const isInsurance = user?.role === 'INSURANCE'
   const insurer = user?.insuranceProvider || ''
 
@@ -206,8 +186,6 @@ export default function SidebarLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-
-      {/* Dark backdrop — only on mobile when sidebar is open */}
       {sidebarOpen && !isDesktop && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -237,7 +215,6 @@ export default function SidebarLayout() {
               </span>
             </div>
           </div>
-          {/* Sidebar Toggle button — visible when sidebar is open */}
           <button
             onClick={() => setSidebarOpen(false)}
             aria-label="Close navigation"
@@ -246,8 +223,6 @@ export default function SidebarLayout() {
             <PanelLeft className="w-5 h-5 text-white" aria-hidden="true" />
           </button>
         </div>
-
-        {/* Nav links */}
         <nav
           aria-label={`${portalLabel} navigation`}
           className="flex-grow py-5 px-3 space-y-0.5 overflow-y-auto"
@@ -289,8 +264,6 @@ export default function SidebarLayout() {
             )
           })}
         </nav>
-
-        {/* User footer */}
         <div className={`p-4 border-t ${borderClass} ${footerBg} flex items-center justify-between flex-shrink-0`}>
           <div className="flex items-center space-x-3 overflow-hidden">
             <div
@@ -314,14 +287,11 @@ export default function SidebarLayout() {
           </button>
         </div>
       </aside>
-
-      {/* ── Main content ─────────────────────────────────────────────────── */}
       <div
         className={`flex-grow flex flex-col min-w-0 transition-all duration-200 ${
           sidebarOpen ? 'md:ml-64' : 'ml-0'
         }`}
       >
-        {/* Top header */}
         <header className={`h-16 ${headerBg} backdrop-blur border-b ${headerBorder} flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20`}>
           <div className="flex items-center space-x-3">
             {!sidebarOpen && (
@@ -340,7 +310,6 @@ export default function SidebarLayout() {
           </div>
 
           <div className="flex items-center space-x-3">
-            {/* ── Notification bell + dropdown ─────────────────────── */}
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setNotifOpen(v => !v)}
@@ -359,7 +328,7 @@ export default function SidebarLayout() {
                 )}
               </button>
 
-              {/* Dropdown panel */}
+
               {notifOpen && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
                   {/* Header */}

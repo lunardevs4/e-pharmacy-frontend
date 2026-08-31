@@ -10,7 +10,7 @@ interface SystemSettings {
 }
 
 export default function AdminSettings() {
-  const [apiUrl, setApiUrl] = useState('https://api.epharmacy.gov.rw/v1')
+  const [apiUrl, setApiUrl] = useState('')
   const [sessionTimeout, setSessionTimeout] = useState('30')
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [twoFactor, setTwoFactor] = useState(true)

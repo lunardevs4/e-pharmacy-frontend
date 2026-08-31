@@ -43,6 +43,8 @@ export default function AdminUsers() {
   const [showViewModal, setShowViewModal] = useState<SystemUser | null>(null)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
   const [modalError, setModalError] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const [createdUser, setCreatedUser] = useState<{ name: string; email: string; role: UserRole; emailSent?: boolean } | null>(null)
 
   // Add form states
   const [name, setName] = useState('')
@@ -97,22 +99,31 @@ export default function AdminUsers() {
     const lastName = rest.join(' ') || ''
 
     try {
-      await UserApi.createUser({
+      setIsCreating(true)
+      const result = await UserApi.createUser({
         firstName,
         lastName,
         email,
         phone,
         role,
       })
-      triggerToast(`User ${name} added successfully.`)
-      setShowAddModal(false)
+      setCreatedUser({
+        name: name.trim(),
+        email: email.trim(),
+        role,
+        emailSent: result?.emailSent,
+      })
       setName('')
       setEmail('')
       setPhone('')
       setRole('PATIENT')
       await loadUsers()
     } catch (error: any) {
-      setModalError(error?.message || 'Unable to create user.')
+      const message = String(error?.message || '')
+      const isInputError = /email|phone|already exists|valid|required|role/i.test(message)
+      setModalError(isInputError ? message : 'Oops, something went wrong. Please try again.')
+    } finally {
+      setIsCreating(false)
     }
   }
 
@@ -251,7 +262,7 @@ export default function AdminUsers() {
             </select>
           </div>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => { setCreatedUser(null); setModalError(null); setShowAddModal(true) }}
             className="bg-health-primary hover:bg-health-secondary text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow-sm transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -370,13 +381,26 @@ export default function AdminUsers() {
                 </div>
               </div>
               <button
-                onClick={() => setShowAddModal(false)}
+                onClick={() => { setCreatedUser(null); setShowAddModal(false) }}
                 aria-label="Close add user modal"
                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
+            {createdUser ? (
+              <div className="p-6 sm:p-7 space-y-5 text-center">
+                <div className="mx-auto w-12 h-12 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <Check className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-black text-gray-900">User Created Successfully!</h4>
+                  <p className="text-xs text-gray-500 mt-1">The user can log in with the registered email and the temporary password sent to their email.</p>
+                </div>
+               
+                <button type="button" onClick={() => { setCreatedUser(null); setShowAddModal(false) }} className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-3 rounded-lg text-sm">Done</button>
+              </div>
+            ) : (
             <form onSubmit={handleAddUser} className="portal-form p-6 sm:p-7 space-y-5 text-xs">
               {modalError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-red-700 font-medium leading-relaxed">
@@ -412,11 +436,12 @@ export default function AdminUsers() {
                   </select>
                 </div>
               </div>
-              <button type="submit"
+              <button type="submit" disabled={isCreating}
                 className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow-md mt-1 focus:outline-none focus:ring-4 focus:ring-emerald-500/20">
-                Create User Account
+                {isCreating ? <span className="inline-block h-4 w-32 mx-auto rounded bg-white/40 animate-pulse" /> : 'Create User Account'}
               </button>
             </form>
+            )}
           </div>
         </div>
       )}

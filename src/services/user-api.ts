@@ -53,7 +53,10 @@ export const UserApi = {
 
     createUser: async (data: { firstName: string; lastName: string; email: string; phone: string; role: string }) => {
         try {
-            const response = await apiClient.post('/auth/managed-users', data)
+            const response = await apiClient.post('/auth/managed-users', data, {
+                timeout: 60000,
+                _skipRetry: true,
+            } as any)
             return response.data
         } catch (error) {
             throw new Error(getErrorMessage(error))
