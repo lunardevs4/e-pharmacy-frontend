@@ -596,17 +596,17 @@ export const MedicineApi = {
     isActive?: boolean
     pharmacistInstructions?: string
   }): Promise<boolean> => {
-    await apiClient.patch(`/reminders/${id}`, data)
+    await apiClient.patch(`/reminders/schedules/${id}`, data)
     return true
   },
 
   deleteReminder: async (id: string): Promise<boolean> => {
-    await apiClient.delete(`/reminders/${id}`)
+    await apiClient.delete(`/reminders/schedules/${id}`)
     return true
   },
 
   markReminderTaken: async (id: string, time: string): Promise<boolean> => {
-    await apiClient.post(`/reminders/${id}/take`, { time })
+    await apiClient.post(`/reminders/schedules/${id}/take`, { time })
     return true
   },
 

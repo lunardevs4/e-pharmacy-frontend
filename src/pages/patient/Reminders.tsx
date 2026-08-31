@@ -27,6 +27,7 @@ export default function PatientReminders() {
   const [error, setError] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'toggle'; id: string; isActive?: boolean } | null>(null)
 
   // Add reminder form state
   const [medicineName, setMedicineName] = useState('')
@@ -87,7 +88,7 @@ export default function PatientReminders() {
     }
   }
 
-  const handleDeleteReminder = async (id: string) => {
+  const deleteReminder = async (id: string) => {
     try {
       await MedicineApi.deleteReminder(id)
       triggerToast('Reminder deleted successfully!')
@@ -97,7 +98,7 @@ export default function PatientReminders() {
     }
   }
 
-  const handleToggleActive = async (id: string, isActive: boolean) => {
+  const toggleReminder = async (id: string, isActive: boolean) => {
     try {
       await MedicineApi.updateReminder(id, { isActive: !isActive })
       triggerToast(`Reminder ${!isActive ? 'activated' : 'deactivated'}!`)
@@ -105,6 +106,17 @@ export default function PatientReminders() {
     } catch (err: any) {
       triggerToast(err.message || 'Failed to update reminder')
     }
+  }
+
+  const handleDeleteReminder = (id: string) => setConfirmAction({ type: 'delete', id })
+  const handleToggleActive = (id: string, isActive: boolean) => setConfirmAction({ type: 'toggle', id, isActive })
+
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return
+    const action = confirmAction
+    setConfirmAction(null)
+    if (action.type === 'delete') await deleteReminder(action.id)
+    else await toggleReminder(action.id, action.isActive || false)
   }
 
   const handleMarkTaken = async (id: string, time: string) => {
@@ -183,6 +195,19 @@ export default function PatientReminders() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
+      {confirmAction && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-gray-900/30" onClick={() => setConfirmAction(null)} />
+          <div role="dialog" aria-modal="true" className="relative w-full max-w-xs rounded-xl bg-white border border-gray-200 shadow-2xl p-5">
+            <h3 className="text-sm font-black text-gray-900">Are you sure?</h3>
+            <p className="text-xs text-gray-500 mt-1.5">{confirmAction.type === 'delete' ? 'This reminder will be permanently deleted.' : `Are you sure you want to ${confirmAction.isActive ? 'deactivate' : 'activate'} this reminder?`}</p>
+            <div className="flex gap-2 mt-4">
+              <button type="button" onClick={() => setConfirmAction(null)} className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button type="button" onClick={handleConfirmAction} className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold text-white ${confirmAction.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-health-primary hover:bg-health-secondary'}`}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Toast */}
       {toastMsg && (
