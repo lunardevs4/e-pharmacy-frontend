@@ -19,7 +19,7 @@ export default function InsuranceDashboard() {
         const providers = await insuranceApi.getProviders()
         const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
         const insuranceId = matchedProvider?.id
-        
+
         const data = await insuranceApi.getDashboardSummary(insuranceId)
         setSummary(data)
       } catch (err: any) {
@@ -99,11 +99,10 @@ export default function InsuranceDashboard() {
             <h2 className="font-bold text-gray-900 text-xs sm:text-sm">{insurer} Claims Queue</h2>
             <p className="text-[10px] sm:text-xs text-gray-500">Live insurance split & contribution tables</p>
           </div>
-          <span className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-2.5 py-1 rounded border uppercase tracking-wider ${
-            insurer === 'MMI'
+          <span className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-2.5 py-1 rounded border uppercase tracking-wider ${insurer === 'MMI'
               ? 'bg-emerald-50 text-emerald-800 border-emerald-250'
               : 'bg-blue-50 text-blue-800 border-blue-250'
-          }`}>
+            }`}>
             {insurer} Co-Pay Active
           </span>
         </div>
@@ -146,13 +145,12 @@ export default function InsuranceDashboard() {
                   <td className="px-3 sm:px-6 py-3 sm:py-4 text-emerald-800 font-extrabold">RWF {claim.insuranceAmount.toLocaleString()}</td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4 text-gray-500 font-semibold">RWF {claim.patientAmount.toLocaleString()}</td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4">
-                    <span className={`inline-block text-[9px] sm:text-[10px] font-bold px-2 sm:px-2.5 py-0.5 rounded border uppercase tracking-wider ${
-                      claim.status === 'APPROVED' || claim.status === 'PAID'
+                    <span className={`inline-block text-[9px] sm:text-[10px] font-bold px-2 sm:px-2.5 py-0.5 rounded border uppercase tracking-wider ${claim.status === 'APPROVED' || claim.status === 'PAID'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         : claim.status === 'REJECTED'
-                        ? 'bg-red-50 text-red-700 border-red-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
-                    }`}>
+                          ? 'bg-red-50 text-red-700 border-red-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}>
                       {claim.status}
                     </span>
                   </td>
