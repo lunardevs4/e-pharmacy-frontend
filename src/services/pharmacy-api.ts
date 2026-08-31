@@ -20,6 +20,10 @@ export const PharmacyApi = {
     }
   },
 
+  removeEmployee: async (pharmacyId: string, employeeId: string) => {
+    return unwrap(await apiClient.delete(`/pharmacies/${pharmacyId}/employees/${employeeId}`))
+  },
+
   getReservations: async (pharmacyId: string) => {
     try {
       return unwrap(

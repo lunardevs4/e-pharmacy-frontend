@@ -45,6 +45,8 @@ export default function AdminUsers() {
   const [modalError, setModalError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [createdUser, setCreatedUser] = useState<{ name: string; email: string; role: UserRole; emailSent?: boolean } | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<SystemUser | null>(null)
+  const [pendingStatus, setPendingStatus] = useState<SystemUser | null>(null)
 
   // Add form states
   const [name, setName] = useState('')
@@ -127,7 +129,7 @@ export default function AdminUsers() {
     }
   }
 
-  const toggleStatus = async (id: string) => {
+  const executeToggleStatus = async (id: string) => {
     const u = users.find((x) => x.id === id)
     if (!u) return
 
@@ -147,8 +149,6 @@ export default function AdminUsers() {
   const deleteUser = async (id: string) => {
     const u = users.find((x) => x.id === id)
     if (!u) return
-    if (!window.confirm(`Delete ${u.name}? This action is irreversible.`)) return
-
     try {
       await UserApi.deleteUser(id)
       triggerToast(`User ${u.name} deleted.`)
@@ -159,6 +159,11 @@ export default function AdminUsers() {
     } catch (error: any) {
       triggerToast(error?.message || 'Unable to delete user.')
     }
+  }
+
+  const requestToggleStatus = (id: string) => {
+    const user = users.find((item) => item.id === id)
+    if (user) setPendingStatus(user)
   }
 
   const filtered = users.filter((u) => {
@@ -189,6 +194,32 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
+      {pendingDelete && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-gray-900/30" onClick={() => setPendingDelete(null)} />
+          <div role="dialog" aria-modal="true" className="relative w-full max-w-xs rounded-xl bg-white border border-gray-200 shadow-2xl p-5">
+            <h3 className="text-sm font-black text-gray-900">Delete user?</h3>
+            <p className="text-xs text-gray-500 mt-1.5">Delete {pendingDelete.name}? This action cannot be undone.</p>
+            <div className="flex gap-2 mt-4">
+              <button type="button" onClick={() => setPendingDelete(null)} className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button type="button" onClick={async () => { const user = pendingDelete; setPendingDelete(null); await deleteUser(user.id) }} className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {pendingStatus && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-gray-900/30" onClick={() => setPendingStatus(null)} />
+          <div role="dialog" aria-modal="true" className="relative w-full max-w-xs rounded-xl bg-white border border-gray-200 shadow-2xl p-5">
+            <h3 className="text-sm font-black text-gray-900">{pendingStatus.status === 'Active' ? 'Suspend account?' : 'Activate account?'}</h3>
+            <p className="text-xs text-gray-500 mt-1.5">Are you sure you want to {pendingStatus.status === 'Active' ? 'suspend' : 'activate'} {pendingStatus.name}?</p>
+            <div className="flex gap-2 mt-4">
+              <button type="button" onClick={() => setPendingStatus(null)} className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button type="button" onClick={async () => { const user = pendingStatus; setPendingStatus(null); await executeToggleStatus(user.id) }} className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold text-white ${pendingStatus.status === 'Active' ? 'bg-red-600 hover:bg-red-700' : 'bg-health-primary hover:bg-health-secondary'}`}>{pendingStatus.status === 'Active' ? 'Suspend' : 'Activate'}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {errorMsg && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {errorMsg}
@@ -330,7 +361,7 @@ export default function AdminUsers() {
                         <Eye className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => toggleStatus(u.id)}
+                        onClick={() => requestToggleStatus(u.id)}
                         className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-colors ${u.status === 'Active'
                           ? 'border-red-200 text-red-700 hover:bg-red-50'
                           : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
@@ -339,7 +370,7 @@ export default function AdminUsers() {
                         {u.status === 'Active' ? 'Suspend' : 'Activate'}
                       </button>
                       <button
-                        onClick={() => deleteUser(u.id)}
+                        onClick={() => setPendingDelete(u)}
                         className="text-[10px] font-bold px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-red-600 transition-colors"
                       >
                         Delete
@@ -499,7 +530,7 @@ export default function AdminUsers() {
               </div>
               <div className="flex space-x-3 pt-2 border-t border-gray-100">
                 <button
-                  onClick={() => { toggleStatus(showViewModal.id); setShowViewModal(null) }}
+                  onClick={() => requestToggleStatus(showViewModal.id)}
                   className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${showViewModal.status === 'Active'
                     ? 'border-red-200 text-red-700 hover:bg-red-50'
                     : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'

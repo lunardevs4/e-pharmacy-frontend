@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Shield, X, Check, Key, ClipboardList, Info, HelpCircle } from 'lucide-react'
+import { Plus, Search, Shield, X, Check, Key, ClipboardList, Info, HelpCircle, Trash2 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { validateEmail } from '@/utils/validation'
 import { AuthApi } from '@/services/auth-api'
@@ -47,6 +47,7 @@ export default function StaffManagement() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [showCredentialsBanner, setShowCredentialsBanner] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<Employee | null>(null)
   const [createdStaff, setCreatedStaff] = useState<{
     name: string
     email: string
@@ -105,6 +106,17 @@ export default function StaffManagement() {
     )
   }
 
+  const deleteEmployee = async (employee: Employee) => {
+    const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
+    if (!pharmacyId) return
+    try {
+      await PharmacyApi.removeEmployee(pharmacyId, employee.id)
+      setEmployees((prev) => prev.filter((item) => item.id !== employee.id))
+    } catch (err: any) {
+      setError(err.message || 'Unable to remove staff member.')
+    }
+  }
+
   // Apply filters
   const filteredEmployees = employees.filter((emp) => {
     const matchesSearch = emp.name.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -117,6 +129,19 @@ export default function StaffManagement() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {pendingDelete && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-gray-900/30" onClick={() => setPendingDelete(null)} />
+          <div role="dialog" aria-modal="true" className="relative w-full max-w-xs rounded-xl bg-white border border-gray-200 shadow-2xl p-5">
+            <h3 className="text-sm font-black text-gray-900">Remove staff member?</h3>
+            <p className="text-xs text-gray-500 mt-1.5">Are you sure you want to remove {pendingDelete.name}?</p>
+            <div className="flex gap-2 mt-4">
+              <button type="button" onClick={() => setPendingDelete(null)} className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button type="button" onClick={async () => { const employee = pendingDelete; setPendingDelete(null); await deleteEmployee(employee) }} className="flex-1 rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700">Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Information Header Banner matching layout mockup */}
       <div className="bg-blue-50/60 border border-blue-200 text-blue-800 rounded-xl p-4 flex items-start space-x-3 text-xs shadow-xs">
@@ -243,6 +268,15 @@ export default function StaffManagement() {
                         }`}
                     >
                       {emp.status === 'Active' ? 'Deactivate' : 'Activate'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPendingDelete(emp)}
+                      className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                      title="Remove staff member"
+                      aria-label={`Remove ${emp.name}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>
