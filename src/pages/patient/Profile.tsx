@@ -10,34 +10,29 @@ import { MedicineApi } from '@/services/medicine-api'
 export default function PatientProfile() {
   const { user, updateProfile } = useAuthStore()
 
-  // Profile forms states
   const [name, setName] = useState(user?.name || '')
   const [email, setEmail] = useState(user?.email || '')
   const [phone, setPhone] = useState(user?.phone || '')
   const [nid] = useState(user?.nid || '1199580048123984') // Read-only National ID
   const [insuranceProvider, setInsuranceProvider] = useState(user?.insuranceProvider || 'RSSB')
   
-  // Cascading location states
   const [province, setProvince] = useState(user?.province || '')
   const [district, setDistrict] = useState(user?.district || '')
   const [sector, setSector] = useState(user?.sector || '')
   const [cell, setCell] = useState(user?.cell || '')
   const [village, setVillage] = useState(user?.village || '')
   
-  // Extra fields
   const [emergencyContact, setEmergencyContact] = useState(user?.emergencyContact || '')
   const [preferredPharmacy, setPreferredPharmacy] = useState(user?.preferredPharmacy || '')
   const [medicalNotes, setMedicalNotes] = useState(user?.medicalNotes || '')
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '')
 
-  // Security password states
   const [currentPass, setCurrentPass] = useState('')
   const [newPass, setNewPass] = useState('')
   const [confirmPass, setConfirmPass] = useState('')
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   
-  // Status states
   const [profileLoading, setProfileLoading] = useState(false)
   const [securityLoading, setSecurityLoading] = useState(false)
   const [emailPreferences, setEmailPreferences] = useState({ reminders: true, lowStock: true, reservations: false, billing: false, system: false })
@@ -65,7 +60,6 @@ export default function PatientProfile() {
     }
   }
   
-  // Unsaved changes check helper
   const hasUnsavedChanges = 
     name !== (user?.name || '') ||
     email !== (user?.email || '') ||
@@ -81,13 +75,11 @@ export default function PatientProfile() {
     medicalNotes !== (user?.medicalNotes || '') ||
     profilePhoto !== (user?.profilePhoto || '')
 
-  // Display timed status toasts
   const triggerToast = (type: 'success' | 'error', text: string) => {
     setToastMsg({ type, text })
     setTimeout(() => setToastMsg(null), 3000)
   }
 
-  // Location selector triggers
   const handleProvinceChange = (e: string) => {
     setProvince(e)
   }
@@ -108,11 +100,9 @@ export default function PatientProfile() {
     setVillage(v)
   }
 
-  // Handle saving demographic profile changes
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Validate email
     const emailValidation = validateEmail(email)
     if (!emailValidation.isValid) {
       triggerToast('error', emailValidation.error || 'Please enter a valid email address.')
@@ -144,7 +134,6 @@ export default function PatientProfile() {
     }
   }
 
-  // Handle password submission logic
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newPass !== confirmPass) {
@@ -160,7 +149,6 @@ export default function PatientProfile() {
     try {
       await AuthApi.changePassword(user?.username || 'patient', currentPass, newPass)
       
-      // Seed security log action to Notification logs too
       const notKey = 'epharmacy_notifications'
       const rawNot = localStorage.getItem(notKey)
       const list = rawNot ? JSON.parse(rawNot) : []
@@ -185,7 +173,6 @@ export default function PatientProfile() {
     }
   }
 
-  // Simulate Photo Upload
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
@@ -202,7 +189,6 @@ export default function PatientProfile() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
       
-      {/* Toast popup */}
       {toastMsg && (
         <div className={`fixed top-20 right-6 z-55 flex items-center space-x-2 px-4.5 py-3 rounded-lg border shadow-xl animate-fadeIn ${
           toastMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-250' : 'bg-red-50 text-red-800 border-red-200'
@@ -212,7 +198,6 @@ export default function PatientProfile() {
         </div>
       )}
 
-      {/* Unsaved changes alert top status banner */}
       {hasUnsavedChanges && (
         <div className="bg-amber-50 border border-amber-250 text-amber-800 px-4 py-3 rounded-xl flex items-center justify-between text-xs animate-fadeIn shadow-xs">
           <div className="flex items-center space-x-2">
@@ -224,14 +209,11 @@ export default function PatientProfile() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {/* Left Column: Health Profile Form (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
           <form onSubmit={handleSaveProfile} className="portal-form bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-xs space-y-6">
             
-            {/* Header info */}
             <div className="flex flex-col sm:flex-row items-center justify-between pb-4 border-b border-gray-150 gap-4">
               <div className="flex items-center space-x-4">
-                {/* Photo Selector */}
                 <div className="relative w-16 h-16 rounded-full bg-slate-100 flex-shrink-0 group overflow-hidden border border-gray-250">
                   {profilePhoto ? (
                     <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
@@ -261,7 +243,6 @@ export default function PatientProfile() {
               </button>
             </div>
 
-            {/* Core demographics grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold text-gray-700">
               
               <div className="space-y-1.5">
@@ -335,7 +316,6 @@ export default function PatientProfile() {
 
             </div>
 
-            {/* Cascading Location Selectors */}
             <div className="space-y-3.5 pt-2 border-t border-gray-150">
               <span className="text-[10px] font-bold text-gray-400 block uppercase tracking-wider">Demographic Location details</span>
               
@@ -359,7 +339,6 @@ export default function PatientProfile() {
               />
             </div>
 
-            {/* Extra details */}
             <div className="space-y-4 pt-2 border-t border-gray-150 text-xs font-bold text-gray-700">
               
               <div className="space-y-1.5">
@@ -481,7 +460,6 @@ export default function PatientProfile() {
                 />
               </div>
 
-              {/* Strength Meter widget */}
               <PasswordStrengthMeter pass={newPass} />
 
               <button

@@ -199,7 +199,6 @@ export default function SidebarLayout() {
         />
       )}
 
-      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <aside
         id="main-sidebar"
         aria-label="Main navigation"
@@ -207,7 +206,6 @@ export default function SidebarLayout() {
           transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        {/* Brand */}
         <div className={`h-16 flex items-center justify-between px-4 border-b ${borderClass} flex-shrink-0`}>
           <div className="flex items-center space-x-2.5 min-w-0">
             <div className="flex-shrink-0 rounded-lg overflow-hidden">
@@ -336,7 +334,6 @@ export default function SidebarLayout() {
 
               {notifOpen && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
-                  {/* Header */}
                   <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                     <div className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-emerald-600" aria-hidden="true" />
@@ -359,7 +356,6 @@ export default function SidebarLayout() {
                     </div>
                   </div>
 
-                  {/* Notification list */}
                   <ul className="max-h-80 overflow-y-auto divide-y divide-gray-50">
                     {notifs.length === 0 ? (
                       <li className="py-10 text-center text-gray-400">
@@ -372,7 +368,6 @@ export default function SidebarLayout() {
                           key={n.id}
                           className={`flex items-start gap-3 px-4 py-3 transition-colors relative ${!n.read ? 'bg-emerald-50/30' : 'hover:bg-gray-50/60'}`}
                         >
-                          {/* Unread indicator */}
                           {!n.read && (
                             <span aria-hidden="true" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-r-full" />
                           )}
@@ -417,7 +412,6 @@ export default function SidebarLayout() {
                     )}
                   </ul>
 
-                  {/* Footer — link to full notifications page */}
                   <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
                     {notifPath() ? (
                       <Link
@@ -437,7 +431,6 @@ export default function SidebarLayout() {
               )}
             </div>
 
-            {/* Profile */}
             <div className="flex items-center space-x-3 border-l border-gray-200 pl-3">
               <div
                 aria-hidden="true"
@@ -471,7 +464,6 @@ export default function SidebarLayout() {
           </div>
         </header>
 
-        {/* Page content */}
         <main id="main-content" className="flex-grow p-4 sm:p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             {portalGated ? (

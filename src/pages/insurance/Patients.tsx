@@ -44,7 +44,6 @@ export default function InsurancePatients() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
 
-  // Modal state
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState<RegisterForm>(EMPTY_FORM)
   const [isSaving, setIsSaving] = useState(false)
@@ -78,7 +77,6 @@ export default function InsurancePatients() {
     loadPatients()
   }, [])
 
-  // Pre-fill insuranceId when modal opens
   const openModal = () => {
     const insurer = user?.insuranceProvider || ''
     const matched = providers.find(p => p.code === insurer || p.name === insurer)
@@ -137,7 +135,6 @@ export default function InsurancePatients() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
 
-      {/* Toast */}
       {toastMsg && (
         <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2">
           <CheckCircle2 className="w-4 h-4" />
@@ -262,7 +259,6 @@ export default function InsurancePatients() {
         </div>
       </div>
 
-      {/* ── Register Patient Modal ── */}
       {showModal && (
         <div
           id="register-patient-modal"
@@ -272,7 +268,6 @@ export default function InsurancePatients() {
           className="portal-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         >
           <div className="portal-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div className="flex items-center space-x-2">
                 <div className="p-1.5 bg-emerald-50 rounded-lg">
@@ -289,7 +284,6 @@ export default function InsurancePatients() {
               </button>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleRegister} className="portal-form px-6 py-5 space-y-4">
               {formError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-700 text-xs">
@@ -298,7 +292,6 @@ export default function InsurancePatients() {
                 </div>
               )}
 
-              {/* Insurance Provider */}
               <div>
                 <label htmlFor="reg-insuranceId" className="block text-[10px] font-black uppercase text-gray-500 mb-1">
                   Insurance Provider <span className="text-red-500">*</span>
@@ -317,7 +310,6 @@ export default function InsurancePatients() {
                 </select>
               </div>
 
-              {/* Full Name + NID */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="reg-fullName" className="block text-[10px] font-black uppercase text-gray-500 mb-1">
@@ -349,7 +341,6 @@ export default function InsurancePatients() {
                 </div>
               </div>
 
-              {/* Policy Number */}
               <div>
                 <label htmlFor="reg-policyNumber" className="block text-[10px] font-black uppercase text-gray-500 mb-1">
                   Policy Number <span className="text-red-500">*</span>
@@ -365,7 +356,6 @@ export default function InsurancePatients() {
                 />
               </div>
 
-              {/* Phone + Gender */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="reg-phone" className="block text-[10px] font-black uppercase text-gray-500 mb-1">Phone</label>
@@ -394,7 +384,6 @@ export default function InsurancePatients() {
                 </div>
               </div>
 
-              {/* Date of Birth */}
               <div>
                 <label htmlFor="reg-dob" className="block text-[10px] font-black uppercase text-gray-500 mb-1">Date of Birth</label>
                 <input
@@ -406,7 +395,6 @@ export default function InsurancePatients() {
                 />
               </div>
 
-              {/* Coverage + Start/End Dates */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label htmlFor="reg-coverage" className="block text-[10px] font-black uppercase text-gray-500 mb-1">Coverage %</label>
@@ -442,7 +430,6 @@ export default function InsurancePatients() {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                 <button
                   type="button"

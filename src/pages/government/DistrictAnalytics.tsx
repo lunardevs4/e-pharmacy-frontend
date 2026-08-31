@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { MapPin, BarChart2, ChevronRight, ArrowLeft, AlertTriangle, CheckCircle2, XCircle, TrendingDown, Filter, RefreshCw } from 'lucide-react'
 import { AuthApi } from '@/services/auth-api'
 
-// ── Data ──────────────────────────────────────────────────────────────────────
 
 interface District {
   id: string
@@ -17,24 +16,17 @@ interface District {
 
 const PROVINCES = ['All Provinces', 'Kigali City', 'Northern Province', 'Southern Province', 'Eastern Province', 'Western Province']
 
-// Normalize raw province strings from the DB to match the PROVINCES labels above.
-// The rwanda-geo-data package stores provinces as short ALLCAPS codes:
-//   KIGALI, SOUTH, WEST, NORTH, EAST
-// Pharmacies may also store longer variants: "Western Province", "northern", etc.
 function normalizeProvince(raw: string | undefined | null): string {
   if (!raw) return 'Unknown'
   const s = raw.trim().toLowerCase()
-  // Short codes from rwanda-geo-data: KIGALI, WEST, EAST, NORTH, SOUTH
   if (s === 'kigali' || s.includes('kigali')) return 'Kigali City'
   if (s === 'north' || s.includes('northern')) return 'Northern Province'
   if (s === 'south' || s.includes('southern')) return 'Southern Province'
   if (s === 'east' || s.includes('eastern')) return 'Eastern Province'
   if (s === 'west' || s.includes('western')) return 'Western Province'
-  // Return original trimmed if no match
   return raw.trim()
 }
 
-// ── Heat level helper ─────────────────────────────────────────────────────────
 
 function heatClass(stock: number): string {
   if (stock >= 90) return 'bg-emerald-500'
@@ -97,7 +89,6 @@ function CoverageGauge({ value, compact = false }: { value: number; compact?: bo
   )
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DistrictAnalytics() {
   const [districts, setDistricts] = useState<District[]>([])
@@ -116,7 +107,6 @@ export default function DistrictAnalytics() {
         AuthApi.getGovernmentDistrictCoverage(),
       ])
 
-      // The coverage endpoint is authoritative and already contains only approved pharmacies.
       const districtMap = new Map<string, District>()
 
       coverage.forEach((item: any) => {
@@ -132,11 +122,8 @@ export default function DistrictAnalytics() {
         })
       })
 
-      // Process low stock data to update critical drugs and stock levels
       lowStock.forEach((item: any) => {
         const linkedPharmacy = item.pharmacy as any
-        // Prevent stock records belonging to pending/rejected pharmacies from
-        // affecting an approved-pharmacy district's coverage.
         if (linkedPharmacy?.status && linkedPharmacy.status !== 'APPROVED') return
 
         const district = (item.pharmacy as any)?.district || item.district || 'Unknown'
@@ -153,7 +140,6 @@ export default function DistrictAnalytics() {
         }
       })
 
-      // Convert to array
       const districtArray = Array.from(districtMap.values())
       setDistricts(districtArray)
     } catch (err: any) {
@@ -181,7 +167,6 @@ export default function DistrictAnalytics() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
 
-      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
@@ -211,7 +196,6 @@ export default function DistrictAnalytics() {
         </div>
       )}
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="flex items-center space-x-2">
           <Filter className="w-4 h-4 text-gray-400" />
@@ -247,13 +231,10 @@ export default function DistrictAnalytics() {
         </button>
       </div>
 
-      {/* Main split: Heatmap grid + Detail panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
-        {/* Left: Heatmap Grid (2/3) */}
         <div className="lg:col-span-2 space-y-4">
 
-          {/* Legend */}
           <div className="flex items-center space-x-4 text-[10px] font-bold text-gray-500 flex-wrap gap-y-1">
             <span className="uppercase tracking-wider">Stock Level Legend:</span>
             {[
@@ -270,7 +251,6 @@ export default function DistrictAnalytics() {
             ))}
           </div>
 
-          {/* Grid of district cells */}
           {loading ? (
             <div className="text-center py-10 flex flex-col items-center justify-center gap-2">
               <RefreshCw className="w-6 h-6 text-emerald-600 animate-spin" />
@@ -291,7 +271,6 @@ export default function DistrictAnalytics() {
                     style={{ background: 'transparent' }}
                     title={`${d.name} — ${d.activeStock}% stock`}
                   >
-                    {/* Compact coverage gauge */}
                     <div className="rounded-lg bg-white p-1 transition-all">
                       <span className="block text-[10px] font-black text-gray-700 leading-tight truncate" title={d.name}>
                         {d.name}
@@ -321,11 +300,9 @@ export default function DistrictAnalytics() {
           )}
         </div>
 
-        {/* Right: Drill-down Panel (1/3) */}
         <div className="lg:col-span-1">
           {selectedDistrict ? (
             <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden animate-fadeIn">
-              {/* Header bar */}
               <div className={`p-4 flex items-center justify-between ${heatClass(selectedDistrict.activeStock)}`}>
                 <div>
                   <span className="text-white font-black text-base block">{selectedDistrict.name}</span>
@@ -339,9 +316,7 @@ export default function DistrictAnalytics() {
                 </button>
               </div>
 
-              {/* Metrics */}
               <div className="p-5 space-y-5 text-xs">
-                {/* Stock gauge */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center font-bold">
                     <span className="text-gray-500 uppercase text-[10px] tracking-wider">Essential Drug Coverage</span>
@@ -357,7 +332,6 @@ export default function DistrictAnalytics() {
                   </div>
                 </div>
 
-                {/* Key stats */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { label: 'Pharmacies', value: selectedDistrict.pharmacies },
@@ -372,7 +346,6 @@ export default function DistrictAnalytics() {
                   ))}
                 </div>
 
-                {/* Critical drug shortages */}
                 <div className="space-y-2">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Drug Shortage Alerts</span>
                   {selectedDistrict.criticalDrugs.length === 0 ? (
@@ -392,7 +365,6 @@ export default function DistrictAnalytics() {
                   )}
                 </div>
 
-                {/* Coverage bar chart by drug category (mock) */}
                 <div className="space-y-2">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Category Coverage</span>
                   {[
@@ -426,7 +398,6 @@ export default function DistrictAnalytics() {
             </div>
           )}
 
-          {/* Province Summary Mini Table */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs space-y-3 mt-4">
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Province Summary</span>
             {['Kigali City', 'Northern Province', 'Southern Province', 'Eastern Province', 'Western Province'].map((prov) => {

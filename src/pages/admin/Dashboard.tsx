@@ -67,7 +67,6 @@ export default function AdminDashboard() {
     loadAdminData()
   }, [])
 
-  // ── Derived platform stats ─────────────────────────────────────────────────
   const totalUsers     = stats?.users?.total ?? users.length
   const activeUsers    = users.filter((u: any) => u.isActive !== false).length
   const pendingUsers   = users.filter((u: any) => !u.isActive).length
@@ -109,7 +108,6 @@ export default function AdminDashboard() {
 
   const MONTHS = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
 
-  // ── Charts data (using real data) ───────────────────────────────────────────────────
   const userGrowthData = {
     labels: MONTHS,
     datasets: [{
@@ -174,7 +172,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-16">
-      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
@@ -202,7 +199,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* System Status Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3 shadow-xs">
           <div className="p-2 sm:p-2.5 bg-blue-50 text-blue-700 rounded-lg">
@@ -245,7 +241,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Service Health & Role Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
@@ -302,7 +297,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div>
@@ -343,7 +337,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Audit Logs */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div className="flex items-center space-x-2">

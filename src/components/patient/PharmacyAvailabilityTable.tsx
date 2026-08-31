@@ -62,7 +62,6 @@ export default function PharmacyAvailabilityTable({
 
   return (
     <div className="space-y-4">
-      {/* Sorter & Insurance Selector */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Available Stocks</h3>
         <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -102,17 +101,14 @@ export default function PharmacyAvailabilityTable({
         </div>
       </div>
 
-      {/* Grid wrapper stacked cards on mobile and side elements on desktop */}
       <div className="space-y-3">
         {pharmacies.map((pharm) => {
           const isFav = bookmarkedPharmacies.includes(pharm.pharmacyId)
           const insurance = selectedInsurance || 'None'
           
-          // Resolve provider ID
           const matchedProvider = providers.find(p => p.code === insurance || p.name === insurance)
           const insuranceId = matchedProvider?.id || null
           
-          // Use backend-calculated insurance coverage when available
           const backendCoverage = pharm.insuranceCoverage
           const isAccepted = backendCoverage?.hasAgreement ?? false
           const hasCoverage = backendCoverage?.isCovered ?? false
@@ -131,7 +127,6 @@ export default function PharmacyAvailabilityTable({
                 <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                   <h4 className="font-bold text-gray-900 text-sm">{pharm.pharmacyName}</h4>
 
-                  {/* Pharmacy Bookmark Star */}
                   {onToggleBookmarkPharmacy && (
                     <button
                       type="button"
@@ -178,7 +173,6 @@ export default function PharmacyAvailabilityTable({
                 </div>
               </div>
 
-              {/* Price & Action button columns */}
               <div className="text-right w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100">
                 <div className="space-y-1">
                   {hasCoverage ? (

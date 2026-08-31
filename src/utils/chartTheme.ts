@@ -1,10 +1,7 @@
 import { Chart as ChartJS, registerables } from 'chart.js'
 
-// Register all chart.js components globally to prevent undefined defaults errors at import time
 ChartJS.register(...registerables)
 
-// Shared visual defaults for every Chart.js graph in the application.
-// Individual charts can still override these when a different treatment is useful.
 ChartJS.defaults.color = '#64748B'
 ChartJS.defaults.font.family = "Inter, Segoe UI, system-ui, sans-serif"
 ChartJS.defaults.font.size = 10

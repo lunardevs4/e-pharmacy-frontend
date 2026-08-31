@@ -5,7 +5,6 @@ import { useAuthStore } from '@/store/authStore'
 export default function PublicRoute() {
   const { isAuthenticated, isInitialising, user } = useAuthStore()
 
-  // Session is still being restored — don't redirect yet
   if (isInitialising) return null
 
   if (isAuthenticated && user) {

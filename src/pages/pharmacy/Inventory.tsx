@@ -65,8 +65,6 @@ export interface CreateMedicinePayload {
 
 export default function PharmacyInventory() {
   const { user } = useAuthStore()
-  // Resolve the real pharmacy context — never fall back to a fake ID,
-  // otherwise every inventory API call fails with an invalid UUID.
   const pharmacyId = user?.pharmacy?.id || user?.pharmacyId || ''
   const pharmacyName = user?.pharmacy?.name || user?.pharmacyName || 'Your Pharmacy'
   const hasPharmacyContext = Boolean(pharmacyId)
@@ -75,23 +73,19 @@ export default function PharmacyInventory() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Search & Filter States
   const [searchVal, setSearchVal] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [stockFilter, setStockFilter] = useState('')
   const [sortBy, setSortBy] = useState('name')
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('ASC')
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
-  // Modals
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
 
-  // Spreadsheet import states
   const [showImportModal, setShowImportModal] = useState(false)
   const [importFile, setImportFile] = useState<File | null>(null)
   const [isImporting, setIsImporting] = useState(false)
@@ -103,12 +97,10 @@ export default function PharmacyInventory() {
     errors: { row: number; error: string; data: any }[]
   } | null>(null)
 
-  // Edit stock/price states
   const [editPrices, setEditPrices] = useState<Record<string, number>>({ CASH: 0 })
   const [editStock, setEditStock] = useState(0)
   const [editStatus, setEditStatus] = useState(true)
 
-  // Add medicine form states
   const [medName, setMedName] = useState('')
   const [medGenericName, setMedGenericName] = useState('')
 
@@ -137,9 +129,6 @@ export default function PharmacyInventory() {
   const [categories, setCategories] = useState<any[]>([])
   const [manufacturers, setManufacturers] = useState<any[]>([])
 
-  // ============================================================
-  // AUTOCOMPLETE STATES
-  // ============================================================
 
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
   const [showManufacturerSuggestions, setShowManufacturerSuggestions] = useState(false)
@@ -147,12 +136,10 @@ export default function PharmacyInventory() {
   const categoryRef = useRef<HTMLDivElement>(null)
   const manufacturerRef = useRef<HTMLDivElement>(null)
 
-  // Filter categories according to what the user types
   const filteredCategories = categories.filter((category) =>
     category.name?.toLowerCase().includes(medCategory.trim().toLowerCase()),
   )
 
-  // Filter manufacturers according to what the user types
   const filteredManufacturers = manufacturers.filter((manufacturer) =>
     manufacturer.name?.toLowerCase().includes(medManufacturer.trim().toLowerCase()),
   )
@@ -167,13 +154,11 @@ export default function PharmacyInventory() {
         setCategories(catList)
         setManufacturers(mfrList)
       } catch {
-        // The submit request reports the authoritative backend error.
       }
     }, 250)
     return () => window.clearTimeout(timer)
   }, [medCategory, medManufacturer])
 
-  // Close autocomplete suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node
@@ -194,7 +179,6 @@ export default function PharmacyInventory() {
     }
   }, [])
 
-  // Load Inventory Data
   const loadInventory = async () => {
     if (!hasPharmacyContext) {
       setLoading(false)
@@ -205,7 +189,6 @@ export default function PharmacyInventory() {
     setError(null)
 
     try {
-        // Real pharmacy-insurance agreements from the backend (not local config)
         let working: InsuranceProvider[] = []
         try {
           const agreementsResponse = await apiClient.get(`/pharmacies/${pharmacyId}/insurance`)
@@ -283,7 +266,6 @@ export default function PharmacyInventory() {
             stockStatus = 'LIMITED'
           }
 
-          // Fetch price mapping
           const savedPrices = localStorage.getItem(`epharmacy_prices_${pharmacyId}_${med.id}`)
           const pricesMap: Record<string, number> = savedPrices ? JSON.parse(savedPrices) : { CASH: Number(item.price) }
           const resolvedPrice = pricesMap.CASH ?? Number(item.price)
@@ -329,7 +311,6 @@ export default function PharmacyInventory() {
     loadInventory()
   }, [pharmacyId])
 
-  // Handles updating stock and price
   const handleUpdateStock = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -349,7 +330,6 @@ export default function PharmacyInventory() {
         }
       }
 
-      // Save custom prices mapping to localStorage
       localStorage.setItem(
         `epharmacy_prices_${pharmacyId}_${selectedItem.medicine.id}`,
         JSON.stringify(editPrices),
@@ -384,7 +364,6 @@ export default function PharmacyInventory() {
     }
   }
 
-  // Handles adding new catalog drug & assigning inventory stock
   const handleAddMedicineSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -434,7 +413,6 @@ export default function PharmacyInventory() {
       return
     }
 
-    // Validate and build multi-insurance prices record
     const finalPricesMap: Record<string, number> = { CASH: priceNum }
     for (const p of activeInsurances) {
       const pVal = medPrices[p.id]
@@ -512,9 +490,6 @@ export default function PharmacyInventory() {
 
       const newMedId = createdMedicine.id
 
-      // Keep the pharmacy-specific stock record linked to the new medicine.
-      // If catalog creation succeeded but stocking fails, say exactly that —
-      // the medicine exists and a retry must not duplicate it.
       try {
         await MedicineApi.updatePharmacyInventory(pharmacyId, newMedId, priceNum, stockNum, true)
       } catch (stockErr: any) {
@@ -530,13 +505,11 @@ export default function PharmacyInventory() {
         return
       }
 
-      // Save custom prices mapping to localStorage
       localStorage.setItem(
         `epharmacy_prices_${pharmacyId}_${newMedId}`,
         JSON.stringify(finalPricesMap),
       )
 
-      // Audit Log
       const logs = JSON.parse(localStorage.getItem('pharmacy_audit_logs') || '[]')
 
       logs.unshift({
@@ -597,7 +570,6 @@ export default function PharmacyInventory() {
   const openEditModal = (item: InventoryItem) => {
     setSelectedItem(item)
     
-    // Retrieve prices mapping
     const savedMapping = localStorage.getItem(`epharmacy_prices_${pharmacyId}_${item.medicine.id}`)
     const parsed: Record<string, number> = savedMapping ? JSON.parse(savedMapping) : { CASH: item.stockInfo.price }
     if (parsed.CASH === undefined) {
@@ -610,11 +582,9 @@ export default function PharmacyInventory() {
     setShowEditModal(true)
   }
 
-  // Filter & Sort Logic
   const getFilteredInventory = () => {
     let list = [...inventoryList]
 
-    // 1. Search Query
     if (searchVal.trim()) {
       const q = searchVal.toLowerCase().trim()
 
@@ -626,14 +596,12 @@ export default function PharmacyInventory() {
       )
     }
 
-    // 2. Category Filter
     if (categoryFilter) {
       list = list.filter(
         (item) => item.medicine.category.toLowerCase() === categoryFilter.toLowerCase(),
       )
     }
 
-    // 3. Stock Level Filter
     if (stockFilter) {
       if (stockFilter === 'out') {
         list = list.filter((item) => item.stockInfo.stock === 0)
@@ -644,7 +612,6 @@ export default function PharmacyInventory() {
       }
     }
 
-    // 4. Sorting
     list.sort((a, b) => {
       let valA: any = a.medicine.name
       let valB: any = b.medicine.name
@@ -692,7 +659,6 @@ export default function PharmacyInventory() {
     currentPage * itemsPerPage,
   )
 
-  // Metrics summary computations
   const totalSKUs = inventoryList.length
 
   const lowStockCount = inventoryList.filter(
@@ -706,7 +672,6 @@ export default function PharmacyInventory() {
     0,
   )
 
-  // Expiry check
   const isExpiringSoon = (dateStr?: string) => {
     if (!dateStr) return false
 
@@ -721,7 +686,6 @@ export default function PharmacyInventory() {
 
   const expiringSoonCount = inventoryList.filter((i) => isExpiringSoon(i.customExpiry)).length
 
-  // Calculate dynamic profit margin helper
   const getProfitMargin = () => {
     const cost = parseFloat(medCost)
     const sell = parseFloat(medPrices.CASH || '')
@@ -733,7 +697,6 @@ export default function PharmacyInventory() {
     return (((sell - cost) / sell) * 100).toFixed(1)
   }
 
-  // ── Spreadsheet import handler ───────────────────────────────────────────
   const handleImportSpreadsheet = async () => {
     if (!importFile) {
       setImportError('Please choose a CSV or Excel file first.')
@@ -763,7 +726,6 @@ export default function PharmacyInventory() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* Header Banner */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
@@ -801,9 +763,7 @@ export default function PharmacyInventory() {
         </button>
       </div>
 
-      {/* Analytics Summaries */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* SKUs */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -822,7 +782,6 @@ export default function PharmacyInventory() {
           </div>
         </div>
 
-        {/* Low Stock */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -843,7 +802,6 @@ export default function PharmacyInventory() {
           </div>
         </div>
 
-        {/* Expiring batch */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -864,7 +822,6 @@ export default function PharmacyInventory() {
           </div>
         </div>
 
-        {/* Value */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -886,11 +843,8 @@ export default function PharmacyInventory() {
         </div>
       </div>
 
-      {/* Table & Filtering */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-        {/* Filters control bar */}
         <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Search */}
           <div className="relative rounded-md max-w-sm w-full">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
@@ -909,7 +863,6 @@ export default function PharmacyInventory() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {/* Category selection */}
             <div className="flex items-center space-x-1.5">
               <Filter className="w-3.5 h-3.5 text-gray-400" />
 
@@ -929,7 +882,6 @@ export default function PharmacyInventory() {
               </select>
             </div>
 
-            {/* Stock filter */}
             <select
               value={stockFilter}
               onChange={(e) => {
@@ -944,7 +896,6 @@ export default function PharmacyInventory() {
               <option value="out">Out of Stock</option>
             </select>
 
-            {/* Refresh btn */}
             <button
               onClick={loadInventory}
               aria-label="Refresh inventory"
@@ -955,7 +906,6 @@ export default function PharmacyInventory() {
           </div>
         </div>
 
-        {/* Content State */}
         {loading ? (
           <div className="p-12 text-center text-gray-500">
             <Loader2 className="w-8 h-8 animate-spin text-health-primary mx-auto mb-2" />
@@ -1143,7 +1093,6 @@ export default function PharmacyInventory() {
               </tbody>
             </table>
 
-            {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
                 <span className="text-xs text-gray-500">
@@ -1174,7 +1123,6 @@ export default function PharmacyInventory() {
         )}
       </div>
 
-      {/* Edit Stock & Price Modal */}
       {showEditModal && selectedItem && (
         <div
           role="dialog"
@@ -1209,7 +1157,6 @@ export default function PharmacyInventory() {
             </div>
 
             <form onSubmit={handleUpdateStock} className="portal-form p-5 space-y-4">
-              {/* Cash Price */}
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                   Cash / No Insurance Price (RWF) *
@@ -1232,7 +1179,6 @@ export default function PharmacyInventory() {
                 </div>
               </div>
 
-              {/* Insurance Prices */}
               {activeInsurances.map((p) => (
                 <div key={p.id}>
                   <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -1268,7 +1214,6 @@ export default function PharmacyInventory() {
                 </div>
               ))}
 
-              {/* Stock */}
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                   Active Stock Level
@@ -1283,7 +1228,6 @@ export default function PharmacyInventory() {
                 />
               </div>
 
-              {/* Status Toggle */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-150">
                 <div>
                   <span className="text-xs font-bold text-gray-700 block">
@@ -1303,7 +1247,6 @@ export default function PharmacyInventory() {
                 />
               </div>
 
-              {/* Submit */}
               <div className="flex justify-end space-x-3 pt-2">
                 <button
                   type="button"
@@ -1325,7 +1268,6 @@ export default function PharmacyInventory() {
         </div>
       )}
 
-      {/* Add Medicine Drawer Modal */}
       {showAddModal && (
         <div
           role="dialog"
@@ -1344,7 +1286,6 @@ export default function PharmacyInventory() {
           />
 
           <div className="relative bg-white w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden animate-scaleIn z-10">
-            {/* Header */}
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <Package className="w-5 h-5 text-health-primary" aria-hidden="true" />
@@ -1369,12 +1310,10 @@ export default function PharmacyInventory() {
               </button>
             </div>
 
-            {/* Form Scroll Area */}
             <form
               onSubmit={handleAddMedicineSubmit}
               className="portal-form flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6"
             >
-              {/* Error */}
               {formError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
                   <ShieldAlert className="w-5 h-5 flex-shrink-0 text-red-600" />
@@ -1382,7 +1321,6 @@ export default function PharmacyInventory() {
                 </div>
               )}
 
-              {/* Success */}
               {formSuccess && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start space-x-2 text-emerald-800 text-xs">
                   <Check className="w-5 h-5 flex-shrink-0 text-emerald-700" />
@@ -1390,9 +1328,6 @@ export default function PharmacyInventory() {
                 </div>
               )}
 
-              {/* ============================================================
-      MEDICINE INFORMATION
-      ============================================================ */}
               <section>
                 <div className="mb-3">
                   <h4 className="text-sm font-black text-gray-900">Medicine Information</h4>
@@ -1403,9 +1338,7 @@ export default function PharmacyInventory() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Trade & Generic Name */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Trade Name */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Trade Name *
@@ -1421,7 +1354,6 @@ export default function PharmacyInventory() {
                       />
                     </div>
 
-                    {/* Generic Name */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Generic Name *
@@ -1438,9 +1370,7 @@ export default function PharmacyInventory() {
                     </div>
                   </div>
 
-                  {/* Category & Manufacturer */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* CATEGORY */}
                     <div ref={categoryRef} className="relative">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Category *
@@ -1503,7 +1433,6 @@ export default function PharmacyInventory() {
                       )}
                     </div>
 
-                    {/* MANUFACTURER */}
                     <div ref={manufacturerRef} className="relative">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Manufacturer *
@@ -1569,9 +1498,6 @@ export default function PharmacyInventory() {
                 </div>
               </section>
 
-              {/* ============================================================
-      BATCH INFORMATION
-      ============================================================ */}
               <section className="pt-5 border-t border-gray-200">
                 <div className="mb-3">
                   <h4 className="text-sm font-black text-gray-900">Batch Information</h4>
@@ -1582,9 +1508,7 @@ export default function PharmacyInventory() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Batch Number & Lot Number */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Batch Number */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Batch Number *
@@ -1604,7 +1528,6 @@ export default function PharmacyInventory() {
                       </p>
                     </div>
 
-                    {/* Lot Number */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Lot Number *
@@ -1621,7 +1544,6 @@ export default function PharmacyInventory() {
                     </div>
                   </div>
 
-                  {/* Expiry */}
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                       Expiry Date *
@@ -1643,9 +1565,6 @@ export default function PharmacyInventory() {
                 </div>
               </section>
 
-              {/* ============================================================
-      PRICING & STOCK
-      ============================================================ */}
               <section className="pt-5 border-t border-gray-200">
                 <div className="mb-3">
                   <h4 className="text-sm font-black text-gray-900">Pricing & Stock</h4>
@@ -1656,9 +1575,7 @@ export default function PharmacyInventory() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Cost & Selling Price */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Unit Cost */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Unit Cost (RWF) *
@@ -1676,7 +1593,6 @@ export default function PharmacyInventory() {
                       />
                     </div>
 
-                    {/* Cash Selling Price */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Cash Selling Price (RWF) *
@@ -1695,7 +1611,6 @@ export default function PharmacyInventory() {
                     </div>
                   </div>
 
-                  {/* Insurance Custom Prices */}
                   {activeInsurances.length > 0 && (
                     <div className="bg-gray-50 border border-gray-150 rounded-lg p-3 space-y-3">
                       <span className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider">
@@ -1729,7 +1644,6 @@ export default function PharmacyInventory() {
                     </div>
                   )}
 
-                  {/* Profit Margin */}
                   {medCost && medPrices.CASH && parseFloat(medPrices.CASH) >= parseFloat(medCost) && (
                     <div className="p-3 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-100 flex items-center justify-between text-xs font-semibold">
                       <div className="flex items-center space-x-1.5">
@@ -1742,7 +1656,6 @@ export default function PharmacyInventory() {
                     </div>
                   )}
 
-                  {/* Initial Stock */}
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                       Initial Stock Quantity (Units) *
@@ -1762,9 +1675,6 @@ export default function PharmacyInventory() {
                 </div>
               </section>
 
-              {/* ============================================================
-      STORAGE
-      ============================================================ */}
               <section className="pt-5 border-t border-gray-200">
                 <div className="mb-3">
                   <h4 className="text-sm font-black text-gray-900">Storage Requirements</h4>
@@ -1775,7 +1685,6 @@ export default function PharmacyInventory() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Storage Conditions */}
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                       Storage Conditions *
@@ -1791,9 +1700,7 @@ export default function PharmacyInventory() {
                     />
                   </div>
 
-                  {/* Temperature */}
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Minimum */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Minimum Temperature (°C)
@@ -1809,7 +1716,6 @@ export default function PharmacyInventory() {
                       />
                     </div>
 
-                    {/* Maximum */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Maximum Temperature (°C)
@@ -1838,9 +1744,6 @@ export default function PharmacyInventory() {
                 </div>
               </section>
 
-              {/* ============================================================
-      SUBMIT
-      ============================================================ */}
               <div className="flex space-x-3 pt-5 border-t border-gray-200">
                 <button
                   type="button"
@@ -1867,9 +1770,6 @@ export default function PharmacyInventory() {
         </div>
       )}
 
-      {/* ============================================================
-          IMPORT SPREADSHEET MODAL (CSV / Excel)
-          ============================================================ */}
       {showImportModal && (
         <div
           role="dialog"
@@ -1878,7 +1778,6 @@ export default function PharmacyInventory() {
           className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm overflow-y-auto"
         >
           <div className="portal-modal-panel bg-white border border-gray-200 rounded-2xl shadow-2xl w-full max-w-xl my-8">
-            {/* Header */}
             <div className="flex items-start justify-between p-5 border-b border-gray-100">
               <div className="flex items-center space-x-3">
                 <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
@@ -1902,7 +1801,6 @@ export default function PharmacyInventory() {
             </div>
 
             <div className="p-5 space-y-4">
-              {/* Format guide */}
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-[11px] font-semibold text-gray-600 space-y-1.5">
                 <span className="block text-[10px] tracking-wider text-slate-400 uppercase font-black mb-1">
                   Required columns
@@ -1932,7 +1830,6 @@ export default function PharmacyInventory() {
                 </div>
               )}
 
-              {/* File input */}
               {!importResult && (
                 <>
                   <label className="block">
@@ -1959,7 +1856,6 @@ export default function PharmacyInventory() {
                 </>
               )}
 
-              {/* Import summary report */}
               {importResult && (
                 <div className="space-y-3">
                   <div className="grid grid-cols-3 gap-3 text-center">
@@ -1998,7 +1894,6 @@ export default function PharmacyInventory() {
               )}
             </div>
 
-            {/* Footer actions */}
             <div className="flex justify-end gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50/60 rounded-b-2xl">
               {importResult ? (
                 <button

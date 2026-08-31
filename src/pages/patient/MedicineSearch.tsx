@@ -45,7 +45,6 @@ export default function MedicineSearch() {
     createPrescription,
   } = useMedicineSearch()
 
-  // Search filter states
   const { user } = useAuthStore()
   const [selectedInsurance, setSelectedInsurance] = useState<string>(user?.insuranceProvider || 'None')
   const [providers, setProviders] = useState<any[]>([])
@@ -63,8 +62,6 @@ export default function MedicineSearch() {
       .finally(() => setProvidersLoading(false))
   }, [])
 
-  // Keep the search and reservation flow aligned with the provider saved in
-  // the patient's profile.
   useEffect(() => {
     setSelectedInsurance(user?.insuranceProvider || 'None')
   }, [user?.insuranceProvider])
@@ -75,20 +72,17 @@ export default function MedicineSearch() {
   const [sortBy, setSortBy] = useState('proximity')
   const [hasSearched, setHasSearched] = useState(!!initialQuery)
 
-  // Bookmarking and search history states
   const [bookmarkedMedicines, setBookmarkedMedicines] = useState<string[]>([])
   const [bookmarkedPharmacies, setBookmarkedPharmacies] = useState<string[]>([])
   const [searchHistory, setSearchHistory] = useState<any[]>([])
   const [inputFocused, setInputFocused] = useState(false)
 
-  // Load bookmarks and history on mount
   useEffect(() => {
     MedicineApi.getFavouriteMedicines().then(setBookmarkedMedicines)
     MedicineApi.getFavouritePharmacies().then(setBookmarkedPharmacies)
     MedicineApi.getSearchHistory().then(setSearchHistory)
   }, [])
 
-  // Trigger search immediately if quick search initialQuery exists
   useEffect(() => {
     if (initialQuery) {
       executeSearch(initialQuery, '', false)
@@ -96,15 +90,12 @@ export default function MedicineSearch() {
     }
   }, [initialQuery, executeSearch])
 
-  // Selected drug details states
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null)
   const [stockList, setStockList] = useState<PharmacyStock[]>([])
   const [stockLoading, setStockLoading] = useState(false)
 
-  // Responsive mobile toggle (List vs Map)
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
 
-  // Reservation Wizard Stepper states (4-step layout)
   const [showResModal, setShowResModal] = useState(false)
   const [resStep, setResStep] = useState<1 | 2 | 3 | 4 | 5>(1)
   const [selectedPharmacy, setSelectedPharmacy] = useState<PharmacyStock | null>(null)
@@ -146,7 +137,6 @@ export default function MedicineSearch() {
     setPrescriptionError(null)
   }
 
-  // Get user's current location
   const getUserLocation = () => {
     setLocationLoading(true)
     setLocationError(null)
@@ -168,7 +158,6 @@ export default function MedicineSearch() {
       (error) => {
         setLocationError('Unable to retrieve your location. Using default location.')
         setLocationLoading(false)
-        // Default to Kigali
         setUserLocation({ lat: -1.9441, lng: 30.0619 })
       },
       {
@@ -179,11 +168,9 @@ export default function MedicineSearch() {
     )
   }
 
-  // Execute registry search
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     
-    // Get user location when searching
     getUserLocation()
     
     setSelectedMedicine(null)
@@ -191,13 +178,11 @@ export default function MedicineSearch() {
     executeSearch(query, category, inStockOnly)
     if (query.trim()) {
       MedicineApi.saveSearchHistory(query, category)
-      // Refresh search history cache
       MedicineApi.getSearchHistory().then(setSearchHistory)
     }
     setHasSearched(true)
   }
 
-  // popular tag click trigger
   const handlePopularSearch = (term: string) => {
     setQuery(term)
     setSelectedMedicine(null)
@@ -208,7 +193,6 @@ export default function MedicineSearch() {
     setHasSearched(true)
   }
 
-  // Bookmarks toggles
   const handleToggleBookmarkMedicine = async (medId: string) => {
     const isFav = bookmarkedMedicines.includes(medId)
     const nextStatus = !isFav
@@ -235,23 +219,19 @@ export default function MedicineSearch() {
     }
   }
 
-  // Load pharmacy availability details
   const handleViewAvailability = async (med: Medicine, insuranceOverride?: string) => {
     setSelectedMedicine(med)
     setStockLoading(true)
     
-    // Get user location when viewing availability
     getUserLocation()
     
     try {
-      // Map selected insurance code/name to provider UUID
       const insurance = insuranceOverride ?? selectedInsurance
       const matchedProvider = providers.find(p => p.code === insurance || p.name === insurance)
       const insuranceId = insurance !== 'None' ? (matchedProvider?.id || null) : null
       
       const list = await getMedicineAvailability(med.id, insuranceId)
       
-      // Calculate distances from user location
       if (userLocation) {
         const listWithDistances = list.map(pharmacy => {
           const distance = calculateDistance(
@@ -275,7 +255,6 @@ export default function MedicineSearch() {
     }
   }
 
-  // Calculate distance between two coordinates (Haversine formula)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371 // Earth's radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180
@@ -288,7 +267,6 @@ export default function MedicineSearch() {
     return R * c // Distance in km
   }
 
-  // Apply sorter logic to pharmacy details
   const getSortedPharmacies = () => {
     const list = [...stockList]
     if (sortBy === 'proximity') {
@@ -308,7 +286,6 @@ export default function MedicineSearch() {
 
   const sortedPharmacies = getSortedPharmacies()
 
-  // Submit checkout reservation
   const handleConfirmReservation = async () => {
     if (!selectedMedicine || !selectedPharmacy) return
     setResLoading(true)
@@ -332,7 +309,6 @@ export default function MedicineSearch() {
         })
       }
 
-      // Resolve provider ID
       const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
       const insuranceId = matchedProvider?.id || null
       const backendCoverage = selectedPharmacy.insuranceCoverage as any
@@ -343,14 +319,11 @@ export default function MedicineSearch() {
         ),
       )
 
-      // Resolve dynamic price set by pharmacy
       const priceInfo = getPharmacyInsurancePrice(selectedPharmacy.pharmacyId, selectedMedicine.id, insuranceId, selectedPharmacy.price)
       const resolvedPrice = priceInfo.price
 
-      // Resolve custom tariff configured by insurer
       const tariff = insuranceId ? getInsuranceTariff(insuranceId, selectedMedicine.id) : null
 
-      // Calculate copay split
       const copay = calculatePatientCopay(resolvedPrice, tariff)
 
       const hasCoverage = isAccepted && (backendCoverage?.isCovered ?? copay.isCovered)
@@ -367,8 +340,6 @@ export default function MedicineSearch() {
         )
       }
 
-      // Insurance fields below are display-only — the reservation API accepts
-      // only medicineId/pharmacyId/quantity/expiresAt.
       const res = await createReservation({
         medicineId: selectedMedicine.id,
         pharmacyId: selectedPharmacy.pharmacyId,
@@ -393,7 +364,6 @@ export default function MedicineSearch() {
     }
   }
 
-  // Clear checkout variables
   const resetResWizard = () => {
     setShowResModal(false)
     setResStep(1)
@@ -403,16 +373,13 @@ export default function MedicineSearch() {
     removePrescription()
   }
 
-  // Google Maps state variables
   const [mapQuery, setMapQuery] = useState('Kigali, Rwanda')
   const [mapZoom, setMapZoom] = useState(13)
   
-  // Location tracking state
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
 
-  // Update Google Maps focus when a new medicine is selected or stockList loads
   useEffect(() => {
     if (selectedMedicine && stockList.length > 0) {
       const closest = stockList[0]
@@ -431,7 +398,6 @@ export default function MedicineSearch() {
 
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col relative overflow-visible">
-      {/* Search Header Console */}
       <div className="relative z-50 flex-shrink-0 bg-white border-b border-gray-200 py-4 px-6">
         <form
           onSubmit={handleSearch}
@@ -471,7 +437,6 @@ export default function MedicineSearch() {
                 onBlur={() => setTimeout(() => setInputFocused(false), 200)}
                 className="w-full pl-4 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 text-xs font-semibold"
               />
-              {/* Recent searches dropdown list */}
               {inputFocused && searchHistory.length > 0 && (
                 <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-250 rounded-lg shadow-xl z-[60] max-h-48 overflow-y-auto text-xs font-bold text-gray-700 divide-y divide-gray-100">
                   <div className="p-2 bg-gray-55/30 text-[9px] uppercase tracking-wider text-gray-400">
@@ -541,15 +506,12 @@ export default function MedicineSearch() {
         </form>
       </div>
 
-      {/* Split-Screen layout map hero */}
       <div className="flex-grow flex relative overflow-hidden">
-        {/* Left Panel: Search list results and clinical guides */}
         <div
           className={`w-full lg:w-1/2 flex flex-col h-full bg-gray-50 border-r border-gray-200 overflow-y-auto p-4 sm:p-6 space-y-6 ${
             mobileView === 'map' ? 'hidden lg:flex' : 'flex'
           }`}
         >
-          {/* Default initial message (before user queries) */}
           {!hasSearched && (
             <div className="bg-white border border-gray-200 rounded-xl p-8 text-center space-y-4 shadow-xs">
               <span className="inline-block p-3 bg-emerald-50 text-health-primary rounded-full">
@@ -581,7 +543,6 @@ export default function MedicineSearch() {
             </div>
           )}
 
-          {/* Search Result Matches cards */}
           {hasSearched && !selectedMedicine && (
             <div className="space-y-4">
               <div className="flex justify-between items-center pb-2 border-b border-gray-200">
@@ -622,10 +583,8 @@ export default function MedicineSearch() {
             </div>
           )}
 
-          {/* Selected Medicine Stock Table details inside the Left column */}
           {selectedMedicine && (
             <div className="space-y-5 animate-fadeIn">
-              {/* Back to search matches */}
               <button
                 type="button"
                 onClick={() => {
@@ -638,7 +597,6 @@ export default function MedicineSearch() {
                 <span>Back to Search Results</span>
               </button>
 
-              {/* Medicine details block */}
               <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
                 <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                   <h2 className="font-black text-gray-900 text-lg">{selectedMedicine.name}</h2>
@@ -649,7 +607,6 @@ export default function MedicineSearch() {
                   )}
                 </div>
 
-                {/* Storage Information */}
                 <div className="text-xs space-y-2.5 text-gray-700 pt-3 border-t border-gray-150">
                   <p>
                     <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
@@ -666,7 +623,6 @@ export default function MedicineSearch() {
                 </div>
               </div>
 
-              {/* Pharmacy stocking list */}
               {stockLoading ? (
                 <div className="text-center py-10 text-xs text-gray-400 flex items-center justify-center space-x-2">
                   <RefreshCw className="w-5 h-5 animate-spin text-emerald-600" />
@@ -717,7 +673,6 @@ export default function MedicineSearch() {
           )}
         </div>
 
-        {/* Right Panel: Permanent Map View */}
         <div
           className={`w-full lg:w-1/2 h-full relative ${
             mobileView === 'map' ? 'flex' : 'hidden lg:flex'
@@ -733,7 +688,6 @@ export default function MedicineSearch() {
         </div>
       </div>
 
-      {/* Floating Action Button for responsive mobile map switch */}
       <div className="lg:hidden absolute bottom-6 right-6 z-30">
         <button
           type="button"
@@ -754,7 +708,6 @@ export default function MedicineSearch() {
         </button>
       </div>
 
-      {/* 4-Step Reservation Wizard Stepper Modal */}
       {showResModal && selectedMedicine && selectedPharmacy && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
           <div
@@ -763,7 +716,6 @@ export default function MedicineSearch() {
           />
 
           <div className="portal-modal-panel relative w-full max-w-lg bg-white rounded-2xl border border-gray-255 shadow-2xl overflow-hidden z-[9999] flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
             <div className="bg-emerald-950 text-white px-6 py-4 flex items-center justify-between border-b border-emerald-900 flex-shrink-0">
               <div>
                 <h3 className="font-black text-sm">Reserve Medication</h3>
@@ -777,16 +729,13 @@ export default function MedicineSearch() {
               </button>
             </div>
 
-            {/* Quantity-only reservation */}
             {resStep < 5 && (
               <div className="bg-gray-50 border-b border-gray-150 px-6 py-3 text-xs font-bold text-health-primary flex-shrink-0">
                 Select quantity
               </div>
             )}
 
-            {/* Stepper Content Pane */}
             <div className="flex-grow p-6 overflow-y-auto min-h-[220px]">
-              {/* Step 1: Review selected items & Qty selection */}
               {resStep === 1 && (
                 <div className="space-y-5">
                   <div className="bg-gray-50 border rounded-xl p-4 space-y-2 text-xs">
@@ -893,7 +842,6 @@ export default function MedicineSearch() {
                 </div>
               )}
 
-              {/* Step 5: Checkout reservation success page */}
               {resStep === 5 && createdReservation && (
                 <div className="space-y-5 text-center py-4">
                   <div className="w-14 h-14 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mx-auto">
@@ -937,7 +885,6 @@ export default function MedicineSearch() {
               )}
             </div>
 
-            {/* Stepper wizard navigation actions */}
             <div className="bg-gray-50 border-t border-gray-150 px-6 py-4 flex items-center justify-end space-x-2 flex-shrink-0">
               {resStep < 5 ? (
                 <button

@@ -41,10 +41,8 @@ export default function PatientHistory() {
     }
   }
 
-  // Get unique pharmacies for filter
   const uniquePharmacies = Array.from(new Set(history.map(item => item.pharmacyName)))
 
-  // Filter history
   const filteredHistory = history.filter(item => {
     const matchesSearch = 
       item.medicineName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,7 +56,6 @@ export default function PatientHistory() {
     return matchesSearch && matchesPharmacy && matchesDate
   })
 
-  // Calculate statistics
   const totalPurchases = history.length
   const totalSpent = history.reduce((sum, item) => sum + item.patientPays, 0)
   const totalQuantity = history.reduce((sum, item) => sum + item.quantity, 0)
@@ -67,7 +64,6 @@ export default function PatientHistory() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       
-      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
         <div className="flex items-center space-x-3">
           <History className="w-6 h-6 text-health-primary" />
@@ -78,7 +74,6 @@ export default function PatientHistory() {
         </div>
       </div>
 
-      {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-center space-x-3">
           <div className="p-2.5 bg-emerald-50 rounded-lg text-health-primary">
@@ -121,7 +116,6 @@ export default function PatientHistory() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs">
         <div className="flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-grow max-w-md">
@@ -155,7 +149,6 @@ export default function PatientHistory() {
         </div>
       </div>
 
-      {/* History Table */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-12 text-center text-xs text-gray-400">

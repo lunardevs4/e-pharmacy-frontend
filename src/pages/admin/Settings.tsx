@@ -97,7 +97,6 @@ export default function AdminSettings() {
 
       <form onSubmit={handleSave} className="portal-form space-y-5">
 
-        {/* API Config */}
         <section aria-labelledby="api-section" className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
             <Globe className="w-4 h-4 text-emerald-700" aria-hidden="true" />
@@ -156,7 +155,6 @@ export default function AdminSettings() {
           </div>
         </section>
 
-        {/* Maintenance */}
         <section aria-labelledby="maintenance-section" className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
             <Server className="w-4 h-4 text-emerald-700" aria-hidden="true" />

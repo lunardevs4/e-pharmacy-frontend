@@ -138,7 +138,6 @@ export default function InsuranceRegister() {
           </div>
         )}
 
-        {/* Provider Name */}
         <div className="group font-sans">
           <label
             className="block mb-2"
@@ -163,7 +162,6 @@ export default function InsuranceRegister() {
           </div>
         </div>
 
-        {/* Email */}
         <div className="group font-sans">
           <label
             className="block mb-2"
@@ -188,7 +186,6 @@ export default function InsuranceRegister() {
           </div>
         </div>
 
-        {/* Phone */}
         <div className="group font-sans">
           <label
             className="block mb-2"
@@ -213,7 +210,6 @@ export default function InsuranceRegister() {
           </div>
         </div>
 
-        {/* Password */}
         <div className="group font-sans">
           <label
             className="block mb-2"
@@ -296,7 +292,6 @@ export default function InsuranceRegister() {
           )}
         </div>
 
-        {/* Confirm Password */}
         <div className="group font-sans">
           <label
             className="block mb-2"
@@ -327,7 +322,6 @@ export default function InsuranceRegister() {
           )}
         </div>
 
-        {/* Submit button — pill */}
         <button
           type="submit"
           disabled={isLoading || !meetsAllCriteria || password !== confirmPassword}

@@ -17,7 +17,6 @@ export default function PharmacySettings() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  // Load all registered insurance providers and existing Working agreements from backend
   useEffect(() => {
     if (activeTab === 'agreements') {
       setLoading(true)
@@ -29,7 +28,6 @@ export default function PharmacySettings() {
         .then(([providersData, agreementsData]) => {
           const activeProviders = (providersData || []).filter((p) => p.isActive !== false)
           setProviders(activeProviders)
-          // Get IDs of insurance providers with active agreements
           const activeAgreementIds = (agreementsData?.data || agreementsData || [])
             .filter((a: any) => a.status === 'ACTIVE')
             .map((a: any) => a.insuranceId)
@@ -54,12 +52,10 @@ export default function PharmacySettings() {
     setSuccessMsg(null)
     setErrorMsg(null)
     try {
-      // Get existing agreements from pharmacy endpoint
       const agreementsResponse = await fetch(`/api/v1/pharmacies/${pharmacyId}/insurance`)
       const agreementsData = await agreementsResponse.json()
       const existingAgreements = agreementsData?.data || agreementsData || []
       
-      // Create new agreements for selected providers that don't have one
       const createPromises = selectedIds
         .filter(id => !existingAgreements.find((a: any) => a.insuranceId === id))
         .map(insuranceId => 
@@ -75,7 +71,6 @@ export default function PharmacySettings() {
           })
         )
       
-      // Deactivate agreements for providers that were deselected
       const deactivatePromises = existingAgreements
         .filter((a: any) => a.status === 'ACTIVE' && !selectedIds.includes(a.insuranceId))
         .map((a: any) => 
@@ -86,7 +81,6 @@ export default function PharmacySettings() {
           })
         )
       
-      // Reactivate agreements for providers that were re-selected
       const reactivatePromises = existingAgreements
         .filter((a: any) => a.status !== 'ACTIVE' && selectedIds.includes(a.insuranceId))
         .map((a: any) => 
@@ -113,7 +107,6 @@ export default function PharmacySettings() {
       <div className="flex justify-between items-center border-b border-gray-200 pb-2">
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Pharmacy Portal Profile</h1>
         
-        {/* Navigation Tabs */}
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => setActiveTab('profile')}

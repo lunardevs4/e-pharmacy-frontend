@@ -109,7 +109,6 @@ export default function MedicineAnalytics() {
         <p className="text-xs text-gray-500 font-medium">Drug usage trends, stock availability indices, and essential medicine tracking across Rwanda.</p>
       </div>
 
-      {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Tracked Medicines', value: essentialMedicines.length, color: 'text-gray-900', bg: 'bg-gray-50' },
@@ -124,7 +123,6 @@ export default function MedicineAnalytics() {
         ))}
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
           <div>
@@ -147,7 +145,6 @@ export default function MedicineAnalytics() {
         </div>
       </div>
 
-      {/* Essential Medicine Table */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <div>

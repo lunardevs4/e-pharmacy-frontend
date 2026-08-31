@@ -16,14 +16,10 @@ const queryClient = new QueryClient({
 function AppShell() {
   const { initialise, isInitialising } = useAuthStore()
 
-  // Restore session from localStorage exactly once on mount
   useEffect(() => {
     initialise()
   }, [])
 
-  // Show a minimal full-screen loader while we check localStorage.
-  // This prevents the ProtectedRoute from redirecting to /login
-  // before the user object has been rehydrated.
   if (isInitialising) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

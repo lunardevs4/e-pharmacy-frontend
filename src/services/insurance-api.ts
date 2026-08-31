@@ -1,6 +1,5 @@
 import { apiClient } from '@/api/client'
 
-// Backend responses are wrapped by TransformInterceptor as { success, data, timestamp }
 const unwrap = (response: any) => response?.data?.data ?? response?.data
 
 export interface InsuranceProvider {
@@ -174,7 +173,6 @@ export const insuranceApi = {
     return unwrap(response)
   },
 
-  // Dashboard — maps the backend summary payload onto the DashboardSummary shape
   async getDashboardSummary(insuranceId?: string): Promise<DashboardSummary> {
     const params = insuranceId ? { insuranceId } : {}
     const response = await apiClient.get('/insurance/summary', { params })
@@ -218,7 +216,6 @@ export const insuranceApi = {
     }
   },
 
-  // Claims
   async getClaims(params?: {
     insuranceId?: string
     pharmacyId?: string
@@ -277,7 +274,6 @@ export const insuranceApi = {
     return unwrap(response)
   },
 
-  // Pharmacy Agreements
   async getAgreements(params?: {
     insuranceId?: string
     pharmacyId?: string
@@ -321,7 +317,6 @@ export const insuranceApi = {
     return unwrap(response)
   },
 
-  // Tariffs
   async getTariffs(params?: {
     insuranceId?: string
     medicineId?: string
@@ -381,7 +376,6 @@ export const insuranceApi = {
     return unwrap(response)
   },
 
-  // Patients
   async getPatients(params?: {
     insuranceId?: string
     status?: string
@@ -437,7 +431,6 @@ export const insuranceApi = {
     return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
   },
 
-  // Providers
   async getProviders(): Promise<InsuranceProvider[]> {
     const response = await apiClient.get('/insurance/providers')
     const raw = unwrap(response)

@@ -18,8 +18,6 @@ export default function AuthLayout({
   const navigate = useNavigate()
 
   const handleGoBack = () => {
-    // Auth pages should return to the public landing page as one flow,
-    // rather than replaying intermediate login/register history entries.
     navigate('/', { replace: true })
   }
 
@@ -70,9 +68,6 @@ export default function AuthLayout({
       style={{ fontFamily: 'var(--font-family-base)' }}
     >
 
-      {/* =========================================================
-          MAIN AUTH CONTAINER
-      ========================================================= */}
       <div
         className="
           auth-layout-container
@@ -93,9 +88,6 @@ export default function AuthLayout({
         "
       >
 
-        {/* =======================================================
-            LEFT — E-PHARMACY GREEN POSTER
-        ======================================================= */}
         <section
           className="
             hidden
@@ -114,9 +106,6 @@ export default function AuthLayout({
           "
         >
 
-          {/* -----------------------------------------------------
-              BASE GREEN GRADIENT
-          ----------------------------------------------------- */}
           <div
             className="
               absolute
@@ -128,9 +117,6 @@ export default function AuthLayout({
             "
           />
 
-          {/* -----------------------------------------------------
-              TECHNICAL GRID
-          ----------------------------------------------------- */}
           <div
             className="absolute inset-0 pointer-events-none opacity-[0.12]"
             style={{
@@ -149,9 +135,6 @@ export default function AuthLayout({
             }}
           />
 
-          {/* -----------------------------------------------------
-              LARGE SOFT LIGHT AREA
-          ----------------------------------------------------- */}
           <div
             className="
               absolute
@@ -166,9 +149,6 @@ export default function AuthLayout({
             "
           />
 
-          {/* -----------------------------------------------------
-              TOP ABSTRACT WAVE
-          ----------------------------------------------------- */}
           <svg
             className="
               absolute
@@ -213,9 +193,6 @@ export default function AuthLayout({
             />
           </svg>
 
-          {/* -----------------------------------------------------
-              BOTTOM WAVES
-          ----------------------------------------------------- */}
           <svg
             className="
               absolute
@@ -229,7 +206,6 @@ export default function AuthLayout({
             preserveAspectRatio="none"
             fill="none"
           >
-            {/* Deep green wave */}
             <path
               d="
                 M0 330
@@ -244,7 +220,6 @@ export default function AuthLayout({
               fillOpacity="0.32"
             />
 
-            {/* Mint wave */}
             <path
               d="
                 M0 390
@@ -259,7 +234,6 @@ export default function AuthLayout({
               fillOpacity="0.22"
             />
 
-            {/* White translucent wave */}
             <path
               d="
                 M0 350
@@ -274,7 +248,6 @@ export default function AuthLayout({
               fillOpacity="0.06"
             />
 
-            {/* Bright green wave */}
             <path
               d="
                 M0 430
@@ -290,9 +263,6 @@ export default function AuthLayout({
             />
           </svg>
 
-          {/* -----------------------------------------------------
-              DIAGONAL DECORATIVE LINES
-          ----------------------------------------------------- */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
 
             <div
@@ -345,9 +315,6 @@ export default function AuthLayout({
 
           </div>
 
-          {/* -----------------------------------------------------
-              DECORATIVE RINGS
-          ----------------------------------------------------- */}
           <div
             className="
               absolute
@@ -408,9 +375,6 @@ export default function AuthLayout({
             "
           />
 
-          {/* -----------------------------------------------------
-              FLOATING DOTS
-          ----------------------------------------------------- */}
           <span className="absolute top-[22%] left-[16%] w-2 h-2 rounded-full bg-[#6EE7B7]/70" />
           <span className="absolute top-[29%] left-[39%] w-3 h-3 rounded-full bg-white/20" />
           <span className="absolute top-[37%] right-[18%] w-2 h-2 rounded-full bg-[#A7F3D0]/60" />
@@ -418,9 +382,6 @@ export default function AuthLayout({
           <span className="absolute bottom-[21%] right-[28%] w-2 h-2 rounded-full bg-white/20" />
           <span className="absolute bottom-[12%] right-[15%] w-1.5 h-1.5 rounded-full bg-white/30" />
 
-          {/* -----------------------------------------------------
-              BRANDING
-          ----------------------------------------------------- */}
           <Link
             to="/"
             className="absolute top-8 left-8 md:top-10 md:left-10 z-20 flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer"
@@ -450,9 +411,6 @@ export default function AuthLayout({
             </span>
           </Link>
 
-          {/* -----------------------------------------------------
-              POSTER CONTENT
-          ----------------------------------------------------- */}
           <div
             className="
               relative
@@ -490,7 +448,6 @@ export default function AuthLayout({
                 {poster.heading}
               </h1>
 
-              {/* Elegant separator */}
               <div className="flex justify-center my-6">
                 <div className="w-10 h-[3px] bg-white rounded-full" />
               </div>
@@ -511,9 +468,6 @@ export default function AuthLayout({
             </div>
           </div>
 
-          {/* -----------------------------------------------------
-              POSTER FOOTER
-          ----------------------------------------------------- */}
           <div
             className="
               absolute
@@ -531,9 +485,6 @@ export default function AuthLayout({
 
         </section>
 
-        {/* =======================================================
-            RIGHT — FORM PANEL
-        ======================================================= */}
         <section
           className={`
             relative
@@ -553,7 +504,6 @@ export default function AuthLayout({
             overflow-y-auto
           `}
         >
-          {/* Go Back button */}
           <button
             onClick={handleGoBack}
             className="
@@ -580,7 +530,6 @@ export default function AuthLayout({
 
           <div className="w-full max-w-[440px] py-2 sm:py-3">
 
-            {/* Mobile Logo */}
             <div className="lg:hidden flex justify-center mb-6">
               <Link
                 to="/"
@@ -609,7 +558,6 @@ export default function AuthLayout({
               </Link>
             </div>
 
-            {/* Title */}
             {title && (
               <div className="mb-4">
 
@@ -649,14 +597,8 @@ export default function AuthLayout({
 
       </div>
 
-      {/* =========================================================
-          AUTHENTICATION SCOPED CSS
-      ========================================================= */}
       <style>{`
 
-        /* ---------------------------------------------
-           FONT CONFIG & ROOT
-        --------------------------------------------- */
         .auth-layout-container input,
         .auth-layout-container select,
         .auth-layout-container textarea,
@@ -665,9 +607,6 @@ export default function AuthLayout({
           font-family: var(--font-family-base), "Source Sans 3", 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
 
-        /* ---------------------------------------------
-           INPUTS
-        --------------------------------------------- */
 
         .auth-layout-container .auth-input {
           background-color: #F7F8FA !important;
@@ -702,11 +641,7 @@ export default function AuthLayout({
           border-left-color: #EF4444 !important;
         }
 
-        /* ---------------------------------------------
-           LABELS
-        --------------------------------------------- */
         
-        /* Main labels */
         .auth-layout-container label:not([for="terms"]):not([for="privacy"]):not([for="remember_me"]):not([for="remember-me"]) {
           font-size: 13px !important;
           margin-bottom: 4px !important;
@@ -715,7 +650,6 @@ export default function AuthLayout({
           display: block !important;
         }
 
-        /* Checkbox labels */
         .auth-layout-container label[for="terms"],
         .auth-layout-container label[for="privacy"],
         .auth-layout-container label[for="remember_me"],
@@ -726,9 +660,6 @@ export default function AuthLayout({
           margin-bottom: 0 !important;
         }
 
-        /* ---------------------------------------------
-           BUTTONS
-        --------------------------------------------- */
 
         .auth-layout-container .auth-button {
           background-color: #059669 !important;
@@ -762,9 +693,6 @@ export default function AuthLayout({
           cursor: not-allowed !important;
         }
 
-        /* ---------------------------------------------
-           CARDS
-        --------------------------------------------- */
 
         .auth-layout-container .auth-card {
           border-radius: 8px !important;
@@ -772,9 +700,6 @@ export default function AuthLayout({
           background-color: #FFFFFF !important;
         }
 
-        /* ---------------------------------------------
-           SELECT
-        --------------------------------------------- */
 
         .auth-layout-container select.auth-input {
           background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
@@ -800,9 +725,6 @@ export default function AuthLayout({
           font-size: 14px !important;
         }
 
-        /* ---------------------------------------------
-           LINKS
-        --------------------------------------------- */
 
         .auth-layout-container a {
           color: #059669;
@@ -813,17 +735,11 @@ export default function AuthLayout({
           color: #047857;
         }
 
-        /* ---------------------------------------------
-           CHECKBOXES
-        --------------------------------------------- */
 
         .auth-layout-container input[type="checkbox"] {
           accent-color: #059669;
         }
 
-        /* ---------------------------------------------
-           MOBILE
-        --------------------------------------------- */
 
         @media (max-width: 1023px) {
 

@@ -38,7 +38,6 @@ export default function MedicineSearchBar({
         </p>
       </div>
 
-      {/* Search Input Bar */}
       <form onSubmit={onSearch} className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
         <div className="relative flex-grow">
           <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
@@ -59,7 +58,6 @@ export default function MedicineSearchBar({
         </button>
       </form>
 
-      {/* Advanced Filters */}
       <div className="pt-2 border-t border-gray-100 flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-gray-500">
         <label className="flex items-center space-x-2 cursor-pointer hover:text-gray-900 transition-colors">
           <input
@@ -71,7 +69,6 @@ export default function MedicineSearchBar({
           <span>In Stock Only</span>
         </label>
 
-        {/* Category Dropdown */}
         <div className="flex items-center space-x-2">
           <span>Category:</span>
           <select
@@ -88,7 +85,6 @@ export default function MedicineSearchBar({
         </div>
       </div>
 
-      {/* Popular Searches */}
       <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs">
         <span className="text-gray-400 font-semibold">Popular searches:</span>
         {['Paracetamol', 'Amoxicillin', 'Metformin'].map((med) => (

@@ -6,31 +6,21 @@ interface AuthStore {
   user: User | null
   token: string | null
   isAuthenticated: boolean
-  /** true while we are still rehydrating the session from storage on first load */
   isInitialising: boolean
   error: string | null
   login: (user: User, token: string) => void
   logout: () => void
   setError: (error: string | null) => void
   updateProfile: (updatedFields: Partial<User>) => void
-  /** Call once on app boot to restore session from localStorage */
   initialise: () => void
 }
 
-/**
- * Returns true only when the token looks like a real JWT
- * (three base64-url segments separated by dots).
- */
 function isRealJwt(token: string): boolean {
   if (!token) return false
   const parts = token.split('.')
   return parts.length === 3
 }
 
-/**
- * Decode a JWT payload without verifying the signature.
- * Used client-side only to check expiry.
- */
 function decodeJwtPayload(token: string): { exp?: number } | null {
   try {
     const payload = token.split('.')[1]
@@ -52,7 +42,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
     const token = TokenStorage.getToken()
     const savedUser = TokenStorage.loadUser() as User | null
 
-    // Validate: token must be a real JWT and not expired
     const tokenValid =
       token &&
       isRealJwt(token) &&
@@ -70,7 +59,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
         isInitialising: false,
       })
     } else {
-      // No valid session or token expired — clear everything stale
       TokenStorage.clearToken()
       set({ isInitialising: false })
     }

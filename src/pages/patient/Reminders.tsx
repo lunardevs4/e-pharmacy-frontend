@@ -29,7 +29,6 @@ export default function PatientReminders() {
   const [toastMsg, setToastMsg] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'toggle'; id: string; isActive?: boolean } | null>(null)
 
-  // Add reminder form state
   const [medicineName, setMedicineName] = useState('')
   const [medicineId, setMedicineId] = useState('')
   const [times, setTimes] = useState<string[]>(['08:00'])
@@ -186,7 +185,6 @@ export default function PatientReminders() {
     }
   }
 
-  // Get active reminders count
   const activeCount = reminders.filter(r => r.isActive).length
   const dueCount = reminders.filter(r => {
     const nextDose = getNextDoseInfo(r)
@@ -209,7 +207,6 @@ export default function PatientReminders() {
         </div>
       )}
       
-      {/* Toast */}
       {toastMsg && (
         <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2">
           <CheckCircle2 className="w-4 h-4" />
@@ -217,7 +214,6 @@ export default function PatientReminders() {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center space-x-3">
@@ -237,7 +233,6 @@ export default function PatientReminders() {
         </div>
       </div>
 
-      {/* Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-center space-x-3">
           <div className="p-2.5 bg-emerald-50 rounded-lg text-health-primary">
@@ -272,7 +267,6 @@ export default function PatientReminders() {
         </div>
       </div>
 
-      {/* Reminders List */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-12 text-center text-xs text-gray-400 flex items-center justify-center space-x-2">
@@ -293,7 +287,6 @@ export default function PatientReminders() {
               return (
                 <div key={reminder.id} className={`p-5 ${!reminder.isActive ? 'opacity-50' : ''}`}>
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    {/* Medicine Info */}
                     <div className="flex-grow space-y-2">
                       <div className="flex items-center space-x-2">
                         <h3 className="font-bold text-gray-900 text-base">{reminder.medicineName}</h3>
@@ -320,7 +313,6 @@ export default function PatientReminders() {
                         </span>
                       </div>
 
-                      {/* Time Slots */}
                       <div className="flex flex-wrap gap-2 mt-2">
                         {reminder.times.map((time, idx) => {
                           const isDue = nextDose?.time === time && nextDose?.isDue
@@ -357,7 +349,6 @@ export default function PatientReminders() {
                       )}
                     </div>
 
-                    {/* Next Dose Info & Actions */}
                     <div className="flex items-center space-x-3">
                       {nextDose && reminder.isActive && (
                         <div className="text-right">
@@ -400,7 +391,6 @@ export default function PatientReminders() {
         )}
       </div>
 
-      {/* Add Reminder Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
           <div className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />

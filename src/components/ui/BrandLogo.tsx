@@ -1,4 +1,3 @@
-// src/components/ui/BrandLogo.tsx
 import React from 'react';
 
 interface BrandLogoProps {

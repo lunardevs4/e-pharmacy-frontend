@@ -54,7 +54,6 @@ interface Pharmacy {
   statusNotes?: string | null
   timeline?: TimelineEvent[]
 
-  // Included relation
   owner?: PharmacyOwner | null
 }
 
@@ -102,16 +101,13 @@ export default function PharmacyRegistry() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
 
-  // Filters
   const [searchVal, setSearchVal] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
 
-  // Verification Dialogs/Modals
   const [activeModal, setActiveModal] = useState<'REJECT' | 'SUSPEND' | 'REQUEST_INFO' | null>(null)
   const [modalComment, setModalComment] = useState('')
   const [isSubmittingAction, setIsSubmittingAction] = useState(false)
 
-  // Mock Document Viewer Modal
   const [viewingDoc, setViewingDoc] = useState<{ label: string; name: string } | null>(null)
 
   useEffect(() => {
@@ -142,7 +138,6 @@ export default function PharmacyRegistry() {
     setTimeout(() => setToastMsg(null), 3000)
   }
 
-  // Handle regulatory actions
   const handleApprove = async () => {
     if (!selectedPharm) return
     setIsSubmittingAction(true)
@@ -182,7 +177,6 @@ export default function PharmacyRegistry() {
         updated = await AuthApi.rejectPharmacy(selectedPharm.id)
         triggerToast(`Application rejected for ${selectedPharm.name || selectedPharm.id}.`)
       } else if (activeModal === 'SUSPEND') {
-        // Backend does not support suspend directly; use REJECTED as administrative hold
         updated = await AuthApi.rejectPharmacy(selectedPharm.id)
         triggerToast(`Pharmacy license suspended for ${selectedPharm.name || selectedPharm.id}.`)
       } else {
@@ -212,7 +206,6 @@ export default function PharmacyRegistry() {
     setSelectedPharm(normalized)
   }
 
-  // Filter listings
   const filteredPharmacies = pharmacies.filter((p) => {
     const query = searchVal.toLowerCase()
     const matchesSearch =
@@ -250,7 +243,6 @@ export default function PharmacyRegistry() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
-      {/* Toast alert popup */}
       {toastMsg && (
         <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-250 text-emerald-805 px-5 py-3 rounded-lg shadow-xl animate-fadeIn flex items-center space-x-2 text-xs font-bold">
           <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -266,7 +258,6 @@ export default function PharmacyRegistry() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Pane: Registry Search and List (5 Cols) */}
         <div className="lg:col-span-5 bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-gray-150">
             <div className="flex items-center space-x-2">
@@ -276,7 +267,6 @@ export default function PharmacyRegistry() {
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{filteredPharmacies.length} Match(es)</span>
           </div>
 
-          {/* Filters console */}
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-grow">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
@@ -301,7 +291,6 @@ export default function PharmacyRegistry() {
             </select>
           </div>
 
-          {/* Pharmacy Listings */}
           {isLoading ? (
             <div className="text-center py-10 flex flex-col items-center justify-center gap-2">
               <RefreshCw className="w-6 h-6 text-emerald-600 animate-spin" />
@@ -345,7 +334,6 @@ export default function PharmacyRegistry() {
           )}
         </div>
 
-        {/* Right Pane: Auditing Report & Verification Console (7 Cols) */}
         <div className="lg:col-span-7 bg-white border border-gray-200 rounded-xl p-5 shadow-xs text-left">
           {!selectedPharm ? (
             <div className="text-center py-24 text-gray-400 font-medium text-xs">
@@ -354,7 +342,6 @@ export default function PharmacyRegistry() {
           ) : (
             <div className="space-y-6 font-semibold text-xs text-gray-700">
 
-              {/* Detailed Header */}
               <div className="pb-4 border-b border-gray-150 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <div className="space-y-1">
                   <h3 className="text-base font-black text-gray-950 uppercase tracking-tight">{selectedPharm.name || selectedPharm.id}</h3>
@@ -366,7 +353,6 @@ export default function PharmacyRegistry() {
                 </div>
               </div>
 
-              {/* Status Alert for Rejections/Suspensions */}
               {selectedPharm.statusNotes && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-xl text-[11px] leading-relaxed font-sans flex items-start space-x-2.5">
                   <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
@@ -377,10 +363,8 @@ export default function PharmacyRegistry() {
                 </div>
               )}
 
-              {/* Report Tab Container */}
               <div className="space-y-5">
 
-                {/* Section 1: Corporate Details */}
                 <div className="space-y-2">
                   <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
                     <Landmark className="w-3.5 h-3.5 text-emerald-805" />
@@ -414,7 +398,6 @@ export default function PharmacyRegistry() {
                   </div>
                 </div>
 
-                {/* Section 2: Contact Info */}
                 <div className="space-y-2">
                   <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5 text-emerald-805" />
@@ -436,7 +419,6 @@ export default function PharmacyRegistry() {
                   </div>
                 </div>
 
-                {/* Section 3: Geographic jurisdiction */}
                 <div className="space-y-2">
                   <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-emerald-805" />
@@ -470,7 +452,6 @@ export default function PharmacyRegistry() {
                   </div>
                 </div>
 
-                {/* Section 4: Responsible Superintendent Pharmacist */}
                 <div className="space-y-2">
                   <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-emerald-805" />
@@ -500,7 +481,6 @@ export default function PharmacyRegistry() {
                   </div>
                 </div>
 
-                {/* Section 5: Documents Auditing */}
                 <div className="space-y-2">
                   <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-emerald-805" />
@@ -535,7 +515,6 @@ export default function PharmacyRegistry() {
                   </div>
                 </div>
 
-                {/* Section 6: Auditing history timeline */}
                 <div className="space-y-2">
                   <h4 className="text-[10px] text-gray-450 uppercase font-black tracking-wider pb-1 border-b border-gray-100 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-emerald-805" />
@@ -557,7 +536,6 @@ export default function PharmacyRegistry() {
 
               </div>
 
-              {/* Section 7: Verification Actions */}
               <div className="pt-5 border-t border-gray-200 flex flex-wrap gap-2.5 justify-end">
                 {selectedPharm.status === 'PENDING' ? (
                   <>
@@ -607,7 +585,6 @@ export default function PharmacyRegistry() {
                     <span>Suspend License</span>
                   </button>
                 ) : (
-                  // Rejected or Suspended
                   <button
                     type="button"
                     disabled={isSubmittingAction}
@@ -625,7 +602,6 @@ export default function PharmacyRegistry() {
         </div>
       </div>
 
-      {/* Decision comment dialog popup */}
       {activeModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div onClick={() => setActiveModal(null)} className="portal-modal-backdrop absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
@@ -680,7 +656,6 @@ export default function PharmacyRegistry() {
         </div>
       )}
 
-      {/* Simulated Document Viewer Modal */}
       {viewingDoc && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <div onClick={() => setViewingDoc(null)} className="portal-modal-backdrop absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
@@ -698,7 +673,6 @@ export default function PharmacyRegistry() {
 
             <div className="p-8 bg-gray-50 flex items-center justify-center min-h-[300px]">
               <div className="bg-white border-4 border-double border-emerald-800 p-8 rounded-xl shadow-md max-w-sm text-center space-y-6 relative overflow-hidden">
-                {/* Background Watermark */}
                 <div className="absolute inset-0 opacity-5 flex items-center justify-center font-bold text-3xl rotate-45 pointer-events-none select-none">
                   RWANDA MOH
                 </div>

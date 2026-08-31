@@ -4,7 +4,6 @@ import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
 import SidebarLayout from '@/layouts/SidebarLayout'
 
-// Public Pages
 import LandingPage from '@/pages/public/Landing'
 import Login from '@/pages/public/Login'
 import RegisterSelector from '@/pages/public/RegisterSelector'
@@ -16,7 +15,6 @@ import ChangePassword from '@/pages/public/ChangePassword'
 import VerifyEmail from '@/pages/public/VerifyEmail'
 import CheckEmail from '@/pages/public/CheckEmail'
 
-// Patient Pages
 import PatientDashboard from '@/pages/patient/Dashboard'
 import MedicineSearch from '@/pages/patient/MedicineSearch'
 import MedicineDetails from '@/pages/patient/MedicineDetails'
@@ -26,7 +24,6 @@ import PatientReminders from '@/pages/patient/Reminders'
 import SharedNotifications from '@/pages/common/Notifications'
 import PatientProfile from '@/pages/patient/Profile'
 
-// Pharmacy Pages
 import PharmacyDashboard from '@/pages/pharmacy/Dashboard'
 import PharmacyInventory from '@/pages/pharmacy/Inventory'
 import PharmacyReservations from '@/pages/pharmacy/Reservations'
@@ -41,7 +38,6 @@ import PharmacyInsurance from '@/pages/pharmacy/Insurance'
 
 
 
-// Government Pages
 import GovernmentDashboard from '@/pages/government/Dashboard'
 import PharmacyRegistry from '@/pages/government/PharmacyRegistry'
 import MedicineRegistry from '@/pages/government/MedicineRegistry'
@@ -52,7 +48,6 @@ import ProvinceAnalytics from '@/pages/government/ProvinceAnalytics'
 import GovernmentCompliance from '@/pages/government/Compliance'
 import GovernmentReports from '@/pages/government/Reports'
 
-// Insurance Pages
 import InsuranceDashboard from '@/pages/insurance/Dashboard'
 import InsuranceClaims from '@/pages/insurance/Claims'
 import InsurancePatients from '@/pages/insurance/Patients'
@@ -60,7 +55,6 @@ import InsurancePayments from '@/pages/insurance/Payments'
 import InsuranceReports from '@/pages/insurance/Reports'
 import InsuranceTariffs from '@/pages/insurance/Tariffs'
 
-// Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard'
 import AdminUsers from '@/pages/admin/Users'
 
@@ -72,10 +66,8 @@ import AdminAuditLogs from '@/pages/admin/AuditLogs'
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Unrestricted Landing Page */}
       <Route path="/" element={<LandingPage />} />
 
-      {/* Public Routes (Guests only, redirects if authenticated) */}
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterSelector />} />
@@ -89,10 +81,8 @@ export default function AppRoutes() {
         <Route path="/success" element={<ForgotPassword />} />
       </Route>
 
-      {/* Auth State Pending Password Enforce Route */}
       <Route path="/change-password" element={<ChangePassword />} />
 
-      {/* Patient Portal */}
       <Route element={<ProtectedRoute allowedRoles={['PATIENT']} />}>
         <Route path="/patient" element={<SidebarLayout />}>
           <Route index element={<PatientDashboard />} />
@@ -106,7 +96,6 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Pharmacy Portal */}
       <Route element={<ProtectedRoute allowedRoles={['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST']} />}>
         <Route path="/pharmacy" element={<SidebarLayout />}>
           <Route index element={<PharmacyDashboard />} />
@@ -118,7 +107,6 @@ export default function AppRoutes() {
             <Route path="insurance" element={<PharmacyInsurance />} />
           </Route>
           
-          {/* Owner Only Routes */}
           <Route element={<ProtectedRoute allowedRoles={['PHARMACY', 'PHARMACY_OWNER']} />}>
             <Route path="staff" element={<PharmacyStaff />} />
             <Route path="audit" element={<PharmacyAudit />} />
@@ -132,7 +120,6 @@ export default function AppRoutes() {
 
 
 
-      {/* Government Portal */}
       <Route element={<ProtectedRoute allowedRoles={['GOVERNMENT']} />}>
         <Route path="/government" element={<SidebarLayout />}>
           <Route index element={<GovernmentDashboard />} />
@@ -148,7 +135,6 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Insurance Portal */}
       <Route element={<ProtectedRoute allowedRoles={['INSURANCE']} />}>
         <Route path="/insurance" element={<SidebarLayout />}>
           <Route index element={<InsuranceDashboard />} />
@@ -161,7 +147,6 @@ export default function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Admin Portal */}
       <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
         <Route path="/admin" element={<SidebarLayout />}>
           <Route index element={<AdminDashboard />} />
@@ -174,7 +159,6 @@ export default function AppRoutes() {
       </Route>
 
 
-      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

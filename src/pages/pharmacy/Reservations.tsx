@@ -188,7 +188,6 @@ export default function PharmacyReservations() {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-black text-gray-900">Incoming Reservations</h1>
@@ -200,7 +199,6 @@ export default function PharmacyReservations() {
         </button>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4" role="list" aria-label="Reservation statistics">
         {[
           { label: 'Pending',          value: counts.pending,   color: 'text-amber-700',   bg: 'bg-amber-50',   Icon: Clock        },
@@ -217,7 +215,6 @@ export default function PharmacyReservations() {
         ))}
       </div>
 
-      {/* Table */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row gap-3">
           <div className="relative flex-grow max-w-sm">

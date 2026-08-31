@@ -173,7 +173,6 @@ export default function PatientRegister() {
       subtitle="Register a secure patient account to access medicine search and reservation."
     >
       <form onSubmit={handleFinalSubmit}>
-        {/* Step indicator */}
         <div
           className="mb-6 rounded-2xl p-4 max-w-sm mx-auto flex items-center justify-around"
           style={{
@@ -255,7 +254,6 @@ export default function PatientRegister() {
 
         {currentStep === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Full Name */}
             <div className="group">
               <label
                 htmlFor="fullName"
@@ -286,7 +284,6 @@ export default function PatientRegister() {
             </div>
 
             <div className="grid grid-cols-2" style={{ gap: '16px' }}>
-              {/* DOB */}
               <div className="group">
                 <label
                   htmlFor="dob"
@@ -315,7 +312,6 @@ export default function PatientRegister() {
                 </div>
               </div>
 
-              {/* Gender */}
               <div className="group">
                 <label
                   htmlFor="gender"
@@ -348,7 +344,6 @@ export default function PatientRegister() {
               </div>
             </div>
 
-            {/* Phone */}
             <div className="group">
               <label
                 htmlFor="phone"
@@ -392,7 +387,6 @@ export default function PatientRegister() {
 
         {currentStep === 2 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Email */}
             <div className="group">
               <label
                 htmlFor="email"
@@ -422,7 +416,6 @@ export default function PatientRegister() {
               </div>
             </div>
 
-            {/* Password */}
             <div className="group">
               <label
                 htmlFor="pass"
@@ -526,7 +519,6 @@ export default function PatientRegister() {
               )}
             </div>
 
-            {/* Confirm Password */}
             <div className="group">
               <label
                 htmlFor="confirmPass"

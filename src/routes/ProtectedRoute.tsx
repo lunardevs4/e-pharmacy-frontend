@@ -10,7 +10,6 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const { isAuthenticated, isInitialising, user } = useAuthStore()
 
-  // Session is still being restored from localStorage — don't redirect yet
   if (isInitialising) return null
 
   if (!isAuthenticated || !user) {

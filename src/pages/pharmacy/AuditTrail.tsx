@@ -26,10 +26,8 @@ export default function AuditTrail() {
     PharmacyApi.getAuditLogs(pharmacyId).then((rows: any[]) => setLogs(rows.map((log) => ({ time: new Date(log.createdAt).toLocaleString(), staff: [log.user?.firstName, log.user?.lastName].filter(Boolean).join(' ') || 'System', role: log.user?.role || 'SYSTEM', action: `${log.action} ${log.entityType}`, ip: log.ipAddress || '—', status: 'Success' })))).catch((err) => setError(err.message || 'Unable to load audit logs.'))
   }, [user?.pharmacy?.id, user?.pharmacyId])
 
-  // Clear Audit Trail
   const handleClearAuditLogs = () => setLogs([])
 
-  // Filter logs list
   const filteredLogs = logs.filter((log) => {
     const matchesSearch = log.staff.toLowerCase().includes(searchVal.toLowerCase()) || 
                           log.action.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -49,7 +47,6 @@ export default function AuditTrail() {
         </div>
       </div>
 
-      {/* Filters Search controls and Table list */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
         
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
@@ -86,7 +83,6 @@ export default function AuditTrail() {
         </div>
 
         {error && <div className="text-sm text-red-600">{error}</div>}
-        {/* Audit Logs Table Grid */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs divide-y divide-gray-150">
             <thead>

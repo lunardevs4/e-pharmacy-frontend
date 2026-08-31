@@ -124,7 +124,6 @@ export default function PharmacyNotifications() {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
@@ -152,7 +151,6 @@ export default function PharmacyNotifications() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by type">
           {(['ALL', 'SHORTAGE', 'RESERVATION', 'MOH', 'BILLING', 'SYSTEM'] as const).map(t => (
@@ -171,7 +169,6 @@ export default function PharmacyNotifications() {
         </select>
       </div>
 
-      {/* List */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-20 text-center text-gray-400 space-y-3">
@@ -185,17 +182,14 @@ export default function PharmacyNotifications() {
               const Icon = meta.icon
               return (
                 <li key={n.id} className={`flex items-start gap-4 px-5 py-4 transition-colors relative ${!n.read ? 'bg-emerald-50/20' : 'hover:bg-gray-50/50'}`}>
-                  {/* Unread pip */}
                   {!n.read && (
                     <span aria-hidden="true" className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full ${SEV_DOT[n.severity ?? 'info']}`} />
                   )}
 
-                  {/* Icon */}
                   <div className={`p-2.5 rounded-lg border flex-shrink-0 mt-0.5 ${meta.bg}`} aria-hidden="true">
                     <Icon className={`w-4 h-4 ${meta.iconColor}`} />
                   </div>
 
-                  {/* Content */}
                   <div className="flex-grow min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-xs font-black text-gray-900 ${!n.read ? 'font-black' : 'font-bold'}`}>{n.title}</span>
@@ -210,7 +204,6 @@ export default function PharmacyNotifications() {
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     {!n.read && (
                       <button onClick={() => markRead(n.id)} aria-label={`Mark "${n.title}" as read`}

@@ -141,7 +141,6 @@ export default function PharmacyDashboard() {
         )}
         
 
-        {/* Quick Metrics Statistics Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
@@ -188,7 +187,6 @@ export default function PharmacyDashboard() {
           </div>
         </div>
 
-        {/* Main Split Section Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">

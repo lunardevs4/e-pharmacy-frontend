@@ -30,22 +30,18 @@ export default function InsurancePayments() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      // Get insurance provider ID from user
       const providers = await insuranceApi.getProviders()
       const insurer = user?.insuranceProvider || 'RSSB'
       const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
       const insuranceId = matchedProvider?.id
 
-      // Backend returns { totalOutstanding, claimCount, claims: [...] }
       const response: OutstandingPaymentsResponse = await insuranceApi.getOutstandingPayments()
       const claims: any[] = Array.isArray(response?.claims) ? response.claims : []
 
-      // Filter by insurance provider if needed
       const filteredClaims = insuranceId
         ? claims.filter((c: any) => c.insuranceId === insuranceId)
         : claims
 
-      // Group claims by pharmacy into OutstandingPayment rows
       const grouped: Record<string, OutstandingPayment> = {}
       for (const claim of filteredClaims) {
         const pid = claim.pharmacyId

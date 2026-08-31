@@ -34,14 +34,10 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _retryCount?: number; _skipRetry?: boolean }
 
-    // Registration creates a database record before sending email. Retrying a
-    // timed-out POST can therefore create a duplicate request while the first
-    // request is still finishing.
     if (originalRequest?._skipRetry) {
       return Promise.reject(error)
     }
 
-    // Retry logic for network errors and 5xx errors
     if (!error.response && originalRequest && !originalRequest._retry) {
       const retryCount = originalRequest._retryCount || 0
       if (retryCount < MAX_RETRIES) {

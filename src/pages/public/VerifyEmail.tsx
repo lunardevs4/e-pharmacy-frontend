@@ -14,8 +14,6 @@ export default function VerifyEmail() {
   useEffect(() => {
     if (!token) { setState('error'); setMessage('This verification link is missing its token.'); return }
 
-    // React StrictMode intentionally re-runs effects in development. Email
-    // verification is one-time, so do not submit the same token twice.
     if (attemptedToken.current === token) return
     attemptedToken.current = token
 

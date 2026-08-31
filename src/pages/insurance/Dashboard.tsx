@@ -15,7 +15,6 @@ export default function InsuranceDashboard() {
       setIsLoading(true)
       setErrorMsg(null)
       try {
-        // Get insurance provider ID from user
         const providers = await insuranceApi.getProviders()
         const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
         const insuranceId = matchedProvider?.id
@@ -74,7 +73,6 @@ export default function InsuranceDashboard() {
         </div>
       </div>
 
-      {/* Additional Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
         <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
           <span className="text-[10px] sm:text-xs text-gray-500 font-semibold block uppercase">Total Patients</span>

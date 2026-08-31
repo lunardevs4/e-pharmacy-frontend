@@ -9,7 +9,6 @@ export default function Reservations() {
   const [loading, setLoading] = useState(false)
   const [selectedRes, setSelectedRes] = useState<Reservation | null>(null)
   
-  // Dialog modal states
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
@@ -19,7 +18,6 @@ export default function Reservations() {
     setTimeout(() => setToastMsg(null), 2500)
   }
 
-  // Load reservations history from dynamic Seed layer
   const loadReservations = async () => {
     setLoading(true)
     try {
@@ -36,14 +34,12 @@ export default function Reservations() {
     loadReservations()
   }, [])
 
-  // Execute order cancellation
   const handleCancelConfirm = async () => {
     if (!selectedRes) return
     setCancelLoading(true)
     try {
       const success = await MedicineApi.cancelReservation(selectedRes.id)
       if (success) {
-        // Log cancellation log to notifications center
         const notKey = 'epharmacy_notifications'
         const rawNot = localStorage.getItem(notKey)
         const alertsList = rawNot ? JSON.parse(rawNot) : []
@@ -87,7 +83,6 @@ export default function Reservations() {
     }
   }
 
-  // Visual status timeline nodes array
   const getTimelineSteps = (status: Reservation['status']): { key: string; label: string; done: boolean; active?: boolean; failed?: boolean }[] => {
     const steps = [
       { key: 'PENDING', label: 'Reserved' },
@@ -118,7 +113,6 @@ export default function Reservations() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-16 relative">
       
-      {/* Dynamic cancel warning popup modal */}
       <ConfirmationDialog
         isOpen={showCancelDialog}
         title="Cancel Reservation?"
@@ -129,7 +123,6 @@ export default function Reservations() {
         isLoading={cancelLoading}
       />
 
-      {/* Success alert toast */}
       {toastMsg && (
         <div className="fixed top-20 right-6 z-55 bg-emerald-50 border border-emerald-250 text-emerald-800 px-4.5 py-3 rounded-lg shadow-xl animate-fadeIn flex items-center space-x-2 text-xs font-bold">
           <CheckCircle2 className="w-5 h-5" />
@@ -137,7 +130,6 @@ export default function Reservations() {
         </div>
       )}
 
-      {/* Main Container Details Switch */}
       {!selectedRes ? (
         <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 shadow-sm space-y-6">
           <div>
@@ -201,10 +193,8 @@ export default function Reservations() {
           )}
         </div>
       ) : (
-        /* Detailed layout Panel */
         <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fadeIn">
           
-          {/* Back button */}
           <button
             type="button"
             onClick={() => setSelectedRes(null)}
@@ -214,7 +204,6 @@ export default function Reservations() {
             <span>Back to list</span>
           </button>
 
-          {/* Title header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-150 pb-4 gap-4">
             <div>
               <div className="flex items-center space-x-3">
@@ -224,7 +213,6 @@ export default function Reservations() {
               <p className="text-xs text-gray-400 font-bold uppercase mt-1">Reservation Reference: <span className="font-mono text-gray-700">{selectedRes.id}</span></p>
             </div>
             
-            {/* Cancellation trigger */}
             {(selectedRes.status === 'PENDING' || selectedRes.status === 'CONFIRMED') && (
               <button
                 type="button"
@@ -236,7 +224,6 @@ export default function Reservations() {
             )}
           </div>
 
-          {/* Fulfillment Milestones Timeline */}
           <div className="space-y-3 bg-gray-50/50 border border-gray-200 p-5 rounded-xl">
             <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Fulfillment Timeline Status</span>
             
@@ -266,13 +253,10 @@ export default function Reservations() {
             </div>
           </div>
 
-          {/* Split info column grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             
-            {/* Left side: details block */}
             <div className="md:col-span-2 space-y-4 text-xs font-bold text-gray-700">
               
-              {/* Medicine details */}
               <div className="border border-gray-150 rounded-xl p-4 space-y-2">
                 <span className="text-[10px] uppercase text-gray-400 block tracking-wider">Reserved Item details</span>
                 <div className="flex justify-between items-center text-gray-950 text-sm">
@@ -284,7 +268,6 @@ export default function Reservations() {
                 </div>
               </div>
 
-              {/* Pharmacy details */}
               <div className="border border-gray-150 rounded-xl p-4 space-y-2">
                 <span className="text-[10px] uppercase text-gray-400 block tracking-wider">Pickup Pharmacy details</span>
                 <div className="text-gray-950 text-sm">{selectedRes.pharmacyName}</div>
@@ -298,7 +281,6 @@ export default function Reservations() {
                 </div>
               </div>
 
-              {/* Insurance & invoice breakdown */}
               <div className="border border-gray-150 rounded-xl p-4 space-y-2.5">
                 <span className="text-[10px] uppercase text-gray-400 block tracking-wider">Payment Cost splits (RWF)</span>
                 
@@ -321,7 +303,6 @@ export default function Reservations() {
 
             </div>
 
-            {/* Right side: reservation reference card */}
             <div className="border border-gray-250 rounded-xl p-5 bg-gray-50/50 flex flex-col items-center text-center space-y-4">
                 <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Reservation reference</span>
               

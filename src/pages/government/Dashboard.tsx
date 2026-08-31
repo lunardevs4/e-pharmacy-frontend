@@ -43,7 +43,6 @@ export default function GovernmentDashboard() {
   const [pharmacies, setPharmacies] = useState<any[]>([])
   const [summary, setSummary] = useState<GovernmentSummary | null>(null)
   const [lowStock, setLowStock] = useState<any[]>([])
-  // const [reservationStats, setReservationStats] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -79,7 +78,6 @@ export default function GovernmentDashboard() {
         reservationResult,
       ] = results
 
-      // Pharmacies
       if (pharmacyResult.status === 'fulfilled') {
         setPharmacies(
           Array.isArray(pharmacyResult.value)
@@ -94,7 +92,6 @@ export default function GovernmentDashboard() {
         setPharmacies([])
       }
 
-      // Summary
       if (summaryResult.status === 'fulfilled') {
         console.log('SUMMARY:', summaryResult.value)
         console.log(
@@ -113,7 +110,6 @@ export default function GovernmentDashboard() {
         setSummary(null)
       }
 
-      // Low stock
       if (lowStockResult.status === 'fulfilled') {
         setLowStock(
           Array.isArray(lowStockResult.value)
@@ -128,7 +124,6 @@ export default function GovernmentDashboard() {
         setLowStock([])
       }
 
-      // Reservation stats
       if (reservationResult.status === 'fulfilled') {
         console.log(
           'RESERVATION STATS:',
@@ -231,7 +226,6 @@ export default function GovernmentDashboard() {
         </div>
       )}
 
-      {/* MoH Rwanda Regulatory Header Banner */}
       <div className="bg-white text-gray-900 rounded-xl p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row justify-between items-center border border-gray-200 shadow-xs relative overflow-hidden gap-4 sm:gap-6">
         <div className="absolute right-0 top-0 w-48 h-48 bg-emerald-50/40 rounded-full blur-2xl pointer-events-none" />
 
@@ -253,7 +247,6 @@ export default function GovernmentDashboard() {
         </div>
       </div>
 
-      {/* Statistics grids */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
           <div className="p-2 sm:p-2.5 bg-emerald-50 text-health-primary rounded-lg">
@@ -306,11 +299,8 @@ export default function GovernmentDashboard() {
         </div>
       </div>
 
-      {/* Alert sections & charts splits */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
-        {/* Left Column (2/3 width) */}
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          {/* Recent Registrations Onboarding timeline */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-gray-150 gap-2">
               <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
@@ -348,7 +338,6 @@ export default function GovernmentDashboard() {
             )}
           </div>
 
-          {/* Critical stock levels shortage logs */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-gray-150 gap-2">
               <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
@@ -378,9 +367,7 @@ export default function GovernmentDashboard() {
           </div>
         </div>
 
-        {/* Right Column: Analytics & Demands (1/3 width) */}
         <div className="space-y-4 sm:space-y-6">
-          {/* Province Distribution Table */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4 font-semibold text-[10px] sm:text-xs text-gray-700">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
@@ -413,7 +400,6 @@ export default function GovernmentDashboard() {
             </div>
           </div>
 
-          {/* National Pharmacy Statistics */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">

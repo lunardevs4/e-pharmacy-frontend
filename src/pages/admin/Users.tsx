@@ -48,7 +48,6 @@ export default function AdminUsers() {
   const [pendingDelete, setPendingDelete] = useState<SystemUser | null>(null)
   const [pendingStatus, setPendingStatus] = useState<SystemUser | null>(null)
 
-  // Add form states
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -90,7 +89,6 @@ export default function AdminUsers() {
     setModalError(null)
     if (!name || !email || !phone) return
 
-    // Validate email
     const emailValidation = validateEmail(email)
     if (!emailValidation.isValid) {
       setModalError(emailValidation.error || 'Please provide a valid email address.')
@@ -225,7 +223,6 @@ export default function AdminUsers() {
           {errorMsg}
         </div>
       )}
-      {/* Toast */}
       {toastMsg && (
         <div
           role="status"
@@ -237,7 +234,6 @@ export default function AdminUsers() {
         </div>
       )}
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Users', value: counts.total, color: 'text-gray-900', bg: 'bg-gray-50', icon: Users },
@@ -256,9 +252,7 @@ export default function AdminUsers() {
         ))}
       </div>
 
-      {/* Table Card */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
-        {/* Toolbar */}
         <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex flex-col sm:flex-row gap-2 flex-grow max-w-2xl">
             <div className="relative flex-grow">
@@ -301,7 +295,6 @@ export default function AdminUsers() {
           </button>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs" aria-label="System users">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -389,7 +382,6 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Add User Modal */}
       {showAddModal && (
         <div
           role="dialog"
@@ -477,7 +469,6 @@ export default function AdminUsers() {
         </div>
       )}
 
-      {/* View User Modal */}
       {showViewModal && (
         <div
           role="dialog"

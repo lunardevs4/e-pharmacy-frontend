@@ -35,12 +35,10 @@ export default function StaffManagement() {
     }).catch((err) => setError(err.message || 'Unable to load staff.')).finally(() => setLoading(false))
   }, [user?.pharmacy?.id, user?.pharmacyId])
 
-  // Filter states
   const [searchVal, setSearchVal] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
-  // Add staff modal states
   const [showAddModal, setShowAddModal] = useState(false)
   const [name, setName] = useState('')
   const [role, setRole] = useState<'Pharmacist' | 'Pharmacy Owner'>('Pharmacist')
@@ -55,12 +53,10 @@ export default function StaffManagement() {
     emailSent: boolean
   } | null>(null)
 
-  // Save new staff member and append action to audit trail logs
   const handleSaveStaff = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !email || !phone) return
 
-    // Validate email
     const emailValidation = validateEmail(email)
     if (!emailValidation.isValid) {
       setError(emailValidation.error || 'Please provide a valid email address.')
@@ -93,7 +89,6 @@ export default function StaffManagement() {
     setShowCredentialsBanner(false)
   }
 
-  // Toggle status (Active / Inactive)
   const toggleEmployeeStatus = (id: string) => {
     setEmployees((prev) =>
       prev.map((emp) => {
@@ -117,7 +112,6 @@ export default function StaffManagement() {
     }
   }
 
-  // Apply filters
   const filteredEmployees = employees.filter((emp) => {
     const matchesSearch = emp.name.toLowerCase().includes(searchVal.toLowerCase()) ||
       emp.email.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -143,7 +137,6 @@ export default function StaffManagement() {
         </div>
       )}
 
-      {/* Information Header Banner matching layout mockup */}
       <div className="bg-blue-50/60 border border-blue-200 text-blue-800 rounded-xl p-4 flex items-start space-x-3 text-xs shadow-xs">
         <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <div className="leading-normal">
@@ -151,17 +144,14 @@ export default function StaffManagement() {
         </div>
       </div>
 
-      {/* Staff Roles & Permissions card summary */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
         <h3 className="text-sm font-black text-gray-900 pb-2 border-b border-gray-150">Staff Roles &amp; Permissions</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px] leading-relaxed">
-          {/* Col 1 */}
           <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">
             <span className="font-bold text-gray-950 block">Pharmacy Owner</span>
             <p className="text-gray-500">🟢 Full access — manage pharmacy, staff, inventory, reports, profile</p>
           </div>
-          {/* Col 2 */}
           <div className="border border-gray-150 rounded-lg p-3 bg-gray-50/40 space-y-2">
             <span className="font-bold text-gray-950 block">Pharmacist</span>
             <p className="text-gray-500">🟢 Dispense medicines, process reservations, update stock after dispensing, send reminders</p>
@@ -169,7 +159,6 @@ export default function StaffManagement() {
         </div>
       </div>
 
-      {/* Filters Search console and staff list table */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
 
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
@@ -216,7 +205,6 @@ export default function StaffManagement() {
           </button>
         </div>
 
-        {/* Employees Table Grid */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs divide-y divide-gray-150">
             <thead>

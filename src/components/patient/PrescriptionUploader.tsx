@@ -70,7 +70,6 @@ export default function PrescriptionUploader({
             </div>
           </div>
 
-          {/* Progress bar line indicator */}
           {uploadProgress > 0 && uploadProgress < 100 && (
             <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
               <div 

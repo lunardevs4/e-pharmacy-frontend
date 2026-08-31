@@ -27,7 +27,6 @@ export default function NationalAnalytics() {
         AuthApi.getGovernmentMedicineAvailability().catch(() => []),
       ])
 
-      // Process low stock data to create district alerts
       const districtMap = new Map<string, DistrictAlert>()
 
       lowStockData.forEach((item: any) => {
@@ -55,7 +54,6 @@ export default function NationalAnalytics() {
         }
       })
 
-      // Add pharmacies and reservation data
       const pharmacies = await AuthApi.getAllPharmacies().catch(() => [])
       pharmacies.forEach((pharm: any) => {
         const district = pharm.district || 'Unknown'
@@ -68,10 +66,8 @@ export default function NationalAnalytics() {
         }
       })
 
-      // Convert to array and add optimal districts
       const alerts = Array.from(districtMap.values())
       
-      // Add some optimal districts from real pharmacy data
       const approvedPharmacies = pharmacies.filter((p: any) => p.status === 'APPROVED')
       const districtCounts = new Map<string, number>()
       approvedPharmacies.forEach((p: any) => {
@@ -118,7 +114,6 @@ export default function NationalAnalytics() {
         </div>
       )}
 
-      {/* Alert Section Banner */}
       {districtAlerts.some(d => d.status === 'Critical Shortage') && (
         <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-start space-x-3 text-xs shadow-xs">
           <ShieldAlert className="w-5 h-5 text-red-650 flex-shrink-0 mt-0.5" />
@@ -130,7 +125,6 @@ export default function NationalAnalytics() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {/* Left Side: Shortage tables (2/3 width) */}
         <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-gray-150">
             <div className="flex items-center space-x-2">
@@ -149,7 +143,6 @@ export default function NationalAnalytics() {
             </div>
           </div>
 
-          {/* District Table */}
           <div className="overflow-x-auto">
             {loading ? (
               <div className="text-center py-10 flex flex-col items-center justify-center gap-2">
@@ -211,7 +204,6 @@ export default function NationalAnalytics() {
           </div>
         </div>
 
-        {/* Right Side: Maps details (1/3 width) */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-gray-150">
             <div className="flex items-center space-x-2">
@@ -221,12 +213,10 @@ export default function NationalAnalytics() {
           </div>
 
           <div className="w-full h-48 bg-gray-50 border border-gray-250 rounded-xl flex items-center justify-center relative overflow-hidden">
-            {/* Mock map interface */}
             <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-xs flex items-center justify-center">
               <span className="text-[10px] text-gray-400 font-black uppercase bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm">Interactive GPS Overlay</span>
             </div>
             
-            {/* Shortage dots */}
             <div className="absolute top-1/4 left-1/3 w-3 h-3 bg-red-600 rounded-full animate-ping" />
             <div className="absolute top-1/4 left-1/3 w-2.5 h-2.5 bg-red-600 rounded-full" />
             <div className="absolute bottom-1/3 right-1/4 w-3.5 h-3.5 bg-amber-500 rounded-full animate-pulse" />

@@ -24,7 +24,6 @@ export default function InsuranceReports() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      // Get insurance provider ID from user
       const providers = await insuranceApi.getProviders()
       const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
       const insuranceId = matchedProvider?.id
@@ -131,7 +130,6 @@ export default function InsuranceReports() {
         </div>
       )}
 
-      {/* Header card */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center gap-3">
         <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-700">
           <BarChart2 className="w-6 h-6" />

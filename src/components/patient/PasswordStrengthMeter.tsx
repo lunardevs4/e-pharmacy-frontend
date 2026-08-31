@@ -38,7 +38,6 @@ export default function PasswordStrengthMeter({ pass }: PasswordStrengthMeterPro
 
   return (
     <div className="space-y-3.5 pt-2">
-      {/* Strength indicator bars */}
       <div className="space-y-1.5">
         <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-gray-400">
           <span>Password Strength</span>
@@ -56,7 +55,6 @@ export default function PasswordStrengthMeter({ pass }: PasswordStrengthMeterPro
         </div>
       </div>
 
-      {/* Requirement list checklist */}
       {pass && checks && (
         <div className="space-y-1 text-[10px] font-bold text-gray-500 leading-relaxed pt-1 border-t border-gray-100">
           <div className="flex items-center space-x-1.5">

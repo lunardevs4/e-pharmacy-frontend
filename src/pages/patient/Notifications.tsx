@@ -24,7 +24,6 @@ export default function PatientNotifications() {
     setTimeout(() => setToastMsg(null), 2500)
   }
 
-  // Load notifications from service layer
   const loadNotifications = async () => {
     setLoading(true)
     try {
@@ -37,13 +36,11 @@ export default function PatientNotifications() {
     }
   }
 
-  // Check for late pickups
   const checkLatePickups = async () => {
     try {
       const latePickupsData = await MedicineApi.checkLatePickups()
       setLatePickups(latePickupsData)
       
-      // Automatically create notifications for late pickups
       if (latePickupsData.length > 0) {
         const existingIds = new Set(notifications.map(n => n.id))
         const newNotifications = latePickupsData
@@ -70,12 +67,10 @@ export default function PatientNotifications() {
     loadNotifications()
     checkLatePickups()
     
-    // Check for late pickups every 5 minutes
     const interval = setInterval(checkLatePickups, 5 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
 
-  // Mark single as read
   const handleMarkRead = async (id: string) => {
     try {
       await MedicineApi.markNotificationRead(id)
@@ -88,7 +83,6 @@ export default function PatientNotifications() {
     }
   }
 
-  // Mark all as read
   const handleMarkAllRead = async () => {
     try {
       await MedicineApi.markAllNotificationsRead()
@@ -99,7 +93,6 @@ export default function PatientNotifications() {
     }
   }
 
-  // Delete notification
   const handleDeleteNotification = async (id: string) => {
     try {
       await MedicineApi.deleteNotification(id)
@@ -110,7 +103,6 @@ export default function PatientNotifications() {
     }
   }
 
-  // Clear all notifications
   const handleClearAll = async () => {
     try {
       await MedicineApi.clearAllNotifications()
@@ -153,20 +145,17 @@ export default function PatientNotifications() {
     }
   }
 
-  // Filter logs list
   const filteredNotifications = notifications.filter((n) => {
     const matchesType = typeFilter === 'ALL' || n.type === typeFilter
     const matchesRead = readFilter === 'ALL' || (readFilter === 'UNREAD' && !n.read)
     return matchesType && matchesRead
   })
 
-  // Unread count
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm space-y-6 max-w-4xl mx-auto pb-16 relative">
       
-      {/* Toast alert popup */}
       {toastMsg && (
         <div className="fixed top-20 right-6 z-55 bg-emerald-50 border border-emerald-250 text-emerald-800 px-4.5 py-3 rounded-lg shadow-xl animate-fadeIn flex items-center space-x-2 text-xs font-bold">
           <CheckCircle2 className="w-5 h-5" />
@@ -174,7 +163,6 @@ export default function PatientNotifications() {
         </div>
       )}
 
-      {/* Header section with counts */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-gray-150 gap-4">
         <div>
           <h1 className="text-xl font-black text-gray-900 flex items-center space-x-2">
@@ -187,7 +175,6 @@ export default function PatientNotifications() {
           </p>
         </div>
 
-        {/* Toolbar actions */}
         <div className="flex items-center space-x-2 w-full sm:w-auto">
           <button
             type="button"
@@ -210,7 +197,6 @@ export default function PatientNotifications() {
         </div>
       </div>
 
-      {/* Dynamic Filters layout */}
       <div className="flex flex-col sm:flex-row gap-2.5 items-center justify-between bg-gray-50/50 p-3 rounded-lg border border-gray-200 text-xs font-bold text-gray-500">
         <div className="flex flex-wrap items-center gap-1">
           {['ALL', 'RESERVATION', 'PRESCRIPTION', 'SECURITY', 'LATE_PICKUP', 'SYSTEM'].map((type) => (
@@ -229,7 +215,6 @@ export default function PatientNotifications() {
           ))}
         </div>
         
-        {/* Late pickups count indicator */}
         {latePickups.length > 0 && (
           <div className="flex items-center space-x-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
             <Clock className="w-3 h-3 text-amber-700" />
@@ -250,7 +235,6 @@ export default function PatientNotifications() {
         </div>
       </div>
 
-      {/* Notifications list grid */}
       {loading ? (
         <div className="py-12 text-center text-xs text-gray-400 flex items-center justify-center space-x-2">
           <RefreshCw className="w-5 h-5 animate-spin text-emerald-600" />
@@ -270,7 +254,6 @@ export default function PatientNotifications() {
                 !not.read ? 'bg-emerald-50/20' : ''
               }`}
             >
-              {/* Unread circle highlight indicator */}
               {!not.read && (
                 <span className="absolute left-0 top-6 w-1.5 h-1.5 bg-emerald-600 rounded-full" />
               )}
@@ -299,7 +282,6 @@ export default function PatientNotifications() {
                 </div>
               </div>
 
-              {/* Row Action buttons */}
               <div className="flex items-center space-x-1.5 flex-shrink-0">
                 {!not.read && (
                   <button

@@ -22,21 +22,17 @@ export const TokenStorage = {
   setRefreshToken: (token: string): void => {
     localStorage.setItem(REFRESH_TOKEN_KEY, token)
   },
-  // Persist the full user object so it survives a page refresh
   saveUser: (user: object): void => {
     localStorage.setItem(USER_KEY, JSON.stringify(user))
   },
   loadUser: (): object | null => {
     try {
-      // 1. Try our own dedicated key first (set by authStore.login)
       const ownRaw = localStorage.getItem(USER_KEY)
       if (ownRaw) return JSON.parse(ownRaw)
 
-      // 2. Fall back to auth-api session key (stores full AuthResponse)
       const sessionRaw = localStorage.getItem('epharmacy_current_session_user')
       if (!sessionRaw) return null
       const parsed = JSON.parse(sessionRaw)
-      // auth-api stores { accessToken, refreshToken, user } — unwrap user
       return parsed?.user ?? parsed
     } catch {
       return null

@@ -17,17 +17,14 @@ export default function InsuranceTariffs() {
   const [loading, setLoading] = useState(true)
   const [saveLoading, setSaveLoading] = useState<Record<string, boolean>>({})
 
-  // Custom states for edit inputs inside rows
   const [tariffs, setTariffs] = useState<Record<string, CustomTariff>>({})
   const [successMsgs, setSuccessMsgs] = useState<Record<string, string>>({})
   const [errorMsgs, setErrorMsgs] = useState<Record<string, string>>({})
 
-  // General Settings states
   const [defaultCoverage, setDefaultCoverage] = useState(80)
   const [generalSaveSuccess, setGeneralSaveSuccess] = useState(false)
   const [generalSaveError, setGeneralSaveError] = useState<string | null>(null)
 
-  // Load insurance provider details and medicines
   useEffect(() => {
     const init = async () => {
       setLoading(true)
@@ -39,14 +36,12 @@ export default function InsuranceTariffs() {
         setInsuranceId(id)
         setInsuranceName(name)
 
-        // Load general discount settings from backend provider
         if (matched) {
           const pct = matched.defaultCoveragePercentage
           setDefaultCoverage(pct <= 1 ? Math.round(pct * 100) : pct)
         }
 
         const [medsList, tariffsList] = await Promise.all([
-          // Load the complete catalogue. The API returns it newest-first.
           MedicineApi.getMedicines(1, 1000, false),
           insuranceApi.getTariffs({ insuranceId: id })
         ])
@@ -68,7 +63,6 @@ export default function InsuranceTariffs() {
         }))
         setMedicines(normalizedMedicines)
 
-        // Load tariffs from backend API
         const initialTariffs: Record<string, CustomTariff> = {}
         for (const med of normalizedMedicines) {
           const backendTariff = tariffsList.find(t => t.medicineId === med.id)
@@ -102,7 +96,6 @@ export default function InsuranceTariffs() {
         [medId]: {
           ...current,
           covered: !current.covered,
-          // Initialize percentage if toggled to true and currently 0
           coveragePercentage: !current.covered && current.coveragePercentage === 0 ? defaultCoverage : current.coveragePercentage
         }
       }
@@ -119,7 +112,6 @@ export default function InsuranceTariffs() {
     }
 
     try {
-      // Update insurance provider settings via backend
       const providerData: any = {
         defaultCoveragePercentage: defaultCoverage,
         defaultCopayPercentage: 100 - defaultCoverage,
@@ -163,7 +155,6 @@ export default function InsuranceTariffs() {
     try {
       const tariff = tariffs[medId]
       
-      // Validation
       if (tariff.covered) {
         if (tariff.coveragePercentage < 0 || tariff.coveragePercentage > 100) {
           throw new Error('Coverage percentage must be between 0% and 100%.')
@@ -173,7 +164,6 @@ export default function InsuranceTariffs() {
         }
       }
 
-      // Save to backend API
       await insuranceApi.setTariff({
         insuranceId,
         medicineId: medId,
@@ -198,7 +188,6 @@ export default function InsuranceTariffs() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
-      {/* Header Banner */}
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
         <div className="p-2.5 bg-emerald-50 text-health-primary rounded-lg">
           <Shield className="w-6 h-6" />
@@ -211,7 +200,6 @@ export default function InsuranceTariffs() {
         </div>
       </div>
 
-      {/* General Settings Panel */}
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-gray-150 pb-3">
           <div className="flex items-center gap-2">
@@ -288,9 +276,7 @@ export default function InsuranceTariffs() {
         </div>
       </div>
 
-      {/* Main Content Card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Catalogue summary */}
         <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center gap-3">
           <p className="text-xs text-gray-500">All medicines in the system catalogue, with newly added medicines first.</p>
           <div className="text-[10px] text-gray-400 font-bold uppercase">
@@ -298,7 +284,6 @@ export default function InsuranceTariffs() {
           </div>
         </div>
 
-        {/* Tariffs List */}
         {loading ? (
           <div className="py-32 flex justify-center items-center">
             <Loader2 className="w-8 h-8 animate-spin text-health-primary" />

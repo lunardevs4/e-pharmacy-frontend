@@ -200,7 +200,6 @@ const getErrorMessage = (error: unknown): string => {
     const axiosError = error as AxiosError
     const responseData = axiosError.response?.data as ApiObject | undefined
     if (responseData?.message) {
-      // NestJS returns message as string or string[]
       if (typeof responseData.message === 'string') return responseData.message
       if (Array.isArray(responseData.message)) return (responseData.message as string[]).join(' · ')
     }
@@ -370,9 +369,6 @@ export const AuthApi = {
 
   getAllPharmacies: async (): Promise<unknown[]> => {
     try {
-      // Government dashboards need the complete set for totals and province
-      // distribution. The API defaults to only 10 records when no limit is
-      // supplied, which can make an existing pharmacy appear to be missing.
       const response = await apiClient.get('/pharmacies', {
         params: { page: 1, limit: 1000 },
       })
@@ -531,7 +527,6 @@ export const AuthApi = {
 
   requestMoreInformation: async (pharmacyId: string, details: string): Promise<unknown> => {
     try {
-      // Backend does not support MORE_INFO_REQUESTED or details yet, using PENDING.
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, {
         status: 'PENDING',
       })
@@ -698,11 +693,6 @@ export const AuthApi = {
     }
   },
 
-  /**
-   * Re-fetches the current user profile from the backend and updates both the
-   * persisted session and the auth store. Used by the pharmacy registration
-   * gate to pick up MOH approval status changes.
-   */
   refreshSession: async (): Promise<AuthUser> => {
     const latest = await AuthApi.getProfile('')
     const session = localStorage.getItem(CURRENT_USER_KEY)
@@ -712,13 +702,11 @@ export const AuthApi = {
         parsed.user = latest
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(parsed))
       } catch {
-        // Session payload unreadable — leave as-is; store update below still applies
       }
     }
     return latest
   },
 
-  // Insurance-specific API functions
   getInsuranceClaims: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/insurance/claims')

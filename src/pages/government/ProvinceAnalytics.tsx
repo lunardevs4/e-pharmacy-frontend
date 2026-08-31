@@ -40,7 +40,6 @@ export default function ProvinceAnalytics() {
         AuthApi.getGovernmentLowStock(10).catch(() => []),
       ])
 
-      // Group pharmacies by province
       const provinceMap = new Map<string, ProvinceData>()
 
       pharmacies.forEach((pharm: any) => {
@@ -70,7 +69,6 @@ export default function ProvinceAnalytics() {
         }
       })
 
-      // Process low stock data to identify critical districts
       const districtStockMap = new Map<string, number>()
       lowStock.forEach((item: any) => {
         const district = (item.pharmacy as any)?.district || item.district || 'Unknown'
@@ -80,7 +78,6 @@ export default function ProvinceAnalytics() {
         }
       })
 
-      // Update province data with critical districts and stock levels
       pharmacies.forEach((pharm: any) => {
         const province = (pharm as any).province || 'Unknown'
         const district = (pharm as any).district || 'Unknown'
@@ -93,14 +90,12 @@ export default function ProvinceAnalytics() {
             provinceData.criticalDistricts.push(district)
           }
           
-          // Reduce average stock based on critical districts
           if (criticalCount > 0) {
             provinceData.avgStock = Math.max(0, provinceData.avgStock - (criticalCount * 2))
           }
         }
       })
 
-      // Convert to array
       const provinceArray = Array.from(provinceMap.values())
       setProvinces(provinceArray)
     } catch (err: any) {
@@ -190,7 +185,6 @@ export default function ProvinceAnalytics() {
         </p>
       </div>
 
-      {/* Summary row */}
       {loading ? (
         <div className="text-center py-10 flex flex-col items-center justify-center gap-2">
           <RefreshCw className="w-6 h-6 text-emerald-600 animate-spin" />
@@ -218,7 +212,6 @@ export default function ProvinceAnalytics() {
         </div>
       )}
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
           <div>
@@ -257,7 +250,6 @@ export default function ProvinceAnalytics() {
         </div>
       </div>
 
-      {/* Detail panel for selected province */}
       {selected && (
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4 animate-fadeIn">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
@@ -303,7 +295,6 @@ export default function ProvinceAnalytics() {
         </div>
       )}
 
-      {/* Province comparison table */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         <div className="p-5 border-b border-gray-100">
           <h3 className="text-sm font-black text-gray-900">Province Summary Table</h3>

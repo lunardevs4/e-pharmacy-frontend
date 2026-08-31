@@ -1,26 +1,22 @@
 import { InsuranceProvider } from '@/services/insurance-api'
 import { InsurancePrices, CustomTariff } from '@/types/insurance'
 
-// 1. Get fallback default active agreements (RSSB & MMI if registered)
 export function getDefaultActiveInsurances(providers: InsuranceProvider[]): string[] {
   return providers
     .filter(p => p.code === 'RSSB' || p.code === 'MMI' || p.name === 'RSSB' || p.name === 'MMI')
     .map(p => p.id)
 }
 
-// 2. Fetch configured active working agreement IDs for a pharmacy
 export function getActivePharmacyInsurances(pharmacyId: string, providers: InsuranceProvider[]): string[] {
   const data = localStorage.getItem(`epharmacy_active_insurances_${pharmacyId}`)
   if (data) return JSON.parse(data)
   return getDefaultActiveInsurances(providers)
 }
 
-// 3. Save active working agreements
 export function saveActivePharmacyInsurances(pharmacyId: string, insurances: string[]): void {
   localStorage.setItem(`epharmacy_active_insurances_${pharmacyId}`, JSON.stringify(insurances))
 }
 
-// 4. Retrieve custom price or fall back to CASH
 export function getPharmacyInsurancePrice(
   pharmacyId: string,
   medicineId: string,
@@ -46,7 +42,6 @@ export function getPharmacyInsurancePrice(
   return { price: prices.CASH ?? basePrice, isCustom: false }
 }
 
-// 5. Retrieve dynamic custom coverage rules (Tariff) set by the insurance provider
 export function getInsuranceTariff(insuranceId: string | null, medicineId: string): CustomTariff | null {
   if (!insuranceId || insuranceId === 'None') return null
   const data = localStorage.getItem(`epharmacy_tariffs_${insuranceId}`)
@@ -55,7 +50,6 @@ export function getInsuranceTariff(insuranceId: string | null, medicineId: strin
   const tariff = tariffs[medicineId]
   if (!tariff) return null
 
-  // Fallback to custom provider general settings if coverage percentage is unconfigured (0 or undefined)
   if (tariff.covered && (tariff.coveragePercentage === undefined || tariff.coveragePercentage === 0)) {
     const settingsStr = localStorage.getItem(`epharmacy_provider_settings_${insuranceId}`)
     let defaultCoverage = 80
@@ -75,7 +69,6 @@ export function getInsuranceTariff(insuranceId: string | null, medicineId: strin
   return tariff
 }
 
-// 6. Save a custom tariff rule
 export function saveInsuranceTariff(insuranceId: string, medicineId: string, tariff: CustomTariff): void {
   const key = `epharmacy_tariffs_${insuranceId}`
   const data = localStorage.getItem(key)
@@ -84,7 +77,6 @@ export function saveInsuranceTariff(insuranceId: string, medicineId: string, tar
   localStorage.setItem(key, JSON.stringify(tariffs))
 }
 
-// 7. Calculate dynamic copay split
 export function calculatePatientCopay(
   pharmacyPrice: number,
   tariff: CustomTariff | null

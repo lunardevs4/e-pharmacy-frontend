@@ -1,4 +1,3 @@
-// src/components/NavShell.tsx
 import React from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { LogoBrand } from '../components/common/LogoBrand';
@@ -29,23 +28,19 @@ export const NavShell: React.FC<NavShellProps> = ({
   const displayTitle = portalTitle || portalName || 'Portal Workspace';
 
   const handleLogout = () => {
-    // Clear session tokens / auth state here
     navigate('/login');
   };
 
   return (
     <div className="min-h-screen flex bg-gray-50 font-sans">
-      {/* Sidebar Navigation */}
       <aside className="w-64 bg-emerald-800 text-white flex flex-col justify-between p-4 shadow-md shrink-0">
         <div>
-          {/* Top Branding Header */}
           <div className="flex items-center justify-center pb-6 border-b border-emerald-700/60 mb-6">
             <div className="bg-white p-2 rounded-xl shadow-sm w-full max-w-[180px] flex items-center justify-center">
               <LogoBrand size="sm" className="h-9 w-auto" />
             </div>
           </div>
 
-          {/* Navigation Links */}
           <nav className="space-y-1">
             {navItems.map((item) => (
               <NavLink
@@ -67,7 +62,6 @@ export const NavShell: React.FC<NavShellProps> = ({
           </nav>
         </div>
 
-        {/* Sidebar Footer Logout Button */}
         <div className="pt-4 border-t border-emerald-700/60">
           <button
             onClick={handleLogout}
@@ -79,9 +73,7 @@ export const NavShell: React.FC<NavShellProps> = ({
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top App Bar */}
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shadow-sm sticky top-0 z-30">
           <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
             {displayTitle}
@@ -109,7 +101,6 @@ export const NavShell: React.FC<NavShellProps> = ({
           </div>
         </header>
 
-        {/* Page View Body (Renders explicit children or nested route Outlet) */}
         <main className="p-6 flex-1 overflow-y-auto">
           {children ? children : <Outlet />}
         </main>

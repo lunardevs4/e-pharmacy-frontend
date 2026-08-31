@@ -93,8 +93,6 @@ export default function PharmacyBilling() {
       setIsLoading(true)
       setError(null)
       try {
-        // Pharmacy's accepted insurers come from its active agreements;
-        // fall back to the public provider directory when none are linked.
         let acceptedProviders: InsuranceProvider[] = []
         try {
           const agreementsResponse = await apiClient.get(`/pharmacies/${pharmacyId}/insurance`)
@@ -221,7 +219,6 @@ export default function PharmacyBilling() {
           })
           claimCreated = true
 
-          // Refresh the live claims list so statuses stay accurate
           const refreshed = await insuranceApi.getClaims({ pharmacyId, limit: 100 })
           setClaims(refreshed.data || [])
         } catch (claimErr: unknown) {
@@ -277,7 +274,6 @@ export default function PharmacyBilling() {
         </div>
       )}
 
-      {/* Metric cards — sourced from real claims + collected reservations */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {[
           { label: "Today's Revenue", value: money(metrics.revenue), detail: `${metrics.transactions} claims today`, Icon: Receipt, color: 'text-emerald-700', bg: 'bg-emerald-50' },
@@ -298,7 +294,6 @@ export default function PharmacyBilling() {
         ))}
       </div>
 
-      {/* Reservations */}
       <section className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         <div className="p-5 border-b border-gray-100">
           <h2 className="text-sm font-black text-gray-900">Reservations</h2>
@@ -349,7 +344,6 @@ export default function PharmacyBilling() {
         </div>
       </section>
 
-      {/* Billing Calculator */}
       <section className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
           <h2 className="text-sm font-black text-gray-900">Billing Calculator</h2>
@@ -441,7 +435,6 @@ export default function PharmacyBilling() {
         </div>
       </section>
 
-      {/* Real submitted claims from the backend */}
       <section className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         <div className="p-5 flex items-center justify-between border-b border-gray-100">
           <div>

@@ -25,14 +25,12 @@ export default function InsuranceClaims() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      // Get insurance provider ID from user
       const providers = await insuranceApi.getProviders()
       const insurer = user?.insuranceProvider || 'RSSB'
       const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
       const insuranceId = matchedProvider?.id
       
       const response = await insuranceApi.getClaims({ insuranceId })
-      // The API returns { data: InsuranceClaim[], meta: any }
       const claimsArray = response?.data || []
       setClaims(claimsArray)
     } catch (error: any) {

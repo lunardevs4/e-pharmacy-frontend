@@ -68,7 +68,6 @@ const normalizeNotification = (payload: any): Notification => ({
 })
 
 export const MedicineApi = {
-  // Search catalog medicines (both national registry and dynamic custom-added ones)
   searchMedicines: async (
     query: string,
     category: string,
@@ -102,7 +101,6 @@ export const MedicineApi = {
     }))
   },
 
-  // Get medicine details by ID
   getMedicineDetails: async (id: string): Promise<Medicine> => {
     const response = await apiClient.get(`/medicines/${id}`)
     const item = response.data
@@ -181,7 +179,6 @@ export const MedicineApi = {
           }
         }
       | {
-          // Legacy catalogue callers are retained until their forms collect batch data.
           name: string
           genericName: string
           categoryId: string
@@ -215,8 +212,6 @@ export const MedicineApi = {
     return response.data
   },
 
-  // Resolves pharmacy stock levels via the dedicated availability endpoint
-  // (single request instead of N+1 per-pharmacy inventory fetches)
   getMedicineAvailability: async (
     medicineId: string,
     insuranceId?: string | null,
@@ -261,12 +256,10 @@ export const MedicineApi = {
         insuranceCoverage: item.insuranceCoverage,
       }))
     } catch {
-      // Return empty array on failure - the retry mechanism will handle transient errors
       return []
     }
   },
 
-  // Update dynamic pharmacy stock levels (for pharmacy manager pages)
   updatePharmacyInventory: async (
     pharmacyId: string,
     medicineId: string,
@@ -293,7 +286,6 @@ export const MedicineApi = {
     return true
   },
 
-  // Import inventory from a CSV or Excel spreadsheet (row-level validation report)
   importInventorySpreadsheet: async (
     pharmacyId: string,
     file: File,
@@ -309,8 +301,6 @@ export const MedicineApi = {
       `/pharmacies/${pharmacyId}/inventory/import`,
       formData,
       {
-        // Spreadsheet imports can take longer than the short timeout used by
-        // ordinary API requests because each row is validated and persisted.
         timeout: 120000,
         headers: { 'Content-Type': 'multipart/form-data' },
       },
@@ -318,7 +308,6 @@ export const MedicineApi = {
     return response?.data?.data ?? response?.data
   },
 
-  // Calculate dynamic insurance cost splits
   calculateInsuranceCoverage: async (
     provider: string,
     basePrice: number,
@@ -382,9 +371,6 @@ export const MedicineApi = {
     return response.data
   },
 
-  // Create pickup reservation
-  // Note: the backend Reservation schema has no insurance columns — coverage
-  // splits are display-only on the client, so only whitelisted fields are sent.
   createReservation: async (data: {
     medicineId?: string
     pharmacyId: string
@@ -401,13 +387,11 @@ export const MedicineApi = {
     return normalizeReservation(response.data)
   },
 
-  // Cancel reservation
   cancelReservation: async (id: string): Promise<boolean> => {
     await apiClient.patch(`/reservations/${id}/cancel`)
     return true
   },
 
-  // Fetch reservations history
   getReservationHistory: async (): Promise<Reservation[]> => {
     const response = await apiClient.get('/reservations')
     const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
@@ -435,7 +419,6 @@ export const MedicineApi = {
     return { reservations, inventory, report }
   },
 
-  // Fetch notifications log
   getNotifications: async (): Promise<Notification[]> => {
     const response = await apiClient.get('/notifications')
     const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
@@ -480,7 +463,6 @@ export const MedicineApi = {
     return response.data?.data || response.data
   },
 
-  // Favourite Medicines list
   getFavouriteMedicines: async (): Promise<string[]> => {
     const key = 'epharmacy_fav_medicines'
     const data = localStorage.getItem(key)
@@ -500,7 +482,6 @@ export const MedicineApi = {
     return true
   },
 
-  // Favourite Pharmacies list
   getFavouritePharmacies: async (): Promise<string[]> => {
     const key = 'epharmacy_fav_pharmacies'
     const data = localStorage.getItem(key)
@@ -520,7 +501,6 @@ export const MedicineApi = {
     return true
   },
 
-  // Search History tracking (Max 20 searches)
   getSearchHistory: async (): Promise<any[]> => {
     const key = 'epharmacy_search_history'
     const data = localStorage.getItem(key)
@@ -532,7 +512,6 @@ export const MedicineApi = {
     const key = 'epharmacy_search_history'
     const list = await MedicineApi.getSearchHistory()
 
-    // Filter duplicates of same query string
     const filtered = list.filter((item) => item.query.toLowerCase() !== query.toLowerCase())
 
     const newItem = {
@@ -553,7 +532,6 @@ export const MedicineApi = {
     return true
   },
 
-  // Medicine Reminders System
   getReminders: async (): Promise<any[]> => {
     const response = await apiClient.get('/reminders/schedules')
     const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
@@ -610,7 +588,6 @@ export const MedicineApi = {
     return true
   },
 
-  // Medicine Purchase History
   getMedicineHistory: async (): Promise<any[]> => {
     const response = await apiClient.get('/reports/patient/me')
     const report = response.data || {}
@@ -645,7 +622,6 @@ export const MedicineApi = {
       })
   },
 
-  // Late pickup notifications
   checkLatePickups: async (): Promise<any[]> => {
     const response = await apiClient.get('/reservations/late')
     const payload = Array.isArray(response.data) ? response.data : response.data?.data || []

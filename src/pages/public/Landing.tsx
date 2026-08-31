@@ -109,7 +109,6 @@ export default function LandingPage() {
     setMessages((prev) => [...prev, { sender: 'user', text: userMsg }])
     setChatInput('')
 
-    // Simulate AI assistant typing latency
     setTimeout(() => {
       let replyText = ''
       const lower = userMsg.toLowerCase()
@@ -262,7 +261,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
       <header className="bg-white border-b border-gray-150 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -318,17 +316,14 @@ export default function LandingPage() {
           </div>
         </div>
       </header>{' '}
-      {/* Hero Section */}
       <section
         id="home"
         className="relative py-16 md:py-24 bg-slate-50/50 border-b border-gray-150 overflow-hidden"
       >
-        {/* Mesh grid pattern background */}
         <div
           className="absolute inset-0 bg-grid-mesh pointer-events-none opacity-75"
           aria-hidden="true"
         />
-        {/* Glow ambient background circles */}
         <div
           className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[35rem] h-[35rem] bg-emerald-100/40 rounded-full blur-[120px] pointer-events-none"
           aria-hidden="true"
@@ -336,7 +331,6 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Copy */}
             <div className="lg:col-span-7 space-y-6">
               <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-[11px] font-black bg-emerald-50 text-health-light-text border border-emerald-100 tracking-wider uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 inline-block animate-pulse"></span>
@@ -352,7 +346,6 @@ export default function LandingPage() {
                 your residence.
               </p>
 
-              {/* Search Control */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
@@ -389,7 +382,6 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right Interactive Card */}
             <div className="lg:col-span-5">
               {showResults ? (
                 <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-white/60 shadow-xl overflow-hidden animate-scaleIn">
@@ -509,7 +501,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* Fixed Stats Section with Counting Numbers */}
       <section className="bg-white border-y border-gray-200 py-8 relative select-none">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-200 text-center">
@@ -549,7 +540,6 @@ export default function LandingPage() {
         </div>
       </section>
 {' '}
-      {/* Platform Features Section */}
       <section
         id="features"
         className="relative py-20 bg-white border-b border-gray-150 overflow-hidden"
@@ -587,11 +577,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* About The Platform Section */}
       <section id="about" className="relative py-20 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            {/* Left Column - Text Content */}
             <div className="space-y-8 pt-6">
               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-50 text-health-primary border border-emerald-100 tracking-wider uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-health-primary mr-2 inline-block"></span>
@@ -614,7 +602,6 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              {/* Portal Details - 3 Column Grid */}
               <div className="grid grid-cols-3 gap-6 pt-6">
                 {portalDetails.map((portal, idx) => {
                   const Icon = portal.icon
@@ -631,17 +618,13 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right Column - Circular Image with Decorative Ring */}
             <div className="relative flex justify-center items-center overflow-visible">
-              {/* Decorative Curved Ring Background */}
               <div className="absolute -inset-8 rounded-full bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 opacity-25 blur-xl" />
               
-              {/* Outer Ring - Dark Green gradient (Logo colors) */}
               <div className="absolute inset-0 rounded-full border-8 border-transparent bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-700 p-1 rounded-full">
                 <div className="w-full h-full rounded-full bg-white" />
               </div>
 
-              {/* Main Circular Image Container */}
               <div className="image-container relative z-10 shadow-2xl border-4 border-white">
                 <img 
                   src="/pharmacy.png" 
@@ -649,7 +632,6 @@ export default function LandingPage() {
                 />
               </div>
 
-              {/* Connected Healthcare Card - Overlay positioned bottom right */}
               <div className="absolute -bottom-6 right-0 w-72 z-20">
                 <div className="bg-emerald-900 rounded-2xl p-6 shadow-2xl text-white space-y-3">
                   <div className="flex items-center space-x-2 mb-2">
@@ -667,7 +649,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* Partner Organisations */}
       <section className="py-16 bg-white border-t border-gray-150">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-8">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
@@ -692,7 +673,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* FAQ Section */}
       <section id="faq" className="py-20 bg-white border-t border-gray-150">
         <div className="max-w-4xl mx-auto px-6 space-y-10">
           <div className="space-y-2">
@@ -732,7 +712,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* CTA Section */}
       <section className="bg-health-primary text-white py-16">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
@@ -763,13 +742,11 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* Footer */}
       <footer
         id="contact"
         className="bg-[#111827] text-gray-400 pt-16 pb-8 border-t border-gray-800"
       >
         <div className="max-w-7xl mx-auto px-6 space-y-12">
-          {/* Main columns */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
@@ -882,7 +859,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Contact Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-gray-800">
             <div className="flex items-center space-x-3 bg-gray-900/40 p-4 rounded-xl border border-gray-800">
               <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
@@ -984,11 +960,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-      {/* Floating AI Assistant Chat Widget (Bottom Right) */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
         {showChat && (
           <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl w-80 sm:w-96 overflow-hidden mb-4 flex flex-col h-[450px]">
-            {/* Header */}
             <div className="bg-health-primary text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center space-x-2">
                 <div className="w-6 h-6 rounded bg-emerald-500/25 flex items-center justify-center font-bold text-xs text-white">
@@ -1004,12 +978,10 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Disclaimer */}
             <div className="bg-emerald-50 text-emerald-800 text-[11px] px-4 py-2 border-b border-emerald-100 leading-normal font-medium flex-shrink-0">
               Educational information only. Does not replace professional medical advice.
             </div>
 
-            {/* Message Area */}
             <div className="flex-grow p-4 overflow-y-auto space-y-4 bg-gray-50/50 flex flex-col">
               {messages.map((msg, i) => (
                 <div
@@ -1029,7 +1001,6 @@ export default function LandingPage() {
               ))}
             </div>
 
-            {/* Input Form */}
             <form
               onSubmit={handleSendMessage}
               className="p-3 bg-white border-t border-gray-150 flex items-center space-x-2 flex-shrink-0"
@@ -1051,7 +1022,6 @@ export default function LandingPage() {
           </div>
         )}
 
-        {/* Floating Button Toggle */}
         <button
           onClick={() => setShowChat(!showChat)}
           aria-label="Toggle Chat Assistant"
@@ -1065,7 +1035,6 @@ export default function LandingPage() {
   )
 }
 
-// Inline SVGs/components for portal details to avoid additional dependencies
 function UserIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg

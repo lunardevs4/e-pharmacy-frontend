@@ -24,7 +24,6 @@ export default function MedicineCard({
           <div className="flex items-center flex-wrap gap-2">
             <h3 className="font-black text-gray-900 text-lg leading-tight">{medicine.name}</h3>
 
-            {/* Bookmarking toggler icon button */}
             {onToggleBookmark && (
               <button
                 type="button"
@@ -65,7 +64,6 @@ export default function MedicineCard({
           )}
         </div>
 
-        {/* Nearby preview snippet */}
         <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl space-y-2.5 w-full sm:w-64 flex-shrink-0">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
             Nearby Availability

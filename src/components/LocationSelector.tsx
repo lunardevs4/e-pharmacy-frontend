@@ -51,14 +51,12 @@ export default function LocationSelector({
 
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load provinces on mount
   useEffect(() => {
     setIsLoading(true)
     try {
       const provinceList = getRwandaProvinces()
       setProvinces(provinceList)
       
-      // Set initial values if provided
       if (initialLocation?.province) {
         const province = findProvince(initialLocation.province)
         if (province) {
@@ -105,7 +103,6 @@ export default function LocationSelector({
     }
   }, [])
 
-  // Handle province change
   const handleProvinceChange = (provinceName: string) => {
     setSelectedProvince(provinceName)
     setSelectedDistrict('')
@@ -126,7 +123,6 @@ export default function LocationSelector({
     updateLocation({ province: provinceName, district: '', sector: '', cell: '', village: '' })
   }
 
-  // Handle district change
   const handleDistrictChange = (districtName: string) => {
     setSelectedDistrict(districtName)
     setSelectedSector('')
@@ -148,7 +144,6 @@ export default function LocationSelector({
     updateLocation({ province: selectedProvince, district: districtName, sector: '', cell: '', village: '' })
   }
 
-  // Handle sector change
   const handleSectorChange = (sectorName: string) => {
     setSelectedSector(sectorName)
     setSelectedCell('')
@@ -171,7 +166,6 @@ export default function LocationSelector({
     updateLocation({ province: selectedProvince, district: selectedDistrict, sector: sectorName, cell: '', village: '' })
   }
 
-  // Handle cell change
   const handleCellChange = (cellName: string) => {
     setSelectedCell(cellName)
     setSelectedVillage('')
@@ -195,7 +189,6 @@ export default function LocationSelector({
     updateLocation({ province: selectedProvince, district: selectedDistrict, sector: selectedSector, cell: cellName, village: '' })
   }
 
-  // Handle village change
   const handleVillageChange = (villageName: string) => {
     setSelectedVillage(villageName)
     updateLocation({ province: selectedProvince, district: selectedDistrict, sector: selectedSector, cell: selectedCell, village: villageName })
@@ -219,7 +212,6 @@ export default function LocationSelector({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-      {/* Province */}
       <div className="space-y-1">
         <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
           Province {required && <span className="text-red-500">*</span>}
@@ -240,7 +232,6 @@ export default function LocationSelector({
         </select>
       </div>
 
-      {/* District */}
       <div className="space-y-1">
         <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
           District {required && <span className="text-red-500">*</span>}
@@ -261,7 +252,6 @@ export default function LocationSelector({
         </select>
       </div>
 
-      {/* Sector */}
       <div className="space-y-1">
         <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
           Sector {required && <span className="text-red-500">*</span>}
@@ -282,7 +272,6 @@ export default function LocationSelector({
         </select>
       </div>
 
-      {/* Cell */}
       <div className="space-y-1">
         <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
           Cell {required && <span className="text-red-500">*</span>}
@@ -303,7 +292,6 @@ export default function LocationSelector({
         </select>
       </div>
 
-      {/* Village */}
       <div className="space-y-1">
         <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
           Village {required && <span className="text-red-500">*</span>}

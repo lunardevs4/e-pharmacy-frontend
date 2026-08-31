@@ -15,7 +15,6 @@ export default function PatientDashboard() {
   const navigate = useNavigate()
   const { user, updateProfile } = useAuthStore()
 
-  // Insurance Widget states
   const [isEditingInsurance, setIsEditingInsurance] = useState(false)
   const [selectedInsurance, setSelectedInsurance] = useState(user?.insuranceProvider || 'None')
   const [insuranceSaveLoading, setInsuranceSaveLoading] = useState(false)
@@ -70,7 +69,6 @@ export default function PatientDashboard() {
     }
   }
 
-  // Data states
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([])
@@ -81,7 +79,6 @@ export default function PatientDashboard() {
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
 
-  // Load patient dashboard records
   const loadDashboardData = async () => {
     setLoading(true)
     try {
@@ -131,7 +128,6 @@ export default function PatientDashboard() {
     loadDashboardData()
   }, [])
 
-  // Execute quick search
   const handleQuickSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim()) return
@@ -143,7 +139,6 @@ export default function PatientDashboard() {
     }
   }
 
-  // Repeat past search query
   const handleRepeatSearch = async (pastQuery: string, category: string) => {
     try {
       await MedicineApi.saveSearchHistory(pastQuery, category)
@@ -153,7 +148,6 @@ export default function PatientDashboard() {
     }
   }
 
-  // Delete single search history item
   const handleDeleteHistoryItem = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
     try {
@@ -166,7 +160,6 @@ export default function PatientDashboard() {
     }
   }
 
-  // Clear entire search history
   const handleClearHistory = async () => {
     try {
       await MedicineApi.clearSearchHistory()
@@ -176,7 +169,6 @@ export default function PatientDashboard() {
     }
   }
 
-  // Remove bookmark
   const handleRemoveFavMedicine = async (e: React.MouseEvent, medId: string) => {
     e.stopPropagation()
     try {
@@ -197,19 +189,16 @@ export default function PatientDashboard() {
     }
   }
 
-  // Stats calculators with real data
   const pendingCount = reservations.filter((r) => r.status === 'PENDING' || r.status === 'CONFIRMED').length
   const collectedCount = reservations.filter((r) => r.status === 'COLLECTED').length
   const cancelledCount = reservations.filter((r) => r.status === 'CANCELLED').length
   const unreadCount = notifications.filter((n) => !n.read).length
   
-  // Additional real stats
   const totalSpent = medicineHistory.reduce((sum, item) => sum + (item.patientPays || 0), 0)
   const totalMedicinesPurchased = medicineHistory.length
   const activeRemindersCount = reminders.length
   const todayDosesCount = reminders.reduce((sum, r) => sum + (r.times?.length || 0), 0)
 
-  // Calculate spending trend (last 7 days vs previous 7 days)
   const spendingTrend = useMemo(() => {
     const now = new Date()
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -230,7 +219,6 @@ export default function PatientDashboard() {
     return Math.round(((recentSpending - previousSpending) / previousSpending) * 100)
   }, [medicineHistory])
 
-  // Reservation status distribution for charts
   const reservationDistribution = useMemo(() => {
     const total = reservations.length || 1
     return {
@@ -240,7 +228,6 @@ export default function PatientDashboard() {
     }
   }, [reservations, pendingCount, collectedCount, cancelledCount])
 
-  // Profile completion meter computation
   const getProfileCompletion = () => {
     let fields = 0
     if (user?.name) fields++
@@ -255,7 +242,6 @@ export default function PatientDashboard() {
 
   const completionPercent = getProfileCompletion()
 
-  // Get status icon badge
   const getStatusIcon = (status: Reservation['status']) => {
     switch (status) {
       case 'PENDING':
@@ -272,10 +258,8 @@ export default function PatientDashboard() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
 
-      {/* Top Welcome & Search Hero panel banner */}
       <div className="bg-white text-gray-900 rounded-xl p-4 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 shadow-xs border border-emerald-800/20 relative overflow-hidden">
 
-        {/* Abstract design elements */}
         <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-50/50 rounded-full blur-xl pointer-events-none" />
 
         <div className="space-y-2 flex-grow">
@@ -302,7 +286,6 @@ export default function PatientDashboard() {
           </form>
         </div>
 
-        {/* Linked Insurance Widget (in Welcome Banner) */}
         <div className="flex-shrink-0 bg-emerald-50/60 border border-emerald-200/60 p-3 sm:p-4 rounded-xl text-center space-y-2 sm:space-y-2.5 max-w-[180px] sm:max-w-[210px] w-full relative z-10 font-sans">
           <span className="text-[9px] sm:text-[10px] text-emerald-800 block uppercase tracking-wider font-bold">Linked Insurance</span>
 
@@ -403,7 +386,6 @@ export default function PatientDashboard() {
 
       </div>
 
-      {/* Stats blocks overview grids */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
 
         <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
@@ -448,7 +430,6 @@ export default function PatientDashboard() {
 
       </div>
 
-      {/* Additional stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
           <div className="p-2 sm:p-2.5 bg-rose-50 rounded-lg text-rose-700">
@@ -483,9 +464,7 @@ export default function PatientDashboard() {
           </div>
         </div>
 
-        {/* Profile completion percentage stats card */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs font-sans">
-          {/* Progress circle ring inside smaller card */}
           <div className="relative w-10 h-10 flex-shrink-0 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90">
               <circle cx="20" cy="20" r="16" stroke="rgba(15,81,50,0.1)" strokeWidth="2.5" fill="transparent" />
@@ -515,13 +494,10 @@ export default function PatientDashboard() {
         </div>
       </div>
 
-      {/* Main dashboard content sections */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
 
-        {/* Left Side: Table & History (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* Recent Reservations Table card */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
@@ -579,7 +555,6 @@ export default function PatientDashboard() {
             )}
           </div>
 
-          {/* Search History Cards */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-3">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
@@ -625,10 +600,8 @@ export default function PatientDashboard() {
 
         </div>
 
-        {/* Right Side Column (1/3 width) */}
         <div className="space-y-6">
 
-          {/* Notifications widget preview */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-955 text-xs uppercase tracking-wider flex items-center space-x-1.5">
@@ -668,7 +641,6 @@ export default function PatientDashboard() {
             )}
           </div>
 
-          {/* Favourite Medicines widget card */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-3">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
@@ -710,7 +682,6 @@ export default function PatientDashboard() {
             )}
           </div>
 
-          {/* Reservation Status Distribution Chart */}
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
@@ -741,7 +712,6 @@ export default function PatientDashboard() {
             </div>
           </div>
 
-          {/* Favourite Pharmacies widget card */}
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-3">
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">

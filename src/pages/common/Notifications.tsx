@@ -58,17 +58,14 @@ export default function SharedNotifications() {
     }
   }
 
-  // Filter list
   const filtered = notifs.filter(n => {
     const matchType = typeFilter === 'ALL' || n.type === typeFilter
     const matchRead = readFilter === 'ALL' || (readFilter === 'UNREAD' && !n.read)
     return matchType && matchRead
   })
 
-  // Get distinct types for filters
   const types = Array.from(new Set(notifs.map(n => n.type)))
 
-  // Group notifications by type for count mapping
   const typeCounts = notifs.reduce<Record<string, number>>((acc, n) => {
     acc[n.type] = (acc[n.type] || 0) + 1
     return acc
@@ -109,7 +106,6 @@ export default function SharedNotifications() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-16 font-sans">
-      {/* Toast Alert */}
       {toast && (
         <div className="fixed bottom-4 right-4 z-50 bg-gray-905 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-slideUp">
           <Check className="w-4 h-4 text-emerald-450" />
@@ -117,7 +113,6 @@ export default function SharedNotifications() {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-emerald-50 text-health-primary rounded-lg">
@@ -154,9 +149,7 @@ export default function SharedNotifications() {
         </div>
       </div>
 
-      {/* Main Layout Card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Filters Toolbar */}
         <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div className="flex flex-wrap items-center gap-1.5">
             <button
@@ -197,7 +190,6 @@ export default function SharedNotifications() {
           </div>
         </div>
 
-        {/* Notifications list */}
         {filtered.length === 0 ? (
           <div className="py-24 text-center text-gray-400">
             <Bell className="w-12 h-12 text-gray-200 mx-auto mb-3" />
@@ -219,17 +211,14 @@ export default function SharedNotifications() {
                     !n.read ? 'bg-emerald-50/20' : 'hover:bg-gray-50/50'
                   }`}
                 >
-                  {/* Unread vertical line */}
                   {!n.read && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-health-primary" />
                   )}
 
-                  {/* Left Icon Badge */}
                   <div className={`p-2.5 rounded-lg border ${styles.bg} ${styles.iconColor} flex-shrink-0`}>
                     <Icon className="w-5 h-5" />
                   </div>
 
-                  {/* Body Text */}
                   <div className="flex-grow min-w-0">
                     <div className="flex flex-wrap items-baseline gap-2">
                       <h4 className={`text-sm ${!n.read ? 'font-bold text-gray-905' : 'font-semibold text-gray-800'}`}>
@@ -252,7 +241,6 @@ export default function SharedNotifications() {
                     </div>
                   </div>
 
-                  {/* Right Actions */}
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     {!n.read && (
                       <button

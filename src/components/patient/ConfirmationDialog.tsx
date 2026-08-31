@@ -24,7 +24,6 @@ export default function ConfirmationDialog({
 }: ConfirmationDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
 
-  // Escape key close handler and focus trapping
   useEffect(() => {
     if (!isOpen) return
 
@@ -42,10 +41,8 @@ export default function ConfirmationDialog({
 
   return (
     <div className="fixed inset-0 z-55 flex items-center justify-center px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
-      {/* Backdrop */}
       <div onClick={onCancel} className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-xs transition-opacity" />
 
-      {/* Panel */}
       <div ref={dialogRef} className="portal-modal-panel relative w-full max-w-sm bg-white rounded-xl border border-gray-250 shadow-2xl p-5 z-55 flex flex-col space-y-4 animate-scaleUp">
         <div className="flex items-start space-x-3.5">
           <div className="p-2 bg-red-50 text-red-700 rounded-full border border-red-100 flex-shrink-0">

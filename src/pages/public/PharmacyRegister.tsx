@@ -138,7 +138,6 @@ export default function PharmacyRegister() {
           </div>
         )}
 
-        {/* Full Name */}
         <div className="group">
           <label
             className="block mb-2"
@@ -163,7 +162,6 @@ export default function PharmacyRegister() {
           </div>
         </div>
 
-        {/* Email */}
         <div className="group">
           <label
             className="block mb-2"
@@ -188,7 +186,6 @@ export default function PharmacyRegister() {
           </div>
         </div>
 
-        {/* Phone */}
         <div className="group">
           <label
             className="block mb-2"
@@ -213,7 +210,6 @@ export default function PharmacyRegister() {
           </div>
         </div>
 
-        {/* Password */}
         <div className="group">
           <label
             className="block mb-2"
@@ -296,7 +292,6 @@ export default function PharmacyRegister() {
           )}
         </div>
 
-        {/* Confirm Password */}
         <div className="group">
           <label
             className="block mb-2"
@@ -327,7 +322,6 @@ export default function PharmacyRegister() {
           )}
         </div>
 
-        {/* Submit button — pill */}
         <button
           type="submit"
           disabled={isLoading || !meetsAllCriteria || password !== confirmPassword}

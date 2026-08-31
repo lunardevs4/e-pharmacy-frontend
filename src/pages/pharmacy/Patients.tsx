@@ -60,7 +60,6 @@ export default function PharmacyPatients() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       
-      {/* Patient Search console card */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
         <div className="flex justify-between items-center pb-2 border-b border-gray-150">
           <div className="flex items-center space-x-2">
@@ -81,7 +80,6 @@ export default function PharmacyPatients() {
           />
         </div>
 
-        {/* Patients Table Grid */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs divide-y divide-gray-150">
             <thead>

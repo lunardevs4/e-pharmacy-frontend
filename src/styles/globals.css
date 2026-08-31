@@ -1,73 +1,10 @@
-/* ==========================================================================
-   E-Pharmacy Frontend — Global Stylesheet
-   ==========================================================================
-   Table of Contents
-   --------------------------------------------------------------------------
-   1. IMPORTS & TAILWIND LAYERS
-      - CSS variable imports
-      - Tailwind base, components, utilities
 
-   2. BASE / TYPOGRAPHY / ROOT STYLES
-      - Body, #root, headings
-      - Brand background gradient
-
-   3. AUTHENTICATION LAYOUT (Login / Register / Forgot Password screens)
-      3.1 AuthLayout — 50/50 Split-Screen Container
-      3.2 AuthLayout — Left Side (Login / Register Form Side)
-      3.3 AuthLayout — Right Side (Promotional Brand Panel)
-      3.4 AuthLayout — Heading + Decorative Leaf Divider
-      3.5 AuthLayout — Three Benefit Sections (Icons + Text)
-      3.6 AuthLayout — Decorative Background Elements
-      3.7 AuthLayout — Responsive Breakpoints (Mobile / Tablet)
-
-   4. LOGIN PAGE SPECIFIC
-      4.1 Login Card Wrapper & ISO/GDPR/MOH Trust Badges
-      4.2 Pharmacist / Staff Login Toggle
-
-   5. REGISTRATION PAGES (Patient + Pharmacy)
-      - Shared registration card styling
-
-   6. FORGOT PASSWORD / CHANGE PASSWORD
-      - Password reset flow helpers
-
-   7. REUSABLE UI HELPERS (Form Controls & Buttons)
-      - Primary button variants
-      - Input field base styles
-      - Grid / mesh backgrounds
-
-   8. ANIMATIONS
-      8.1 Modal & Element Fade / Scale
-      8.2 Infinite Ribbon Marquee (Landing)
-      8.3 Reduced Motion Support
-
-   9. CUSTOM SCROLLBAR
-      - WebKit + Firefox themed scrollbar
-
-   10. MISC / IMAGE HELPERS
-       - Circular image container
-
-   11. PRINT STYLES
-       - Receipt printing support
-
-   ========================================================================== */
-
-
-/* --------------------------------------------------------------------------
-   1. IMPORTS & TAILWIND LAYERS
-   -------------------------------------------------------------------------- */
 
 @import './variables.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-
-/* --------------------------------------------------------------------------
-   2. BASE / TYPOGRAPHY / ROOT STYLES
-   -------------------------------------------------------------------------- */
-
-/* Base body reset: font, background, text color, no default margins */
 body {
   font-family: var(--font-family-base);
   background-color: var(--color-neutral-light-gray);
@@ -76,19 +13,15 @@ body {
   padding: 0;
 }
 
-/* E-Pharmacy brand surface: keeps white cards readable while making the
-   surrounding application feel like one intentional product. */
 #root {
   min-height: 100vh;
   background: #f8fafc;
 }
 
-/* Editorial serif headings for the health/pharmacy premium feel */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Merriweather', Georgia, serif;
 }
 
-/* Subtle health-green mesh grid used on landing backgrounds */
 .bg-grid-mesh {
   background-size: 40px 40px;
   background-image:
@@ -96,67 +29,6 @@ h1, h2, h3, h4, h5, h6 {
     linear-gradient(to bottom, rgba(15, 81, 50, 0.12) 1px, transparent 1px);
 }
 
-
-/* --------------------------------------------------------------------------
-   3. AUTHENTICATION LAYOUT (Login / Register / Forgot Password screens)
-   -------------------------------------------------------------------------- */
-
-/* ---- 3.1 AuthLayout — 50/50 Split-Screen Container --------------------- */
-/* Root flex container used by Login, PatientRegister, PharmacyRegister,
-   ForgotPassword, ChangePassword pages. Forces true 50/50 desktop split
-   with no horizontal overflow. */
-.auth-main-container {
-  display: flex;
-  flex-direction: row;
-  min-height: 100vh;
-  width: 100%;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-/* ---- 3.2 AuthLayout — Left Side (Login / Register Form Side) ----------- */
-/* Left 50% panel: white/light surface with centered card, ambient green
-   blur glows and soft dotted grid texture in the background. */
-.auth-left-panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 50%;
-  min-width: 0;
-  min-height: 100vh;
-  background-color: #ffffff;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-/* Outer spacing wrapper around the centered authentication card */
-.auth-left-content {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 520px;
-  padding: 40px 60px;
-  box-sizing: border-box;
-}
-
-/* ---- 3.3 AuthLayout — Right Side (Promotional Brand Panel) ------------- */
-/* Right 50% panel: deep emerald forest-green gradient with blurred
-   one1.png pharmacy shelf backdrop, promotional copy, and benefits. */
-.auth-right-panel {
-  position: relative;
-  display: flex;
-  overflow: hidden;
-  width: 50%;
-  min-width: 0;
-  min-height: 100vh;
-  box-sizing: border-box;
-  background: linear-gradient(145deg, #022c22 0%, #043e2f 45%, #064e3b 100%);
-}
-
-/* Inner content wrapper for the promotional copy. Keeps everything
-   comfortably away from the edges with 60px/70px padding. */
 .auth-right-content {
   position: relative;
   z-index: 10;
@@ -169,15 +41,6 @@ h1, h2, h3, h4, h5, h6 {
   box-sizing: border-box;
 }
 
-/* ---- 3.4 AuthLayout — Heading + Decorative Leaf Divider ---------------- */
-/* Applied to the "Your trusted partner in better health" heading on the
-   promotional right panel. Bold "better health" sub-line. */
-.auth-right-heading {
-  /* currently rendered inline in AuthLayout — placeholder hook */
-}
-
-/* Small leaf divider between the heading and benefits column, flanked by
-   two thin gradient horizontal rules */
 .auth-right-leaf-divider {
   display: flex;
   align-items: center;
@@ -185,9 +48,6 @@ h1, h2, h3, h4, h5, h6 {
   gap: 1rem;
 }
 
-/* ---- 3.5 AuthLayout — Three Benefit Sections (Icons + Text) ------------ */
-/* Vertical stack of the three benefits (Order Medicines, Fast Delivery,
-   Secure & Reliable). 38px gap between benefits, 24px icon↔text gap. */
 .auth-right-benefits {
   display: flex;
   flex-direction: column;
@@ -196,14 +56,12 @@ h1, h2, h3, h4, h5, h6 {
   gap: 38px;
 }
 
-/* Single benefit row: circular icon (72×72) + text block side-by-side */
 .auth-benefit-row {
   display: flex;
   align-items: flex-start;
   gap: 24px;
 }
 
-/* Circular light-mint glass-morphism icon container for each benefit */
 .auth-benefit-icon {
   flex-shrink: 0;
   display: flex;
