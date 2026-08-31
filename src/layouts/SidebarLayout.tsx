@@ -184,6 +184,11 @@ export default function SidebarLayout() {
   const headerBg = 'bg-white'
   const headerBorder = 'border-gray-200'
 
+  const formatName = (name: string | undefined) => {
+    if (!name) return 'User'
+    return Array.from(new Set(name.split(/\s+/))).join(' ')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {sidebarOpen && !isDesktop && (
@@ -206,7 +211,7 @@ export default function SidebarLayout() {
         <div className={`h-16 flex items-center justify-between px-4 border-b ${borderClass} flex-shrink-0`}>
           <div className="flex items-center space-x-2.5 min-w-0">
             <div className="flex-shrink-0 rounded-lg overflow-hidden">
-              <img src="/browsersvg.png" alt="Rwanda E-Pharmacy" className="h-8 w-8 object-contain" />
+              <img src="/logo1.png" alt="Rwanda E-Pharmacy" className="h-8 w-8 object-contain" />
             </div>
             <div className="min-w-0">
               <span className="font-black text-sm leading-none block text-white tracking-wide">Rwanda</span>
@@ -273,7 +278,7 @@ export default function SidebarLayout() {
               {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
             </div>
             <div className="overflow-hidden">
-              <span className="block font-bold text-xs text-white truncate">{user?.name || 'User'}</span>
+              <span className="block font-bold text-xs text-white truncate">{formatName(user?.name)}</span>
               <span className="block text-[10px] text-emerald-200/70 truncate">{isInsurance ? `${insurer} Auditor` : user?.role}</span>
             </div>
           </div>
@@ -442,7 +447,7 @@ export default function SidebarLayout() {
               </div>
               <div className="hidden md:flex flex-col min-w-0 text-left">
                 <span className="text-xs font-bold text-gray-800 truncate max-w-[180px] leading-tight">
-                  {user?.name}
+                  {formatName(user?.name)}
                 </span>
                 <span className="text-[10px] text-gray-500 font-medium truncate max-w-[180px] leading-tight mt-0.5">
                   {['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user?.role || '') && user?.pharmacy?.name
