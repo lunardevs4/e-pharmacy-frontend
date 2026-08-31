@@ -45,7 +45,8 @@ export default function PatientDashboard() {
     setInsuranceSaveLoading(true)
     try {
       const updated = await AuthApi.updateProfile(user?.username || 'patient', {
-        firstName: user?.name || '',
+        firstName: user?.firstName || user?.name?.split(' ')[0] || '',
+        lastName: user?.lastName || '',
         email: user?.email || '',
         phone: user?.phone || '',
         insuranceProvider: selectedInsurance,
@@ -278,7 +279,7 @@ export default function PatientDashboard() {
         <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-50/50 rounded-full blur-xl pointer-events-none" />
 
         <div className="space-y-2 flex-grow">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950">Muraho, {user?.name || 'Citizen'}</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950">Muraho, {user?.firstName?.split(' ')[0] || user?.name?.split(' ')[0] || 'Citizen'}</h1>
           <p className="text-gray-500 text-[10px] sm:text-xs max-w-lg font-medium leading-normal">
             Welcome to the Rwanda Ministry of Health national drug dispensary system. Check reservation statuses, search medication catalogues, or upload prescriptions below.
           </p>

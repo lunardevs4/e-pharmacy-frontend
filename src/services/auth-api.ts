@@ -394,7 +394,8 @@ export const AuthApi = {
   getGovernmentSummary: async (): Promise<unknown> => {
     try {
       const response = await apiClient.get('/government/summary')
-      return response.data
+      const payload = response.data
+      return payload?.data ?? payload
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -404,7 +405,10 @@ export const AuthApi = {
   getGovernmentMedicineAvailability: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/government/medicine-availability')
-      return Array.isArray(response.data) ? response.data : []
+      const payload = response.data
+      if (Array.isArray(payload)) return payload
+      if (Array.isArray(payload?.data)) return payload.data
+      return []
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
@@ -508,7 +512,8 @@ export const AuthApi = {
       if (endDate) query.push(`endDate=${encodeURIComponent(endDate)}`)
       const url = `/reports/government${query.length ? `?${query.join('&')}` : ''}`
       const response = await apiClient.get(url)
-      return response.data
+      const payload = response.data
+      return payload?.data ?? payload
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }

@@ -32,42 +32,21 @@ export default function MedicineAnalytics() {
     setLoading(true)
     setError(null)
     try {
-      const [medicines, lowStock] = await Promise.all([
-        MedicineApi.searchMedicines('', '', false).catch(() => []),
-        AuthApi.getGovernmentLowStock(10).catch(() => []),
-      ])
+      const availabilityData = await AuthApi.getGovernmentMedicineAvailability().catch(() => [])
 
-      // Process medicines to create essential medicine tracking
-      const medicineMap = new Map<string, EssentialMedicine>()
-
-      medicines.forEach((med: any) => {
-        const key = med.name
-        if (!medicineMap.has(key)) {
-          medicineMap.set(key, {
-            name: med.name,
-            category: med.category || 'Other',
-            nationalStock: 95, // Default healthy stock
-            trend: 'stable',
-            shortage: false,
-          })
+      const medicineArray = availabilityData.map((item: any) => {
+        const name = item.medicine?.tradeName || item.medicine?.name || 'Unknown'
+        const category = item.medicine?.category?.name || item.medicine?.category || 'Other'
+        const quantity = item.totalStock || 0
+        return {
+          name,
+          category,
+          nationalStock: quantity, // Real total stock
+          trend: (quantity <= 20 ? 'down' : quantity >= 80 ? 'up' : 'stable') as 'up' | 'down' | 'stable',
+          shortage: quantity <= 20,
         }
-      })
+      }).sort((a: any, b: any) => b.nationalStock - a.nationalStock)
 
-      // Update stock levels based on low stock data
-      lowStock.forEach((item: any) => {
-        const medicineName = (item.medicine as any)?.name || item.medicineName || 'Unknown'
-        const quantity = item.quantity || 0
-
-        if (medicineMap.has(medicineName)) {
-          const medicineData = medicineMap.get(medicineName)!
-          medicineData.nationalStock = Math.max(0, Math.min(100, quantity))
-          medicineData.shortage = quantity <= 10
-          medicineData.trend = quantity <= 10 ? 'down' : quantity >= 80 ? 'up' : 'stable'
-        }
-      })
-
-      // Convert to array and limit to top 15
-      const medicineArray = Array.from(medicineMap.values()).slice(0, 15)
       setEssentialMedicines(medicineArray)
     } catch (err: any) {
       setError(err.message || 'Failed to load medicine analytics')
@@ -86,85 +65,18 @@ export default function MedicineAnalytics() {
   }, [essentialMedicines])
 
   const usageTrend = useMemo(() => {
-    if (essentialMedicines.length === 0) {
-      return { labels: MONTHS, datasets: [] }
-    }
-
-    const categoryStats = categories.slice(0, 2).map((cat, index) => {
-      const catMeds = essentialMedicines.filter(m => m.category === cat)
-      const avgStock = catMeds.reduce((acc, m) => acc + m.nationalStock, 0) / (catMeds.length || 1)
-      
-      const data = MONTHS.map((_, i) => {
-         const base = 2000 + (avgStock * 20)
-         const variation = Math.sin(i + index) * 800
-         return Math.round(base + variation)
-      })
-
-      const isFirst = index === 0;
-      const color = isFirst ? '#059669' : '#34d399';
-
-      return {
-        label: cat,
-        data,
-        borderColor: color,
-        backgroundColor: (context: any) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-          gradient.addColorStop(0, isFirst ? 'rgba(5, 150, 105, 0.5)' : 'rgba(52, 211, 153, 0.5)');
-          gradient.addColorStop(1, isFirst ? 'rgba(5, 150, 105, 0.0)' : 'rgba(52, 211, 153, 0.0)');
-          return gradient;
-        },
-        fill: true,
-        tension: 0.5,
-        borderWidth: 3,
-        pointRadius: 0,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: color,
-        pointBorderWidth: 2,
-      }
-    })
-
     return {
       labels: MONTHS,
-      datasets: categoryStats
+      datasets: []
     }
-  }, [essentialMedicines, categories])
+  }, [])
 
   const stockIndex = useMemo(() => {
-    const currentAvg = essentialMedicines.length > 0 
-      ? essentialMedicines.reduce((a, m) => a + m.nationalStock, 0) / essentialMedicines.length
-      : 92
-
-    const data = MONTHS.map((_, i) => {
-      const variation = Math.cos(i) * 3
-      return Math.max(0, Math.min(100, currentAvg - 5 + variation + (i * 0.8)))
-    })
-
     return {
       labels: MONTHS,
-      datasets: [{
-        label: 'National Drug Availability Index (%)',
-        data,
-        borderColor: '#10b981',
-        backgroundColor: (context: any) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-          gradient.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
-          gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-          return gradient;
-        },
-        fill: true,
-        tension: 0.5,
-        borderWidth: 3,
-        pointRadius: 0,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: '#10b981',
-        pointBorderWidth: 2,
-      }],
+      datasets: []
     }
-  }, [essentialMedicines])
+  }, [])
 
   const filtered = essentialMedicines.filter((m) =>
     categoryFilter ? m.category === categoryFilter : true
@@ -219,18 +131,8 @@ export default function MedicineAnalytics() {
             <h3 className="text-sm font-black text-gray-900">Drug Dispensing Volume Trends</h3>
             <p className="text-[10px] text-gray-400">Monthly units dispensed by category</p>
           </div>
-          <div className="relative h-64 rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
-            <Line data={usageTrend} options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: { duration: 0 },
-              interaction: { mode: 'index', intersect: false },
-              plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } }, tooltip: { animation: false, backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
-              scales: {
-                y: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
-                x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },
-              },
-            }} />
+          <div className="relative h-64 rounded-xl border border-gray-100 bg-gray-50 p-3 flex items-center justify-center">
+            <span className="text-xs text-gray-400 font-medium text-center">Historical trend data is currently unavailable.<br/>Data collection is ongoing.</span>
           </div>
         </div>
 
@@ -239,18 +141,8 @@ export default function MedicineAnalytics() {
             <h3 className="text-sm font-black text-gray-900">National Drug Availability Index</h3>
             <p className="text-[10px] text-gray-400">% of essential medicines in adequate stock</p>
           </div>
-          <div className="relative h-64 rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-blue-50/70 p-3">
-            <Line data={stockIndex} options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: { duration: 0 },
-              interaction: { mode: 'index', intersect: false },
-              plugins: { legend: { display: false }, tooltip: { animation: false, backgroundColor: '#0f5132', titleFont: { size: 10 }, bodyFont: { size: 10 }, displayColors: false } },
-              scales: {
-                y: { min: 85, max: 100, border: { display: false }, ticks: { callback: (v: any) => `${v}%`, font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.08)' } },
-                x: { border: { display: false }, ticks: { font: { size: 10 } }, grid: { color: 'rgba(15,81,50,0.05)' } },
-              },
-            }} />
+          <div className="relative h-64 rounded-xl border border-gray-100 bg-gray-50 p-3 flex items-center justify-center">
+            <span className="text-xs text-gray-400 font-medium text-center">Historical trend data is currently unavailable.<br/>Data collection is ongoing.</span>
           </div>
         </div>
       </div>
@@ -297,15 +189,7 @@ export default function MedicineAnalytics() {
                       <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] font-semibold">{m.category}</span>
                     </td>
                     <td className="px-5 py-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-20 bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${m.nationalStock >= 90 ? 'bg-emerald-500' : m.nationalStock >= 75 ? 'bg-yellow-400' : 'bg-red-500'}`}
-                            style={{ width: `${m.nationalStock}%` }}
-                          />
-                        </div>
-                        <span className="font-black text-gray-900">{m.nationalStock}%</span>
-                      </div>
+                      <span className="font-black text-gray-900">{m.nationalStock} units</span>
                     </td>
                     <td className="px-5 py-3">
                       <span className={`text-[10px] font-bold ${m.trend === 'up' ? 'text-emerald-700' : m.trend === 'down' ? 'text-red-700' : 'text-gray-500'}`}>

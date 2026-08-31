@@ -103,7 +103,7 @@ export default function GovernmentDashboard() {
         )
 
         setSummary(
-          (summaryResult.value as any)?.data ?? null
+          (summaryResult.value as any)?.data ?? summaryResult.value ?? null
         )
       } else {
         console.error(
