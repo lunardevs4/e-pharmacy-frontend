@@ -100,7 +100,6 @@ export default function MedicineSearch() {
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null)
   const [stockList, setStockList] = useState<PharmacyStock[]>([])
   const [stockLoading, setStockLoading] = useState(false)
-  const [expandedClinical, setExpandedClinical] = useState(false)
 
   // Responsive mobile toggle (List vs Map)
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
@@ -240,7 +239,6 @@ export default function MedicineSearch() {
   const handleViewAvailability = async (med: Medicine, insuranceOverride?: string) => {
     setSelectedMedicine(med)
     setStockLoading(true)
-    setExpandedClinical(false)
     
     // Get user location when viewing availability
     getUserLocation()
@@ -651,45 +649,20 @@ export default function MedicineSearch() {
                   )}
                 </div>
 
-                {/* Patient Clinical Info */}
+                {/* Storage Information */}
                 <div className="text-xs space-y-2.5 text-gray-700 pt-3 border-t border-gray-150">
                   <p>
-                    <span className="font-bold text-gray-900">Clinical Uses:</span>{' '}
-                    {selectedMedicine.uses}
+                    <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
+                    {selectedMedicine.storage}
                   </p>
                   <p>
-                    <span className="font-bold text-gray-900">Recommended Dosage:</span>{' '}
-                    {selectedMedicine.dosage}
+                    <span className="font-bold text-gray-900">Minimum Temperature:</span>{' '}
+                    {selectedMedicine.minTemperature != null ? `${selectedMedicine.minTemperature}°C` : 'Not provided'}
                   </p>
                   <p>
-                    <span className="font-bold text-gray-900">Warnings &amp; Safety:</span>{' '}
-                    <span className="text-rose-700">{selectedMedicine.warnings}</span>
+                    <span className="font-bold text-gray-900">Maximum Temperature:</span>{' '}
+                    {selectedMedicine.maxTemperature != null ? `${selectedMedicine.maxTemperature}°C` : 'Not provided'}
                   </p>
-
-                  <button
-                    type="button"
-                    onClick={() => setExpandedClinical(!expandedClinical)}
-                    className="text-health-primary font-bold hover:underline"
-                  >
-                    {expandedClinical ? 'Show Less' : 'View Clinical Contraindications & Storage'}
-                  </button>
-
-                  {expandedClinical && (
-                    <div className="space-y-2 pt-2 border-t border-dashed border-gray-250 animate-fadeIn">
-                      <p>
-                        <span className="font-bold text-gray-900">Common Side Effects:</span>{' '}
-                        {selectedMedicine.sideEffects}
-                      </p>
-                      <p>
-                        <span className="font-bold text-gray-900">Drug Interactions:</span>{' '}
-                        {selectedMedicine.interactions}
-                      </p>
-                      <p>
-                        <span className="font-bold text-gray-900">Storage Requirements:</span>{' '}
-                        {selectedMedicine.storage}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
 
