@@ -456,4 +456,12 @@ export const insuranceApi = {
     const response = await apiClient.patch(`/insurance/providers/${id}`, data)
     return unwrap(response)
   },
+
+  async exportReport(insuranceId: string, endpoint: string): Promise<Blob> {
+    const response = await apiClient.get(`/insurance/reports/${endpoint}`, {
+      params: { insuranceId },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 }

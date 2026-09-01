@@ -41,9 +41,37 @@ export default function InsuranceReports() {
     loadSummary()
   }, [])
 
-  const download = (name: string) => {
+  const download = async (name: string, endpoint: string) => {
+    if (!summary) return
     setLoading(name)
-    setTimeout(() => { setLoading(null); setToast(`${name} exported.`); setTimeout(() => setToast(null), 3000) }, 1400)
+    setErrorMsg(null)
+    try {
+      // Find the insurance ID
+      const providers = await insuranceApi.getProviders()
+      const matchedProvider = providers.find(p => p.code === insurer || p.name === insurer)
+      const insuranceId = matchedProvider?.id
+      
+      if (!insuranceId) throw new Error('Insurance ID not found')
+
+      const blob = await insuranceApi.exportReport(insuranceId, endpoint)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      // Provide an appropriate extension based on the endpoint
+      const extension = endpoint.includes('register') || endpoint.includes('audit') ? 'csv' : 'pdf'
+      a.download = `${name.replace(/\s+/g, '_').toLowerCase()}.${extension}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      setToast(`${name} exported successfully.`)
+      setTimeout(() => setToast(null), 3000)
+    } catch (err: any) {
+      setErrorMsg(err.message || `Failed to export ${name}.`)
+    } finally {
+      setLoading(null)
+    }
   }
 
   const claimsVolumeData = {
@@ -109,10 +137,10 @@ export default function InsuranceReports() {
   }
 
   const reports = [
-    { name: `${insurer} Monthly Claims Summary`, type: 'PDF' },
-    { name: `${insurer} Pharmacy Payout Register`, type: 'CSV' },
-    { name: `${insurer} Rejection Analysis Report`, type: 'PDF' },
-    { name: `${insurer} Insured Patient Coverage Audit`, type: 'CSV' },
+    { name: `${insurer} Monthly Claims Summary`, type: 'PDF', endpoint: 'monthly-summary' },
+    { name: `${insurer} Pharmacy Payout Register`, type: 'CSV', endpoint: 'payout-register' },
+    { name: `${insurer} Rejection Analysis Report`, type: 'PDF', endpoint: 'rejection-analysis' },
+    { name: `${insurer} Insured Patient Coverage Audit`, type: 'CSV', endpoint: 'coverage-audit' },
   ]
 
   return (
@@ -178,7 +206,7 @@ export default function InsuranceReports() {
                 <p className="text-xs font-bold text-gray-900">{r.name}</p>
                 <span className="text-[9px] font-mono text-gray-400">{r.type}</span>
               </div>
-              <button onClick={() => download(r.name)} disabled={loading !== null} aria-label={`Download ${r.name}`}
+              <button onClick={() => download(r.name, r.endpoint)} disabled={loading !== null} aria-label={`Download ${r.name}`}
                 className="flex items-center space-x-1 border border-gray-300 bg-white text-gray-600 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600">
                 {loading === r.name
                   ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /><span>Generating...</span></>
