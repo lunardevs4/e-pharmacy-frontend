@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { apiClient } from '@/api/client'
+import { useLanguageStore } from '@/store/languageStore'
+import LanguageSelector from '@/components/common/LanguageSelector'
 
 function CountUp({ end, duration = 1500, suffix = '', decimals = 0 }: { end: number; duration?: number; suffix?: string; decimals?: number }) {
   const [count, setCount] = useState(0)
@@ -55,6 +57,7 @@ import {
 } from 'lucide-react'
 
 export default function LandingPage() {
+  const { t } = useLanguageStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [stats, setStats] = useState({
     registeredPharmacies: '—',
@@ -179,79 +182,79 @@ export default function LandingPage() {
 
   const features = [
     {
-      title: 'Search Any Medicine',
-      desc: 'Find medicines by generic name, trade name, or manufacturer across all registered pharmacies in Rwanda.',
+      title: t('feature.search.title'),
+      desc: t('feature.search.desc'),
       icon: Search,
     },
     {
-      title: 'Nearest Pharmacies',
-      desc: 'Instantly see which pharmacies near your registered residence currently have the medicine in stock, sorted by distance.',
+      title: t('feature.nearest.title'),
+      desc: t('feature.nearest.desc'),
       icon: MapPin,
     },
     {
-      title: 'Reserve for Pickup',
-      desc: 'Reserve your medicine online and collect it in person at the pharmacy. No delivery — your medicine is held for you.',
+      title: t('feature.reserve.title'),
+      desc: t('feature.reserve.desc'),
       icon: Bookmark,
     },
     {
-      title: 'Upload Prescription',
-      desc: 'Photograph your prescription and submit it digitally. The pharmacy verifies it before you arrive.',
+      title: t('feature.upload.title'),
+      desc: t('feature.upload.desc'),
       icon: Upload,
     },
     {
-      title: 'Insurance Integration',
-      desc: 'See insurance coverage at a glance. Your insurer pays their share directly to the pharmacy.',
+      title: t('feature.insurance.title'),
+      desc: t('feature.insurance.desc'),
       icon: CreditCard,
     },
     {
-      title: 'Medication Reminders',
-      desc: 'Receive reminders when it is time to take your medicine, or when your reservation is ready for pickup.',
+      title: t('feature.reminders.title'),
+      desc: t('feature.reminders.desc'),
       icon: Bell,
     },
   ]
 
   const portalDetails = [
     {
-      role: 'Patients',
-      desc: 'Search medicines, check availability, reserve for pickup, manage prescriptions and reminders.',
+      role: t('portal.patients.title'),
+      desc: t('portal.patients.desc'),
       icon: UserIcon,
     },
     {
-      role: 'Pharmacies',
-      desc: 'Manage inventory, handle reservations, process billing with insurance integration.',
+      role: t('portal.pharmacies.title'),
+      desc: t('portal.pharmacies.desc'),
       icon: PharmacyIcon,
     },
     {
-      role: 'Government',
-      desc: 'Monitor national medicine availability, pharmacy compliance, and district health coverage.',
+      role: t('portal.government.title'),
+      desc: t('portal.government.desc'),
       icon: Landmark,
     },
   ]
 
   const faqs = [
     {
-      q: 'Does this platform deliver medicines?',
-      a: 'No, the platform does not deliver medicines. Its purpose is to ensure that every Rwandan can quickly locate a medicine, confirm it is available, verify their insurance coverage, and reserve it for in-person collection.',
+      q: t('faq.q1'),
+      a: t('faq.a1'),
     },
     {
-      q: 'How do I find a medicine near me?',
-      a: 'Search by generic name, trade name, or manufacturer. The system will show you all nearby pharmacies that currently have stock, sorted by distance from your registered residence.',
+      q: t('faq.q2'),
+      a: t('faq.a2'),
     },
     {
-      q: 'Is insurance accepted?',
-      a: 'Yes. Major public and private insurance providers in Rwanda (such as RSSB/Mutuelle, MMI, and RAMA) are integrated. The system calculates your co-payment share automatically.',
+      q: t('faq.q3'),
+      a: t('faq.a3'),
     },
     {
-      q: 'Who can use this platform?',
-      a: 'All citizens and residents of Rwanda with a valid National ID or passport can register as patients. Licensed pharmacies and government health authorities have dedicated portals.',
+      q: t('faq.q4'),
+      a: t('faq.a4'),
     },
     {
-      q: 'Is my medical data secure?',
-      a: 'Yes. The platform is fully ISO 27001 certified and GDPR compliant. Patient data is encrypted and accessible only to authorized healthcare professionals.',
+      q: t('faq.q5'),
+      a: t('faq.a5'),
     },
     {
-      q: 'How do I register?',
-      a: 'Patients can register online using their 16-digit Rwandan National ID. Pharmacies must submit their licensing details for verification by the Ministry of Health before activation.',
+      q: t('faq.q6'),
+      a: t('faq.a6'),
     },
   ]
 
@@ -284,34 +287,35 @@ export default function LandingPage() {
 
           <nav className="hidden md:flex space-x-8 text-sm font-bold text-gray-500">
             <a href="#home" className="hover:text-health-primary transition-colors">
-              Home
+              {t('nav.home')}
             </a>
             <a href="#features" className="hover:text-health-primary transition-colors">
-              Features
+              {t('nav.features')}
             </a>
             <a href="#about" className="hover:text-health-primary transition-colors">
-              About
+              {t('nav.about')}
             </a>
             <a href="#faq" className="hover:text-health-primary transition-colors">
-              FAQ
+              {t('nav.faq')}
             </a>
             <a href="#contact" className="hover:text-health-primary transition-colors">
-              Contact
+              {t('nav.contact')}
             </a>
           </nav>
 
           <div className="flex items-center space-x-6">
+            <LanguageSelector />
             <Link
               to="/login"
               className="text-sm font-bold text-gray-800 hover:text-health-primary transition-colors"
             >
-              Log In
+              {t('nav.login')}
             </Link>
             <Link
               to="/register"
               className="bg-health-primary hover:bg-health-secondary text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <span>Register</span>
+              <span>{t('nav.register')}</span>
             </Link>
           </div>
         </div>
@@ -337,13 +341,10 @@ export default function LandingPage() {
                 GOVERNMENT OF RWANDA
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-black text-gray-950 leading-[1.1] tracking-tight">
-                Find medicines across <br />
-                Rwanda &mdash; instantly.
+                {t('landing.heroTitleMain')}
               </h1>
               <p className="text-gray-600 text-base sm:text-lg leading-relaxed max-w-xl">
-                Enter your required medication. Instantly see verified pharmacy stock, compare
-                co-pay costs with your insurance provider, and reserve for secure collection near
-                your residence.
+                {t('landing.heroSubtitleMain')}
               </p>
 
               <form
@@ -357,7 +358,7 @@ export default function LandingPage() {
                   <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search a medicine, e.g. Paracetamol..."
+                    placeholder={t('landing.searchPlaceholderInput')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 text-sm font-semibold"
@@ -367,32 +368,33 @@ export default function LandingPage() {
                   type="submit"
                   className="bg-health-primary hover:bg-health-secondary text-white font-bold px-6 py-3.5 rounded-xl transition-colors text-sm flex items-center justify-center space-x-2 shadow-md hover:shadow-lg active:scale-[0.98] transition-transform duration-100 cursor-pointer"
                 >
-                  <span>Search Catalog</span>
+                  <span>{t('landing.searchButtonInput')}</span>
                 </button>
               </form>
 
               <div className="flex items-center space-x-4 text-xs font-bold text-gray-500">
                 <Link to="/register/patient" className="text-health-primary hover:underline">
-                  Register as Patient &gt;
+                  {t('landing.registerAsPatientLink')}
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link to="/register/pharmacy" className="text-health-primary hover:underline">
-                  Register as Pharmacy &gt;
+                  {t('landing.registerAsPharmacyLink')}
                 </Link>
               </div>
             </div>
 
+            {/* Right Interactive Card */}
             <div className="lg:col-span-5">
               {showResults ? (
                 <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-white/60 shadow-xl overflow-hidden animate-scaleIn">
                   <div className="bg-slate-50/60 border-b border-gray-150 px-6 py-4 flex items-center justify-between">
                     <div>
                       <h3 className="font-bold text-gray-900 text-sm">
-                        Search Results &mdash; {searchTerm || 'Paracetamol'}
+                        {t('landing.searchResultsTitle', { query: searchTerm || 'Paracetamol' })}
                       </h3>
                       <p className="text-xs text-gray-400 mt-0.5 font-medium">
                         {isSearching
-                          ? 'Searching...'
+                          ? t('landing.searchingProgress')
                           : searchUsedFallback
                             ? 'No nearby pharmacies found; showing other pharmacies with stock'
                             : `${searchResults.length} pharmacies nearby`}
@@ -408,7 +410,7 @@ export default function LandingPage() {
                       }}
                       className="text-xs font-bold text-gray-400 hover:text-gray-650 transition-colors"
                     >
-                      Clear
+                      {t('landing.clearBtn')}
                     </button>
                   </div>
 
@@ -416,7 +418,7 @@ export default function LandingPage() {
                     {isSearching ? (
                       <div className="p-8 text-center text-sm text-gray-500 font-medium">
                         <span className="inline-block animate-pulse">
-                          Searching national medicine database...
+                          {t('landing.searchingProgress')}
                         </span>
                       </div>
                     ) : searchError ? (
@@ -425,7 +427,7 @@ export default function LandingPage() {
                       </div>
                     ) : searchResults.length === 0 ? (
                       <div className="p-8 text-center text-sm text-gray-500">
-                        No active stock found for "{searchTerm}".
+                        {t('landing.noStockFound', { query: searchTerm })}
                       </div>
                     ) : (
                       searchResults.map((item, idx) => (
@@ -468,13 +470,15 @@ export default function LandingPage() {
                                   item.quantity > 5 ? 'text-emerald-600' : 'text-orange-550'
                                 }`}
                               >
-                                {item.quantity > 5 ? 'Available' : `Low Stock (${item.quantity})`}
+                                {item.quantity > 5 
+                                  ? t('landing.availableText') 
+                                  : t('landing.lowStockText', { qty: String(item.quantity) })}
                               </span>
                               <Link
                                 to="/login"
                                 className="bg-health-primary hover:bg-health-secondary text-white text-[11px] font-bold px-3 py-1 rounded transition-colors shadow-xs"
                               >
-                                Reserve
+                                {t('landing.reserveBtn')}
                               </Link>
                             </div>
                           </div>
@@ -489,11 +493,10 @@ export default function LandingPage() {
                     <Search className="w-8 h-8" />
                   </div>
                   <h3 className="text-lg font-black text-gray-900 relative z-10">
-                    National Medicine Search
+                    {t('landing.searchButtonInput')}
                   </h3>
                   <p className="text-gray-500 text-xs mt-2.5 max-w-xs leading-relaxed mx-auto relative z-10 font-medium">
-                    Search by generic name or manufacturer to locate verified nearby stock,
-                    calculate insurance coverage, and lock in your reservation for pickup.
+                    {t('landing.heroSubtitleMain')}
                   </p>
                 </div>
               )}
@@ -509,7 +512,7 @@ export default function LandingPage() {
                 {statsLoading ? '…' : stats.registeredPharmacies}
               </span>
               <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
-                Registered Pharmacies
+                {t('landing.registeredPharmacies')}
               </span>
             </div>
             <div className="space-y-1 pl-4">
@@ -517,7 +520,7 @@ export default function LandingPage() {
                 {statsLoading ? '…' : stats.patientsRegistered}
               </span>
               <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
-                Patients Registered
+                {t('landing.patientsRegistered')}
               </span>
             </div>
             <div className="space-y-1 pl-4">
@@ -525,7 +528,7 @@ export default function LandingPage() {
                 {statsLoading ? '…' : stats.provincesCovered}
               </span>
               <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
-                Provinces Covered
+                {t('landing.provincesCovered')}
               </span>
             </div>
             <div className="space-y-1 pl-4">
@@ -533,13 +536,14 @@ export default function LandingPage() {
                 {statsLoading ? '…' : stats.nationalAvailability}
               </span>
               <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
-                National Availability
+                {t('landing.nationalAvailability')}
               </span>
             </div>
           </div>
         </div>
       </section>
-{' '}
+
+      {/* Platform Features Section */}
       <section
         id="features"
         className="relative py-20 bg-white border-b border-gray-150 overflow-hidden"
@@ -547,14 +551,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="space-y-4 max-w-3xl">
             <span className="text-xs font-bold uppercase tracking-widest text-health-primary">
-              Platform Features
+              {t('landing.platformFeatures')}
             </span>
             <h2 className="text-3xl font-serif font-black text-gray-950">
-              Everything you need in one platform.
+              {t('landing.featuresHeading')}
             </h2>
             <p className="text-gray-600 text-base font-medium">
-              From finding a medicine to confirming your insurance coverage and reserving for
-              pickup.
+              {t('landing.featuresDesc')}
             </p>
           </div>
 
@@ -583,22 +586,19 @@ export default function LandingPage() {
             <div className="space-y-8 pt-6">
               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-50 text-health-primary border border-emerald-100 tracking-wider uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-health-primary mr-2 inline-block"></span>
-                ABOUT RWANDA E-PHARMACY
+                {t('landing.aboutTitle')}
               </span>
               
               <h2 className="text-3xl font-serif font-black text-gray-950 leading-tight">
-                Making medicine access simpler for every Rwandan
+                {t('landing.aboutHeading')}
               </h2>
               
               <div className="space-y-4 text-gray-600 text-sm leading-relaxed font-medium">
                 <p>
-                  Rwanda E-Pharmacy is an initiative of the Ministry of Health to digitise medicine
-                  access across all five provinces. The platform connects patients, pharmacies,
-                  and government health authorities into one centralised,
-                  real-time system.
+                  {t('landing.aboutP1')}
                 </p>
                 <p>
-                  We are building a healthier Rwanda where every person can easily find, verify and access the medicines they need.
+                  {t('landing.aboutP2')}
                 </p>
               </div>
 
@@ -611,7 +611,7 @@ export default function LandingPage() {
                         <Icon className="w-5 h-5" />
                       </div>
                       <h3 className="font-bold text-gray-950 text-sm">{portal.role}</h3>
-                      <p className="text-gray-500 text-[11px] leading-relaxed font-medium">{portal.desc}</p>
+                      <p className="text-gray-550 text-[11px] leading-relaxed font-medium">{portal.desc}</p>
                     </div>
                   )
                 })}
@@ -639,9 +639,9 @@ export default function LandingPage() {
                       <Check className="w-4 h-4 text-white" />
                     </div>
                   </div>
-                  <h3 className="font-bold text-lg">Connected healthcare across Rwanda</h3>
+                  <h3 className="font-bold text-lg">{t('landing.connectedCardHeading')}</h3>
                   <p className="text-sm leading-relaxed text-emerald-100">
-                    One platform. Many partners. Better health for all.
+                    {t('landing.connectedCardDesc')}
                   </p>
                 </div>
               </div>
@@ -652,7 +652,7 @@ export default function LandingPage() {
       <section className="py-16 bg-white border-t border-gray-150">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-8">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-            Partner Organisations
+            {t('landing.partnerTitle')}
           </span>
           <div className="flex flex-wrap justify-center items-center gap-4">
             {[
@@ -677,9 +677,9 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-6 space-y-10">
           <div className="space-y-2">
             <span className="text-xs font-bold uppercase tracking-widest text-health-primary">
-              FAQ
+              {t('nav.faq')}
             </span>
-            <h2 className="text-3xl font-extrabold text-gray-900">Frequently Asked Questions</h2>
+            <h2 className="text-3xl font-extrabold text-gray-900">{t('nav.faq')}</h2>
           </div>
 
           <div className="space-y-3">
@@ -715,29 +715,29 @@ export default function LandingPage() {
       <section className="bg-health-primary text-white py-16">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Ready to find your medicine?
+            {t('landing.ctaTitle')}
           </h2>
           <p className="text-emerald-100 text-base max-w-md mx-auto">
-            Join 2.4 million Rwandans already registered. Free for all patients.
+            {t('landing.ctaSubtitle')}
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2">
             <Link
               to="/register/patient"
               className="w-full sm:w-auto bg-white text-health-primary hover:bg-emerald-50 px-6 py-3 rounded-lg text-sm font-bold shadow-md transition-colors text-center"
             >
-              Register as Patient
+              {t('landing.ctaPatientBtn')}
             </Link>
             <Link
               to="/register/pharmacy"
               className="w-full sm:w-auto border border-white hover:bg-white/10 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center font-sans"
             >
-              Register as Pharmacy
+              {t('landing.ctaPharmacyBtn')}
             </Link>
             <Link
               to="/login"
               className="w-full sm:w-auto bg-emerald-950/40 border border-white/20 hover:bg-emerald-950/60 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center"
             >
-              Sign In
+              {t('landing.ctaSignInBtn')}
             </Link>
           </div>
         </div>
@@ -765,38 +765,38 @@ export default function LandingPage() {
                 </div>
               </div>
               <p className="text-xs text-gray-500 leading-relaxed">
-                Official national digital pharmacy platform operated by the Government of Rwanda.
+                {t('landing.footerTagline')}
               </p>
             </div>
 
             <div>
               <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
-                Platform
+                {t('landing.footerPlatform')}
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Search Medicines
+                    {t('landing.searchButton')}
                   </Link>
                 </li>
                 <li>
                   <a href="#home" className="hover:text-white transition-colors">
-                    Nearby Pharmacies
+                    {t('feature.nearest.title')}
                   </a>
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Reservations
+                    {t('nav.reservations')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Upload Prescription
+                    {t('feature.upload.title')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Medicine Reminders
+                    {t('feature.reminders.title')}
                   </Link>
                 </li>
               </ul>
@@ -804,22 +804,22 @@ export default function LandingPage() {
 
             <div>
               <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
-                Portals
+                {t('landing.footerPortal')}s
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Patient Portal
+                    {t('portal.patients.title')} {t('landing.footerPortal')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Pharmacy Portal
+                    {t('portal.pharmacies.title')} {t('landing.footerPortal')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Government Portal
+                    {t('portal.government.title')} {t('landing.footerPortal')}
                   </Link>
                 </li>
               </ul>
@@ -827,7 +827,7 @@ export default function LandingPage() {
 
             <div>
               <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
-                Support
+                {t('landing.footerLegal')}
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
@@ -852,7 +852,7 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <a href="#contact" className="hover:text-white transition-colors">
-                    Contact Us
+                    {t('landing.footerContact')}
                   </a>
                 </li>
               </ul>

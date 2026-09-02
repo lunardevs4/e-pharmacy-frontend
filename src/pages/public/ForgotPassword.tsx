@@ -4,11 +4,13 @@ import AuthLayout from '@/layouts/AuthLayout'
 import { AuthApi } from '@/services/auth-api'
 import { validateEmail } from '@/utils/validation'
 import { Mail, ShieldCheck, CheckCircle2, AlertCircle, Loader2, Eye, EyeOff, Lock } from 'lucide-react'
+import { useLanguageStore } from '@/store/languageStore'
 
 type ForgotStep = 'EMAIL' | 'OTP' | 'RESET' | 'SUCCESS'
 
 export default function ForgotPassword() {
   const navigate = useNavigate()
+  const { t } = useLanguageStore()
   const [step, setStep] = useState<ForgotStep>('EMAIL')
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
@@ -32,7 +34,7 @@ export default function ForgotPassword() {
     e.preventDefault()
     const emailValidation = validateEmail(email)
     if (!emailValidation.isValid) {
-      setErrorMsg(emailValidation.error || 'Please enter a valid email address.')
+      setErrorMsg(emailValidation.error || t('forgot.validationEmail'))
       return
     }
 
@@ -51,7 +53,7 @@ export default function ForgotPassword() {
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (otp.length !== 6) {
-      setErrorMsg('Please enter the 6-digit OTP code.')
+      setErrorMsg(t('forgot.validationOtp'))
       return
     }
 
@@ -70,11 +72,11 @@ export default function ForgotPassword() {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!meetsAllCriteria) {
-      setErrorMsg('Password does not meet all strength requirements.')
+      setErrorMsg(t('forgot.validationStrength'))
       return
     }
     if (password !== confirmPassword) {
-      setErrorMsg('New password and confirm password fields do not match.')
+      setErrorMsg(t('forgot.validationMatch'))
       return
     }
 
@@ -93,34 +95,34 @@ export default function ForgotPassword() {
   const getStepTitle = () => {
     switch (step) {
       case 'EMAIL':
-        return 'Forgot Password'
+        return t('forgot.title')
       case 'OTP':
-        return 'Email Verification'
+        return t('forgot.otpTitle')
       case 'RESET':
-        return 'Create New Password'
+        return t('forgot.resetTitle')
       case 'SUCCESS':
-        return 'Password Updated'
+        return t('forgot.successTitle')
     }
   }
 
   const getStepSubtitle = () => {
     switch (step) {
       case 'EMAIL':
-        return 'Enter your email to receive a password reset verification code.'
+        return t('forgot.subtitle')
       case 'OTP':
-        return `We have sent a verification code to ${email}.`
+        return t('forgot.otpSubtitle', { email })
       case 'RESET':
-        return 'Set a strong password for your secure National Health account.'
+        return t('forgot.resetSubtitle')
       case 'SUCCESS':
-        return 'Your password has been changed successfully.'
+        return t('forgot.successSubtitle')
     }
   }
 
   const getPasswordStrength = () => {
     const passed = Object.values(criteria).filter(Boolean).length
-    if (passed <= 2) return { score: 1, label: 'Weak', color: 'bg-red-500' }
-    if (passed <= 4) return { score: 2, label: 'Medium', color: 'bg-orange-500' }
-    return { score: 3, label: 'Strong', color: 'bg-emerald-600' }
+    if (passed <= 2) return { score: 1, label: t('forgot.strengthWeak'), color: 'bg-red-500' }
+    if (passed <= 4) return { score: 2, label: t('forgot.strengthMedium'), color: 'bg-orange-500' }
+    return { score: 3, label: t('forgot.strengthStrong'), color: 'bg-emerald-600' }
   }
 
   const strength = getPasswordStrength()
@@ -138,7 +140,7 @@ export default function ForgotPassword() {
         <form onSubmit={handleEmailSubmit} className="space-y-5">
           <div className="group">
             <label htmlFor="email" className="text-[13px] font-semibold text-gray-800 mb-2 block">
-              Email Address
+              {t('forgot.emailLabel')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -152,7 +154,7 @@ export default function ForgotPassword() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="block w-full pl-11 pr-4 py-[13px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input"
-                placeholder="e.g. user@epharmacy.rw"
+                placeholder={t('forgot.emailPlaceholder')}
               />
             </div>
           </div>
@@ -162,12 +164,12 @@ export default function ForgotPassword() {
             disabled={isLoading}
             className="w-full flex justify-center py-[13px] px-4 border border-transparent text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99] auth-button"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Verification Code'}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('forgot.sendCode')}
           </button>
 
           <div className="text-center mt-4">
             <Link to="/login" className="text-sm font-semibold text-health-primary hover:underline">
-              Back to Sign In
+              {t('forgot.backToSignIn')}
             </Link>
           </div>
         </form>
@@ -177,7 +179,7 @@ export default function ForgotPassword() {
         <form onSubmit={handleOtpSubmit} className="space-y-5">
           <div className="group">
             <label htmlFor="otp" className="text-[13px] font-semibold text-gray-800 mb-2 block">
-              Verification Code (OTP)
+              {t('forgot.otpLabel')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -192,11 +194,11 @@ export default function ForgotPassword() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 className="block w-full pl-11 pr-4 py-[13px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed tracking-widest text-center font-mono auth-input"
-                placeholder="123456"
+                placeholder={t('forgot.otpPlaceholder')}
               />
             </div>
             <p className="mt-2 text-xs text-gray-500 font-medium">
-              For testing flow, enter the verification code <span className="font-bold text-gray-700">123456</span>.
+              {t('forgot.otpHint')}
             </p>
           </div>
 
@@ -205,7 +207,7 @@ export default function ForgotPassword() {
             disabled={isLoading}
             className="w-full flex justify-center py-[13px] px-4 border border-transparent text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.99] auth-button"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify Code'}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('forgot.verifyCodeBtn')}
           </button>
 
           <div className="flex justify-between items-center text-sm mt-4">
@@ -214,14 +216,14 @@ export default function ForgotPassword() {
               onClick={() => setStep('EMAIL')}
               className="font-semibold text-gray-500 hover:text-gray-700"
             >
-              Change Email
+              {t('forgot.changeEmail')}
             </button>
             <button
               type="button"
               onClick={handleEmailSubmit}
               className="font-semibold text-health-primary hover:underline"
             >
-              Resend Code
+              {t('forgot.resendCode')}
             </button>
           </div>
         </form>
@@ -231,7 +233,7 @@ export default function ForgotPassword() {
         <form onSubmit={handlePasswordSubmit} className="space-y-5">
           <div>
             <label htmlFor="newPass" className="block text-sm font-semibold text-gray-700 mb-1.5">
-              New Password
+              {t('forgot.newPasswordLabel')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -250,7 +252,7 @@ export default function ForgotPassword() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-650"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -259,7 +261,7 @@ export default function ForgotPassword() {
             {password && (
               <div className="mt-2.5 space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500 font-medium">Strength:</span>
+                  <span className="text-gray-500 font-medium">{t('forgot.passwordStrength')}</span>
                   <span className="font-bold text-gray-700">{strength.label}</span>
                 </div>
                 <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
@@ -272,33 +274,33 @@ export default function ForgotPassword() {
             )}
 
             <div className="mt-3.5 bg-gray-50 border border-gray-200 p-4 rounded-xl text-xs space-y-2 font-medium text-gray-600">
-              <span className="font-bold text-gray-700 block mb-1.5">Password Requirements:</span>
+              <span className="font-bold text-gray-700 block mb-1.5">{t('forgot.requirementsTitle')}</span>
               <div className="flex items-center space-x-2.5">
                 <span className={`w-2 h-2 rounded-full ${criteria.length ? 'bg-health-primary' : 'bg-gray-300'}`} />
-                <span className={criteria.length ? 'text-health-primary font-bold' : 'text-gray-500'}>Minimum 8 characters</span>
+                <span className={criteria.length ? 'text-health-primary font-bold' : 'text-gray-500'}>{t('forgot.reqLength')}</span>
               </div>
               <div className="flex items-center space-x-2.5">
                 <span className={`w-2 h-2 rounded-full ${criteria.uppercase ? 'bg-health-primary' : 'bg-gray-300'}`} />
-                <span className={criteria.uppercase ? 'text-health-primary font-bold' : 'text-gray-500'}>At least one uppercase letter</span>
+                <span className={criteria.uppercase ? 'text-health-primary font-bold' : 'text-gray-500'}>{t('forgot.reqUppercase')}</span>
               </div>
               <div className="flex items-center space-x-2.5">
                 <span className={`w-2 h-2 rounded-full ${criteria.lowercase ? 'bg-health-primary' : 'bg-gray-300'}`} />
-                <span className={criteria.lowercase ? 'text-health-primary font-bold' : 'text-gray-500'}>At least one lowercase letter</span>
+                <span className={criteria.lowercase ? 'text-health-primary font-bold' : 'text-gray-500'}>{t('forgot.reqLowercase')}</span>
               </div>
               <div className="flex items-center space-x-2.5">
                 <span className={`w-2 h-2 rounded-full ${criteria.number ? 'bg-health-primary' : 'bg-gray-300'}`} />
-                <span className={criteria.number ? 'text-health-primary font-bold' : 'text-gray-500'}>At least one number</span>
+                <span className={criteria.number ? 'text-health-primary font-bold' : 'text-gray-500'}>{t('forgot.reqNumber')}</span>
               </div>
               <div className="flex items-center space-x-2.5">
                 <span className={`w-2 h-2 rounded-full ${criteria.special ? 'bg-health-primary' : 'bg-gray-300'}`} />
-                <span className={criteria.special ? 'text-health-primary font-bold' : 'text-gray-500'}>At least one special character (@$!%*?&)</span>
+                <span className={criteria.special ? 'text-health-primary font-bold' : 'text-gray-500'}>{t('forgot.reqSpecial')}</span>
               </div>
             </div>
           </div>
 
           <div>
             <label htmlFor="confirmPass" className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Confirm New Password
+              {t('forgot.confirmPasswordLabel')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -316,7 +318,7 @@ export default function ForgotPassword() {
               />
             </div>
             {password && confirmPassword && password !== confirmPassword && (
-              <p className="mt-1.5 text-xs text-red-600 font-semibold">Passwords do not match.</p>
+              <p className="mt-1.5 text-xs text-red-600 font-semibold">{t('forgot.passwordsDoNotMatch')}</p>
             )}
           </div>
 
@@ -325,7 +327,7 @@ export default function ForgotPassword() {
             disabled={isLoading || !meetsAllCriteria || password !== confirmPassword}
             className="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold text-white disabled:opacity-50 transition-all duration-200 active:scale-[0.99] auth-button"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Reset Password'}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('forgot.resetBtn')}
           </button>
         </form>
       )}
@@ -336,13 +338,13 @@ export default function ForgotPassword() {
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <p className="text-sm text-gray-600 font-medium leading-relaxed">
-            Your secure account credentials have been successfully updated.
+            {t('forgot.successDesc')}
           </p>
           <button
             onClick={() => navigate('/login')}
             className="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold text-white transition-all duration-200 active:scale-[0.99] auth-button"
           >
-            Sign In Now
+            {t('forgot.signInNow')}
           </button>
         </div>
       )}

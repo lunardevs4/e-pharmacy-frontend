@@ -608,6 +608,14 @@ export default function MedicineSearch() {
                 </div>
 
                 <div className="text-xs space-y-2.5 text-gray-700 pt-3 border-t border-gray-150">
+                  {selectedMedicine.prescriptionRequired && (
+                    <div className="bg-amber-50 border border-amber-250 text-amber-900 rounded-lg p-3 text-[11px] font-bold mt-1 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                      <span>
+                        Always use prescription medicines strictly according to professional medical advice. Follow your physician's prescribed directions carefully.
+                      </span>
+                    </div>
+                  )}
                   <p>
                     <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
                     {selectedMedicine.storage}

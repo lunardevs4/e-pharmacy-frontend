@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
 import { isValidRealEmail } from '@/utils/validation'
 import AuthLayout from '@/layouts/AuthLayout'
+import { useLanguageStore } from '@/store/languageStore'
 import {
   Lock,
   User,
@@ -53,6 +54,7 @@ const SERIF = "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif"
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuthStore()
+  const { t } = useLanguageStore()
 
 
   const [isLoading, setIsLoading] = useState(false)
@@ -110,7 +112,7 @@ export default function Login() {
         localStorage.removeItem('epharmacy_remembered_email')
       }
 
-      setSuccessMsg('Authentication successful! Redirecting...')
+      setSuccessMsg(t('auth.authSuccessful'))
       login(res.user, res.accessToken)
 
       setTimeout(() => {
@@ -150,7 +152,7 @@ export default function Login() {
           const parsed = JSON.parse(statusJson)
           setPharmacyStatusData(parsed)
         } catch {
-          setErrorMsg('Failed to parse pharmacy registration details.')
+          setErrorMsg(t('auth.failedParsePharmacyDetails'))
         }
       } else {
         const message = error.message?.toLowerCase() || ''
@@ -159,9 +161,9 @@ export default function Login() {
         } else if (message.includes('verify your email')) {
           navigate(`/check-email?email=${encodeURIComponent(data.email)}&reason=login`)
         } else if (message.includes('account is not active')) {
-          setErrorMsg('Your account exists, but it is not active yet. Please wait for approval or contact an administrator.')
+          setErrorMsg(t('auth.accountNotActive'))
         } else {
-          setErrorMsg(error.message || 'We could not sign you in. Please check your credentials or try again later.')
+          setErrorMsg(error.message || t('auth.loginFailedDefault'))
         }
       }
     } finally {
@@ -184,12 +186,12 @@ export default function Login() {
         statusNotes: statusData.statusNotes
       })
       if (statusData.status === 'APPROVED') {
-        setSuccessMsg('Your pharmacy registration has been approved! You can now sign in.')
+        setSuccessMsg(t('auth.pharmacyApprovedMsg'))
         setPharmacyStatusData(null)
       }
     } catch (err: unknown) {
       const error = err as Error & { message?: string }
-      setErrorMsg(error.message || 'Could not verify updated status.')
+      setErrorMsg(error.message || t('auth.statusCheckFailed'))
     } finally {
       setIsRefreshingStatus(false)
     }
@@ -199,45 +201,45 @@ export default function Login() {
   const renderStatusCard = (data: PharmacyStatusData) => {
     const statusMap = {
       PENDING_VERIFICATION: {
-        label: 'Under MoH Review',
+        label: t('status.mohReview.label'),
         color: 'bg-amber-100 text-amber-800 border-amber-200',
-        message: 'Your pharmacy registration is currently under Ministry of Health review.',
-        desc: 'Our administrative inspectors are auditing your uploaded operating licenses, RDB registration certifications, superintendent pharmacist credentials, and RRA clearances.',
+        message: t('status.mohReview.message'),
+        desc: t('status.mohReview.desc'),
         icon: Clock
       },
       APPROVED: {
-        label: 'Approved',
+        label: t('status.approved.label'),
         color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-        message: 'Your pharmacy registration has been approved!',
-        desc: 'You can now sign in to your portal.',
+        message: t('status.approved.message'),
+        desc: t('status.approved.desc'),
         icon: CheckCircle2
       },
       REJECTED: {
-        label: 'Application Rejected',
+        label: t('status.rejected.label'),
         color: 'bg-red-100 text-red-800 border-red-200',
-        message: 'Your pharmacy registration application was rejected by the Ministry of Health.',
-        desc: 'Please review the auditor notes below for details on missing or incorrect compliance documentation.',
+        message: t('status.rejected.message'),
+        desc: t('status.rejected.desc'),
         icon: XCircle
       },
       SUSPENDED: {
-        label: 'License Suspended',
+        label: t('status.suspended.label'),
         color: 'bg-rose-100 text-rose-800 border-rose-200',
-        message: 'Your pharmacy operating portal access has been suspended.',
-        desc: 'Suspensions are applied by the MoH compliance board due to regulatory concerns, pharmacy licensing expirations, or code-of-conduct violations.',
+        message: t('status.suspended.message'),
+        desc: t('status.suspended.desc'),
         icon: ShieldAlert
       },
       EXPIRED: {
-        label: 'Operating License Expired',
+        label: t('status.expired.label'),
         color: 'bg-gray-100 text-gray-800 border-gray-200',
-        message: 'Your pharmacy operating license has expired.',
-        desc: 'Please contact the Ministry of Health licensing division to file your renewal audit and reactivate your portal privileges.',
+        message: t('status.expired.message'),
+        desc: t('status.expired.desc'),
         icon: ShieldAlert
       },
       MORE_INFO_REQUESTED: {
-        label: 'Additional Info Requested',
+        label: t('status.moreInfo.label'),
         color: 'bg-blue-100 text-blue-800 border-blue-200',
-        message: 'The Ministry of Health requires additional information to complete your registration.',
-        desc: 'Please review the auditor comment below and supply updated details to your regional verification officer.',
+        message: t('status.moreInfo.message'),
+        desc: t('status.moreInfo.desc'),
         icon: MailIcon
       }
     }
@@ -309,7 +311,7 @@ export default function Login() {
               }}
             >
               <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                Auditor Board Comments:
+                {t('auth.auditorComments')}
               </span>
               <p className="text-gray-800 text-[11px] font-mono leading-normal">
                 {data.statusNotes}
@@ -331,13 +333,13 @@ export default function Login() {
         >
           <div>
             <span className="block text-[10px] uppercase font-bold tracking-wider text-gray-400">
-              Submission Date
+              {t('auth.submissionDate')}
             </span>
             <span className="font-bold font-mono text-gray-800">{data.submissionDate}</span>
           </div>
           <div>
             <span className="block text-[10px] uppercase font-bold tracking-wider text-gray-400">
-              Estimated Review Time
+              {t('auth.estimatedReview')}
             </span>
             <span className="font-bold text-gray-800">{data.estimatedReviewTime}</span>
           </div>
@@ -358,7 +360,7 @@ export default function Login() {
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            <span>Back to Sign In</span>
+            <span>{t('forgot.backToSignIn')}</span>
           </button>
 
           <button
@@ -373,12 +375,12 @@ export default function Login() {
             {isRefreshingStatus ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                <span>Checking...</span>
+                <span>{t('auth.checking')}</span>
               </>
             ) : (
               <>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                <span>Check Status</span>
+                <span>{t('auth.checkStatus')}</span>
               </>
             )}
           </button>
@@ -389,8 +391,8 @@ export default function Login() {
   return (
     <AuthLayout
       mode="login"
-      title={pharmacyStatusData ? 'Registration Status' : 'Welcome back!'}
-      subtitle={pharmacyStatusData ? undefined : 'Enter your email and password to sign in to your account'}
+      title={pharmacyStatusData ? 'Registration Status' : t('auth.signIn')}
+      subtitle={pharmacyStatusData ? undefined : t('auth.loginDesc')}
     >
       {errorMsg && (
         <div
@@ -443,7 +445,7 @@ export default function Login() {
               className="block mb-1.5"
               style={{ fontSize: '13.5px', fontWeight: 600, color: '#111827' }}
             >
-              Email
+              {t('auth.emailAddress')}
             </label>
             <div className="group">
               <div className="relative">
@@ -458,7 +460,7 @@ export default function Login() {
                   className={`block w-full pl-11 pr-3.5 py-[12px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input ${
                     errors.email ? 'error' : ''
                   }`}
-                  placeholder="Enter your email"
+                  placeholder={t('auth.emailAddress')}
                 />
               </div>
             </div>
@@ -475,7 +477,7 @@ export default function Login() {
                 className="block"
                 style={{ fontSize: '13.5px', fontWeight: 600, color: '#111827' }}
               >
-                Password
+                {t('auth.password')}
               </label>
             </div>
             <div className="group">
@@ -491,7 +493,7 @@ export default function Login() {
                   className={`block w-full pl-11 pr-11 py-[12px] placeholder:text-gray-400 font-normal focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed auth-input ${
                     errors.password ? 'error' : ''
                   }`}
-                  placeholder="Enter your password"
+                  placeholder={t('auth.password')}
                 />
                 <button
                   type="button"
@@ -534,7 +536,7 @@ export default function Login() {
                 className="ml-2 block cursor-pointer font-medium"
                 style={{ color: '#4B5563' }}
               >
-                Remember me
+                {t('auth.rememberMe')}
               </label>
             </div>
             <Link
@@ -544,7 +546,7 @@ export default function Login() {
               onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
               onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
             >
-              Forgot password?
+              {t('auth.forgotPassword')}
             </Link>
           </div>
           <button
@@ -555,10 +557,10 @@ export default function Login() {
             {isLoading ? (
               <>
                 <Loader2 className="w-[18px] h-[18px] mr-2 animate-spin" />
-                <span>Authenticating...</span>
+                <span>{t('auth.authenticating')}</span>
               </>
             ) : (
-              <span>Sign In</span>
+              <span>{t('auth.signIn')}</span>
             )}
           </button>
           <div className="flex items-center gap-3 py-0.5">
@@ -571,12 +573,30 @@ export default function Login() {
             </span>
             <div className="flex-1 h-px" style={{ backgroundColor: '#E5E7EB' }} />
           </div>
-         
+          {/* Sign in as Pharmacist / Staff — clean outline */}
+          <button
+            type="button"
+            onClick={() => setIsStaffLogin(!isStaffLogin)}
+            className="w-full flex justify-center items-center gap-2 py-[12px] px-4 rounded-md text-sm font-semibold transition-all duration-200 active:scale-[0.99]"
+            style={{
+              borderWidth: '1.5px',
+              borderStyle: 'solid',
+              borderColor: isStaffLogin ? BRAND : '#E5E7EB',
+              color: BRAND,
+              backgroundColor: isStaffLogin ? 'rgba(5, 150, 105, 0.05)' : '#ffffff',
+              fontSize: '14px',
+            }}
+          >
+            <ShieldCheck className="w-[18px] h-[18px]" />
+            <span>{t('auth.signInAsStaff')}</span>
+          </button>
+
+          {/* Account links — clean single-line registration prompt */}
           <div
             className="text-center pt-1 font-sans"
             style={{ fontSize: '14px' }}
           >
-            <span style={{ color: '#6B7280', fontWeight: 500 }}>Don&apos;t have an account? </span>
+            <span style={{ color: '#6B7280', fontWeight: 500 }}>{t('auth.dontHaveAccount')} </span>
             <Link
               to="/register"
               className="font-semibold transition-colors"
@@ -584,7 +604,7 @@ export default function Login() {
               onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
               onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
             >
-              Register
+              {t('nav.register')}
             </Link>
           </div>
         </form>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Landmark, Users, Package, AlertTriangle, FileText, CheckCircle2, ChevronRight, Activity, TrendingUp, XCircle, MapPin, Clock } from 'lucide-react'
 import { AuthApi } from '@/services/auth-api'
+import { useLanguageStore } from '@/store/languageStore'
 
 function SemiCircularGauge({ value }: { value: number }) {
   const percentage = Math.max(0, Math.min(100, Math.round(value)))
@@ -40,6 +41,7 @@ function SemiCircularGauge({ value }: { value: number }) {
 }
 
 export default function GovernmentDashboard() {
+  const { t, formatStatus } = useLanguageStore()
   const [pharmacies, setPharmacies] = useState<any[]>([])
   const [summary, setSummary] = useState<GovernmentSummary | null>(null)
   const [lowStock, setLowStock] = useState<any[]>([])
@@ -232,18 +234,26 @@ export default function GovernmentDashboard() {
         <div className="space-y-2 text-center sm:text-left flex-grow">
           <div className="flex justify-center sm:justify-start items-center space-x-2.5">
             <Landmark className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-800" />
-            <span className="text-[8px] sm:text-[9px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50/80 px-2 py-0.5 rounded border border-emerald-200">MoH Regulator Portal</span>
+            <span className="text-[8px] sm:text-[9px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50/80 px-2 py-0.5 rounded border border-emerald-200">
+              {t('role.government.portal')}
+            </span>
           </div>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950">Ministry of Health Regulator Dashboard</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950">
+            {t('government.dash.title')}
+          </h1>
           <p className="text-gray-500 text-[10px] sm:text-xs max-w-xl leading-normal font-medium">
-            National regulatory oversight of essential drug cataloguing, licensing verification, and district stock availability index tracking across Rwanda.
+            {t('government.dash.subtitle')}
           </p>
         </div>
 
         <div className="flex-shrink-0 bg-emerald-50 border border-emerald-200/60 px-4 sm:px-5 py-3 sm:py-4 rounded-xl text-center min-w-[160px] sm:min-w-[180px]">
-          <span className="text-[8px] sm:text-[9px] uppercase text-emerald-800 block font-black">Approved pharmacy coverage</span>
+          <span className="text-[8px] sm:text-[9px] uppercase text-emerald-800 block font-black">
+            {t('government.dash.approvedCoverage')}
+          </span>
           <SemiCircularGauge value={approvedCoverage} />
-          <span className="text-[8px] sm:text-[9px] text-gray-450 block font-semibold">of registered pharmacies</span>
+          <span className="text-[8px] sm:text-[9px] text-gray-450 block font-semibold">
+            {t('government.dash.totalPharmacies')}
+          </span>
         </div>
       </div>
 
@@ -253,8 +263,10 @@ export default function GovernmentDashboard() {
             <Users className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Approved Stores</span>
-            <span className="text-base sm:text-lg font-black text-gray-950">{approvedCount} total</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">
+              {t('government.dash.approvedPharmacies')}
+            </span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{approvedCount} {t('common.total')}</span>
           </div>
         </div>
 
@@ -263,8 +275,10 @@ export default function GovernmentDashboard() {
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Pending Applications</span>
-            <span className="text-base sm:text-lg font-black text-gray-950">{pendingCount} pending</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">
+              {t('government.dash.pendingInspection')}
+            </span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{pendingCount} {formatStatus('PENDING')}</span>
           </div>
         </div>
 
@@ -273,8 +287,10 @@ export default function GovernmentDashboard() {
             <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Rejected Applications</span>
-            <span className="text-base sm:text-lg font-black text-red-650">{rejectedCount} apps</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">
+              {t('status.rejected')}
+            </span>
+            <span className="text-base sm:text-lg font-black text-red-650">{rejectedCount}</span>
           </div>
         </div>
 
@@ -283,7 +299,9 @@ export default function GovernmentDashboard() {
             <Users className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Registered Patients</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">
+              {t('government.dash.registeredPatients')}
+            </span>
             <span className="text-base sm:text-lg font-black text-gray-950">{summary?.totalPatients ?? 0}</span>
           </div>
         </div>
@@ -293,7 +311,9 @@ export default function GovernmentDashboard() {
             <Package className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">Active Medicines</span>
+            <span className="text-[8px] sm:text-[9px] text-gray-400 block uppercase font-bold">
+              {t('government.dash.essentialMeds')}
+            </span>
             <span className="text-base sm:text-lg font-black text-gray-950">{summary?.totalMedicines ?? 0}</span>
           </div>
         </div>
@@ -305,14 +325,14 @@ export default function GovernmentDashboard() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-gray-150 gap-2">
               <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
-                <span>Recent Pharmacy Onboardings</span>
+                <span>{t('government.dash.recentAccreditations')}</span>
               </h3>
-              <span className="text-[8px] sm:text-[9px] text-gray-400 font-bold font-mono">Verify Application Logs</span>
+              <span className="text-[8px] sm:text-[9px] text-gray-400 font-bold font-mono">{t('government.dash.viewRegistry')}</span>
             </div>
 
             {recentRegistrations.length === 0 ? (
               <div className="text-center py-4 sm:py-6 text-[10px] sm:text-xs text-gray-400">
-                No pharmacy registration applications found.
+                {t('common.noData')}
               </div>
             ) : (
               <div className="divide-y divide-gray-100 text-[10px] sm:text-xs font-semibold text-gray-700">
@@ -320,17 +340,19 @@ export default function GovernmentDashboard() {
                   <div key={lic.id} className="py-3 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                     <div className="space-y-1">
                       <span className="font-bold text-gray-955 block">{lic.name || lic.pharmacyName}</span>
-                      <span className="text-[10px] text-gray-500 block font-medium">Pharmacist: {lic.managerName || 'Unknown'} • Registered on {new Date(lic.createdAt || lic.updatedAt || '').toLocaleDateString() || '—'}</span>
+                      <span className="text-[10px] text-gray-500 block font-medium">Pharmacist: {lic.managerName || 'Unknown'} • {new Date(lic.createdAt || lic.updatedAt || '').toLocaleDateString() || '—'}</span>
                     </div>
 
                     <div className="flex items-center space-x-2 self-end sm:self-center font-bold">
-                      {lic.status === 'APPROVED' ? (
-                        <span className="text-[9px] text-emerald-750 bg-emerald-50 border border-emerald-250 px-2 py-0.5 rounded uppercase">Approved</span>
-                      ) : lic.status === 'PENDING' ? (
-                        <span className="text-[9px] text-amber-750 bg-amber-50 border border-amber-250 px-2 py-0.5 rounded uppercase">Pending MOH Review</span>
-                      ) : (
-                        <span className="text-[9px] text-red-750 bg-red-50 border border-red-250 px-2 py-0.5 rounded uppercase">Rejected</span>
-                      )}
+                      <span className={`text-[9px] px-2 py-0.5 rounded border uppercase ${
+                        lic.status === 'APPROVED'
+                          ? 'text-emerald-750 bg-emerald-50 border-emerald-250'
+                          : lic.status === 'PENDING'
+                          ? 'text-amber-750 bg-amber-50 border-amber-250'
+                          : 'text-red-750 bg-red-50 border-red-250'
+                      }`}>
+                        {formatStatus(lic.status)}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -342,9 +364,8 @@ export default function GovernmentDashboard() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-gray-150 gap-2">
               <h3 className="font-black text-gray-950 text-[10px] sm:text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-600" />
-                <span>MOH Critical Stock Shortage Alerts</span>
+                <span>{t('government.dash.lowStockNational')}</span>
               </h3>
-              <span className="text-[8px] sm:text-[9px] bg-red-50 text-red-700 font-bold border border-red-200 px-2 py-0.5 rounded-full font-sans">Requires MOH Intervention</span>
             </div>
 
             <div className="divide-y divide-gray-100 text-[10px] sm:text-xs">
@@ -413,28 +434,28 @@ export default function GovernmentDashboard() {
                 <span className="w-2.5 h-2.5 bg-health-primary rounded-sm" />
                 <div>
                   <span className="block text-[8px] text-gray-400">RETAIL</span>
-                  <span className="text-xs text-gray-800 font-extrabold">{retailCount} stores</span>
+                  <span className="text-xs text-gray-800 font-extrabold">{retailCount}</span>
                 </div>
               </div>
               <div className="flex items-center space-x-1.5 bg-gray-50 p-2 rounded-lg">
                 <span className="w-2.5 h-2.5 bg-blue-600 rounded-sm" />
                 <div>
                   <span className="block text-[8px] text-gray-400">WHOLESALE</span>
-                  <span className="text-xs text-gray-800 font-extrabold">{wholesaleCount} stores</span>
+                  <span className="text-xs text-gray-800 font-extrabold">{wholesaleCount}</span>
                 </div>
               </div>
               <div className="flex items-center space-x-1.5 bg-gray-50 p-2 rounded-lg">
                 <span className="w-2.5 h-2.5 bg-amber-500 rounded-sm" />
                 <div>
                   <span className="block text-[8px] text-gray-400">HOSPITAL</span>
-                  <span className="text-xs text-gray-800 font-extrabold">{hospitalCount} stores</span>
+                  <span className="text-xs text-gray-800 font-extrabold">{hospitalCount}</span>
                 </div>
               </div>
               <div className="flex items-center space-x-1.5 bg-gray-50 p-2 rounded-lg">
                 <span className="w-2.5 h-2.5 bg-gray-400 rounded-sm" />
                 <div>
                   <span className="block text-[8px] text-gray-400">TOTAL</span>
-                  <span className="text-xs text-gray-800 font-extrabold">{summary?.totalPharmacies ?? totalCount} stores</span>
+                  <span className="text-xs text-gray-800 font-extrabold">{summary?.totalPharmacies ?? totalCount}</span>
                 </div>
               </div>
             </div>

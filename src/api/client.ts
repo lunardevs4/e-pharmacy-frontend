@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { TokenStorage } from '@/services/token-storage'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguageStore } from '@/store/languageStore'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
@@ -58,7 +59,7 @@ apiClient.interceptors.response.use(
 
     if (!error.response) {
       return Promise.reject(
-        new Error('Oopss Something went wrong. Please try again.')
+        new Error(useLanguageStore.getState().t('error.networkError'))
       )
     }
 

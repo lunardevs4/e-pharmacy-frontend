@@ -2,6 +2,7 @@ import { AxiosError } from 'axios'
 import { UserRole } from '@/types'
 import { apiClient } from '@/api/client'
 import { TokenStorage } from '@/services/token-storage'
+import { useLanguageStore } from '@/store/languageStore'
 
 
 export interface AuthUser {
@@ -196,6 +197,7 @@ const normalizeAuthResponse = (payload: unknown): AuthResponse => {
 }
 
 const getErrorMessage = (error: unknown): string => {
+  const { t } = useLanguageStore.getState()
   if (typeof error === 'object' && error !== null) {
     const axiosError = error as AxiosError
     const responseData = axiosError.response?.data as ApiObject | undefined
@@ -204,16 +206,16 @@ const getErrorMessage = (error: unknown): string => {
       if (Array.isArray(responseData.message)) return (responseData.message as string[]).join(' · ')
     }
     if (responseData?.error && typeof responseData.error === 'string') return responseData.error
-    if (axiosError.response?.status === 400) return 'The request was not valid. Please check your email and password.'
-    if (axiosError.response?.status === 401) return 'Incorrect email or password.'
-    if (axiosError.response?.status === 403) return 'Your account is not allowed to sign in yet.'
-    if (axiosError.response?.status === 404) return 'Account not found.'
+    if (axiosError.response?.status === 400) return t('error.invalidRequest')
+    if (axiosError.response?.status === 401) return t('error.incorrectCredentials')
+    if (axiosError.response?.status === 403) return t('error.accountNotAllowed')
+    if (axiosError.response?.status === 404) return t('error.accountNotFound')
     if (axiosError.response?.status && axiosError.response.status >= 500) {
-      return 'The authentication server is temporarily unavailable. Please try again shortly.'
+      return t('error.serverUnavailable')
     }
   }
   if (error instanceof Error) return error.message
-  return 'Request failed. Please try again.'
+  return t('error.requestFailed')
 }
 
 

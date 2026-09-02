@@ -1,5 +1,6 @@
 import { apiClient } from '@/api/client'
 import { AxiosError } from 'axios'
+import { useLanguageStore } from '@/store/languageStore'
 
 export interface AdminUser {
     id: string
@@ -28,6 +29,7 @@ const unwrapApiResponse = (response: any): any[] => {
 }
 
 const getErrorMessage = (error: unknown): string => {
+  const { t } = useLanguageStore.getState()
   if (typeof error === 'object' && error !== null) {
     const axiosError = error as AxiosError
     const responseData = axiosError.response?.data as any
@@ -38,7 +40,7 @@ const getErrorMessage = (error: unknown): string => {
     if (responseData?.error && typeof responseData.error === 'string') return responseData.error
   }
   if (error instanceof Error) return error.message
-  return 'Request failed. Please try again.'
+  return t('error.requestFailed')
 }
 
 export const UserApi = {

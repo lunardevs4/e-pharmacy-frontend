@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguageStore } from '@/store/languageStore'
 import { MedicineApi } from '@/services/medicine-api'
 import { PharmacyApi } from '@/services/pharmacy-api'
 import { 
@@ -30,6 +31,7 @@ interface PharmacyDashboardAuditLog {
 
 export default function PharmacyDashboard() {
   const { user } = useAuthStore()
+  const { t, formatStatus } = useLanguageStore()
   const [reservations, setReservations] = useState<PharmacyDashboardReservation[]>([])
   const [inventory, setInventory] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<PharmacyDashboardAuditLog[]>([])
@@ -140,13 +142,16 @@ export default function PharmacyDashboard() {
           </div>
         )}
         
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">Today's Reservations</span>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                {t('pharmacy.dash.todayReservations')}
+              </span>
               <p className="text-2xl sm:text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.todayReservations.length}</p>
-              <span className="text-[10px] sm:text-[11px] text-gray-400 block font-medium">{summary.ready} confirmed reservation{summary.ready === 1 ? '' : 's'}</span>
+              <span className="text-[10px] sm:text-[11px] text-gray-400 block font-medium">
+                {t('pharmacy.dash.confirmedReservations', { count: summary.ready, plural: summary.ready === 1 ? '' : 's' })}
+              </span>
             </div>
             <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100 flex-shrink-0">
               <Bookmark className="w-4 h-4" />
@@ -155,9 +160,13 @@ export default function PharmacyDashboard() {
 
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total Units</span>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                {t('pharmacy.dash.totalUnits')}
+              </span>
               <p className="text-2xl sm:text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.totalInventory}</p>
-              <span className="text-[10px] sm:text-[11px] text-gray-400 block font-medium">{summary.lowStock} low stock</span>
+              <span className="text-[10px] sm:text-[11px] text-gray-400 block font-medium">
+                {t('pharmacy.dash.lowStockCount', { count: summary.lowStock })}
+              </span>
             </div>
             <div className="p-2 bg-gray-50 text-gray-600 rounded-lg border border-gray-205 flex-shrink-0">
               <Box className="w-4 h-4" />
@@ -166,9 +175,13 @@ export default function PharmacyDashboard() {
 
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">Patients (Month)</span>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                {t('pharmacy.dash.patientsMonth')}
+              </span>
               <p className="text-2xl sm:text-3xl font-black text-gray-900 mt-1">{isLoading ? '—' : summary.monthPatients.size}</p>
-              <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 block pt-1">Unique patients this month</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 block pt-1">
+                {t('pharmacy.dash.uniquePatientsMonth')}
+              </span>
             </div>
             <div className="p-2 bg-gray-50 text-gray-650 rounded-lg border border-gray-205 flex-shrink-0">
               <Users className="w-4 h-4" />
@@ -177,9 +190,13 @@ export default function PharmacyDashboard() {
 
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">Inventory Value</span>
-              <p className="text-xl sm:text-2xl font-black text-gray-900 mt-1">{isLoading ? '—' : `${summary.inventoryValue.toLocaleString()} RWF`}</p>
-              <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 block pt-1">Based on current stock and prices</span>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                {t('pharmacy.dash.inventoryValue')}
+              </span>
+              <p className="text-xl sm:text-2xl font-black text-gray-900 mt-1">{isLoading ? '—' : `${summary.inventoryValue.toLocaleString()} ${t('common.rwf')}`}</p>
+              <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 block pt-1">
+                {t('pharmacy.dash.basedOnCurrentStock')}
+              </span>
             </div>
             <div className="p-2 bg-gray-50 text-gray-650 rounded-lg border border-gray-205 flex-shrink-0">
               <TrendingUp className="w-4 h-4" />
@@ -192,9 +209,9 @@ export default function PharmacyDashboard() {
             <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                  <h3 className="text-xs sm:text-sm font-black text-gray-900">Recent Reservations</h3>
+                  <h3 className="text-xs sm:text-sm font-black text-gray-900">{t('pharmacy.dash.recentReservations')}</h3>
                   <Link to="/pharmacy/reservations" className="text-[10px] sm:text-xs font-bold text-health-primary hover:underline flex items-center">
-                    <span>View all</span>
+                    <span>{t('common.viewAll')}</span>
                     <ChevronRight className="w-3 h-3.5 sm:w-3.5 sm:h-3.5 ml-0.5" />
                   </Link>
                 </div>
@@ -203,26 +220,26 @@ export default function PharmacyDashboard() {
                 <table className="w-full text-left text-[10px] sm:text-xs divide-y divide-gray-150">
                   <thead>
                     <tr className="text-[9px] sm:text-[10px] font-black text-slate-450 uppercase tracking-wider">
-                      <th className="py-2 px-1 sm:px-2.5">Patient</th>
-                      <th className="py-2 px-1 sm:px-2.5">Medicine</th>
-                      <th className="py-2 px-1 sm:px-2.5">Date</th>
+                      <th className="py-2 px-1 sm:px-2.5">{t('common.patient')}</th>
+                      <th className="py-2 px-1 sm:px-2.5">{t('common.medicine')}</th>
+                      <th className="py-2 px-1 sm:px-2.5">{t('common.date')}</th>
                       <th className="py-2 px-1 sm:px-2.5 text-center">Insur.</th>
-                      <th className="py-2 px-1 sm:px-2.5">Status</th>
-                      <th className="py-2 px-1 sm:px-2.5 text-right">Action</th>
+                      <th className="py-2 px-1 sm:px-2.5">{t('common.status')}</th>
+                      <th className="py-2 px-1 sm:px-2.5 text-right">{t('common.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
                     {isLoading && (
-                      <tr><td colSpan={6} className="py-6 sm:py-8 text-center text-gray-400">Loading reservations…</td></tr>
+                      <tr><td colSpan={6} className="py-6 sm:py-8 text-center text-gray-400">{t('common.loading')}</td></tr>
                     )}
                     {!isLoading && reservations.length === 0 && (
-                      <tr><td colSpan={7} className="py-6 sm:py-8 text-center text-gray-400">No reservations found.</td></tr>
+                      <tr><td colSpan={7} className="py-6 sm:py-8 text-center text-gray-400">{t('pharmacy.dash.noReservations')}</td></tr>
                     )}
                     {!isLoading && reservations.map((res) => (
                       <tr key={res.id} className="hover:bg-gray-50/50">
                         <td className="py-3 font-bold text-gray-900">{res.patient}</td>
                         <td className="py-3">{res.medicine}</td>
-                        <td className="py-3 text-gray-500">{res.date}</td>
+                        <td className="py-3 text-gray-550">{res.date}</td>
                         <td className="py-3 text-center">
                           {res.insurance ? (
                             <CheckCircle className="w-4 h-4 text-emerald-600 inline-block" />
@@ -231,26 +248,17 @@ export default function PharmacyDashboard() {
                           )}
                         </td>
                         <td className="py-3">
-                          {res.status === 'CONFIRMED' && (
-                            <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.25 rounded border border-emerald-200">
-                              {reservationStatusLabel(res.status)}
-                            </span>
-                          )}
-                          {res.status === 'PENDING' && (
-                            <span className="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.25 rounded border border-amber-200">
-                              {reservationStatusLabel(res.status)}
-                            </span>
-                          )}
-                          {res.status === 'COLLECTED' && (
-                            <span className="inline-flex items-center text-[10px] font-bold text-slate-650 bg-slate-50 px-2 py-0.25 rounded border border-slate-200">
-                              {reservationStatusLabel(res.status)}
-                            </span>
-                          )}
-                          {res.status === 'CANCELLED' && (
-                            <span className="inline-flex items-center text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.25 rounded border border-red-200">
-                              {reservationStatusLabel(res.status)}
-                            </span>
-                          )}
+                          <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.25 rounded border ${
+                            res.status === 'CONFIRMED'
+                              ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                              : res.status === 'PENDING'
+                              ? 'text-amber-700 bg-amber-50 border-amber-200'
+                              : res.status === 'COLLECTED'
+                              ? 'text-slate-650 bg-slate-50 border-slate-200'
+                              : 'text-red-700 bg-red-50 border-red-200'
+                          }`}>
+                            {formatStatus(res.status)}
+                          </span>
                         </td>
                         <td className="py-3 text-right">
                           {res.status === 'CONFIRMED' && (
@@ -260,7 +268,7 @@ export default function PharmacyDashboard() {
                               aria-label={`Confirm collection for reservation ${res.id}`}
                               className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-3 py-1 rounded text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
                             >
-                              Confirm
+                              {t('pharmacy.dash.confirm')}
                             </button>
                           )}
                           {res.status === 'PENDING' && (
@@ -270,7 +278,7 @@ export default function PharmacyDashboard() {
                               aria-label={`Mark reservation ${res.id} ready for pickup`}
                               className="bg-health-primary hover:bg-health-secondary text-white font-bold px-3 py-1 rounded text-[10px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
                             >
-                              Mark Ready
+                              {t('status.confirmed')}
                             </button>
                           )}
                         </td>
@@ -286,12 +294,12 @@ export default function PharmacyDashboard() {
               <div className="flex justify-between items-center pb-2 border-b border-gray-105">
                 <div className="flex items-center space-x-2">
                   <Activity className="w-4 h-4 text-emerald-700" />
-                  <h3 className="text-xs sm:text-sm font-black text-gray-900">Recent Staff Activity</h3>
+                  <h3 className="text-xs sm:text-sm font-black text-gray-900">{t('pharmacy.dash.recentActivity')}</h3>
                 </div>
               </div>
               <div className="space-y-3 font-medium text-[10px] sm:text-xs text-gray-600">
                 {auditLogs.length === 0 ? (
-                  <p className="text-gray-400">No staff activity recorded.</p>
+                  <p className="text-gray-400">{t('common.noData')}</p>
                 ) : auditLogs.map((log) => (
                   <div key={log.id} className="flex items-center space-x-3.5">
                     <span className="text-gray-400 font-mono whitespace-nowrap">{new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -305,9 +313,11 @@ export default function PharmacyDashboard() {
 
           <div className="space-y-4 sm:space-y-6">
             <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5">
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Reservation Status</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                {t('common.status')}
+              </span>
               <div className="space-y-2 pt-2 text-[10px] sm:text-xs">
-                {[['Pending', summary.pending, 'bg-amber-400'], ['Confirmed', summary.ready, 'bg-emerald-500'], ['Collected', summary.collected, 'bg-slate-500']].map(([label, count, color]) => (
+                {[[formatStatus('PENDING'), summary.pending, 'bg-amber-400'], [formatStatus('CONFIRMED'), summary.ready, 'bg-emerald-500'], [formatStatus('COLLECTED'), summary.collected, 'bg-slate-500']].map(([label, count, color]) => (
                   <div key={label as string} className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-gray-600"><span className={`w-2 h-2 rounded-full ${color}`} />{label}</span>
                     <span className="font-black text-gray-900">{count}</span>

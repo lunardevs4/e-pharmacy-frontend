@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AuthApi } from '@/services/auth-api'
 import { UserApi } from '@/services/user-api'
 import { MedicineApi } from '@/services/medicine-api'
+import { useLanguageStore } from '@/store/languageStore'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement,
   LineElement, PointElement, Title, Tooltip, Legend, Filler,
@@ -19,6 +20,7 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Title, Tooltip, Legend, Filler)
 
 export default function AdminDashboard() {
+  const { t, formatStatus } = useLanguageStore()
   const [refreshing, setRefreshing] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
   const [stats, setStats] = useState<any>(null)
@@ -176,17 +178,19 @@ export default function AdminDashboard() {
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-700" />
-            <span className="text-[9px] sm:text-[10px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Super Admin Console</span>
+            <span className="text-[9px] sm:text-[10px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              Super Admin Console
+            </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-900">Platform Administration Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900">{t('admin.dash.title')}</h1>
           <p className="text-slate-500 text-[10px] sm:text-xs leading-relaxed">
-            Complete system oversight: users, pharmacies, medicines, reservations, and compliance monitoring.
+            {t('admin.dash.subtitle')}
           </p>
         </div>
         <div className="flex items-center space-x-2 sm:space-x-3">
           <div className="text-right text-[10px] sm:text-xs text-slate-500">
-            <div>Last refresh: {lastRefreshed.toLocaleTimeString()}</div>
-            <div className="mt-1">System Status: <span className="text-emerald-700 font-bold">Operational</span></div>
+            <div>{lastRefreshed.toLocaleTimeString()}</div>
+            <div className="mt-1">System: <span className="text-emerald-700 font-bold">{t('common.active')}</span></div>
           </div>
           <button
             onClick={handleRefresh}
@@ -194,7 +198,7 @@ export default function AdminDashboard() {
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 sm:px-4 py-2 rounded-lg text-[10px] sm:text-xs transition-colors flex items-center space-x-2 disabled:opacity-50"
           >
             {refreshing ? <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-            <span>Refresh</span>
+            <span>{t('common.refresh')}</span>
           </button>
         </div>
       </div>
@@ -205,7 +209,9 @@ export default function AdminDashboard() {
             <Users className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Total Users</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('admin.dash.totalUsers')}
+            </span>
             <span className="text-base sm:text-lg font-black text-gray-950">{totalUsers}</span>
           </div>
         </div>
@@ -215,7 +221,9 @@ export default function AdminDashboard() {
             <Package className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Active Medicines</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('admin.dash.registeredMeds')}
+            </span>
             <span className="text-base sm:text-lg font-black text-gray-950">{activeMeds}</span>
           </div>
         </div>
@@ -225,7 +233,9 @@ export default function AdminDashboard() {
             <Building className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Approved Pharmacies</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('admin.dash.licensedPharmacies')}
+            </span>
             <span className="text-base sm:text-lg font-black text-gray-950">{approvedPharm}</span>
           </div>
         </div>
@@ -235,7 +245,9 @@ export default function AdminDashboard() {
             <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Pending Actions</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('admin.dash.securityAlerts')}
+            </span>
             <span className="text-base sm:text-lg font-black text-gray-950">{totalPendingActions}</span>
           </div>
         </div>
@@ -245,7 +257,7 @@ export default function AdminDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
             <Server className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-xs sm:text-sm font-black text-gray-900">Service Health</h3>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">{t('admin.dash.systemHealth')}</h3>
           </div>
           <div className="space-y-2">
             {SERVICES.map((service) => (
@@ -266,7 +278,7 @@ export default function AdminDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
             <Users className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-xs sm:text-sm font-black text-gray-900">User Role Distribution</h3>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">{t('admin.dash.userDistribution')}</h3>
           </div>
           <Doughnut data={roleDistribution} options={doughnutOpts} />
         </div>
@@ -274,24 +286,24 @@ export default function AdminDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
             <Activity className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-xs sm:text-sm font-black text-gray-900">Quick Actions</h3>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">{t('common.quickActions')}</h3>
           </div>
           <div className="space-y-2">
             <Link to="/admin/users" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2.5 sm:p-3 text-[10px] sm:text-xs font-bold text-gray-700 transition-colors">
               <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 mr-2" />
-              Manage Users
+              {t('nav.users')}
             </Link>
             <Link to="/admin/medicines" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2.5 sm:p-3 text-[10px] sm:text-xs font-bold text-gray-700 transition-colors">
               <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 mr-2" />
-              Medicine Registry
+              {t('nav.medicineRegistry')}
             </Link>
             <Link to="/admin/roles" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2.5 sm:p-3 text-[10px] sm:text-xs font-bold text-gray-700 transition-colors">
               <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 mr-2" />
-              Role Permissions
+              {t('nav.roles')}
             </Link>
             <Link to="/admin/audit" className="block bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-2.5 sm:p-3 text-[10px] sm:text-xs font-bold text-gray-700 transition-colors">
               <FileLock2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 mr-2" />
-              Audit Logs
+              {t('nav.auditLogs')}
             </Link>
           </div>
         </div>
@@ -341,7 +353,7 @@ export default function AdminDashboard() {
         <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div className="flex items-center space-x-2">
             <FileLock2 className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-xs sm:text-sm font-black text-gray-900">Recent System Activity</h3>
+            <h3 className="text-xs sm:text-sm font-black text-gray-900">{t('admin.dash.recentAuditLogs')}</h3>
           </div>
           <span className="text-[10px] sm:text-xs text-gray-400 font-bold">{logs.length} recent logs</span>
         </div>
@@ -350,11 +362,11 @@ export default function AdminDashboard() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-wider">
                 <th className="px-3 sm:px-5 py-2 sm:py-3">Actor</th>
-                <th className="px-3 sm:px-5 py-2 sm:py-3">Role</th>
-                <th className="px-3 sm:px-5 py-2 sm:py-3">Action</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">{t('nav.roles')}</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">{t('common.actions')}</th>
                 <th className="px-3 sm:px-5 py-2 sm:py-3">Resource</th>
-                <th className="px-3 sm:px-5 py-2 sm:py-3">Status</th>
-                <th className="px-3 sm:px-5 py-2 sm:py-3">Time</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">{t('common.status')}</th>
+                <th className="px-3 sm:px-5 py-2 sm:py-3">{t('common.date')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
@@ -370,7 +382,7 @@ export default function AdminDashboard() {
                       log.status === 'Failed' ? 'bg-red-50 text-red-700' :
                       'bg-amber-50 text-amber-700'
                     }`}>
-                      {log.status || '—'}
+                      {formatStatus(log.status)}
                     </span>
                   </td>
                   <td className="px-3 sm:px-5 py-2 sm:py-3 font-mono text-gray-500">{log.time || '—'}</td>

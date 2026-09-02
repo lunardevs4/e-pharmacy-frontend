@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { insuranceApi, DashboardSummary } from '@/services/insurance-api'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguageStore } from '@/store/languageStore'
 import { Shield } from 'lucide-react'
 
 export default function InsuranceDashboard() {
+  const { t, formatStatus } = useLanguageStore()
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -43,59 +45,91 @@ export default function InsuranceDashboard() {
           <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
         <div className="flex-grow">
-          <h1 className="text-lg sm:text-xl font-black text-gray-900">{insurer} Executive Dashboard</h1>
-          <p className="text-[10px] sm:text-xs text-gray-550">Overview of active claims, payouts, and billing audits for {insurer === 'MMI' ? 'Military Medical Insurance' : 'Rwanda Social Security Board'}.</p>
+          <h1 className="text-lg sm:text-xl font-black text-gray-900">
+            {t('insurance.dash.title', { insurer })}
+          </h1>
+          <p className="text-[10px] sm:text-xs text-gray-550">
+            {t('insurance.dash.subtitle', { name: insurer === 'MMI' ? 'Military Medical Insurance' : 'Rwanda Social Security Board' })}
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
         <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-[10px] sm:text-xs text-gray-400 font-bold block uppercase">Total Claims Processed</span>
-          <span className="text-xl sm:text-2xl font-black text-gray-900 block mt-2">{isLoading ? '—' : summary?.totalClaims || 0}</span>
-          <span className="text-[10px] sm:text-xs text-emerald-700 mt-1 font-semibold block">Live claims count</span>
-        </div>
-        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-[10px] sm:text-xs text-gray-400 font-bold block uppercase">Average Approval Rate</span>
-          <span className="text-xl sm:text-2xl font-black text-health-primary block mt-2">{isLoading ? '—' : `${approvalRate}%`}</span>
-          <span className="text-[10px] sm:text-xs text-emerald-700 mt-1 font-semibold block">Approval ratio</span>
-        </div>
-        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-[10px] sm:text-xs text-gray-400 font-bold block uppercase">Pending Claims</span>
-          <span className="text-xl sm:text-2xl font-black text-orange-600 block mt-2">{isLoading ? '—' : summary?.pendingClaims || 0}</span>
-          <span className="text-[10px] sm:text-xs text-gray-550 mt-1 block">Awaiting audit review</span>
-        </div>
-        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-[10px] sm:text-xs text-gray-400 font-bold block uppercase">Total Disbursed</span>
-          <span className="text-xl sm:text-2xl font-black text-gray-900 block mt-2">
-            {isLoading ? '—' : `RWF ${summary?.paidClaimsAmount?.toLocaleString() || 0}`}
+          <span className="text-[10px] sm:text-xs text-gray-400 font-bold block uppercase">
+            {t('insurance.dash.totalClaims')}
           </span>
-          <span className="text-[10px] sm:text-xs text-gray-550 mt-1 block">Insurer portion paid</span>
+          <span className="text-xl sm:text-2xl font-black text-gray-900 block mt-2">{isLoading ? '—' : summary?.totalClaims || 0}</span>
+          <span className="text-[10px] sm:text-xs text-emerald-700 mt-1 font-semibold block">
+            {t('insurance.dash.liveClaimsCount')}
+          </span>
+        </div>
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
+          <span className="text-[10px] sm:text-xs text-gray-400 font-bold block uppercase">
+            {t('insurance.dash.approvalRate')}
+          </span>
+          <span className="text-xl sm:text-2xl font-black text-health-primary block mt-2">{isLoading ? '—' : `${approvalRate}%`}</span>
+          <span className="text-[10px] sm:text-xs text-emerald-700 mt-1 font-semibold block">
+            {t('insurance.dash.approvalRatio')}
+          </span>
+        </div>
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
+          <span className="text-[10px] sm:text-xs text-gray-400 font-bold block uppercase">
+            {t('insurance.dash.pendingClaims')}
+          </span>
+          <span className="text-xl sm:text-2xl font-black text-orange-600 block mt-2">{isLoading ? '—' : summary?.pendingClaims || 0}</span>
+          <span className="text-[10px] sm:text-xs text-gray-550 mt-1 block">
+            {t('insurance.dash.awaitingAudit')}
+          </span>
+        </div>
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
+          <span className="text-[10px] sm:text-xs text-gray-400 font-bold block uppercase">
+            {t('insurance.dash.totalDisbursed')}
+          </span>
+          <span className="text-xl sm:text-2xl font-black text-gray-900 block mt-2">
+            {isLoading ? '—' : `${summary?.paidClaimsAmount?.toLocaleString() || 0} ${t('common.rwf')}`}
+          </span>
+          <span className="text-[10px] sm:text-xs text-gray-550 mt-1 block">
+            {t('insurance.dash.insurerPortionPaid')}
+          </span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
         <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-[10px] sm:text-xs text-gray-500 font-semibold block uppercase">Total Patients</span>
+          <span className="text-[10px] sm:text-xs text-gray-500 font-semibold block uppercase">
+            {t('insurance.dash.totalPatients')}
+          </span>
           <span className="text-xl sm:text-2xl font-black text-gray-900 block mt-2">{isLoading ? '—' : summary?.totalPatients || 0}</span>
-          <span className="text-[10px] sm:text-xs text-gray-500 mt-1 block">Registered insured patients</span>
+          <span className="text-[10px] sm:text-xs text-gray-500 mt-1 block">
+            {t('insurance.dash.registeredInsured')}
+          </span>
         </div>
         <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-[10px] sm:text-xs text-gray-500 font-semibold block uppercase">Active Agreements</span>
+          <span className="text-[10px] sm:text-xs text-gray-500 font-semibold block uppercase">
+            {t('insurance.dash.activeAgreements')}
+          </span>
           <span className="text-xl sm:text-2xl font-black text-gray-900 block mt-2">{isLoading ? '—' : summary?.totalAgreements || 0}</span>
-          <span className="text-[10px] sm:text-xs text-gray-500 mt-1 block">Pharmacy partnerships</span>
+          <span className="text-[10px] sm:text-xs text-gray-500 mt-1 block">
+            {t('insurance.dash.pharmacyPartnerships')}
+          </span>
         </div>
         <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-[10px] sm:text-xs text-gray-500 font-semibold block uppercase">Medicine Tariffs</span>
+          <span className="text-[10px] sm:text-xs text-gray-500 font-semibold block uppercase">
+            {t('insurance.dash.medicineTariffs')}
+          </span>
           <span className="text-xl sm:text-2xl font-black text-gray-900 block mt-2">{isLoading ? '—' : summary?.totalTariffs || 0}</span>
-          <span className="text-[10px] sm:text-xs text-gray-500 mt-1 block">Covered medicines</span>
+          <span className="text-[10px] sm:text-xs text-gray-500 mt-1 block">
+            {t('insurance.dash.coveredMedicines')}
+          </span>
         </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-gray-50/50">
           <div>
-            <h2 className="font-bold text-gray-900 text-xs sm:text-sm">{insurer} Claims Queue</h2>
-            <p className="text-[10px] sm:text-xs text-gray-500">Live insurance split & contribution tables</p>
+            <h2 className="font-bold text-gray-900 text-xs sm:text-sm">{t('insurance.dash.claimsQueue')}</h2>
+            <p className="text-[10px] sm:text-xs text-gray-500">{t('insurance.dash.claimsQueueDesc')}</p>
           </div>
           <span className={`text-[9px] sm:text-[10px] font-black px-2 sm:px-2.5 py-1 rounded border uppercase tracking-wider ${insurer === 'MMI'
               ? 'bg-emerald-50 text-emerald-800 border-emerald-250'
@@ -112,26 +146,26 @@ export default function InsuranceDashboard() {
             <thead className="bg-gray-100 text-[9px] sm:text-[10px] font-black text-slate-500 uppercase border-b border-gray-200">
               <tr>
                 <th className="px-3 sm:px-6 py-2 sm:py-3">Claim #</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3">Pharmacy</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3">Medicine</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3">Total Amount</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3">Insurance Pays</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3">Patient Pays</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3">Status</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3">Date</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3">{t('common.pharmacy')}</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3">{t('common.medicine')}</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3">{t('common.total')}</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3">{t('common.insurancePortion')}</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3">{t('common.copay')}</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3">{t('common.status')}</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3">{t('common.date')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-150">
               {isLoading ? (
                 <tr>
                   <td colSpan={8} className="px-3 sm:px-6 py-6 sm:py-8 text-center text-[10px] sm:text-sm text-gray-500">
-                    Loading claims data...
+                    {t('common.loading')}
                   </td>
                 </tr>
               ) : !summary?.recentClaims || summary.recentClaims.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-3 sm:px-6 py-6 sm:py-8 text-center text-[10px] sm:text-sm text-gray-500">
-                    No insurance claims data is available yet for {insurer}.
+                    {t('common.noData')}
                   </td>
                 </tr>
               ) : summary.recentClaims.map((claim) => (
@@ -139,9 +173,9 @@ export default function InsuranceDashboard() {
                   <td className="px-3 sm:px-6 py-3 sm:py-4 font-bold text-gray-900">{claim.claimNumber}</td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-gray-800">{claim.pharmacy?.name || 'Pharmacy'}</td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4">{claim.medicineName || claim.medicine?.tradeName || claim.medicine?.genericName || 'Unknown Medicine'}</td>
-                  <td className="px-3 sm:px-6 py-3 sm:py-4 font-bold">RWF {claim.totalAmount.toLocaleString()}</td>
-                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-emerald-800 font-extrabold">RWF {claim.insuranceAmount.toLocaleString()}</td>
-                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-gray-500 font-semibold">RWF {claim.patientAmount.toLocaleString()}</td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 font-bold">{claim.totalAmount.toLocaleString()} {t('common.rwf')}</td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-emerald-800 font-extrabold">{claim.insuranceAmount.toLocaleString()} {t('common.rwf')}</td>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-gray-500 font-semibold">{claim.patientAmount.toLocaleString()} {t('common.rwf')}</td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4">
                     <span className={`inline-block text-[9px] sm:text-[10px] font-bold px-2 sm:px-2.5 py-0.5 rounded border uppercase tracking-wider ${claim.status === 'APPROVED' || claim.status === 'PAID'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -149,7 +183,7 @@ export default function InsuranceDashboard() {
                           ? 'bg-red-50 text-red-700 border-red-200'
                           : 'bg-amber-50 text-amber-700 border-amber-200'
                       }`}>
-                      {claim.status}
+                      {formatStatus(claim.status)}
                     </span>
                   </td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4 text-[10px] sm:text-xs text-gray-500">

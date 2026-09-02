@@ -1,6 +1,8 @@
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { useLanguageStore } from '@/store/languageStore'
+import LanguageSelector from '@/components/common/LanguageSelector'
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -16,6 +18,7 @@ export default function AuthLayout({
   mode,
 }: AuthLayoutProps) {
   const navigate = useNavigate()
+  const { t } = useLanguageStore()
 
   const handleGoBack = () => {
     navigate('/', { replace: true })
@@ -38,24 +41,24 @@ export default function AuthLayout({
     switch (computedMode) {
       case 'register':
         return {
-          tagline: 'Ready to join?',
-          heading: 'CREATE ACCOUNT',
-          desc: 'Join E-Pharmacy and access secure digital healthcare services.',
+          tagline: t('poster.register.tagline'),
+          heading: t('poster.register.heading'),
+          desc: t('poster.register.desc'),
         }
 
       case 'reset':
         return {
-          tagline: 'Secure your account',
-          heading: 'RESET PASSWORD',
-          desc: 'Follow the simple steps to regain access to your healthcare dashboard.',
+          tagline: t('poster.reset.tagline'),
+          heading: t('poster.reset.heading'),
+          desc: t('poster.reset.desc'),
         }
 
       case 'login':
       default:
         return {
-          tagline: 'Nice to see you again',
-          heading: 'WELCOME BACK',
-          desc: 'Welcome back to E-Pharmacy. Manage your healthcare experience securely and conveniently.',
+          tagline: t('poster.login.tagline'),
+          heading: t('poster.login.heading'),
+          desc: t('poster.login.desc'),
         }
     }
   }
@@ -442,7 +445,6 @@ export default function AuthLayout({
                   font-light
                   tracking-[0.06em]
                   text-white
-                  whitespace-nowrap
                 "
               >
                 {poster.heading}
@@ -504,6 +506,12 @@ export default function AuthLayout({
             overflow-y-auto
           `}
         >
+          {/* Language Selector */}
+          <div className="absolute top-5 left-6 md:top-6 md:left-8 z-30">
+            <LanguageSelector />
+          </div>
+
+          {/* Go Back button */}
           <button
             onClick={handleGoBack}
             className="
@@ -525,7 +533,7 @@ export default function AuthLayout({
             "
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Go Back</span>
+            <span>{t('auth.goBack')}</span>
           </button>
 
           <div className="w-full max-w-[440px] py-2 sm:py-3">

@@ -2,6 +2,8 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
 import { useNotificationStore } from '@/store/notificationStore'
+import { useLanguageStore } from '@/store/languageStore'
+import LanguageSelector from '@/components/common/LanguageSelector'
 import { useEffect, useRef, useState } from 'react'
 import PharmacyRegistrationGate, { isPharmacyGated } from '@/components/pharmacy/PharmacyRegistrationGate'
 import { Lock } from 'lucide-react'
@@ -16,7 +18,8 @@ export default function SidebarLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
-  const { sidebarOpen, setSidebarOpen } = useUIStore()
+  const { t } = useLanguageStore()
+  const { sidebarOpen, setSidebarOpen, toggleSidebar } = useUIStore()
   const { items: notifs, unreadCount, load, markRead, markAllRead, remove } = useNotificationStore()
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
@@ -156,6 +159,42 @@ export default function SidebarLayout() {
     }
   }
 
+  const translateNavLabel = (label: string) => {
+    switch (label) {
+      case 'Dashboard':          return t('nav.dashboard')
+      case 'Search Medicine':    return t('nav.searchMedicine' as any) || 'Search Medicine'
+      case 'My Reservations':    return t('nav.myReservations' as any) || 'My Reservations'
+      case 'History':            return t('nav.history' as any) || 'History'
+      case 'Reminders':          return t('nav.reminders' as any) || 'Reminders'
+      case 'Notifications':      return t('nav.notifications')
+      case 'Profile':            return t('nav.profile')
+      case 'Inventory':          return t('nav.inventory')
+      case 'Reservations':       return t('nav.reservations')
+      case 'Patients':           return t('nav.patients')
+      case 'Billing':            return t('nav.billing' as any) || 'Billing'
+      case 'Staff':              return t('nav.staff')
+      case 'Audit Trail':        return t('nav.audit')
+      case 'Reports':            return t('nav.reports')
+      case 'Settings':           return t('nav.settings')
+      case 'Claims':             return t('nav.claims')
+      case 'Payments':           return t('nav.payments' as any) || 'Payments'
+      case 'Medicine Discounts': return t('nav.tariffs')
+      case 'Insured Patients':   return t('nav.insuredPatients' as any) || 'Insured Patients'
+      case 'Pharmacy Registry':  return t('nav.pharmacyRegistry' as any) || 'Pharmacy Registry'
+      case 'Medicine Registry':  return t('nav.medicineRegistry' as any) || 'Medicine Registry'
+      case 'National Analytics': return t('nav.nationalAnalytics' as any) || 'National Analytics'
+      case 'District Heatmap':   return t('nav.districtHeatmap' as any) || 'District Heatmap'
+      case 'Province Analytics': return t('nav.provinceAnalytics' as any) || 'Province Analytics'
+      case 'Drug Analytics':     return t('nav.drugAnalytics' as any) || 'Drug Analytics'
+      case 'Compliance Audits':  return t('nav.complianceAudits' as any) || 'Compliance Audits'
+      case 'MOH Reports':        return t('nav.mohReports' as any) || 'MOH Reports'
+      case 'Users':              return t('nav.users' as any) || 'Users'
+      case 'Roles':              return t('nav.roles' as any) || 'Roles'
+      case 'Audit Logs':         return t('nav.auditLogs' as any) || 'Audit Logs'
+      default:                   return label
+    }
+  }
+
   const navLinks = getLinks()
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
   const currentRole = user?.role ? (['PHARMACY', 'PHARMACY_OWNER', 'PHARMACIST'].includes(user.role) ? 'PHARMACY' : user.role) : ''
@@ -169,11 +208,21 @@ export default function SidebarLayout() {
   const borderClass = 'border-[#022c22]/50'
   const footerBg = 'bg-[#022c22]/45'
 
-  const portalLabel = isInsurance
-    ? insurer === 'MMI'
-      ? 'MMI Portal'
-      : 'RSSB Portal'
-    : `${user?.role} Portal`
+  const getPortalTranslation = (role: string) => {
+    switch (role) {
+      case 'PATIENT': return t('role.patient.portal')
+      case 'PHARMACY':
+      case 'PHARMACY_OWNER':
+      case 'PHARMACIST': return t('role.pharmacy.portal')
+      case 'GOVERNMENT': return t('role.government.portal')
+      case 'ADMIN': return t('role.admin.portal')
+      case 'INSURANCE': return isInsurance ? (insurer === 'MMI' ? 'MMI' : 'RSSB') : t('role.insurance.portal')
+      default: return role
+    }
+  }
+
+  const translatedPortal = getPortalTranslation(user?.role || '')
+  const portalLabel = `${translatedPortal} ${t('nav.portal')}`
 
   const portalSub = isInsurance
     ? insurer === 'MMI'
@@ -246,7 +295,7 @@ export default function SidebarLayout() {
                 }}
                 aria-current={isActive ? 'page' : undefined}
                 aria-disabled={locked || undefined}
-                title={locked ? 'Register and get MOH approval to unlock this section' : undefined}
+                title={locked ? t('auth.portalLockedTooltip') : undefined}
                 className={`flex items-center justify-between py-2.5 rounded-none text-sm font-medium transition-all
                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400 ${
                   isActive
@@ -256,7 +305,7 @@ export default function SidebarLayout() {
               >
                 <div className="flex items-center space-x-3">
                   <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-emerald-200/70'}`} aria-hidden="true" />
-                  <span>{link.label}</span>
+                  <span>{translateNavLabel(link.label)}</span>
                 </div>
                 {locked ? (
                   <Lock className="w-3 h-3 text-emerald-300/70 flex-shrink-0" aria-label="Locked" />
@@ -337,7 +386,7 @@ export default function SidebarLayout() {
                   <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                     <div className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-emerald-600" aria-hidden="true" />
-                      <span className="text-sm font-black text-gray-900">Notifications</span>
+                      <span className="text-sm font-black text-gray-900">{t('nav.notifications')}</span>
                       {unreadCount > 0 && (
                         <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
                           {unreadCount}
@@ -350,7 +399,7 @@ export default function SidebarLayout() {
                           onClick={() => markAllRead(currentRole)}
                           className="text-[10px] font-bold text-emerald-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
                         >
-                          Mark all read
+                          {t('auth.markAllRead')}
                         </button>
                       )}
                     </div>
@@ -360,7 +409,7 @@ export default function SidebarLayout() {
                     {notifs.length === 0 ? (
                       <li className="py-10 text-center text-gray-400">
                         <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" aria-hidden="true" />
-                        <p className="text-xs font-semibold">No notifications</p>
+                        <p className="text-xs font-semibold">{t('auth.noNotifications')}</p>
                       </li>
                     ) : (
                       notifs.slice(0, 8).map(n => (
@@ -419,7 +468,7 @@ export default function SidebarLayout() {
                         onClick={() => setNotifOpen(false)}
                         className="block text-center text-xs font-bold text-health-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 rounded"
                       >
-                        View all notifications →
+                        {t('auth.viewAllNotifications')} →
                       </Link>
                     ) : (
                       <p className="text-center text-[11px] text-gray-400">
@@ -431,6 +480,12 @@ export default function SidebarLayout() {
               )}
             </div>
 
+            {/* Language Selector */}
+            <div className="border-l border-gray-200 pl-3">
+              <LanguageSelector />
+            </div>
+
+            {/* Profile */}
             <div className="flex items-center space-x-3 border-l border-gray-200 pl-3">
               <div
                 aria-hidden="true"

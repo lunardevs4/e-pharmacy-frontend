@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguageStore } from '@/store/languageStore'
 import { MedicineApi } from '@/services/medicine-api'
 import { AuthApi } from '@/services/auth-api'
 import { insuranceApi } from '@/services/insurance-api'
@@ -14,6 +15,7 @@ import {
 export default function PatientDashboard() {
   const navigate = useNavigate()
   const { user, updateProfile } = useAuthStore()
+  const { t, formatStatus } = useLanguageStore()
 
   const [isEditingInsurance, setIsEditingInsurance] = useState(false)
   const [selectedInsurance, setSelectedInsurance] = useState(user?.insuranceProvider || 'None')
@@ -263,16 +265,18 @@ export default function PatientDashboard() {
         <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-50/50 rounded-full blur-xl pointer-events-none" />
 
         <div className="space-y-2 flex-grow">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950">Muraho, {user?.firstName?.split(' ')[0] || user?.name?.split(' ')[0] || 'Citizen'}</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950">
+            {t('welcome.user', { name: user?.firstName?.split(' ')[0] || user?.name?.split(' ')[0] || 'Citizen' })}
+          </h1>
           <p className="text-gray-500 text-[10px] sm:text-xs max-w-lg font-medium leading-normal">
-            Welcome to the Rwanda Ministry of Health national drug dispensary system. Check reservation statuses, search medication catalogues, or upload prescriptions below.
+            {t('government.dash.subtitle')}
           </p>
 
           <form onSubmit={handleQuickSearchSubmit} className="relative max-w-lg pt-3">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-6" />
             <input
               type="text"
-              placeholder="Quick search medicines, generic molecule names or manufacturers..."
+              placeholder={t('patient.dash.quickSearchPlaceholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full pl-9 pr-20 sm:pr-24 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-[10px] sm:text-xs font-bold text-gray-950 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
@@ -281,23 +285,25 @@ export default function PatientDashboard() {
               type="submit"
               className="absolute right-1 top-4 py-1.5 px-2.5 sm:px-3.5 bg-health-primary hover:bg-emerald-900 rounded-md text-white font-bold text-[9px] sm:text-[10px] uppercase transition-colors"
             >
-              Search
+              {t('common.search')}
             </button>
           </form>
         </div>
 
         <div className="flex-shrink-0 bg-emerald-50/60 border border-emerald-200/60 p-3 sm:p-4 rounded-xl text-center space-y-2 sm:space-y-2.5 max-w-[180px] sm:max-w-[210px] w-full relative z-10 font-sans">
-          <span className="text-[9px] sm:text-[10px] text-emerald-800 block uppercase tracking-wider font-bold">Linked Insurance</span>
+          <span className="text-[9px] sm:text-[10px] text-emerald-800 block uppercase tracking-wider font-bold">
+            {t('patient.dash.linkedInsurance')}
+          </span>
 
           {insuranceSaveSuccess && (
             <div className="bg-emerald-100 border border-emerald-200 text-emerald-800 py-1 px-2 rounded text-[9px] font-bold animate-fadeIn">
-              Saved!
+              {t('common.saved')}
             </div>
           )}
 
           {insuranceSaveError && (
             <div className="bg-red-50 border border-red-200 text-red-800 py-1 px-2 rounded text-[9px] font-bold animate-fadeIn truncate" title={insuranceSaveError}>
-              Error saving
+              {t('common.errorSaving')}
             </div>
           )}
 
@@ -313,7 +319,7 @@ export default function PatientDashboard() {
                     {prov.code || prov.name}
                   </option>
                 ))}
-                <option value="None">None (Cash)</option>
+                <option value="None">{t('patient.dash.payingCash')}</option>
               </select>
               <div className="flex items-center space-x-1.5">
                 <button
@@ -322,7 +328,7 @@ export default function PatientDashboard() {
                   onClick={handleSaveInsurance}
                   className="flex-grow bg-health-primary hover:bg-emerald-800 text-white text-[9px] font-bold py-1 px-1.5 rounded transition-colors flex items-center justify-center space-x-0.5 cursor-pointer"
                 >
-                  {insuranceSaveLoading ? '...' : 'Save'}
+                  {insuranceSaveLoading ? '...' : t('common.save')}
                 </button>
                 <button
                   type="button"
@@ -334,7 +340,7 @@ export default function PatientDashboard() {
                   }}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-[9px] font-bold py-1 px-1.5 rounded transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>
@@ -344,7 +350,7 @@ export default function PatientDashboard() {
                 <>
                   <div className="flex items-center justify-center space-x-1 text-emerald-700">
                     <Shield className="w-4 h-4 fill-emerald-100" />
-                    <span className="text-xs font-black">{user.insuranceProvider} Active</span>
+                    <span className="text-xs font-black">{user.insuranceProvider} {t('common.active')}</span>
                   </div>
                   <span className="block text-[10px] text-emerald-750 font-semibold leading-none">
                     {(() => {
@@ -352,9 +358,9 @@ export default function PatientDashboard() {
                       if (matched) {
                         const pct = matched.defaultCoveragePercentage
                         const display = pct > 1 ? pct : Math.round(pct * 100)
-                        return `${display}% cost covered`
+                        return t('patient.dash.costCovered', { pct: display })
                       }
-                      return 'Discount active'
+                      return t('patient.dash.discountActive')
                     })()}
                   </span>
                   <button
@@ -362,21 +368,21 @@ export default function PatientDashboard() {
                     onClick={() => setIsEditingInsurance(true)}
                     className="text-[9px] text-emerald-800 hover:text-emerald-950 font-bold block mx-auto hover:underline cursor-pointer"
                   >
-                    Change Provider &rarr;
+                    {t('patient.dash.changeProvider')} &rarr;
                   </button>
                 </>
               ) : (
                 <>
                   <div className="flex items-center justify-center space-x-1 text-amber-600">
                     <AlertTriangle className="w-4 h-4" />
-                    <span className="text-xs font-black">Paying Cash</span>
+                    <span className="text-xs font-black">{t('patient.dash.payingCash')}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsEditingInsurance(true)}
                     className="text-[9px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-2 py-1 rounded shadow-xs transition-colors block mx-auto cursor-pointer"
                   >
-                    Link Insurance
+                    {t('patient.dash.linkInsurance')}
                   </button>
                 </>
               )}
@@ -393,8 +399,10 @@ export default function PatientDashboard() {
             <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Pending Pickups</span>
-            <span className="text-base sm:text-lg font-black text-gray-950">{pendingCount} orders</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('patient.dash.pendingPickups')}
+            </span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{pendingCount} {t('common.orders')}</span>
           </div>
         </div>
 
@@ -403,8 +411,10 @@ export default function PatientDashboard() {
             <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Collected Items</span>
-            <span className="text-base sm:text-lg font-black text-gray-950">{collectedCount} medications</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('patient.dash.collectedItems')}
+            </span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{collectedCount} {t('common.medications')}</span>
           </div>
         </div>
 
@@ -413,8 +423,10 @@ export default function PatientDashboard() {
             <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Total Spent</span>
-            <span className="text-base sm:text-lg font-black text-gray-950">{totalSpent.toLocaleString()} RWF</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('patient.dash.totalSpent')}
+            </span>
+            <span className="text-base sm:text-lg font-black text-gray-950">{totalSpent.toLocaleString()} {t('common.rwf')}</span>
           </div>
         </div>
 
@@ -423,7 +435,9 @@ export default function PatientDashboard() {
             <Package className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Medicines Purchased</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('patient.dash.medicinesPurchased')}
+            </span>
             <span className="text-base sm:text-lg font-black text-gray-950">{totalMedicinesPurchased}</span>
           </div>
         </div>
@@ -436,9 +450,13 @@ export default function PatientDashboard() {
             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Active Reminders</span>
-            <span className="text-base sm:text-lg font-black text-gray-955">{activeRemindersCount} medications</span>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block">{todayDosesCount} doses today</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('patient.dash.activeReminders')}
+            </span>
+            <span className="text-base sm:text-lg font-black text-gray-955">{activeRemindersCount} {t('common.medications')}</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block">
+              {t('patient.dash.dosesToday', { count: todayDosesCount })}
+            </span>
           </div>
         </div>
 
@@ -447,7 +465,9 @@ export default function PatientDashboard() {
             <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Spending Trend (7d)</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('patient.dash.spendingTrend')}
+            </span>
             <span className={`text-base sm:text-lg font-black ${spendingTrend >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {spendingTrend >= 0 ? '+' : ''}{spendingTrend}%
             </span>
@@ -459,8 +479,10 @@ export default function PatientDashboard() {
             <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">Unread Updates</span>
-            <span className="text-base sm:text-lg font-black text-gray-955">{unreadCount} alerts</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 block uppercase font-bold">
+              {t('nav.notifications')}
+            </span>
+            <span className="text-base sm:text-lg font-black text-gray-955">{unreadCount}</span>
           </div>
         </div>
 
@@ -482,13 +504,15 @@ export default function PatientDashboard() {
             <span className="absolute text-[9px] font-black text-emerald-955">{completionPercent}%</span>
           </div>
           <div>
-            <span className="text-[10px] text-gray-400 block uppercase font-bold">Profile Score</span>
+            <span className="text-[10px] text-gray-400 block uppercase font-bold">
+              {t('patient.dash.profileCompletion')}
+            </span>
             <button
               type="button"
               onClick={() => navigate('/patient/profile')}
               className="text-[10px] text-health-primary hover:text-emerald-900 font-bold block hover:underline text-left mt-0.5 cursor-pointer"
             >
-              Complete Profile &rarr;
+              {t('patient.dash.updateProfile')} &rarr;
             </button>
           </div>
         </div>
@@ -502,21 +526,21 @@ export default function PatientDashboard() {
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <ClipboardList className="w-4 h-4 text-emerald-700" />
-                <span>Recent Dispensing Reservations</span>
+                <span>{t('patient.dash.recentReservations')}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => navigate('/patient/reservations')}
                 className="text-xs text-health-primary hover:text-emerald-900 font-bold flex items-center space-x-0.5"
               >
-                <span>View all</span>
+                <span>{t('common.viewAll')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {reservations.length === 0 ? (
               <div className="text-center py-6 text-xs text-gray-400">
-                No active medicine pickup reservations logged.
+                {t('patient.dash.noReservations')}
               </div>
             ) : (
               <div className="overflow-x-auto text-[10px] sm:text-xs font-semibold text-gray-700">
@@ -524,10 +548,10 @@ export default function PatientDashboard() {
                   <thead>
                     <tr className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest pb-2">
                       <th className="py-2 px-1 sm:px-0">Ref ID</th>
-                      <th className="py-2 px-1 sm:px-0">Medicine</th>
-                      <th className="py-2 px-1 sm:px-0">Pharmacy</th>
-                      <th className="py-2 px-1 sm:px-0">Out-of-Pocket</th>
-                      <th className="py-2 px-1 sm:px-0 text-right">Status</th>
+                      <th className="py-2 px-1 sm:px-0">{t('common.medicine')}</th>
+                      <th className="py-2 px-1 sm:px-0">{t('common.pharmacy')}</th>
+                      <th className="py-2 px-1 sm:px-0">{t('common.copay')}</th>
+                      <th className="py-2 px-1 sm:px-0 text-right">{t('common.status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 font-bold text-gray-900">
@@ -540,11 +564,11 @@ export default function PatientDashboard() {
                         <td className="py-3 font-mono text-gray-450">{res.id.slice(0, 8)}</td>
                         <td className="py-3 text-gray-950">{res.medicineName}</td>
                         <td className="py-3 text-gray-550">{res.pharmacyName}</td>
-                        <td className="py-3 text-health-primary">{res.patientPays || 0} RWF</td>
+                        <td className="py-3 text-health-primary">{res.patientPays || 0} {t('common.rwf')}</td>
                         <td className="py-3 text-right">
                           <div className="inline-flex items-center space-x-1">
                             {getStatusIcon(res.status)}
-                            <span className="text-[10px] capitalize text-gray-700">{res.status.toLowerCase()}</span>
+                            <span className="text-[10px] text-gray-700">{formatStatus(res.status)}</span>
                           </div>
                         </td>
                       </tr>
@@ -559,7 +583,7 @@ export default function PatientDashboard() {
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <History className="w-4 h-4 text-emerald-700" />
-                <span>Recent Search History</span>
+                <span>{t('patient.dash.searchHistory')}</span>
               </h3>
               {searchHistory.length > 0 && (
                 <button
@@ -567,14 +591,14 @@ export default function PatientDashboard() {
                   onClick={handleClearHistory}
                   className="text-[10px] text-red-650 hover:underline font-bold"
                 >
-                  Clear all history
+                  {t('patient.dash.clearHistory')}
                 </button>
               )}
             </div>
 
             {searchHistory.length === 0 ? (
               <div className="text-center py-4 text-xs text-gray-400">
-                Search history logs are empty.
+                {t('common.noData')}
               </div>
             ) : (
               <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-1 text-[10px] sm:text-xs">
@@ -606,20 +630,20 @@ export default function PatientDashboard() {
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-955 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <Bell className="w-4 h-4 text-emerald-700" />
-                <span>Recent Notifications</span>
+                <span>{t('nav.notifications')}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => navigate('/patient/notifications')}
                 className="text-[10px] text-health-primary hover:underline font-bold"
               >
-                Open centre
+                {t('common.viewAll')}
               </button>
             </div>
 
             {notifications.length === 0 ? (
               <div className="text-center py-4 text-xs text-gray-400">
-                No alerts in log.
+                {t('auth.noNotifications')}
               </div>
             ) : (
               <div className="space-y-3">
@@ -645,13 +669,13 @@ export default function PatientDashboard() {
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
-                <span>Bookmarked Medicines</span>
+                <span>{t('patient.dash.favMedicines')}</span>
               </h3>
             </div>
 
             {favMedicines.length === 0 ? (
               <div className="text-center py-4 text-xs text-gray-400">
-                Bookmark drugs on the search catalog for quick access.
+                {t('common.noData')}
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -686,15 +710,15 @@ export default function PatientDashboard() {
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <ClipboardList className="w-4 h-4 text-emerald-700" />
-                <span>Reservation Status</span>
+                <span>{t('common.status')}</span>
               </h3>
             </div>
 
             <div className="space-y-3">
               {[
-                { label: 'Pending', value: reservationDistribution.pending, color: 'bg-amber-500' },
-                { label: 'Collected', value: reservationDistribution.collected, color: 'bg-emerald-500' },
-                { label: 'Cancelled', value: reservationDistribution.cancelled, color: 'bg-red-500' },
+                { label: formatStatus('PENDING'), value: reservationDistribution.pending, color: 'bg-amber-500' },
+                { label: formatStatus('COLLECTED'), value: reservationDistribution.collected, color: 'bg-emerald-500' },
+                { label: formatStatus('CANCELLED'), value: reservationDistribution.cancelled, color: 'bg-red-500' },
               ].map((item) => (
                 <div key={item.label} className="space-y-1">
                   <div className="flex justify-between text-xs font-bold text-gray-700">
@@ -716,13 +740,13 @@ export default function PatientDashboard() {
             <div className="flex justify-between items-center pb-2 border-b border-gray-150">
               <h3 className="font-black text-gray-950 text-xs uppercase tracking-wider flex items-center space-x-1.5">
                 <MapPin className="w-4 h-4 text-emerald-700" />
-                <span>Bookmarked Pharmacies</span>
+                <span>{t('patient.dash.favPharmacies')}</span>
               </h3>
             </div>
 
             {favPharmacies.length === 0 ? (
               <div className="text-center py-4 text-xs text-gray-400">
-                Bookmark pharmacies on search list views for quick lookup.
+                {t('common.noData')}
               </div>
             ) : (
               <div className="space-y-2.5">
