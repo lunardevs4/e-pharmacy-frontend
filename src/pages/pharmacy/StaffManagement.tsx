@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Shield, X, Check, Key, ClipboardList, Info, HelpCircle, Trash2 } from 'lucide-react'
+import { Plus, Search, Shield, X, Check, Info,  Trash2 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { validateEmail } from '@/utils/validation'
 import { AuthApi } from '@/services/auth-api'
@@ -24,8 +24,8 @@ export default function StaffManagement() {
   useEffect(() => {
     const pharmacyId = user?.pharmacy?.id || user?.pharmacyId
     if (!pharmacyId) return
-    PharmacyApi.getDetails(pharmacyId).then((pharmacy: any) => {
-      const rows = (pharmacy.employees || []).map((employee: any) => {
+    PharmacyApi.getEmployees(pharmacyId).then((employees: any[]) => {
+      const rows = (employees || []).map((employee: any) => {
         if (!['PHARMACY_OWNER', 'PHARMACIST'].includes(employee.role)) return null
         const account = employee.user || {}
         const roleMap: Record<string, Employee['role']> = { PHARMACIST: 'Pharmacist', PHARMACY_OWNER: 'Pharmacy Owner' }
@@ -70,8 +70,8 @@ export default function StaffManagement() {
     try {
       const result = await AuthApi.createStaff(pharmacyId, { firstName, lastName: rest.join(' ') || firstName, email, phone, role: roleValue, position: role })
       setCreatedStaff({ name: name.trim(), email, role, emailSent: result?.emailSent !== false })
-      const pharmacy = await PharmacyApi.getDetails(pharmacyId)
-      setEmployees((pharmacy.employees || [])
+      const employees = await PharmacyApi.getEmployees(pharmacyId)
+      setEmployees((employees || [])
         .filter((employee: any) => ['PHARMACY_OWNER', 'PHARMACIST'].includes(employee.role))
         .map((employee: any) => ({ id: employee.id, name: [employee.user?.firstName, employee.user?.lastName].filter(Boolean).join(' ') || employee.user?.email, role: employee.role === 'PHARMACY_OWNER' ? 'Pharmacy Owner' : 'Pharmacist', email: employee.user?.email || '—', phone: employee.user?.phone || '—', status: employee.user?.isActive === false ? 'Inactive' : 'Active', lastLogin: employee.user?.updatedAt ? new Date(employee.user.updatedAt).toLocaleString() : '—' })))
     } catch (err: any) { setError(err.message || 'Unable to create staff member.'); return }

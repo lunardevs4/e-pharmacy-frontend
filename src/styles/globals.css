@@ -363,10 +363,6 @@ h1, h2, h3, h4, h5, h6 {
   animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* ---- 8.2 Infinite Ribbon Marquee (Landing Page) ------------------------ */
-/* Scrolling partner-pharmacy / accreditation badge ribbon on the public
-   landing page. Pauses on hover; respects reduced-motion preferences. */
-
 @keyframes marquee-scroll {
   0%   { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
@@ -384,55 +380,36 @@ h1, h2, h3, h4, h5, h6 {
   animation-play-state: paused;
 }
 
-/* ---- 8.3 Reduced Motion Support --------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee-infinite {
     animation: none;
   }
 }
 
-
-/* --------------------------------------------------------------------------
-   9. GLOBAL CUSTOM SCROLLBAR
-   -------------------------------------------------------------------------- */
-
-/* Elegant health-green themed thin scrollbar applied globally.
-   Ensures that everywhere we have a scrollbar (window, panels, dashboards),
-   it is styled with a beautiful green theme matching the application concept. */
-
-/* WebKit (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
-  width: 8px; /* thin but not too thin, easy to see and interact with */
+  width: 8px; 
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 81, 50, 0.04); /* very subtle health-primary background */
+  background: rgba(15, 81, 50, 0.04);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #059669; /* E-Pharmacy concept green */
+  background: #059669;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #047857; /* darker emerald green hover */
+  background: #047857;
 }
 
-/* Firefox scrollbar support */
 * {
   scrollbar-width: thin;
   scrollbar-color: #059669 rgba(15, 81, 50, 0.04);
 }
 
-
-/* --------------------------------------------------------------------------
-   10. MISC / IMAGE HELPERS
-   -------------------------------------------------------------------------- */
-
-/* Large circular image cropper. Used by landing-page hero and profile
-   photo placeholders. */
 .image-container {
   width: 550px;
   height: 550px;
@@ -446,15 +423,6 @@ h1, h2, h3, h4, h5, h6 {
   object-fit: cover;
 }
 
-
-/* --------------------------------------------------------------------------
-   11. PRINT STYLES
-   -------------------------------------------------------------------------- */
-
-/* Receipt / invoice printing flow used by Pharmacy dashboard → Reports
-   and Patient dashboard → Reservation history. Hides #root entirely
-   during print, forces color, and removes shadows/actions. */
-
 @media print {
   @page {
     margin: 0;
@@ -464,7 +432,6 @@ h1, h2, h3, h4, h5, h6 {
     background: white !important;
   }
 
-  /* Hide the entire SPA shell; only the detached receipt root prints */
   body > #root {
     display: none !important;
   }

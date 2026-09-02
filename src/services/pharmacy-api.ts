@@ -19,6 +19,10 @@ export const PharmacyApi = {
       throw err
     }
   },
+  getEmployees: async (pharmacyId: string) => {
+    const response = await apiClient.get(`/pharmacies/${pharmacyId}/employees`)
+    return unwrap(response)
+  },
 
   removeEmployee: async (pharmacyId: string, employeeId: string) => {
     return unwrap(await apiClient.delete(`/pharmacies/${pharmacyId}/employees/${employeeId}`))
