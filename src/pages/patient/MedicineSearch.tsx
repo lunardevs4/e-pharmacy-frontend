@@ -397,15 +397,17 @@ export default function MedicineSearch() {
   }
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col relative overflow-visible">
-      <div className="relative z-50 flex-shrink-0 bg-white border-b border-gray-200 py-4 px-6">
+    <div className="flex flex-col relative overflow-visible" style={{ height: 'calc(100dvh - 4rem)' }}>
+      {/* ── Search Bar Header ── */}
+      <div className="relative z-50 flex-shrink-0 bg-white border-b border-gray-200 py-3 px-4 sm:px-6">
         <form
           onSubmit={handleSearch}
-          className="max-w-5xl mx-auto flex flex-col md:flex-row gap-3 items-center justify-between"
+          className="max-w-5xl mx-auto flex flex-col gap-3"
         >
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <MapPin className="w-5 h-5 text-health-primary" />
-            <h1 className="text-lg font-black text-gray-900 leading-none">
+          {/* Title row */}
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
+            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-health-primary flex-shrink-0" />
+            <h1 className="text-sm sm:text-base md:text-lg font-black text-gray-900 leading-none">
               Find Medicines Near You
             </h1>
             {locationLoading && (
@@ -415,19 +417,17 @@ export default function MedicineSearch() {
               </span>
             )}
             {userLocation && !locationLoading && (
-              <span className="text-[10px] text-emerald-600 font-medium">
-                Location tracked
-              </span>
+              <span className="text-[10px] text-emerald-600 font-medium">✓ Location tracked</span>
             )}
             {locationError && (
-              <span className="text-[10px] text-amber-600 font-medium">
-                {locationError}
-              </span>
+              <span className="text-[10px] text-amber-600 font-medium">{locationError}</span>
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto flex-grow max-w-2xl relative">
-            <div className="relative flex-grow">
+          {/* Inputs row */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            {/* Search input with autocomplete */}
+            <div className="relative flex-grow min-w-0">
               <input
                 type="text"
                 placeholder="Search trade brand or generic molecule name..."
@@ -435,7 +435,7 @@ export default function MedicineSearch() {
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setTimeout(() => setInputFocused(false), 200)}
-                className="w-full pl-4 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 text-xs font-semibold"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 text-xs font-semibold"
               />
               {inputFocused && searchHistory.length > 0 && (
                 <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-250 rounded-lg shadow-xl z-[60] max-h-48 overflow-y-auto text-xs font-bold text-gray-700 divide-y divide-gray-100">
@@ -464,51 +464,54 @@ export default function MedicineSearch() {
               )}
             </div>
 
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            >
-              <option value="">All Categories</option>
-              <option value="Analgesics">Analgesics</option>
-              <option value="Antibiotics">Antibiotics</option>
-              <option value="Antidiabetics">Antidiabetics</option>
-              <option value="Antihypertensives">Antihypertensives</option>
-            </select>
+            {/* Category + Location + Search in one flex row on mobile */}
+            <div className="flex gap-2">
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="flex-1 sm:flex-none bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2.5 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="">All Categories</option>
+                <option value="Analgesics">Analgesics</option>
+                <option value="Antibiotics">Antibiotics</option>
+                <option value="Antidiabetics">Antidiabetics</option>
+                <option value="Antihypertensives">Antihypertensives</option>
+              </select>
 
-            <button
-              type="button"
-              onClick={getUserLocation}
-              disabled={locationLoading}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded-lg text-xs transition-colors flex items-center justify-center space-x-2"
-              title="Get my current location"
-            >
-              {locationLoading ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Navigation className="w-3.5 h-3.5" />
-              )}
-              <span className="hidden sm:inline">My Location</span>
-            </button>
+              <button
+                type="button"
+                onClick={getUserLocation}
+                disabled={locationLoading}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2.5 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5 flex-shrink-0"
+                title="Get my current location"
+              >
+                {locationLoading ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Navigation className="w-3.5 h-3.5" />
+                )}
+                <span className="hidden sm:inline">My Location</span>
+              </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-health-primary hover:bg-health-secondary text-white font-bold px-5 py-2 rounded-lg text-xs transition-colors flex items-center justify-center space-x-2"
-            >
-              {loading ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <span>Search Registry</span>
-              )}
-            </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-health-primary hover:bg-health-secondary text-white font-bold px-4 sm:px-5 py-2.5 rounded-lg text-xs transition-colors flex items-center justify-center space-x-2 flex-shrink-0"
+              >
+                {loading ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <span>Search</span>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
 
-      <div className="flex-grow flex relative overflow-hidden">
+      <div className="flex-1 min-h-0 flex relative overflow-hidden">
         <div
-          className={`w-full lg:w-1/2 flex flex-col h-full bg-gray-50 border-r border-gray-200 overflow-y-auto p-4 sm:p-6 space-y-6 ${
+          className={`w-full lg:w-1/2 flex flex-col min-h-0 bg-gray-50 border-r border-gray-200 overflow-y-auto p-4 sm:p-5 space-y-5 ${
             mobileView === 'map' ? 'hidden lg:flex' : 'flex'
           }`}
         >
@@ -682,21 +685,21 @@ export default function MedicineSearch() {
         </div>
 
         <div
-          className={`w-full lg:w-1/2 h-full relative ${
+          className={`w-full lg:w-1/2 min-h-0 relative ${
             mobileView === 'map' ? 'flex' : 'hidden lg:flex'
           }`}
         >
           <iframe
             title="Google Map Locator"
             src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&hl=en&z=${mapZoom}&t=&ie=UTF8&iwloc=&output=embed`}
-            className="w-full h-full min-h-[500px] lg:min-h-full border-0 shadow-sm"
+            className="w-full h-full min-h-[300px] lg:min-h-full border-0 shadow-sm"
             allowFullScreen
             loading="lazy"
           />
         </div>
       </div>
 
-      <div className="lg:hidden absolute bottom-6 right-6 z-30">
+      <div className="lg:hidden absolute bottom-20 right-4 z-30 safe-area-bottom">
         <button
           type="button"
           onClick={() => setMobileView((prev) => (prev === 'list' ? 'map' : 'list'))}
@@ -717,7 +720,7 @@ export default function MedicineSearch() {
       </div>
 
       {showResModal && selectedMedicine && selectedPharmacy && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center px-0 sm:px-4 py-0 sm:py-6">
           <div
             onClick={resetResWizard}
             className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm"

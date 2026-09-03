@@ -260,11 +260,12 @@ export default function PatientDashboard() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
 
-      <div className="bg-white text-gray-900 rounded-xl p-4 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 shadow-xs border border-emerald-800/20 relative overflow-hidden">
+      {/* ── Hero / Welcome Banner ── */}
+      <div className="bg-white text-gray-900 rounded-xl p-4 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 shadow-xs border border-emerald-800/20 relative overflow-hidden">
 
         <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-50/50 rounded-full blur-xl pointer-events-none" />
 
-        <div className="space-y-2 flex-grow">
+        <div className="space-y-2 flex-grow w-full min-w-0">
           <h1 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950">
             {t('welcome.user', { name: user?.firstName?.split(' ')[0] || user?.name?.split(' ')[0] || 'Citizen' })}
           </h1>
@@ -272,25 +273,25 @@ export default function PatientDashboard() {
             {t('government.dash.subtitle')}
           </p>
 
-          <form onSubmit={handleQuickSearchSubmit} className="relative max-w-lg pt-3">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-6" />
+          <form onSubmit={handleQuickSearchSubmit} className="relative w-full max-w-lg pt-3">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 mt-1.5 pointer-events-none" />
             <input
               type="text"
               placeholder={t('patient.dash.quickSearchPlaceholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-9 pr-20 sm:pr-24 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-[10px] sm:text-xs font-bold text-gray-950 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
+              className="w-full pl-9 pr-24 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-[10px] sm:text-xs font-bold text-gray-950 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
             />
             <button
               type="submit"
-              className="absolute right-1 top-4 py-1.5 px-2.5 sm:px-3.5 bg-health-primary hover:bg-emerald-900 rounded-md text-white font-bold text-[9px] sm:text-[10px] uppercase transition-colors"
+              className="absolute right-1 top-1/2 -translate-y-1/2 mt-1.5 py-1.5 px-3 bg-health-primary hover:bg-emerald-900 rounded-md text-white font-bold text-[9px] sm:text-[10px] uppercase transition-colors"
             >
               {t('common.search')}
             </button>
           </form>
         </div>
 
-        <div className="flex-shrink-0 bg-emerald-50/60 border border-emerald-200/60 p-3 sm:p-4 rounded-xl text-center space-y-2 sm:space-y-2.5 max-w-[180px] sm:max-w-[210px] w-full relative z-10 font-sans">
+        <div className="flex-shrink-0 bg-emerald-50/60 border border-emerald-200/60 p-3 sm:p-4 rounded-xl text-center space-y-2 sm:space-y-2.5 w-full md:w-[200px] md:max-w-[210px] relative z-10 font-sans">
           <span className="text-[9px] sm:text-[10px] text-emerald-800 block uppercase tracking-wider font-bold">
             {t('patient.dash.linkedInsurance')}
           </span>
@@ -392,8 +393,8 @@ export default function PatientDashboard() {
 
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-
+      {/* ── First row of stat cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
           <div className="p-2 sm:p-2.5 bg-amber-50 rounded-lg text-amber-700">
             <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -444,7 +445,8 @@ export default function PatientDashboard() {
 
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      {/* ── Second row of stat cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs">
           <div className="p-2 sm:p-2.5 bg-rose-50 rounded-lg text-rose-700">
             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -486,9 +488,9 @@ export default function PatientDashboard() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-xs font-sans">
-          <div className="relative w-10 h-10 flex-shrink-0 flex items-center justify-center">
-            <svg className="w-full h-full transform -rotate-90">
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-xs font-sans">
+          <div className="relative w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 flex items-center justify-center">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 40 40">
               <circle cx="20" cy="20" r="16" stroke="rgba(15,81,50,0.1)" strokeWidth="2.5" fill="transparent" />
               <circle
                 cx="20"
@@ -543,13 +545,13 @@ export default function PatientDashboard() {
                 {t('patient.dash.noReservations')}
               </div>
             ) : (
-              <div className="overflow-x-auto text-[10px] sm:text-xs font-semibold text-gray-700">
-                <table className="w-full text-left divide-y divide-gray-150">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 text-[10px] sm:text-xs font-semibold text-gray-700">
+                <table className="w-full min-w-[400px] text-left divide-y divide-gray-150">
                   <thead>
                     <tr className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest pb-2">
                       <th className="py-2 px-1 sm:px-0">Ref ID</th>
                       <th className="py-2 px-1 sm:px-0">{t('common.medicine')}</th>
-                      <th className="py-2 px-1 sm:px-0">{t('common.pharmacy')}</th>
+                      <th className="py-2 px-1 sm:px-0 hidden sm:table-cell">{t('common.pharmacy')}</th>
                       <th className="py-2 px-1 sm:px-0">{t('common.copay')}</th>
                       <th className="py-2 px-1 sm:px-0 text-right">{t('common.status')}</th>
                     </tr>
@@ -563,12 +565,12 @@ export default function PatientDashboard() {
                       >
                         <td className="py-3 font-mono text-gray-450">{res.id.slice(0, 8)}</td>
                         <td className="py-3 text-gray-950">{res.medicineName}</td>
-                        <td className="py-3 text-gray-550">{res.pharmacyName}</td>
+                        <td className="py-3 text-gray-550 hidden sm:table-cell">{res.pharmacyName}</td>
                         <td className="py-3 text-health-primary">{res.patientPays || 0} {t('common.rwf')}</td>
                         <td className="py-3 text-right">
                           <div className="inline-flex items-center space-x-1">
                             {getStatusIcon(res.status)}
-                            <span className="text-[10px] text-gray-700">{formatStatus(res.status)}</span>
+                            <span className="text-[10px] text-gray-700 hidden xs:inline">{formatStatus(res.status)}</span>
                           </div>
                         </td>
                       </tr>

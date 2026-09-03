@@ -382,7 +382,7 @@ export default function SidebarLayout() {
 
 
               {notifOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                <div className="fixed sm:absolute right-2 sm:right-0 left-2 sm:left-auto top-[4.5rem] sm:top-auto sm:mt-2 w-auto sm:w-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                     <div className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-emerald-600" aria-hidden="true" />
@@ -405,7 +405,7 @@ export default function SidebarLayout() {
                     </div>
                   </div>
 
-                  <ul className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                  <ul className="max-h-[50vh] sm:max-h-80 overflow-y-auto divide-y divide-gray-50">
                     {notifs.length === 0 ? (
                       <li className="py-10 text-center text-gray-400">
                         <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" aria-hidden="true" />
