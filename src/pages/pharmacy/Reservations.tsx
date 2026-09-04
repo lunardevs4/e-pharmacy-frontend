@@ -243,17 +243,17 @@ export default function PharmacyReservations() {
           </select>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs" aria-label="Reservations list">
+        <div className="overflow-x-auto -mx-0">
+          <table className="w-full min-w-[600px] text-left text-xs" aria-label="Reservations list">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                <th scope="col" className="px-5 py-3">Patient</th>
-                <th scope="col" className="px-5 py-3">Medicine</th>
-                <th scope="col" className="px-5 py-3 text-center">Qty</th>
-                <th scope="col" className="px-5 py-3">Patient Pays</th>
-                <th scope="col" className="px-5 py-3">Pickup By</th>
-                <th scope="col" className="px-5 py-3">Status</th>
-                <th scope="col" className="px-5 py-3 text-right">Actions</th>
+                <th scope="col" className="px-3 sm:px-5 py-3">Patient</th>
+                <th scope="col" className="px-3 sm:px-5 py-3">Medicine</th>
+                <th scope="col" className="px-3 sm:px-5 py-3 hidden sm:table-cell text-center">Qty</th>
+                <th scope="col" className="px-3 sm:px-5 py-3">Pays</th>
+                <th scope="col" className="px-3 sm:px-5 py-3 hidden md:table-cell">Pickup By</th>
+                <th scope="col" className="px-3 sm:px-5 py-3">Status</th>
+                <th scope="col" className="px-3 sm:px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
@@ -261,39 +261,39 @@ export default function PharmacyReservations() {
                 <tr><td colSpan={7} className="text-center py-10 text-gray-400 text-xs">Loading reservations...</td></tr>
               ) : filtered.map(r => (
                 <tr key={r.id} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3">
+                  <td className="px-3 sm:px-5 py-3">
                     <span className="font-bold text-gray-900 block">{r.patient}</span>
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="px-3 sm:px-5 py-3">
                     <span className="font-semibold text-gray-800 block">{r.medicine}</span>
                     {r.prescriptionRequired && (
                       <span className="text-[9px] text-red-700 font-bold">Rx Required</span>
                     )}
                   </td>
-                  <td className="px-5 py-3 text-center font-bold text-gray-900">{r.qty}</td>
-                  <td className="px-5 py-3 font-black text-gray-900">RWF {r.patientPays.toLocaleString()}</td>
-                  <td className="px-5 py-3 font-mono text-gray-500">{r.pickupDeadline}</td>
-                  <td className="px-5 py-3">
-                    <span className={`inline-flex text-[10px] font-bold border px-2 py-0.5 rounded ${STATUS_STYLES[r.status]}`}>
-                      {r.status === 'READY' ? 'Ready for Pickup' : r.status}
+                  <td className="px-3 sm:px-5 py-3 text-center font-bold text-gray-900 hidden sm:table-cell">{r.qty}</td>
+                  <td className="px-3 sm:px-5 py-3 font-black text-gray-900 whitespace-nowrap">RWF {r.patientPays.toLocaleString()}</td>
+                  <td className="px-3 sm:px-5 py-3 font-mono text-gray-500 hidden md:table-cell">{r.pickupDeadline}</td>
+                  <td className="px-3 sm:px-5 py-3">
+                    <span className={`inline-flex text-[10px] font-bold border px-2 py-0.5 rounded whitespace-nowrap ${STATUS_STYLES[r.status]}`}>
+                      {r.status === 'READY' ? 'Ready' : r.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center justify-end space-x-1.5">
+                  <td className="px-3 sm:px-5 py-3">
+                    <div className="flex items-center justify-end gap-1.5 flex-wrap">
                       {r.status === 'READY' && (
                         <button
                           onClick={() => confirm(r.id)}
                           aria-label={`Confirm pickup for ${r.id}`}
-                          className="text-[10px] font-bold px-2.5 py-1 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
                         >
-                          Confirm Pickup
+                          Confirm
                         </button>
                       )}
                       {(r.status === 'PENDING' || r.status === 'READY') && (
                         <button
                           onClick={() => cancel(r.id)}
                           aria-label={`Cancel reservation ${r.id}`}
-                          className="text-[10px] font-bold px-2.5 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-400"
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
                         >
                           Cancel
                         </button>

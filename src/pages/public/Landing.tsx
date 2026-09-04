@@ -265,55 +265,39 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <header className="bg-white border-b border-gray-150 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
+          {/* Brand */}
+          <div className="flex items-center space-x-2.5 flex-shrink-0">
             <img
               src="/logo1.png"
               alt="Rwanda E-Pharmacy Logo"
-              className="h-12 w-auto object-contain flex-shrink-0"
+              className="h-9 sm:h-12 w-auto object-contain flex-shrink-0"
             />
-            <div>
-              <span className="text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">
-                Rwanda
-              </span>
-              <span className="text-xs font-black text-health-primary tracking-wider block uppercase leading-none mt-0.5">
-                E-Pharmacy
-              </span>
-              <span className="text-[8px] text-gray-400 font-bold block mt-0.5 leading-none uppercase tracking-wide">
-                Government
-              </span>
+            <div className="hidden xs:block">
+              <span className="text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">Rwanda</span>
+              <span className="text-xs font-black text-health-primary tracking-wider block uppercase leading-none mt-0.5">E-Pharmacy</span>
+              <span className="text-[8px] text-gray-400 font-bold block mt-0.5 leading-none uppercase tracking-wide">Government</span>
             </div>
           </div>
 
-          <nav className="hidden md:flex space-x-8 text-sm font-bold text-gray-500">
-            <a href="#home" className="hover:text-health-primary transition-colors">
-              {t('nav.home')}
-            </a>
-            <a href="#features" className="hover:text-health-primary transition-colors">
-              {t('nav.features')}
-            </a>
-            <a href="#about" className="hover:text-health-primary transition-colors">
-              {t('nav.about')}
-            </a>
-            <a href="#faq" className="hover:text-health-primary transition-colors">
-              {t('nav.faq')}
-            </a>
-            <a href="#contact" className="hover:text-health-primary transition-colors">
-              {t('nav.contact')}
-            </a>
+          {/* Desktop nav */}
+          <nav className="hidden lg:flex space-x-6 xl:space-x-8 text-sm font-bold text-gray-500">
+            <a href="#home" className="hover:text-health-primary transition-colors">{t('nav.home')}</a>
+            <a href="#features" className="hover:text-health-primary transition-colors">{t('nav.features')}</a>
+            <a href="#about" className="hover:text-health-primary transition-colors">{t('nav.about')}</a>
+            <a href="#faq" className="hover:text-health-primary transition-colors">{t('nav.faq')}</a>
+            <a href="#contact" className="hover:text-health-primary transition-colors">{t('nav.contact')}</a>
           </nav>
 
-          <div className="flex items-center space-x-6">
+          {/* Actions */}
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <LanguageSelector />
-            <Link
-              to="/login"
-              className="text-sm font-bold text-gray-800 hover:text-health-primary transition-colors"
-            >
+            <Link to="/login" className="text-xs sm:text-sm font-bold text-gray-800 hover:text-health-primary transition-colors whitespace-nowrap">
               {t('nav.login')}
             </Link>
             <Link
               to="/register"
-              className="bg-health-primary hover:bg-health-secondary text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+              className="bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
             >
               <span>{t('nav.register')}</span>
             </Link>
@@ -322,64 +306,51 @@ export default function LandingPage() {
       </header>{' '}
       <section
         id="home"
-        className="relative py-16 md:py-24 bg-slate-50/50 border-b border-gray-150 overflow-hidden"
+        className="relative py-10 sm:py-16 md:py-24 bg-slate-50/50 border-b border-gray-150 overflow-hidden"
       >
-        <div
-          className="absolute inset-0 bg-grid-mesh pointer-events-none opacity-75"
-          aria-hidden="true"
-        />
-        <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[35rem] h-[35rem] bg-emerald-100/40 rounded-full blur-[120px] pointer-events-none"
-          aria-hidden="true"
-        />
+        <div className="absolute inset-0 bg-grid-mesh pointer-events-none opacity-75" aria-hidden="true" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[20rem] sm:w-[35rem] h-[20rem] sm:h-[35rem] bg-emerald-100/40 rounded-full blur-[120px] pointer-events-none" aria-hidden="true" />
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-7 space-y-6">
-              <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-[11px] font-black bg-emerald-50 text-health-light-text border border-emerald-100 tracking-wider uppercase">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-7 space-y-5 sm:space-y-6">
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black bg-emerald-50 text-health-lightText border border-emerald-100 tracking-wider uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 inline-block animate-pulse"></span>
                 GOVERNMENT OF RWANDA
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-black text-gray-950 leading-[1.1] tracking-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-black text-gray-950 leading-[1.1] tracking-tight">
                 {t('landing.heroTitleMain')}
               </h1>
-              <p className="text-gray-600 text-base sm:text-lg leading-relaxed max-w-xl">
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-xl">
                 {t('landing.heroSubtitleMain')}
               </p>
 
               <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  handleSearch()
-                }}
-                className="flex flex-col sm:flex-row gap-3 max-w-xl w-full"
+                onSubmit={(e) => { e.preventDefault(); handleSearch() }}
+                className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 w-full"
               >
                 <div className="relative flex-grow shadow-sm rounded-xl">
-                  <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                   <input
                     type="text"
                     placeholder={t('landing.searchPlaceholderInput')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 text-sm font-semibold"
+                    className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 bg-white border border-gray-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-900 text-sm font-semibold"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="bg-health-primary hover:bg-health-secondary text-white font-bold px-6 py-3.5 rounded-xl transition-colors text-sm flex items-center justify-center space-x-2 shadow-md hover:shadow-lg active:scale-[0.98] transition-transform duration-100 cursor-pointer"
+                  className="bg-health-primary hover:bg-health-secondary text-white font-bold px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl transition-colors text-sm flex items-center justify-center space-x-2 shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
                 >
                   <span>{t('landing.searchButtonInput')}</span>
                 </button>
               </form>
 
-              <div className="flex items-center space-x-4 text-xs font-bold text-gray-500">
-                <Link to="/register/patient" className="text-health-primary hover:underline">
-                  {t('landing.registerAsPatientLink')}
-                </Link>
+              <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-gray-500">
+                <Link to="/register/patient" className="text-health-primary hover:underline">{t('landing.registerAsPatientLink')}</Link>
                 <span className="text-gray-300">|</span>
-                <Link to="/register/pharmacy" className="text-health-primary hover:underline">
-                  {t('landing.registerAsPharmacyLink')}
-                </Link>
+                <Link to="/register/pharmacy" className="text-health-primary hover:underline">{t('landing.registerAsPharmacyLink')}</Link>
               </div>
             </div>
 
@@ -504,38 +475,38 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      <section className="bg-white border-y border-gray-200 py-8 relative select-none">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-200 text-center">
+      <section className="bg-white border-y border-gray-200 py-6 sm:py-8 relative select-none">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 text-center">
             <div className="space-y-1">
-              <span className="block text-3xl font-extrabold text-gray-900">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900">
                 {statsLoading ? '…' : stats.registeredPharmacies}
               </span>
-              <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
+              <span className="block text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                 {t('landing.registeredPharmacies')}
               </span>
             </div>
-            <div className="space-y-1 pl-4">
-              <span className="block text-3xl font-extrabold text-gray-900">
+            <div className="space-y-1">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900">
                 {statsLoading ? '…' : stats.patientsRegistered}
               </span>
-              <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
+              <span className="block text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                 {t('landing.patientsRegistered')}
               </span>
             </div>
-            <div className="space-y-1 pl-4">
-              <span className="block text-3xl font-extrabold text-gray-900">
+            <div className="space-y-1">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900">
                 {statsLoading ? '…' : stats.provincesCovered}
               </span>
-              <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
+              <span className="block text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                 {t('landing.provincesCovered')}
               </span>
             </div>
-            <div className="space-y-1 pl-4">
-              <span className="block text-3xl font-extrabold text-gray-900">
+            <div className="space-y-1">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-gray-900">
                 {statsLoading ? '…' : stats.nationalAvailability}
               </span>
-              <span className="block text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider whitespace-nowrap">
+              <span className="block text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                 {t('landing.nationalAvailability')}
               </span>
             </div>
@@ -544,105 +515,72 @@ export default function LandingPage() {
       </section>
 
       {/* Platform Features Section */}
-      <section
-        id="features"
-        className="relative py-20 bg-white border-b border-gray-150 overflow-hidden"
-      >
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="space-y-4 max-w-3xl">
-            <span className="text-xs font-bold uppercase tracking-widest text-health-primary">
-              {t('landing.platformFeatures')}
-            </span>
-            <h2 className="text-3xl font-serif font-black text-gray-950">
-              {t('landing.featuresHeading')}
-            </h2>
-            <p className="text-gray-600 text-base font-medium">
-              {t('landing.featuresDesc')}
-            </p>
+      <section id="features" className="relative py-12 sm:py-20 bg-white border-b border-gray-150 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="space-y-3 sm:space-y-4 max-w-3xl">
+            <span className="text-xs font-bold uppercase tracking-widest text-health-primary">{t('landing.platformFeatures')}</span>
+            <h2 className="text-2xl sm:text-3xl font-serif font-black text-gray-950">{t('landing.featuresHeading')}</h2>
+            <p className="text-gray-600 text-sm sm:text-base font-medium">{t('landing.featuresDesc')}</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8 mt-8 sm:mt-12">
             {features.map((feat, idx) => {
               const Icon = feat.icon
               return (
-                <div
-                  key={idx}
-                  className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow duration-150 space-y-4"
-                >
-                  <div className="w-10 h-10 bg-emerald-50 text-health-primary rounded-lg flex items-center justify-center">
-                    <Icon className="w-5 h-5" />
+                <div key={idx} className="p-5 sm:p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow duration-150 space-y-3 sm:space-y-4">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-50 text-health-primary rounded-lg flex items-center justify-center">
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <h3 className="text-base font-serif font-bold text-gray-950">{feat.title}</h3>
-                  <p className="text-gray-550 text-sm leading-relaxed font-medium">{feat.desc}</p>
+                  <h3 className="text-sm sm:text-base font-serif font-bold text-gray-950">{feat.title}</h3>
+                  <p className="text-gray-550 text-xs sm:text-sm leading-relaxed font-medium">{feat.desc}</p>
                 </div>
               )
             })}
           </div>
         </div>
       </section>
-      <section id="about" className="relative py-20 bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            <div className="space-y-8 pt-6">
+      <section id="about" className="relative py-12 sm:py-20 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-start">
+            <div className="space-y-6 sm:space-y-8 pt-2 sm:pt-6 order-2 lg:order-1">
               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-50 text-health-primary border border-emerald-100 tracking-wider uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-health-primary mr-2 inline-block"></span>
                 {t('landing.aboutTitle')}
               </span>
-              
-              <h2 className="text-3xl font-serif font-black text-gray-950 leading-tight">
-                {t('landing.aboutHeading')}
-              </h2>
-              
+              <h2 className="text-2xl sm:text-3xl font-serif font-black text-gray-950 leading-tight">{t('landing.aboutHeading')}</h2>
               <div className="space-y-4 text-gray-600 text-sm leading-relaxed font-medium">
-                <p>
-                  {t('landing.aboutP1')}
-                </p>
-                <p>
-                  {t('landing.aboutP2')}
-                </p>
+                <p>{t('landing.aboutP1')}</p>
+                <p>{t('landing.aboutP2')}</p>
               </div>
-
-              <div className="grid grid-cols-3 gap-6 pt-6">
+              <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-4 sm:pt-6">
                 {portalDetails.map((portal, idx) => {
                   const Icon = portal.icon
                   return (
-                    <div key={idx} className="text-center space-y-2">
-                      <div className="w-12 h-12 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mx-auto">
-                        <Icon className="w-5 h-5" />
+                    <div key={idx} className="text-center space-y-1.5 sm:space-y-2">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mx-auto">
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <h3 className="font-bold text-gray-950 text-sm">{portal.role}</h3>
-                      <p className="text-gray-550 text-[11px] leading-relaxed font-medium">{portal.desc}</p>
+                      <h3 className="font-bold text-gray-950 text-xs sm:text-sm">{portal.role}</h3>
+                      <p className="text-gray-550 text-[10px] sm:text-[11px] leading-relaxed font-medium hidden sm:block">{portal.desc}</p>
                     </div>
                   )
                 })}
               </div>
             </div>
 
-            <div className="relative flex justify-center items-center overflow-visible">
+            <div className="relative flex justify-center items-center overflow-visible order-1 lg:order-2">
               <div className="absolute -inset-8 rounded-full bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 opacity-25 blur-xl" />
-              
-              <div className="absolute inset-0 rounded-full border-8 border-transparent bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-700 p-1 rounded-full">
-                <div className="w-full h-full rounded-full bg-white" />
+              <div className="relative z-10 w-full max-w-[340px] sm:max-w-[440px] mx-auto aspect-square rounded-full overflow-hidden shadow-2xl border-4 border-white">
+                <img src="/pharmacy.png" alt="Healthcare Workers" className="w-full h-full object-cover" />
               </div>
-
-              <div className="image-container relative z-10 shadow-2xl border-4 border-white">
-                <img 
-                  src="/pharmacy.png" 
-                  alt="Healthcare Workers" 
-                />
-              </div>
-
-              <div className="absolute -bottom-6 right-0 w-72 z-20">
-                <div className="bg-emerald-900 rounded-2xl p-6 shadow-2xl text-white space-y-3">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
+              <div className="absolute -bottom-4 sm:-bottom-6 right-2 sm:right-0 w-56 sm:w-72 z-20">
+                <div className="bg-emerald-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl text-white space-y-2 sm:space-y-3">
+                  <div className="flex items-center space-x-2 mb-1 sm:mb-2">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/30 flex items-center justify-center">
+                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                     </div>
                   </div>
-                  <h3 className="font-bold text-lg">{t('landing.connectedCardHeading')}</h3>
-                  <p className="text-sm leading-relaxed text-emerald-100">
-                    {t('landing.connectedCardDesc')}
-                  </p>
+                  <h3 className="font-bold text-sm sm:text-lg">{t('landing.connectedCardHeading')}</h3>
+                  <p className="text-xs sm:text-sm leading-relaxed text-emerald-100">{t('landing.connectedCardDesc')}</p>
                 </div>
               </div>
             </div>

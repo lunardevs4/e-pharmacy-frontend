@@ -173,44 +173,32 @@ export default function PharmacyAvailabilityTable({
                 </div>
               </div>
 
-              <div className="text-right w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100">
+              <div className="text-right w-full sm:w-auto flex sm:flex-col items-end justify-between sm:justify-center gap-3 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-100 mt-1 sm:mt-0">
                 <div className="space-y-1">
                   {hasCoverage ? (
                     <div className="bg-emerald-50 border border-emerald-150 rounded-xl p-2.5 text-right shadow-xs">
                       <span className="block text-[9px] font-bold text-emerald-800 uppercase tracking-wider leading-none flex items-center justify-end gap-1">
                         <Shield className="w-3 h-3" />
-                        With {insuranceName} ({coveragePercentage}% off)
+                        {insuranceName} ({coveragePercentage}% off)
                       </span>
-                      <span className="text-sm font-black text-emerald-700 block mt-1 font-mono">
-                        {patientPays} RWF
-                      </span>
+                      <span className="text-sm font-black text-emerald-700 block mt-1 font-mono">{patientPays} RWF</span>
                       <span className="block text-[9px] text-emerald-600 font-semibold mt-0.5">
-                        Co-pay / Retail: <span className="line-through text-gray-400 font-mono">{pharm.price} RWF</span>
+                        Retail: <span className="line-through text-gray-400 font-mono">{pharm.price} RWF</span>
                       </span>
-                      <span className="block text-[9px] text-emerald-600 font-semibold font-mono">
-                        Insurance pays: {insurancePays} RWF
-                      </span>
+                      <span className="block text-[9px] text-emerald-600 font-semibold font-mono">Insurer pays: {insurancePays} RWF</span>
                     </div>
                   ) : (
                     <div className="bg-gray-55 border border-gray-200 rounded-xl p-2.5 text-right shadow-xs">
                       {insurance !== 'None' ? (
                         !isAccepted ? (
-                          <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 uppercase tracking-wider mb-1.5">
-                            {insuranceName} Not Accepted
-                          </span>
+                          <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 uppercase tracking-wider mb-1.5">{insuranceName} Not Accepted</span>
                         ) : (
-                          <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 uppercase tracking-wider mb-1.5">
-                            Not Covered by {insuranceName}
-                          </span>
+                          <span className="block text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 uppercase tracking-wider mb-1.5">Not Covered</span>
                         )
                       ) : (
-                        <span className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider leading-none">
-                          Retail Price
-                        </span>
+                        <span className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider leading-none">Retail Price</span>
                       )}
-                      <span className="text-base font-black text-gray-950 block font-mono">
-                        {pharm.price} RWF
-                      </span>
+                      <span className="text-base font-black text-gray-950 block font-mono">{pharm.price} RWF</span>
                     </div>
                   )}
                 </div>
@@ -218,9 +206,9 @@ export default function PharmacyAvailabilityTable({
                   type="button"
                   disabled={!pharm.isOpen || pharm.stock === 0}
                   onClick={() => onReserve(pharm)}
-                  className="bg-health-primary hover:bg-health-secondary text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors shadow-sm focus:outline-none disabled:opacity-50"
+                  className="bg-health-primary hover:bg-health-secondary text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors shadow-sm focus:outline-none disabled:opacity-50 whitespace-nowrap"
                 >
-                  Reserve Medication
+                  Reserve
                 </button>
               </div>
             </div>

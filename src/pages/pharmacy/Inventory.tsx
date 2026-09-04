@@ -726,41 +726,34 @@ export default function PharmacyInventory() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <Package className="w-6 h-6 text-health-primary" />
-            <h1 className="text-2xl font-black text-gray-900">Stock Management</h1>
+      <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <Package className="w-5 h-5 sm:w-6 sm:h-6 text-health-primary" />
+              <h1 className="text-xl sm:text-2xl font-black text-gray-900">Stock Management</h1>
+            </div>
+            <p className="text-xs text-gray-500 font-medium">
+              Active Storefront: <span className="font-bold text-health-primary">{pharmacyName}</span>
+            </p>
           </div>
-
-          <p className="text-xs text-gray-500 font-medium">
-            Active Storefront: <span className="font-bold text-health-primary">{pharmacyName}</span>{' '}
-          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => { resetForm(); setShowAddModal(true) }}
+              className="flex items-center justify-center space-x-2 py-2 sm:py-2.5 px-3 sm:px-4 bg-health-primary hover:bg-health-secondary text-white font-bold rounded-lg text-xs sm:text-sm transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Medication</span>
+            </button>
+            <button
+              onClick={() => { setImportFile(null); setImportResult(null); setImportError(null); setShowImportModal(true) }}
+              className="flex items-center justify-center space-x-2 py-2 sm:py-2.5 px-3 sm:px-4 border border-health-primary text-health-primary hover:bg-emerald-50 font-bold rounded-lg text-xs sm:text-sm transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Import CSV</span>
+            </button>
+          </div>
         </div>
-
-        <button
-          onClick={() => {
-            resetForm()
-            setShowAddModal(true)
-          }}
-          className="flex items-center justify-center space-x-2 py-2.5 px-4 bg-health-primary hover:bg-health-secondary text-white font-bold rounded-lg text-sm transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Medication</span>
-        </button>
-
-        <button
-          onClick={() => {
-            setImportFile(null)
-            setImportResult(null)
-            setImportError(null)
-            setShowImportModal(true)
-          }}
-          className="flex items-center justify-center space-x-2 py-2.5 px-4 border border-health-primary text-health-primary hover:bg-emerald-50 font-bold rounded-lg text-sm transition-colors"
-        >
-          <Upload className="w-4 h-4" />
-          <span>Import CSV/Excel</span>
-        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -844,35 +837,26 @@ export default function PharmacyInventory() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-        <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="relative rounded-md max-w-sm w-full">
+        <div className="p-3 sm:p-4 bg-gray-50 border-b border-gray-200 flex flex-col gap-3">
+          <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
             </div>
-
             <input
               type="text"
               value={searchVal}
-              onChange={(e) => {
-                setSearchVal(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="block w-full pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-900"
+              onChange={(e) => { setSearchVal(e.target.value); setCurrentPage(1) }}
+              className="block w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-900"
               placeholder="Search by drug name or batch..."
             />
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center space-x-1.5">
-              <Filter className="w-3.5 h-3.5 text-gray-400" />
-
+              <Filter className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
               <select
                 value={categoryFilter}
-                onChange={(e) => {
-                  setCategoryFilter(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="bg-white border border-gray-300 rounded-lg py-1.5 px-3 text-xs text-gray-700 focus:outline-none"
+                onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1) }}
+                className="bg-white border border-gray-300 rounded-lg py-1.5 px-2.5 text-xs text-gray-700 focus:outline-none"
               >
                 <option value="">All Categories</option>
                 <option value="Analgesics">Analgesics</option>
@@ -881,19 +865,16 @@ export default function PharmacyInventory() {
                 <option value="Antihypertensives">Antihypertensives</option>
               </select>
             </div>
-
             <select
               value={stockFilter}
-              onChange={(e) => {
-                setStockFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="bg-white border border-gray-300 rounded-lg py-1.5 px-3 text-xs text-gray-700 focus:outline-none"
+              onChange={(e) => { setStockFilter(e.target.value); setCurrentPage(1) }}
+              className="bg-white border border-gray-300 rounded-lg py-1.5 px-2.5 text-xs text-gray-700 focus:outline-none"
             >
               <option value="">All Stock Levels</option>
-              <option value="high">High Stock (&gt;= 20)</option>
-              <option value="low">Low Stock (&lt; 20)</option>
+              <option value="high">High (&ge; 20)</option>
+              <option value="low">Low (&lt; 20)</option>
               <option value="out">Out of Stock</option>
+            </select>f Stock</option>
             </select>
 
             <button
