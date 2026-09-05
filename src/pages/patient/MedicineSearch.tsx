@@ -619,18 +619,24 @@ export default function MedicineSearch() {
                       </span>
                     </div>
                   )}
-                  <p>
-                    <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
-                    {selectedMedicine.storage}
-                  </p>
+                  {selectedMedicine.storage && selectedMedicine.storage !== 'Not provided' && (
+                    <p>
+                      <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
+                      {selectedMedicine.storage}
+                    </p>
+                  )}
+                  {selectedMedicine.minTemperature != null && (
                   <p>
                     <span className="font-bold text-gray-900">Minimum Temperature:</span>{' '}
                     {selectedMedicine.minTemperature != null ? `${selectedMedicine.minTemperature}°C` : 'Not provided'}
                   </p>
+                  )}
+                  {selectedMedicine.maxTemperature != null && (
                   <p>
                     <span className="font-bold text-gray-900">Maximum Temperature:</span>{' '}
                     {selectedMedicine.maxTemperature != null ? `${selectedMedicine.maxTemperature}°C` : 'Not provided'}
                   </p>
+                  )}
                 </div>
               </div>
 
