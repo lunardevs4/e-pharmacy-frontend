@@ -54,6 +54,7 @@ import {
   Send,
   Landmark,
   Shield,
+  Menu,
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -70,6 +71,7 @@ export default function LandingPage() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(1) // Item 1 (How do I find a medicine near me?) is expanded by default
 
   const [showChat, setShowChat] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'assistant'; text: string }>>([
     {
@@ -302,12 +304,53 @@ export default function LandingPage() {
             </Link>
             <Link
               to="/register"
-              className="bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
+              className="hidden sm:flex bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors items-center gap-1 cursor-pointer whitespace-nowrap"
             >
               <span>{t('nav.register')}</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu((open) => !open)}
+              aria-label={showMobileMenu ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={showMobileMenu}
+              className="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-health-primary transition-colors focus:outline-none focus:ring-2 focus:ring-health-primary/30"
+            >
+              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
+
+        {showMobileMenu && (
+          <div className="lg:hidden border-t border-gray-100 bg-white shadow-lg">
+            <nav aria-label="Mobile navigation" className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+              <div className="flex flex-col">
+                {[
+                  ['#home', t('nav.home')],
+                  ['#features', t('nav.features')],
+                  ['#about', t('nav.about')],
+                  ['#faq', t('nav.faq')],
+                  ['#contact', t('nav.contact')],
+                ].map(([href, label]) => (
+                  <a
+                    key={href}
+                    href={href}
+                    onClick={() => setShowMobileMenu(false)}
+                    className="border-b border-gray-100 py-3 text-sm font-bold text-gray-600 hover:text-health-primary transition-colors"
+                  >
+                    {label}
+                  </a>
+                ))}
+                <Link
+                  to="/register"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-health-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-health-secondary transition-colors"
+                >
+                  {t('nav.register')}
+                </Link>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>{' '}
       <section
         id="home"
