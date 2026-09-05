@@ -496,7 +496,7 @@ export default function AuthLayout({
             lg:min-h-0
             bg-white
             flex
-            ${computedMode === 'register' ? 'items-start pt-20 md:pt-28 pb-12' : 'items-center py-10 lg:py-16'}
+            ${computedMode === 'register' ? 'items-start pt-20 md:pt-28 pb-12' : 'items-start pt-20 pb-10 lg:items-center lg:py-16'}
             justify-center
             px-6
             sm:px-10
