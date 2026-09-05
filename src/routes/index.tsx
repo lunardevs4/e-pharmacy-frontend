@@ -1,71 +1,72 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
 import SidebarLayout from '@/layouts/SidebarLayout'
 
-import LandingPage from '@/pages/public/Landing'
-import Login from '@/pages/public/Login'
-import RegisterSelector from '@/pages/public/RegisterSelector'
-import PatientRegister from '@/pages/public/PatientRegister'
-import PharmacyRegister from '@/pages/public/PharmacyRegister'
-import InsuranceRegister from '@/pages/public/InsuranceRegister'
-import ForgotPassword from '@/pages/public/ForgotPassword'
-import ChangePassword from '@/pages/public/ChangePassword'
-import VerifyEmail from '@/pages/public/VerifyEmail'
-import CheckEmail from '@/pages/public/CheckEmail'
+const LandingPage = lazy(() => import('@/pages/public/Landing'))
+const Login = lazy(() => import('@/pages/public/Login'))
+const RegisterSelector = lazy(() => import('@/pages/public/RegisterSelector'))
+const PatientRegister = lazy(() => import('@/pages/public/PatientRegister'))
+const PharmacyRegister = lazy(() => import('@/pages/public/PharmacyRegister'))
+const InsuranceRegister = lazy(() => import('@/pages/public/InsuranceRegister'))
+const ForgotPassword = lazy(() => import('@/pages/public/ForgotPassword'))
+const ChangePassword = lazy(() => import('@/pages/public/ChangePassword'))
+const VerifyEmail = lazy(() => import('@/pages/public/VerifyEmail'))
+const CheckEmail = lazy(() => import('@/pages/public/CheckEmail'))
 
-import PatientDashboard from '@/pages/patient/Dashboard'
-import MedicineSearch from '@/pages/patient/MedicineSearch'
-import MedicineDetails from '@/pages/patient/MedicineDetails'
-import Reservations from '@/pages/patient/Reservations'
-import PatientHistory from '@/pages/patient/History'
-import PatientReminders from '@/pages/patient/Reminders'
-import SharedNotifications from '@/pages/common/Notifications'
-import PatientProfile from '@/pages/patient/Profile'
+const PatientDashboard = lazy(() => import('@/pages/patient/Dashboard'))
+const MedicineSearch = lazy(() => import('@/pages/patient/MedicineSearch'))
+const MedicineDetails = lazy(() => import('@/pages/patient/MedicineDetails'))
+const Reservations = lazy(() => import('@/pages/patient/Reservations'))
+const PatientHistory = lazy(() => import('@/pages/patient/History'))
+const PatientReminders = lazy(() => import('@/pages/patient/Reminders'))
+const SharedNotifications = lazy(() => import('@/pages/common/Notifications'))
+const PatientProfile = lazy(() => import('@/pages/patient/Profile'))
 
-import PharmacyDashboard from '@/pages/pharmacy/Dashboard'
-import PharmacyInventory from '@/pages/pharmacy/Inventory'
-import PharmacyReservations from '@/pages/pharmacy/Reservations'
-import PharmacyInsuranceClaims from '@/pages/pharmacy/InsuranceClaims'
-import PharmacyPatients from '@/pages/pharmacy/Patients'
-import PharmacyStaff from '@/pages/pharmacy/StaffManagement'
-import PharmacyAudit from '@/pages/pharmacy/AuditTrail'
-import PharmacyReports from '@/pages/pharmacy/Reports'
-import PharmacySettings from '@/pages/pharmacy/Settings'
-import PharmacyProfile from '@/pages/pharmacy/Profile'
-import PharmacyInsurance from '@/pages/pharmacy/Insurance'
+const PharmacyDashboard = lazy(() => import('@/pages/pharmacy/Dashboard'))
+const PharmacyInventory = lazy(() => import('@/pages/pharmacy/Inventory'))
+const PharmacyReservations = lazy(() => import('@/pages/pharmacy/Reservations'))
+const PharmacyInsuranceClaims = lazy(() => import('@/pages/pharmacy/InsuranceClaims'))
+const PharmacyPatients = lazy(() => import('@/pages/pharmacy/Patients'))
+const PharmacyStaff = lazy(() => import('@/pages/pharmacy/StaffManagement'))
+const PharmacyAudit = lazy(() => import('@/pages/pharmacy/AuditTrail'))
+const PharmacyReports = lazy(() => import('@/pages/pharmacy/Reports'))
+const PharmacySettings = lazy(() => import('@/pages/pharmacy/Settings'))
+const PharmacyProfile = lazy(() => import('@/pages/pharmacy/Profile'))
+const PharmacyInsurance = lazy(() => import('@/pages/pharmacy/Insurance'))
 
 
 
-import GovernmentDashboard from '@/pages/government/Dashboard'
-import PharmacyRegistry from '@/pages/government/PharmacyRegistry'
-import MedicineRegistry from '@/pages/government/MedicineRegistry'
-import NationalAnalytics from '@/pages/government/NationalAnalytics'
-import DistrictAnalytics from '@/pages/government/DistrictAnalytics'
-import MedicineAnalytics from '@/pages/government/MedicineAnalytics'
-import ProvinceAnalytics from '@/pages/government/ProvinceAnalytics'
-import GovernmentCompliance from '@/pages/government/Compliance'
-import GovernmentReports from '@/pages/government/Reports'
+const GovernmentDashboard = lazy(() => import('@/pages/government/Dashboard'))
+const PharmacyRegistry = lazy(() => import('@/pages/government/PharmacyRegistry'))
+const MedicineRegistry = lazy(() => import('@/pages/government/MedicineRegistry'))
+const NationalAnalytics = lazy(() => import('@/pages/government/NationalAnalytics'))
+const DistrictAnalytics = lazy(() => import('@/pages/government/DistrictAnalytics'))
+const MedicineAnalytics = lazy(() => import('@/pages/government/MedicineAnalytics'))
+const ProvinceAnalytics = lazy(() => import('@/pages/government/ProvinceAnalytics'))
+const GovernmentCompliance = lazy(() => import('@/pages/government/Compliance'))
+const GovernmentReports = lazy(() => import('@/pages/government/Reports'))
 
-import InsuranceDashboard from '@/pages/insurance/Dashboard'
-import InsuranceClaims from '@/pages/insurance/Claims'
-import InsurancePatients from '@/pages/insurance/Patients'
-import InsurancePayments from '@/pages/insurance/Payments'
-import InsuranceReports from '@/pages/insurance/Reports'
-import InsuranceTariffs from '@/pages/insurance/Tariffs'
+const InsuranceDashboard = lazy(() => import('@/pages/insurance/Dashboard'))
+const InsuranceClaims = lazy(() => import('@/pages/insurance/Claims'))
+const InsurancePatients = lazy(() => import('@/pages/insurance/Patients'))
+const InsurancePayments = lazy(() => import('@/pages/insurance/Payments'))
+const InsuranceReports = lazy(() => import('@/pages/insurance/Reports'))
+const InsuranceTariffs = lazy(() => import('@/pages/insurance/Tariffs'))
 
-import AdminDashboard from '@/pages/admin/Dashboard'
-import AdminUsers from '@/pages/admin/Users'
+const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'))
+const AdminUsers = lazy(() => import('@/pages/admin/Users'))
 
-import AdminRoles from '@/pages/admin/Roles'
-import AdminSettings from '@/pages/admin/Settings'
-import AdminAuditLogs from '@/pages/admin/AuditLogs'
+const AdminRoles = lazy(() => import('@/pages/admin/Roles'))
+const AdminSettings = lazy(() => import('@/pages/admin/Settings'))
+const AdminAuditLogs = lazy(() => import('@/pages/admin/AuditLogs'))
 
 
 export default function AppRoutes() {
   return (
-    <Routes>
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><span className="text-sm text-gray-500">Loading…</span></div>}>
+      <Routes>
       <Route path="/" element={<LandingPage />} />
 
       <Route element={<PublicRoute />}>
@@ -160,6 +161,7 @@ export default function AppRoutes() {
 
 
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   )
 }
