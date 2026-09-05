@@ -496,7 +496,7 @@ export default function AuthLayout({
             lg:min-h-0
             bg-white
             flex
-            ${computedMode === 'register' ? 'items-start pt-28 md:pt-28 pb-12' : 'items-start pt-28 pb-10 lg:items-start lg:pt-28 lg:pb-16'}
+            ${computedMode === 'register' ? 'items-start pt-20 md:pt-28 pb-12' : 'items-start pt-20 pb-8 lg:items-start lg:pt-20 lg:pb-12'}
             justify-center
             px-6
             sm:px-10
@@ -748,6 +748,17 @@ export default function AuthLayout({
           accent-color: #059669;
         }
 
+
+        .auth-layout,
+        .auth-layout-container > section:last-child {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .auth-layout::-webkit-scrollbar,
+        .auth-layout-container > section:last-child::-webkit-scrollbar {
+          display: none;
+        }
 
         @media (max-width: 1023px) {
 
