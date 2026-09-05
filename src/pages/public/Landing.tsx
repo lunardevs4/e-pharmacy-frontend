@@ -229,6 +229,11 @@ export default function LandingPage() {
       desc: t('portal.government.desc'),
       icon: Landmark,
     },
+    {
+      role: 'Insurance',
+      desc: 'Manage member coverage, verify claims, and support seamless healthcare payments.',
+      icon: Shield,
+    },
   ]
 
   const faqs = [
@@ -551,7 +556,7 @@ export default function LandingPage() {
                 <p>{t('landing.aboutP1')}</p>
                 <p>{t('landing.aboutP2')}</p>
               </div>
-              <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-4 sm:pt-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 pt-4 sm:pt-6">
                 {portalDetails.map((portal, idx) => {
                   const Icon = portal.icon
                   return (
