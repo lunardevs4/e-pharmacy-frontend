@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import {
   Map,
   List,
@@ -32,7 +32,10 @@ import {
 
 export default function MedicineSearch() {
   const location = useLocation()
-  const initialQuery = (location.state as any)?.initialQuery || ''
+  const [searchParams] = useSearchParams()
+  // Search entry points use the URL so the keyword survives navigation and refreshes.
+  // Keep the location-state fallback for older callers that may still use it.
+  const initialQuery = searchParams.get('q')?.trim() || (location.state as any)?.initialQuery || ''
 
   const {
     results,
@@ -84,6 +87,9 @@ export default function MedicineSearch() {
   }, [])
 
   useEffect(() => {
+    setQuery(initialQuery)
+    setHasSearched(Boolean(initialQuery))
+
     if (initialQuery) {
       executeSearch(initialQuery, '', false)
       MedicineApi.saveSearchHistory(initialQuery, '')
