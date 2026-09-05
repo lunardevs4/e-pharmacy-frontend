@@ -21,7 +21,6 @@ import {
   RefreshCw,
   XCircle,
   ShieldAlert,
-  ShieldCheck,
 } from 'lucide-react'
 
 
@@ -64,7 +63,6 @@ export default function Login() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  const [isStaffLogin, setIsStaffLogin] = useState(false)
 
 
   const [pharmacyStatusData, setPharmacyStatusData] = useState<PharmacyStatusData | null>(null)
@@ -563,34 +561,6 @@ export default function Login() {
               <span>{t('auth.signIn')}</span>
             )}
           </button>
-          <div className="flex items-center gap-3 py-0.5">
-            <div className="flex-1 h-px" style={{ backgroundColor: '#E5E7EB' }} />
-            <span
-              className="text-xs text-gray-400 font-medium"
-              style={{ fontSize: '12px', color: '#9CA3AF' }}
-            >
-              or
-            </span>
-            <div className="flex-1 h-px" style={{ backgroundColor: '#E5E7EB' }} />
-          </div>
-          {/* Sign in as Pharmacist / Staff — clean outline */}
-          <button
-            type="button"
-            onClick={() => setIsStaffLogin(!isStaffLogin)}
-            className="w-full flex justify-center items-center gap-2 py-[12px] px-4 rounded-md text-sm font-semibold transition-all duration-200 active:scale-[0.99]"
-            style={{
-              borderWidth: '1.5px',
-              borderStyle: 'solid',
-              borderColor: isStaffLogin ? BRAND : '#E5E7EB',
-              color: BRAND,
-              backgroundColor: isStaffLogin ? 'rgba(5, 150, 105, 0.05)' : '#ffffff',
-              fontSize: '14px',
-            }}
-          >
-            <ShieldCheck className="w-[18px] h-[18px]" />
-            <span>{t('auth.signInAsStaff')}</span>
-          </button>
-
           {/* Account links — clean single-line registration prompt */}
           <div
             className="text-center pt-1 font-sans"

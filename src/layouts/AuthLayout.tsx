@@ -496,7 +496,7 @@ export default function AuthLayout({
             lg:min-h-0
             bg-white
             flex
-            ${computedMode === 'register' ? 'items-start pt-28 md:pt-28 pb-12' : 'items-start pt-28 pb-10 lg:items-start lg:pt-28 lg:pb-16'}
+            ${computedMode === 'register' ? 'items-start pt-20 md:pt-28 pb-12' : 'items-start pt-8 pb-6 lg:items-start lg:pt-12 lg:pb-12'}
             justify-center
             px-4
             sm:px-8
@@ -518,10 +518,10 @@ export default function AuthLayout({
             </button>
           </div>
 
-          <div className={`w-full max-w-[420px] mx-auto ${computedMode === 'register' ? 'pt-16 sm:pt-20' : 'pt-14 sm:pt-16'}`}>
+          <div className={`w-full max-w-[420px] mx-auto ${computedMode === 'register' ? 'pt-16 sm:pt-20' : 'pt-4 sm:pt-8'}`}>
 
             {/* Logo shown only on mobile (lg panel is hidden) */}
-            <div className="lg:hidden flex justify-center mb-5 sm:mb-6">
+            <div className="lg:hidden flex justify-center mb-1 sm:mb-2">
               <Link
                 to="/"
                 className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-white border border-gray-150 rounded-[5px] shadow-sm p-1.5 hover:opacity-90 transition-opacity cursor-pointer"
@@ -694,6 +694,17 @@ export default function AuthLayout({
           accent-color: #059669;
         }
 
+
+        .auth-layout,
+        .auth-layout-container > section:last-child {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .auth-layout::-webkit-scrollbar,
+        .auth-layout-container > section:last-child::-webkit-scrollbar {
+          display: none;
+        }
 
         @media (max-width: 1023px) {
 
