@@ -269,42 +269,49 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <header className="bg-white border-b border-gray-150 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
-          {/* Brand */}
-          <div className="flex items-center space-x-2.5 flex-shrink-0">
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 h-14 sm:h-16 lg:h-20 flex items-center justify-between">
+
+          {/* ── Brand: logo image always visible, wordmark only on sm+ ── */}
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <img
               src="/logo1.png"
               alt="Rwanda E-Pharmacy Logo"
-              className="h-9 sm:h-12 w-auto object-contain flex-shrink-0"
+              className="h-8 sm:h-10 lg:h-12 w-auto object-contain flex-shrink-0"
             />
-            <div className="hidden xs:block">
-              <span className="text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">Rwanda</span>
-              <span className="text-xs font-black text-health-primary tracking-wider block uppercase leading-none mt-0.5">E-Pharmacy</span>
-              <span className="text-[8px] text-gray-400 font-bold block mt-0.5 leading-none uppercase tracking-wide">Government</span>
+            {/* Wordmark hidden on xs, shown from sm up */}
+            <div className="hidden sm:block leading-tight">
+              <span className="text-[10px] sm:text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">Rwanda</span>
+              <span className="text-[10px] sm:text-xs font-black text-health-primary tracking-wider block uppercase leading-none mt-0.5">E-Pharmacy</span>
+              <span className="text-[7px] sm:text-[8px] text-gray-400 font-bold block mt-0.5 leading-none uppercase tracking-wide">Government</span>
             </div>
-          </div>
+          </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex space-x-6 xl:space-x-8 text-sm font-bold text-gray-500">
-            <a href="#home" className="hover:text-health-primary transition-colors">{t('nav.home')}</a>
+          {/* ── Desktop nav links (lg+) ── */}
+          <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8 text-sm font-bold text-gray-500">
+            <a href="#home"     className="hover:text-health-primary transition-colors">{t('nav.home')}</a>
             <a href="#features" className="hover:text-health-primary transition-colors">{t('nav.features')}</a>
-            <a href="#about" className="hover:text-health-primary transition-colors">{t('nav.about')}</a>
-            <a href="#faq" className="hover:text-health-primary transition-colors">{t('nav.faq')}</a>
-            <a href="#contact" className="hover:text-health-primary transition-colors">{t('nav.contact')}</a>
+            <a href="#about"    className="hover:text-health-primary transition-colors">{t('nav.about')}</a>
+            <a href="#faq"      className="hover:text-health-primary transition-colors">{t('nav.faq')}</a>
+            <a href="#contact"  className="hover:text-health-primary transition-colors">{t('nav.contact')}</a>
           </nav>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          {/* ── Right: language + login + register ── */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <LanguageSelector />
-            <Link to="/login" className="text-xs sm:text-sm font-bold text-gray-800 hover:text-health-primary transition-colors whitespace-nowrap">
+
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center border border-gray-300 hover:border-health-primary text-xs sm:text-sm font-bold text-gray-700 hover:text-health-primary px-3 sm:px-4 py-2 sm:py-2 lg:py-2.5 rounded-lg transition-colors whitespace-nowrap leading-none"
+            >
               {t('nav.login')}
             </Link>
+
             <Link
               to="/register"
-              className="bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2 lg:py-2.5 rounded-lg transition-colors whitespace-nowrap leading-none"
             >
-              <span>{t('nav.register')}</span>
+              {t('nav.register')}
             </Link>
           </div>
         </div>
@@ -572,20 +579,29 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative flex justify-center items-center overflow-visible order-1 lg:order-2">
-              <div className="absolute -inset-8 rounded-full bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 opacity-25 blur-xl" />
-              <div className="relative z-10 w-full max-w-[340px] sm:max-w-[440px] mx-auto aspect-square rounded-full overflow-hidden shadow-2xl border-4 border-white">
-                <img src="/pharmacy.png" alt="Healthcare Workers" className="w-full h-full object-cover" />
+            <div className="relative flex justify-center items-start order-1 lg:order-2 pb-24 sm:pb-28 lg:pb-0">
+              {/* Glow */}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900 opacity-20 blur-3xl rounded-full pointer-events-none" />
+
+              {/* Photo — capped at 220px on mobile, 320px on sm, 420px on lg */}
+              <div className="relative z-10 w-[200px] sm:w-[280px] lg:w-[360px] xl:w-[420px] aspect-square rounded-full overflow-hidden shadow-2xl border-4 border-white flex-shrink-0">
+                <img
+                  src="/pharmacy.png"
+                  alt="Healthcare Workers"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="absolute -bottom-4 sm:-bottom-6 right-2 sm:right-0 w-56 sm:w-72 z-20">
-                <div className="bg-emerald-900 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl text-white space-y-2 sm:space-y-3">
-                  <div className="flex items-center space-x-2 mb-1 sm:mb-2">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/30 flex items-center justify-center">
-                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+
+              {/* Floating info card — sits below the photo */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 w-52 sm:w-64 lg:w-72 z-20">
+                <div className="bg-emerald-900 rounded-xl p-3 sm:p-4 lg:p-5 shadow-2xl text-white space-y-1.5 sm:space-y-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div className="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-white" />
                     </div>
                   </div>
-                  <h3 className="font-bold text-sm sm:text-lg">{t('landing.connectedCardHeading')}</h3>
-                  <p className="text-xs sm:text-sm leading-relaxed text-emerald-100">{t('landing.connectedCardDesc')}</p>
+                  <h3 className="font-bold text-xs sm:text-sm lg:text-base leading-snug">{t('landing.connectedCardHeading')}</h3>
+                  <p className="text-[10px] sm:text-xs leading-relaxed text-emerald-100">{t('landing.connectedCardDesc')}</p>
                 </div>
               </div>
             </div>

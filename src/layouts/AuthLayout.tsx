@@ -492,108 +492,54 @@ export default function AuthLayout({
             relative
             w-full
             lg:w-1/2
-            min-h-[600px]
+            min-h-[520px]
             lg:min-h-0
             bg-white
             flex
-            ${computedMode === 'register' ? 'items-start pt-20 md:pt-28 pb-12' : 'items-center py-10 lg:py-16'}
+            ${computedMode === 'register' ? 'items-start pb-10' : 'items-center py-8 lg:py-16'}
             justify-center
-            px-6
-            sm:px-10
-            md:px-16
-            lg:px-14
+            px-4
+            sm:px-8
+            md:px-14
+            lg:px-12
             xl:px-20
             overflow-y-auto
           `}
         >
-          {/* Language Selector */}
-          <div className="absolute top-5 left-6 md:top-6 md:left-8 z-30">
+          {/* ── Top bar: Language selector (left) + Go Back (right) ── */}
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 sm:px-6 md:px-8 pt-4 sm:pt-5 z-30">
             <LanguageSelector />
+            <button
+              onClick={handleGoBack}
+              className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#059669] transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{t('auth.goBack')}</span>
+            </button>
           </div>
 
-          {/* Go Back button */}
-          <button
-            onClick={handleGoBack}
-            className="
-              absolute
-              top-5
-              right-6
-              md:top-6
-              md:right-8
-              flex
-              items-center
-              gap-1.5
-              text-xs
-              font-bold
-              text-gray-500
-              hover:text-[#059669]
-              transition-colors
-              z-30
-              cursor-pointer
-            "
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{t('auth.goBack')}</span>
-          </button>
+          <div className={`w-full max-w-[420px] mx-auto ${computedMode === 'register' ? 'pt-16 sm:pt-20' : 'pt-14 sm:pt-16'}`}>
 
-          <div className="w-full max-w-[440px] py-2 sm:py-3">
-
-            <div className="lg:hidden flex justify-center mb-6">
+            {/* Logo shown only on mobile (lg panel is hidden) */}
+            <div className="lg:hidden flex justify-center mb-5 sm:mb-6">
               <Link
                 to="/"
-                className="
-                  w-12
-                  h-12
-                  flex
-                  items-center
-                  justify-center
-                  bg-white
-                  border
-                  border-gray-150
-                  rounded-[5px]
-                  shadow-sm
-                  p-1.5
-                  hover:opacity-90
-                  transition-opacity
-                  cursor-pointer
-                "
+                className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-white border border-gray-150 rounded-[5px] shadow-sm p-1.5 hover:opacity-90 transition-opacity cursor-pointer"
               >
-                <img
-                  src="/logo1.png"
-                  alt="E-Pharmacy Logo"
-                  className="w-full h-full object-contain"
-                />
+                <img src="/logo1.png" alt="E-Pharmacy Logo" className="w-full h-full object-contain" />
               </Link>
             </div>
 
             {title && (
               <div className="mb-4">
-
-                <h2
-                  className="
-                    text-xl
-                    sm:text-2xl
-                    font-bold
-                    tracking-tight
-                    text-[#172033]
-                  "
-                >
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-[#172033]">
                   {title}
                 </h2>
-
                 {subtitle && (
-                  <p
-                    className="
-                      text-[#64748B]
-                      text-sm
-                      mt-1.5
-                      leading-5
-                    "
-                  >
+                  <p className="text-[#64748B] text-xs sm:text-sm mt-1.5 leading-5">
                     {subtitle}
                   </p>
                 )}
-
               </div>
             )}
 
@@ -760,7 +706,7 @@ export default function AuthLayout({
           }
 
           .auth-layout-container > section:last-child {
-            min-height: 600px;
+            min-height: 520px;
           }
 
         }
@@ -773,14 +719,12 @@ export default function AuthLayout({
 
           .auth-layout-container {
             box-shadow: none !important;
-          }
-
-          .auth-layout-container > section:first-child {
-            min-height: 350px;
+            border-radius: 0 !important;
           }
 
           .auth-layout-container > section:last-child {
-            min-height: 620px;
+            min-height: 100dvh;
+            padding-bottom: env(safe-area-inset-bottom, 16px);
           }
 
         }
