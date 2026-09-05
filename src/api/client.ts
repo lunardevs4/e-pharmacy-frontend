@@ -5,8 +5,8 @@ import { useLanguageStore } from '@/store/languageStore'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
-const MAX_RETRIES = 3
-const RETRY_DELAY = 1000
+const MAX_RETRIES = 1
+const RETRY_DELAY = 500
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 

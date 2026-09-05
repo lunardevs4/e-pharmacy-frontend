@@ -95,7 +95,7 @@ export const MedicineApi = {
       warnings: item.warnings || item.safetyWarnings || 'Not provided',
       sideEffects: item.sideEffects || 'Not provided',
       interactions: item.interactions || 'Not provided',
-      storage: item.storage || item.storageConditions || item.batches?.map((batch: any) => batch.storageConditions).filter(Boolean).join('; ') || 'Not provided',
+      storage: item.storage || item.storageConditions || item.batches?.map((batch: any) => batch.storageConditions).filter(Boolean).join('; ') || '',
       minTemperature: item.minTemperature ?? item.batches?.find((batch: any) => batch.minTemperature != null)?.minTemperature ?? null,
       maxTemperature: item.maxTemperature ?? item.batches?.find((batch: any) => batch.maxTemperature != null)?.maxTemperature ?? null,
     }))
@@ -117,7 +117,7 @@ export const MedicineApi = {
       warnings: item.warnings || item.safetyWarnings || 'Not provided',
       sideEffects: item.sideEffects || 'Not provided',
       interactions: item.interactions || 'Not provided',
-      storage: item.storage || item.storageConditions || item.batches?.map((batch: any) => batch.storageConditions).filter(Boolean).join('; ') || 'Not provided',
+      storage: item.storage || item.storageConditions || item.batches?.map((batch: any) => batch.storageConditions).filter(Boolean).join('; ') || '',
       minTemperature: item.minTemperature ?? item.batches?.find((batch: any) => batch.minTemperature != null)?.minTemperature ?? null,
       maxTemperature: item.maxTemperature ?? item.batches?.find((batch: any) => batch.maxTemperature != null)?.maxTemperature ?? null,
     }

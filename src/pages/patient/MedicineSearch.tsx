@@ -399,7 +399,7 @@ export default function MedicineSearch() {
   return (
     <div className="flex flex-col relative overflow-visible" style={{ height: 'calc(100dvh - 4rem)' }}>
       {/* ── Search Bar Header ── */}
-      <div className="relative z-50 flex-shrink-0 bg-white border-b border-gray-200 py-3 px-4 sm:px-6">
+      <div className="relative z-10 flex-shrink-0 bg-white border-b border-gray-200 py-3 px-4 sm:px-6">
         <form
           onSubmit={handleSearch}
           className="max-w-5xl mx-auto flex flex-col gap-3"
@@ -619,18 +619,24 @@ export default function MedicineSearch() {
                       </span>
                     </div>
                   )}
-                  <p>
-                    <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
-                    {selectedMedicine.storage}
-                  </p>
+                  {selectedMedicine.storage && selectedMedicine.storage !== 'Not provided' && (
+                    <p>
+                      <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
+                      {selectedMedicine.storage}
+                    </p>
+                  )}
+                  {selectedMedicine.minTemperature != null && (
                   <p>
                     <span className="font-bold text-gray-900">Minimum Temperature:</span>{' '}
                     {selectedMedicine.minTemperature != null ? `${selectedMedicine.minTemperature}°C` : 'Not provided'}
                   </p>
+                  )}
+                  {selectedMedicine.maxTemperature != null && (
                   <p>
                     <span className="font-bold text-gray-900">Maximum Temperature:</span>{' '}
                     {selectedMedicine.maxTemperature != null ? `${selectedMedicine.maxTemperature}°C` : 'Not provided'}
                   </p>
+                  )}
                 </div>
               </div>
 

@@ -54,6 +54,7 @@ import {
   Send,
   Landmark,
   Shield,
+  Menu,
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -70,6 +71,7 @@ export default function LandingPage() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(1) // Item 1 (How do I find a medicine near me?) is expanded by default
 
   const [showChat, setShowChat] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'assistant'; text: string }>>([
     {
@@ -269,23 +271,17 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 h-14 sm:h-16 lg:h-20 flex items-center justify-between">
-
-          {/* ── Brand: logo image always visible, wordmark only on sm+ ── */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+      <header className="bg-white border-b border-gray-150 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
+          {/* Brand */}
+          <div className="flex flex-col items-center flex-shrink-0 leading-none">
             <img
               src="/logo1.png"
               alt="Rwanda E-Pharmacy Logo"
               className="h-8 sm:h-10 lg:h-12 w-auto object-contain flex-shrink-0"
             />
-            {/* Wordmark hidden on xs, shown from sm up */}
-            <div className="hidden sm:block leading-tight">
-              <span className="text-[10px] sm:text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">Rwanda</span>
-              <span className="text-[10px] sm:text-xs font-black text-health-primary tracking-wider block uppercase leading-none mt-0.5">E-Pharmacy</span>
-              <span className="text-[7px] sm:text-[8px] text-gray-400 font-bold block mt-0.5 leading-none uppercase tracking-wide">Government</span>
-            </div>
-          </Link>
+            <span className="mt-0.5 text-[9px] sm:text-[10px] font-black text-health-primary tracking-tight">E-pharmacy</span>
+          </div>
 
           {/* ── Desktop nav links (lg+) ── */}
           <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8 text-sm font-bold text-gray-500">
@@ -299,22 +295,66 @@ export default function LandingPage() {
           {/* ── Right: language + login + register ── */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <LanguageSelector />
-
-            <Link
-              to="/login"
-              className="inline-flex items-center justify-center border border-gray-300 hover:border-health-primary text-xs sm:text-sm font-bold text-gray-700 hover:text-health-primary px-3 sm:px-4 py-2 sm:py-2 lg:py-2.5 rounded-lg transition-colors whitespace-nowrap leading-none"
-            >
+            <Link to="/login" className="hidden lg:inline text-xs sm:text-sm font-bold text-gray-800 hover:text-health-primary transition-colors whitespace-nowrap">
               {t('nav.login')}
             </Link>
 
             <Link
               to="/register"
-              className="inline-flex items-center justify-center bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2 lg:py-2.5 rounded-lg transition-colors whitespace-nowrap leading-none"
+              className="hidden lg:flex bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors items-center gap-1 cursor-pointer whitespace-nowrap"
             >
               {t('nav.register')}
             </Link>
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu((open) => !open)}
+              aria-label={showMobileMenu ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={showMobileMenu}
+              className="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-health-primary transition-colors focus:outline-none focus:ring-2 focus:ring-health-primary/30"
+            >
+              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
+
+        {showMobileMenu && (
+          <div className="lg:hidden border-t border-gray-100 bg-white shadow-lg">
+            <nav aria-label="Mobile navigation" className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+              <div className="flex flex-col">
+                {[
+                  ['#home', t('nav.home')],
+                  ['#features', t('nav.features')],
+                  ['#about', t('nav.about')],
+                  ['#faq', t('nav.faq')],
+                  ['#contact', t('nav.contact')],
+                ].map(([href, label]) => (
+                  <a
+                    key={href}
+                    href={href}
+                    onClick={() => setShowMobileMenu(false)}
+                    className="border-b border-gray-100 py-3 text-sm font-bold text-gray-600 hover:text-health-primary transition-colors"
+                  >
+                    {label}
+                  </a>
+                ))}
+                <Link
+                  to="/login"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-700 hover:border-health-primary hover:text-health-primary transition-colors"
+                >
+                  {t('nav.login')}
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-health-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-health-secondary transition-colors"
+                >
+                  {t('nav.register')}
+                </Link>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>{' '}
       <section
         id="home"
