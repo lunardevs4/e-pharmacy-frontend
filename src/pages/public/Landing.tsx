@@ -292,34 +292,42 @@ export default function LandingPage() {
             <a href="#contact"  className="hover:text-health-primary transition-colors">{t('nav.contact')}</a>
           </nav>
 
-          {/* ── Right: language + login + register ── */}
+          {/* ── Right: language + login + register + hamburger ── */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <LanguageSelector />
-            <Link to="/login" className="hidden lg:inline text-xs sm:text-sm font-bold text-gray-800 hover:text-health-primary transition-colors whitespace-nowrap">
+
+            {/* Login — always visible */}
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center border border-gray-300 hover:border-health-primary text-xs font-bold text-gray-700 hover:text-health-primary px-3 py-2 rounded-lg transition-colors whitespace-nowrap leading-none"
+            >
               {t('nav.login')}
             </Link>
 
+            {/* Register — always visible */}
             <Link
               to="/register"
-              className="hidden lg:flex bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors items-center gap-1 cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center bg-health-primary hover:bg-health-secondary text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors whitespace-nowrap leading-none"
             >
               {t('nav.register')}
             </Link>
+
+            {/* Hamburger — only for nav links, only on < lg */}
             <button
               type="button"
               onClick={() => setShowMobileMenu((open) => !open)}
-              aria-label={showMobileMenu ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-label={showMobileMenu ? 'Close menu' : 'Open menu'}
               aria-expanded={showMobileMenu}
-              className="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-health-primary transition-colors focus:outline-none focus:ring-2 focus:ring-health-primary/30"
+              className="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-health-primary transition-colors focus:outline-none focus:ring-2 focus:ring-health-primary/30"
             >
-              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {showMobileMenu ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
         {showMobileMenu && (
           <div className="lg:hidden border-t border-gray-100 bg-white shadow-lg">
-            <nav aria-label="Mobile navigation" className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+            <nav aria-label="Mobile navigation" className="max-w-7xl mx-auto px-4 sm:px-6 py-2">
               <div className="flex flex-col">
                 {[
                   ['#home', t('nav.home')],
@@ -332,25 +340,11 @@ export default function LandingPage() {
                     key={href}
                     href={href}
                     onClick={() => setShowMobileMenu(false)}
-                    className="border-b border-gray-100 py-3 text-sm font-bold text-gray-600 hover:text-health-primary transition-colors"
+                    className="border-b border-gray-100 last:border-b-0 py-3 text-sm font-bold text-gray-600 hover:text-health-primary transition-colors"
                   >
                     {label}
                   </a>
                 ))}
-                <Link
-                  to="/login"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-700 hover:border-health-primary hover:text-health-primary transition-colors"
-                >
-                  {t('nav.login')}
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-health-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-health-secondary transition-colors"
-                >
-                  {t('nav.register')}
-                </Link>
               </div>
             </nav>
           </div>
@@ -511,14 +505,14 @@ export default function LandingPage() {
                   </div>
                 </div>
               ) : (
-                <div className="backdrop-blur-md bg-white/80 border border-white/60 shadow-xl rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[350px] relative overflow-hidden">
-                  <div className="w-16 h-16 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mb-4 relative z-10">
-                    <Search className="w-8 h-8" />
+                <div className="backdrop-blur-md bg-white/80 border border-white/60 shadow-xl rounded-2xl p-6 sm:p-8 text-center flex flex-col items-center justify-center min-h-[200px] sm:min-h-[350px] relative overflow-hidden">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-50 text-health-primary rounded-full flex items-center justify-center mb-3 sm:mb-4 relative z-10">
+                    <Search className="w-6 h-6 sm:w-8 sm:h-8" />
                   </div>
-                  <h3 className="text-lg font-black text-gray-900 relative z-10">
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 relative z-10">
                     {t('landing.searchButtonInput')}
                   </h3>
-                  <p className="text-gray-500 text-xs mt-2.5 max-w-xs leading-relaxed mx-auto relative z-10 font-medium">
+                  <p className="text-gray-500 text-xs mt-2 sm:mt-2.5 max-w-xs leading-relaxed mx-auto relative z-10 font-medium">
                     {t('landing.heroSubtitleMain')}
                   </p>
                 </div>
@@ -648,12 +642,12 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      <section className="py-16 bg-white border-t border-gray-150">
-        <div className="max-w-7xl mx-auto px-6 text-center space-y-8">
+      <section className="py-10 sm:py-16 bg-white border-t border-gray-150">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-6 sm:space-y-8">
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
             {t('landing.partnerTitle')}
           </span>
-          <div className="flex flex-wrap justify-center items-center gap-4">
+          <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4">
             {[
               'Ministry of Health',
               'RSSB',
@@ -664,7 +658,7 @@ export default function LandingPage() {
             ].map((partner) => (
               <span
                 key={partner}
-                className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-colors cursor-default"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 rounded-lg text-[10px] sm:text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 transition-colors cursor-default"
               >
                 {partner}
               </span>
@@ -672,36 +666,36 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      <section id="faq" className="py-20 bg-white border-t border-gray-150">
-        <div className="max-w-4xl mx-auto px-6 space-y-10">
+      <section id="faq" className="py-12 sm:py-20 bg-white border-t border-gray-150">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-10">
           <div className="space-y-2">
             <span className="text-xs font-bold uppercase tracking-widest text-health-primary">
               {t('nav.faq')}
             </span>
-            <h2 className="text-3xl font-extrabold text-gray-900">{t('nav.faq')}</h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{t('nav.faq')}</h2>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {faqs.map((faq, idx) => {
               const isExpanded = expandedFaq === idx
               return (
                 <div
                   key={idx}
-                  className="border border-gray-250 rounded-lg overflow-hidden bg-white"
+                  className="border border-gray-200 rounded-lg overflow-hidden bg-white"
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors text-left focus:outline-none"
+                    className="w-full px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors text-left focus:outline-none gap-3"
                   >
-                    <span className="font-bold text-gray-900 text-sm sm:text-base">{faq.q}</span>
+                    <span className="font-bold text-gray-900 text-sm leading-snug">{faq.q}</span>
                     {isExpanded ? (
-                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                      <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                      <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
                     )}
                   </button>
                   {isExpanded && (
-                    <div className="px-6 pb-5 pt-1 text-gray-500 text-sm leading-relaxed border-t border-gray-100">
+                    <div className="px-4 sm:px-6 pb-4 sm:pb-5 pt-1 text-gray-500 text-xs sm:text-sm leading-relaxed border-t border-gray-100">
                       {faq.a}
                     </div>
                   )}
@@ -711,15 +705,15 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      <section className="bg-health-primary text-white py-16">
-        <div className="max-w-7xl mx-auto px-6 text-center space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+      <section className="bg-health-primary text-white py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-5 sm:space-y-6">
+          <h2 className="text-2xl sm:text-3xl sm:text-4xl font-extrabold tracking-tight">
             {t('landing.ctaTitle')}
           </h2>
-          <p className="text-emerald-100 text-base max-w-md mx-auto">
+          <p className="text-emerald-100 text-sm sm:text-base max-w-md mx-auto">
             {t('landing.ctaSubtitle')}
           </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 pt-1 sm:pt-2">
             <Link
               to="/register/patient"
               className="w-full sm:w-auto bg-white text-health-primary hover:bg-emerald-50 px-6 py-3 rounded-lg text-sm font-bold shadow-md transition-colors text-center"
@@ -728,7 +722,7 @@ export default function LandingPage() {
             </Link>
             <Link
               to="/register/pharmacy"
-              className="w-full sm:w-auto border border-white hover:bg-white/10 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center font-sans"
+              className="w-full sm:w-auto border border-white hover:bg-white/10 px-6 py-3 rounded-lg text-sm font-bold transition-colors text-center"
             >
               {t('landing.ctaPharmacyBtn')}
             </Link>
@@ -743,214 +737,108 @@ export default function LandingPage() {
       </section>
       <footer
         id="contact"
-        className="bg-[#111827] text-gray-400 pt-16 pb-8 border-t border-gray-800"
+        className="bg-[#111827] text-gray-400 pt-10 sm:pt-16 pb-8 border-t border-gray-800"
       >
-        <div className="max-w-7xl mx-auto px-6 space-y-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10 sm:space-y-12">
+          {/* ── Main footer columns ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+            <div className="col-span-2 sm:col-span-2 md:col-span-1 space-y-4">
               <div className="flex items-center space-x-3">
                 <img
                   src="/logo1.png"
                   alt="Rwanda E-Pharmacy Logo"
-                  className="h-10 w-auto object-contain flex-shrink-0"
+                  className="h-9 sm:h-10 w-auto object-contain flex-shrink-0"
                 />
                 <div>
-                  <span className="text-xs font-black text-white tracking-wider block uppercase leading-none">
-                    Rwanda
-                  </span>
-                  <span className="text-xs font-black text-emerald-450 tracking-wider block uppercase leading-none mt-0.5">
-                    E-Pharmacy
-                  </span>
+                  <span className="text-xs font-black text-white tracking-wider block uppercase leading-none">Rwanda</span>
+                  <span className="text-xs font-black text-emerald-450 tracking-wider block uppercase leading-none mt-0.5">E-Pharmacy</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                {t('landing.footerTagline')}
-              </p>
+              <p className="text-xs text-gray-500 leading-relaxed">{t('landing.footerTagline')}</p>
             </div>
 
             <div>
-              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
-                {t('landing.footerPlatform')}
-              </h4>
+              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-3 sm:mb-4">{t('landing.footerPlatform')}</h4>
               <ul className="space-y-2 text-xs">
-                <li>
-                  <Link to="/login" className="hover:text-white transition-colors">
-                    {t('landing.searchButton')}
-                  </Link>
-                </li>
-                <li>
-                  <a href="#home" className="hover:text-white transition-colors">
-                    {t('feature.nearest.title')}
-                  </a>
-                </li>
-                <li>
-                  <Link to="/login" className="hover:text-white transition-colors">
-                    {t('nav.reservations')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/login" className="hover:text-white transition-colors">
-                    {t('feature.upload.title')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/login" className="hover:text-white transition-colors">
-                    {t('feature.reminders.title')}
-                  </Link>
-                </li>
+                <li><Link to="/login" className="hover:text-white transition-colors">{t('landing.searchButton')}</Link></li>
+                <li><a href="#home" className="hover:text-white transition-colors">{t('feature.nearest.title')}</a></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">{t('nav.reservations')}</Link></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">{t('feature.upload.title')}</Link></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">{t('feature.reminders.title')}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
-                {t('landing.footerPortal')}s
-              </h4>
+              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-3 sm:mb-4">{t('landing.footerPortal')}s</h4>
               <ul className="space-y-2 text-xs">
-                <li>
-                  <Link to="/login" className="hover:text-white transition-colors">
-                    {t('portal.patients.title')} {t('landing.footerPortal')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/login" className="hover:text-white transition-colors">
-                    {t('portal.pharmacies.title')} {t('landing.footerPortal')}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/login" className="hover:text-white transition-colors">
-                    {t('portal.government.title')} {t('landing.footerPortal')}
-                  </Link>
-                </li>
+                <li><Link to="/login" className="hover:text-white transition-colors">{t('portal.patients.title')} {t('landing.footerPortal')}</Link></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">{t('portal.pharmacies.title')} {t('landing.footerPortal')}</Link></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">{t('portal.government.title')} {t('landing.footerPortal')}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-4">
-                {t('landing.footerLegal')}
-              </h4>
+              <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-3 sm:mb-4">{t('landing.footerLegal')}</h4>
               <ul className="space-y-2 text-xs">
-                <li>
-                  <a href="#contact" className="hover:text-white transition-colors">
-                    Help Centre
-                  </a>
-                </li>
-                <li>
-                  <a href="#contact" className="hover:text-white transition-colors">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="#contact" className="hover:text-white transition-colors">
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a href="#contact" className="hover:text-white transition-colors">
-                    Report an Issue
-                  </a>
-                </li>
-                <li>
-                  <a href="#contact" className="hover:text-white transition-colors">
-                    {t('landing.footerContact')}
-                  </a>
-                </li>
+                <li><a href="#contact" className="hover:text-white transition-colors">Help Centre</a></li>
+                <li><a href="#contact" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#contact" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#contact" className="hover:text-white transition-colors">Report an Issue</a></li>
+                <li><a href="#contact" className="hover:text-white transition-colors">{t('landing.footerContact')}</a></li>
               </ul>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-gray-800">
-            <div className="flex items-center space-x-3 bg-gray-900/40 p-4 rounded-xl border border-gray-800">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                  />
-                </svg>
+          {/* ── Contact cards ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 sm:pt-8 border-t border-gray-800">
+            {[
+              {
+                label: 'Hotline',
+                value: '+250 788 000 000',
+                icon: (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                ),
+              },
+              {
+                label: 'Email',
+                value: 'support@epharmacy.rw',
+                icon: (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                ),
+              },
+              {
+                label: 'Address',
+                value: 'KG 7 Ave, Kigali, Rwanda',
+                icon: (
+                  <>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </>
+                ),
+              },
+            ].map(({ label, value, icon }) => (
+              <div key={label} className="flex items-center space-x-3 bg-gray-900/40 p-3 sm:p-4 rounded-xl border border-gray-800">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">{icon}</svg>
+                </div>
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">{label}</span>
+                  <span className="text-white text-xs sm:text-sm font-bold truncate block">{value}</span>
+                </div>
               </div>
-              <div>
-                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                  Hotline
-                </span>
-                <span className="text-white text-sm font-bold">+250 788 000 000</span>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 bg-gray-900/40 p-4 rounded-xl border border-gray-800">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                  Email
-                </span>
-                <span className="text-white text-sm font-bold">support@epharmacy.rw</span>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 bg-gray-900/40 p-4 rounded-xl border border-gray-800">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                  Address
-                </span>
-                <span className="text-white text-sm font-bold">KG 7 Ave, Kigali, Rwanda</span>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Copyright & Tags */}
-          <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-xs">
+          {/* ── Copyright ── */}
+          <div className="pt-6 sm:pt-8 border-t border-gray-800 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center text-xs">
             <span>&copy; 2024 Government of Rwanda. All rights reserved.</span>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               <span>ISO 27001</span>
-              <span>&bull;</span>
+              <span className="hidden sm:inline">&bull;</span>
               <span>GDPR</span>
-              <span>&bull;</span>
+              <span className="hidden sm:inline">&bull;</span>
               <span>WCAG 2.1 AA</span>
-              <span>&bull;</span>
+              <span className="hidden sm:inline">&bull;</span>
               <span className="flex items-center text-emerald-400 font-bold">
                 <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5 inline-block"></span>
                 All systems operational
@@ -959,9 +847,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+      <div className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
         {showChat && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl w-80 sm:w-96 overflow-hidden mb-4 flex flex-col h-[450px]">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl w-[calc(100vw-1.5rem)] max-w-sm sm:w-96 overflow-hidden mb-3 sm:mb-4 flex flex-col h-[min(420px,calc(100dvh-6rem))]">
             <div className="bg-health-primary text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center space-x-2">
                 <div className="w-6 h-6 rounded bg-emerald-500/25 flex items-center justify-center font-bold text-xs text-white">
@@ -972,23 +860,24 @@ export default function LandingPage() {
               <button
                 onClick={() => setShowChat(false)}
                 className="text-white/80 hover:text-white transition-colors focus:outline-none"
+                aria-label="Close chat"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="bg-emerald-50 text-emerald-800 text-[11px] px-4 py-2 border-b border-emerald-100 leading-normal font-medium flex-shrink-0">
+            <div className="bg-emerald-50 text-emerald-800 text-[11px] px-3 sm:px-4 py-2 border-b border-emerald-100 leading-normal font-medium flex-shrink-0">
               Educational information only. Does not replace professional medical advice.
             </div>
 
-            <div className="flex-grow p-4 overflow-y-auto space-y-4 bg-gray-50/50 flex flex-col">
+            <div className="flex-grow p-3 sm:p-4 overflow-y-auto space-y-3 sm:space-y-4 bg-gray-50/50 flex flex-col">
               {messages.map((msg, i) => (
                 <div
                   key={i}
                   className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
+                    className={`max-w-[88%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs leading-relaxed shadow-sm ${
                       msg.sender === 'user'
                         ? 'bg-health-primary text-white rounded-tr-none'
                         : 'bg-white text-gray-800 border border-gray-150 rounded-tl-none'
@@ -1002,7 +891,7 @@ export default function LandingPage() {
 
             <form
               onSubmit={handleSendMessage}
-              className="p-3 bg-white border-t border-gray-150 flex items-center space-x-2 flex-shrink-0"
+              className="p-2.5 sm:p-3 bg-white border-t border-gray-150 flex items-center space-x-2 flex-shrink-0"
             >
               <input
                 type="text"
@@ -1014,6 +903,7 @@ export default function LandingPage() {
               <button
                 type="submit"
                 className="bg-health-primary hover:bg-health-secondary text-white p-2 rounded-lg transition-colors flex-shrink-0 focus:outline-none"
+                aria-label="Send message"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -1024,9 +914,9 @@ export default function LandingPage() {
         <button
           onClick={() => setShowChat(!showChat)}
           aria-label="Toggle Chat Assistant"
-          className="w-14 h-14 bg-health-primary hover:bg-health-secondary text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 focus:outline-none"
+          className="w-12 h-12 sm:w-14 sm:h-14 bg-health-primary hover:bg-health-secondary text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 focus:outline-none"
         >
-          {showChat ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
+          {showChat ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />}
         </button>
       </div>
 
