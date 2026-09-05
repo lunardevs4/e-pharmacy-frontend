@@ -202,7 +202,13 @@ const getErrorMessage = (error: unknown): string => {
     const axiosError = error as AxiosError
     const responseData = axiosError.response?.data as ApiObject | undefined
     if (responseData?.message) {
-      if (typeof responseData.message === 'string') return responseData.message
+      if (typeof responseData.message === 'string') {
+        // Never expose framework/proxy routing errors to end users.
+        if (/^Cannot (GET|POST|PUT|PATCH|DELETE|OPTIONS)\s+\//i.test(responseData.message)) {
+          return t('error.serverUnavailable')
+        }
+        return responseData.message
+      }
       if (Array.isArray(responseData.message)) return (responseData.message as string[]).join(' · ')
     }
     if (responseData?.error && typeof responseData.error === 'string') return responseData.error
