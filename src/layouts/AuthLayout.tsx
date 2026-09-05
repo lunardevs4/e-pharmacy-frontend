@@ -80,8 +80,8 @@ export default function AuthLayout({
           h-auto
           lg:h-[calc(100vh-80px)]
           xl:h-[calc(100vh-96px)]
-          min-h-[700px]
-          lg:min-h-[620px]
+          min-h-0
+          lg:min-h-0
           flex
           flex-col
           lg:flex-row
@@ -492,11 +492,11 @@ export default function AuthLayout({
             relative
             w-full
             lg:w-1/2
-            min-h-[520px]
+            min-h-0
             lg:min-h-0
             bg-white
             flex
-            ${computedMode === 'register' ? 'items-start pt-20 md:pt-28 pb-12' : 'items-start pt-8 pb-6 lg:items-start lg:pt-12 lg:pb-12'}
+            ${computedMode === 'register' ? 'items-start pt-8 md:pt-12 pb-8' : 'items-start pt-8 pb-6 lg:items-start lg:pt-12 lg:pb-12'}
             justify-center
             px-4
             sm:px-8
@@ -518,7 +518,7 @@ export default function AuthLayout({
             </button>
           </div>
 
-          <div className={`w-full max-w-[420px] mx-auto ${computedMode === 'register' ? 'pt-16 sm:pt-20' : 'pt-4 sm:pt-8'}`}>
+          <div className={`w-full mx-auto pt-4 sm:pt-8 ${computedMode === 'register' ? 'max-w-[720px]' : 'max-w-[420px]'}`}>
 
             {/* Logo shown only on mobile (lg panel is hidden) */}
             <div className="lg:hidden flex justify-center mb-1 sm:mb-2">
@@ -717,7 +717,7 @@ export default function AuthLayout({
           }
 
           .auth-layout-container > section:last-child {
-            min-height: 520px;
+            min-height: auto;
           }
 
         }
@@ -734,7 +734,7 @@ export default function AuthLayout({
           }
 
           .auth-layout-container > section:last-child {
-            min-height: 100dvh;
+            min-height: auto;
             padding-bottom: env(safe-area-inset-bottom, 16px);
           }
 

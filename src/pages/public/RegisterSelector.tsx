@@ -19,7 +19,6 @@ export default function RegisterSelector() {
     {
       title: t('role.patient'),
       subtitle: t('role.patient.sub'),
-      desc: t('role.patient.desc'),
       link: '/register/patient',
       icon: User,
       bgColor: 'bg-emerald-50',
@@ -29,7 +28,6 @@ export default function RegisterSelector() {
     {
       title: t('role.pharmacy'),
       subtitle: t('role.pharmacy.sub'),
-      desc: t('role.pharmacy.desc'),
       link: '/register/pharmacy',
       icon: PlusSquare,
       bgColor: 'bg-teal-50',
@@ -39,7 +37,6 @@ export default function RegisterSelector() {
     {
       title: t('role.insurance'),
       subtitle: t('role.insurance.sub'),
-      desc: t('role.insurance.desc'),
       link: '/register/insurance',
       icon: Shield,
       bgColor: 'bg-emerald-50',
@@ -54,14 +51,16 @@ export default function RegisterSelector() {
       title={t('auth.createAccount')}
       subtitle={t('auth.selectRole')}
     >
-      <div className="flex flex-col gap-4 font-sans">
+      <div className="flex flex-col gap-4 font-sans xl:flex-row xl:flex-wrap">
         {options.map((opt, idx) => {
           const Icon = opt.icon
           return (
             <Link
               key={idx}
               to={opt.link}
-              className="group p-5 bg-white rounded-lg border border-gray-200 hover:border-[#059669] hover:shadow-md transition-all duration-200 flex items-start gap-4 text-left relative overflow-hidden auth-card"
+              className={`group p-5 bg-white rounded-lg border border-gray-200 hover:border-[#059669] hover:shadow-md transition-all duration-200 flex items-start gap-4 text-left relative overflow-hidden auth-card xl:flex-shrink-0 xl:flex-col ${
+                idx < 2 ? 'xl:basis-[calc(50%-0.5rem)]' : 'xl:basis-full'
+              }`}
               style={{
                 borderColor: '#E5E7EB',
                 borderWidth: '1px',
@@ -85,9 +84,6 @@ export default function RegisterSelector() {
                 <h4 className="text-base font-bold text-gray-900 mt-0.5 group-hover:text-[#059669] transition-colors">
                   {opt.title}
                 </h4>
-                <p className="text-gray-550 text-xs mt-1.5 leading-relaxed font-medium">
-                  {opt.desc}
-                </p>
                 <div className="text-[11px] font-bold text-[#059669] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 mt-3">
                   <span>{t('role.onboard')}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -97,7 +93,7 @@ export default function RegisterSelector() {
           )
         })}
 
-        <div className="mt-4 pt-4 border-t border-gray-150 flex flex-col justify-center items-center text-xs text-center font-sans font-semibold">
+        <div className="mt-4 pt-4 border-t border-gray-150 flex w-full flex-col justify-center items-center text-xs text-center font-sans font-semibold xl:basis-full">
           <span style={{ color: '#6B7280', fontWeight: 500 }}>{t('auth.alreadyOnboarded')} </span>
           <Link
             to="/login"
