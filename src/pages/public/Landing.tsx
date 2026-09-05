@@ -274,17 +274,13 @@ export default function LandingPage() {
       <header className="bg-white border-b border-gray-150 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
           {/* Brand */}
-          <div className="flex items-center space-x-2.5 flex-shrink-0">
+          <div className="flex flex-col items-center flex-shrink-0 leading-none">
             <img
               src="/logo1.png"
               alt="Rwanda E-Pharmacy Logo"
               className="h-9 sm:h-12 w-auto object-contain flex-shrink-0"
             />
-            <div className="hidden xs:block">
-              <span className="text-xs font-black text-gray-950 tracking-wider block uppercase leading-none">Rwanda</span>
-              <span className="text-xs font-black text-health-primary tracking-wider block uppercase leading-none mt-0.5">E-Pharmacy</span>
-              <span className="text-[8px] text-gray-400 font-bold block mt-0.5 leading-none uppercase tracking-wide">Government</span>
-            </div>
+            <span className="mt-0.5 text-[9px] sm:text-[10px] font-black text-health-primary tracking-tight">E-pharmacy</span>
           </div>
 
           {/* Desktop nav */}
@@ -299,12 +295,12 @@ export default function LandingPage() {
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <LanguageSelector />
-            <Link to="/login" className="text-xs sm:text-sm font-bold text-gray-800 hover:text-health-primary transition-colors whitespace-nowrap">
+            <Link to="/login" className="hidden lg:inline text-xs sm:text-sm font-bold text-gray-800 hover:text-health-primary transition-colors whitespace-nowrap">
               {t('nav.login')}
             </Link>
             <Link
               to="/register"
-              className="hidden sm:flex bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors items-center gap-1 cursor-pointer whitespace-nowrap"
+              className="hidden lg:flex bg-health-primary hover:bg-health-secondary text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors items-center gap-1 cursor-pointer whitespace-nowrap"
             >
               <span>{t('nav.register')}</span>
             </Link>
@@ -341,9 +337,16 @@ export default function LandingPage() {
                   </a>
                 ))}
                 <Link
+                  to="/login"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-700 hover:border-health-primary hover:text-health-primary transition-colors"
+                >
+                  {t('nav.login')}
+                </Link>
+                <Link
                   to="/register"
                   onClick={() => setShowMobileMenu(false)}
-                  className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-health-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-health-secondary transition-colors"
+                  className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-health-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-health-secondary transition-colors"
                 >
                   {t('nav.register')}
                 </Link>
