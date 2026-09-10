@@ -560,7 +560,7 @@ export const AuthApi = {
 
   restoreSession: async (): Promise<AuthResponse | null> => {
     try {
-      const user = await AuthApi.getProfile('')
+      const user = await AuthApi.getProfile('', true)
       return { user }
     } catch {
       return null
@@ -661,10 +661,14 @@ export const AuthApi = {
   },
 
 
-  getProfile: async (_emailOrUsername: string): Promise<AuthUser> => {
+  getProfile: async (_emailOrUsername: string, skipAuthRefresh = false): Promise<AuthUser> => {
     void _emailOrUsername
     try {
-      const response = await apiClient.get('/users/profile')
+      const response = await apiClient.get('/users/profile', {
+        // A missing cookie during startup means "signed out", not a reason to
+        // call the refresh endpoint and consume the auth rate limit.
+        _skipAuthRefresh: skipAuthRefresh,
+      } as never)
       return normalizeUser(response.data)
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))

@@ -28,7 +28,12 @@ let refreshQueue: Array<{ resolve: () => void; reject: (error: unknown) => void 
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _retryCount?: number; _skipRetry?: boolean }
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean
+      _retryCount?: number
+      _skipRetry?: boolean
+      _skipAuthRefresh?: boolean
+    }
 
     if (originalRequest?._skipRetry) {
       return Promise.reject(error)
@@ -59,7 +64,7 @@ apiClient.interceptors.response.use(
     }
 
     const isAuthRequest = ['/auth/login', '/auth/refresh', '/auth/logout'].some((path) => originalRequest.url?.includes(path))
-    if (error.response.status === 401 && !isAuthRequest && !originalRequest._retry) {
+    if (error.response.status === 401 && !isAuthRequest && !originalRequest._skipAuthRefresh && !originalRequest._retry) {
       if (!isRefreshing) {
           isRefreshing = true
           originalRequest._retry = true
@@ -82,7 +87,9 @@ apiClient.interceptors.response.use(
           })
         })
       }
-      if (typeof window !== 'undefined') window.location.href = '/login'
+      // Let the caller handle an unauthenticated response. In particular, the
+      // startup session probe must be allowed to resolve so public routes can
+      // render when no authentication cookie exists.
     }
     return Promise.reject(error)
   },
