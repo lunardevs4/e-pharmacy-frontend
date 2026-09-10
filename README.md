@@ -95,9 +95,8 @@ src/
 │   ├── ProtectedRoute.tsx # Role guard + firstLogin redirect
 │   └── PublicRoute.tsx    # Redirects authenticated users to their portal
 ├── services/
-│   ├── auth-api.ts        # Auth service (mock — localStorage backed)
+│   ├── auth-api.ts        # Cookie-based authentication API
 │   ├── medicine-api.ts    # Medicine / pharmacy / reservation service (mock)
-│   └── token-storage.ts   # JWT token helpers (localStorage)
 ├── store/
 │   ├── authStore.ts       # Zustand auth state (user, token, login, logout)
 │   └── uiStore.ts         # Zustand UI state (sidebar open, notification count)
@@ -130,11 +129,11 @@ Each role has an isolated route prefix and a role-specific sidebar.
 
 ## Authentication
 
-- Auth state is held in Zustand (`authStore`). On boot, `isAuthenticated` is derived from the presence of a stored JWT in `localStorage`.
+- Auth state is held in Zustand (`authStore`). On boot, the app validates the HttpOnly authentication cookie through the profile endpoint.
 - `ProtectedRoute` enforces role-based access and redirects unauthenticated or wrong-role users.
 - `PublicRoute` redirects already-authenticated users to their portal home.
 - A `firstLogin` flag on the user object forces a password change via `/change-password` before any protected page is accessible.
-- The Axios client in `src/api/client.ts` attaches `Authorization: Bearer <token>` to every request and includes a 401-intercept with a refresh token queue, ready for backend integration.
+- The Axios client in `src/api/client.ts` sends credentials with every request and refreshes the HttpOnly cookie session after a 401 response.
 
 ### Demo Credentials (mock mode)
 
@@ -184,7 +183,7 @@ Password reset OTP code (mock): **123456**
 
 ## API Integration
 
-The app is mock-first. All data lives in `src/services/` and `localStorage`.
+The app is mock-first. Non-sensitive demo data lives in `src/services/` and `localStorage`; authentication credentials are never stored in browser storage.
 
 To connect to the real NestJS backend:
 

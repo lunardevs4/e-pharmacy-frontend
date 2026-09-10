@@ -1,6 +1,4 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
-import { TokenStorage } from '@/services/token-storage'
-import { useAuthStore } from '@/store/authStore'
 import { useLanguageStore } from '@/store/languageStore'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
@@ -14,21 +12,18 @@ export const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 8000,
+  withCredentials: true,
 })
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = TokenStorage.getToken()
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
     return config
   },
   (error) => Promise.reject(error),
 )
 
 let isRefreshing = false
-let refreshQueue: Array<(token: string) => void> = []
+let refreshQueue: Array<{ resolve: () => void; reject: (error: unknown) => void }> = []
 
 apiClient.interceptors.response.use(
   (response) => response,
@@ -63,41 +58,30 @@ apiClient.interceptors.response.use(
       )
     }
 
-    const isLoginRequest = originalRequest.url?.includes('/auth/login')
-    if (error.response.status === 401 && !isLoginRequest && !originalRequest._retry) {
-      const refreshToken = TokenStorage.getRefreshToken()
-
-      if (refreshToken) {
-        if (!isRefreshing) {
+    const isAuthRequest = ['/auth/login', '/auth/refresh', '/auth/logout'].some((path) => originalRequest.url?.includes(path))
+    if (error.response.status === 401 && !isAuthRequest && !originalRequest._retry) {
+      if (!isRefreshing) {
           isRefreshing = true
           originalRequest._retry = true
           try {
-            const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken }, { timeout: 5000 })
-            const payload = res.data?.data || res.data
-            const accessToken = payload?.accessToken
-            if (accessToken) {
-              TokenStorage.setToken(accessToken)
-              if (payload?.refreshToken) TokenStorage.setRefreshToken(payload.refreshToken)
-              isRefreshing = false
-              refreshQueue.forEach((cb) => cb(accessToken))
-              refreshQueue = []
-              return apiClient(originalRequest)
-            }
-          } catch {
+            await axios.post(`${API_URL}/auth/refresh`, undefined, { timeout: 5000, withCredentials: true })
             isRefreshing = false
+            refreshQueue.forEach(({ resolve }) => resolve())
+            refreshQueue = []
+            return apiClient(originalRequest)
+          } catch (refreshError) {
+            isRefreshing = false
+            refreshQueue.forEach(({ reject }) => reject(refreshError))
             refreshQueue = []
           }
-        } else {
-          return new Promise((resolve) => {
-            refreshQueue.push((token: string) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`
-              resolve(apiClient(originalRequest))
-            })
+      } else {
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({
+            resolve: () => resolve(apiClient(originalRequest)),
+            reject,
           })
-        }
+        })
       }
-      TokenStorage.clearToken()
-      useAuthStore.getState().logout()
       if (typeof window !== 'undefined') window.location.href = '/login'
     }
     return Promise.reject(error)

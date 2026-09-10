@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { User } from '@/types'
-import { TokenStorage } from '@/services/token-storage'
+import { AuthApi } from '@/services/auth-api'
 
 interface AuthStore {
   user: User | null
@@ -8,27 +8,11 @@ interface AuthStore {
   isAuthenticated: boolean
   isInitialising: boolean
   error: string | null
-  login: (user: User, token: string) => void
+  login: (user: User) => void
   logout: () => void
   setError: (error: string | null) => void
   updateProfile: (updatedFields: Partial<User>) => void
   initialise: () => void
-}
-
-function isRealJwt(token: string): boolean {
-  if (!token) return false
-  const parts = token.split('.')
-  return parts.length === 3
-}
-
-function decodeJwtPayload(token: string): { exp?: number } | null {
-  try {
-    const payload = token.split('.')[1]
-    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
-    return JSON.parse(decoded)
-  } catch {
-    return null
-  }
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -38,40 +22,25 @@ export const useAuthStore = create<AuthStore>((set) => ({
   isInitialising: true,   // start as true — will be set false after restore attempt
   error: null,
 
-  initialise: () => {
-    const token = TokenStorage.getToken()
-    const savedUser = TokenStorage.loadUser() as User | null
-
-    const tokenValid =
-      token &&
-      isRealJwt(token) &&
-      (() => {
-        const payload = decodeJwtPayload(token)
-        if (!payload?.exp) return false
-        return payload.exp * 1000 > Date.now()
-      })()
-
-    if (tokenValid && savedUser) {
-      set({
-        token,
-        user: savedUser,
-        isAuthenticated: true,
-        isInitialising: false,
-      })
-    } else {
-      TokenStorage.clearToken()
-      set({ isInitialising: false })
+  initialise: async () => {
+    try {
+      const session = await AuthApi.restoreSession()
+      if (session?.user) {
+        set({ user: session.user as User, isAuthenticated: true, isInitialising: false })
+        return
+      }
+    } catch {
+      // An absent or expired HttpOnly cookie means there is no active session.
     }
+    set({ isInitialising: false })
   },
 
-  login: (user, token) => {
-    TokenStorage.setToken(token)
-    TokenStorage.saveUser(user)
-    set({ user, token, isAuthenticated: true, error: null })
+  login: (user) => {
+    set({ user, token: null, isAuthenticated: true, error: null })
   },
 
   logout: () => {
-    TokenStorage.clearToken()
+    void AuthApi.logout()
     set({ user: null, token: null, isAuthenticated: false, error: null })
   },
 
@@ -80,7 +49,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
   updateProfile: (updatedFields) => {
     set((state) => {
       const updated = state.user ? { ...state.user, ...updatedFields } : null
-      if (updated) TokenStorage.saveUser(updated)
       return { user: updated }
     })
   },

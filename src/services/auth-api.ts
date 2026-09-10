@@ -1,7 +1,6 @@
 import { AxiosError } from 'axios'
 import { UserRole } from '@/types'
 import { apiClient } from '@/api/client'
-import { TokenStorage } from '@/services/token-storage'
 import { useLanguageStore } from '@/store/languageStore'
 
 
@@ -68,8 +67,6 @@ export interface AuthUser {
 
 
 export interface AuthResponse {
-  accessToken: string
-  refreshToken: string
   user: AuthUser
 }
 
@@ -91,9 +88,6 @@ type UpdateProfileFields = {
   medicalNotes?: string
   profilePhoto?: string
 }
-
-const CURRENT_USER_KEY = 'epharmacy_current_session_user'
-
 
 const toString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined)
 
@@ -190,8 +184,6 @@ const normalizeAuthResponse = (payload: unknown): AuthResponse => {
   const data = getObject(raw.data ?? payload)
 
   return {
-    accessToken: toString(data.accessToken) || '',
-    refreshToken: toString(data.refreshToken) || '',
     user: normalizeUser(data.user ?? data),
   }
 }
@@ -285,9 +277,6 @@ export const AuthApi = {
     try {
       const response = await apiClient.post('/auth/login', { email, password })
       const normalized = normalizeAuthResponse(response.data)
-      TokenStorage.setToken(normalized.accessToken)
-      TokenStorage.setRefreshToken(normalized.refreshToken)
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalized))
       return normalized
     } catch (error: unknown) {
       const msg = getErrorMessage(error)
@@ -325,9 +314,6 @@ export const AuthApi = {
         lastName,
       })
       const normalized = normalizeAuthResponse(response.data)
-      TokenStorage.setToken(normalized.accessToken)
-      TokenStorage.setRefreshToken(normalized.refreshToken)
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(normalized))
       return normalized
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -573,20 +559,18 @@ export const AuthApi = {
 
 
   restoreSession: async (): Promise<AuthResponse | null> => {
-    const session = localStorage.getItem(CURRENT_USER_KEY)
-    if (!session) return null
     try {
-      return JSON.parse(session)
+      const user = await AuthApi.getProfile('')
+      return { user }
     } catch {
       return null
     }
   },
 
 
-  refreshToken: async (token: string): Promise<{ accessToken: string }> => {
+  refreshToken: async (): Promise<void> => {
     try {
-      const response = await apiClient.post('/auth/refresh', { refreshToken: token })
-      return { accessToken: response.data.accessToken }
+      await apiClient.post('/auth/refresh')
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -595,13 +579,8 @@ export const AuthApi = {
 
   logout: async (): Promise<void> => {
     try {
-      const refreshToken = TokenStorage.getRefreshToken()
-      if (refreshToken) {
-        await apiClient.post('/auth/logout', { refreshToken })
-      }
+      await apiClient.post('/auth/logout')
     } finally {
-      TokenStorage.clearToken()
-      localStorage.removeItem(CURRENT_USER_KEY)
     }
   },
 
@@ -639,10 +618,7 @@ export const AuthApi = {
 
 
   getCurrentUser: async (): Promise<AuthUser> => {
-    const session = localStorage.getItem(CURRENT_USER_KEY)
-    if (!session) throw new Error('No active session.')
-    const payload = JSON.parse(session) as AuthResponse
-    return payload.user
+    return AuthApi.getProfile('')
   },
 
 
@@ -655,12 +631,6 @@ export const AuthApi = {
         insuranceProvider: updatedFields.insuranceProvider,
       })
       const normalized = normalizeUser(response.data)
-      const current = localStorage.getItem(CURRENT_USER_KEY)
-      if (current) {
-        const parsed = JSON.parse(current)
-        parsed.user = normalized
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(parsed))
-      }
       return normalized
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -703,15 +673,6 @@ export const AuthApi = {
 
   refreshSession: async (): Promise<AuthUser> => {
     const latest = await AuthApi.getProfile('')
-    const session = localStorage.getItem(CURRENT_USER_KEY)
-    if (session) {
-      try {
-        const parsed = JSON.parse(session) as AuthResponse
-        parsed.user = latest
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(parsed))
-      } catch {
-      }
-    }
     return latest
   },
 

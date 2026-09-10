@@ -61,7 +61,7 @@ export default function ChangePassword() {
       setSuccessMsg('Password updated successfully! Redirecting to portal...')
       
       const updatedUser = { ...user, firstLogin: false }
-      login(updatedUser, token || '')
+      login(updatedUser)
 
       setTimeout(() => {
         switch (user.role) {
