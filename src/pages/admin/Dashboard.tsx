@@ -4,6 +4,9 @@ import { AuthApi } from '@/services/auth-api'
 import { UserApi } from '@/services/user-api'
 import { MedicineApi } from '@/services/medicine-api'
 import { useLanguageStore } from '@/store/languageStore'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement,
   LineElement, PointElement, Title, Tooltip, Legend, Filler,
@@ -174,6 +177,9 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-16">
+      {isLoading && (
+        <LoadingState message="Loading admin dashboard…" className="py-20" />
+      )}
       <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="space-y-2">
           <div className="flex items-center space-x-2">

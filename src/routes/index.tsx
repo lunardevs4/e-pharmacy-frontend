@@ -57,6 +57,8 @@ const InsuranceTariffs = lazy(() => import('@/pages/insurance/Tariffs'))
 
 const AdherenceHistory = lazy(() => import('@/pages/patient/AdherenceHistory'))
 const PharmacyAdherenceReport = lazy(() => import('@/pages/pharmacy/AdherenceReport'))
+
+const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'))
 const AdminUsers = lazy(() => import('@/pages/admin/Users'))
 
 const AdminRoles = lazy(() => import('@/pages/admin/Roles'))

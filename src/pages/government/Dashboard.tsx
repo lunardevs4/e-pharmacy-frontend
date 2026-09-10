@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { Landmark, Users, Package, AlertTriangle, FileText, CheckCircle2, ChevronRight, Activity, TrendingUp, XCircle, MapPin, Clock } from 'lucide-react'
 import { AuthApi } from '@/services/auth-api'
 import { useLanguageStore } from '@/store/languageStore'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 function SemiCircularGauge({ value }: { value: number }) {
   const percentage = Math.max(0, Math.min(100, Math.round(value)))
@@ -194,39 +197,27 @@ export default function GovernmentDashboard() {
     severity: Number(item.quantity ?? 0) <= 0 ? 'HIGH' : 'MEDIUM',
   }))
 
-  const renderSkeleton = () => {
-    return (
-      <div className="space-y-6 max-w-7xl mx-auto pb-16 animate-pulse">
-        <div className="h-32 bg-gray-200 rounded-xl" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 bg-gray-200 rounded-xl" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <div className="h-48 bg-gray-200 rounded-xl" />
-            <div className="h-48 bg-gray-200 rounded-xl" />
-          </div>
-          <div className="space-y-4">
-            <div className="h-48 bg-gray-200 rounded-xl" />
-            <div className="h-48 bg-gray-200 rounded-xl" />
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const renderSkeleton = () => (
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <LoadingState message="Loading government dashboard…" className="py-20" />
+    </div>
+  )
 
   if (isLoading) return renderSkeleton()
 
+  if (errorMsg) return (
+    <div className="max-w-7xl mx-auto pb-16">
+      <ErrorState
+        title="Dashboard unavailable"
+        message={errorMsg}
+        onRetry={fetchDashboardData}
+        className="py-20"
+      />
+    </div>
+  )
+
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-16">
-      {errorMsg && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 animate-pulse" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
 
       <div className="bg-white text-gray-900 rounded-xl p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row justify-between items-center border border-gray-200 shadow-xs relative overflow-hidden gap-4 sm:gap-6">
         <div className="absolute right-0 top-0 w-48 h-48 bg-emerald-50/40 rounded-full blur-2xl pointer-events-none" />
