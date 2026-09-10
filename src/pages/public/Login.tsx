@@ -111,7 +111,7 @@ export default function Login() {
       }
 
       setSuccessMsg(t('auth.authSuccessful'))
-      login(res.user, res.accessToken)
+      login(res.user)
 
       setTimeout(() => {
         if (res.user.firstLogin) {

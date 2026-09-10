@@ -4,6 +4,9 @@ import { useAuthStore } from '@/store/authStore'
 import { useLanguageStore } from '@/store/languageStore'
 import { MedicineApi } from '@/services/medicine-api'
 import { PharmacyApi } from '@/services/pharmacy-api'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 import { 
   Bookmark, Box, Users, TrendingUp, ChevronRight, Activity, 
   AlertTriangle, CheckCircle, XCircle, Loader2, ArrowRight, Clock,
@@ -137,9 +140,7 @@ export default function PharmacyDashboard() {
       <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto transition-all duration-300">
 
         {errorMsg && (
-          <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm font-semibold text-red-800">
-            {errorMsg}
-          </div>
+          <ErrorState message={errorMsg} onRetry={() => window.location.reload()} />
         )}
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -230,10 +231,12 @@ export default function PharmacyDashboard() {
                   </thead>
                   <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
                     {isLoading && (
-                      <tr><td colSpan={6} className="py-6 sm:py-8 text-center text-gray-400">{t('common.loading')}</td></tr>
+                      <tr><td colSpan={6} className="py-6"><LoadingState message="Loading reservations..." /></td></tr>
                     )}
                     {!isLoading && reservations.length === 0 && (
-                      <tr><td colSpan={7} className="py-6 sm:py-8 text-center text-gray-400">{t('pharmacy.dash.noReservations')}</td></tr>
+                      <tr><td colSpan={6} className="py-6">
+                        <EmptyState title="No reservations" description={t('pharmacy.dash.noReservations')} />
+                      </td></tr>
                     )}
                     {!isLoading && reservations.map((res) => (
                       <tr key={res.id} className="hover:bg-gray-50/50">
@@ -299,7 +302,7 @@ export default function PharmacyDashboard() {
               </div>
               <div className="space-y-3 font-medium text-[10px] sm:text-xs text-gray-600">
                 {auditLogs.length === 0 ? (
-                  <p className="text-gray-400">{t('common.noData')}</p>
+                  <EmptyState title="No recent activity" />
                 ) : auditLogs.map((log) => (
                   <div key={log.id} className="flex items-center space-x-3.5">
                     <span className="text-gray-400 font-mono whitespace-nowrap">{new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>

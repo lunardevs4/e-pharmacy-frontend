@@ -37,14 +37,14 @@ export interface User {
   lastName?: string
   role: UserRole
   phone?: string
-  nid?: string // National ID (crucial for Rwanda healthcare)
-  licenseNumber?: string // For Pharmacy
-  insuranceProvider?: string // For Insurance Company
-  firstLogin?: boolean // Mandatory first-time password change flag
-  position?: string // Employee position (e.g. Pharmacist)
-  permissions?: string[] // Employee permissions array
-  pharmacyId?: string // Link to pharmacy organization
-  pharmacyName?: string // Name of the pharmacy
+  nid?: string 
+  licenseNumber?: string 
+  insuranceProvider?: string 
+  firstLogin?: boolean 
+  position?: string 
+  permissions?: string[] 
+  pharmacyId?: string 
+  pharmacyName?: string 
   isActive?: boolean
   createdAt?: string
   updatedAt?: string

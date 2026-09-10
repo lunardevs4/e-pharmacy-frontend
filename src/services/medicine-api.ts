@@ -539,8 +539,8 @@ export const MedicineApi = {
       id: item.id,
       medicineId: item.medicineId,
       medicineName: item.medicineName || item.medicine?.tradeName || 'Medication',
-      times: item.times || item.timeOfDay || [], // Array of time strings like ["08:00", "12:00", "20:00"]
-      frequency: item.frequency || (item.intervalHours === 168 ? 'weekly' : 'daily'), // daily, weekly, as_needed
+      times: item.times || item.timeOfDay || [], 
+      frequency: item.frequency || (item.intervalHours === 168 ? 'weekly' : 'daily'), 
       startDate: item.startDate,
       endDate: item.endDate,
       notes: item.notes || '',
@@ -554,7 +554,7 @@ export const MedicineApi = {
   createReminder: async (data: {
     medicineId?: string
     medicineName: string
-    times: string[] // Array of time strings in HH:MM format
+    times: string[]
     frequency: 'daily' | 'weekly' | 'as_needed'
     startDate: string
     endDate?: string

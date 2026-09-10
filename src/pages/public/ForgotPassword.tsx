@@ -83,7 +83,7 @@ export default function ForgotPassword() {
     setIsLoading(true)
     setErrorMsg(null)
     try {
-      await AuthApi.resetPassword(email, password)
+      await AuthApi.resetPassword(email, password, otp)
       setStep('SUCCESS')
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to update password.')
