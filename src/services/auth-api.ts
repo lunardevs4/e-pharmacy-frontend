@@ -599,7 +599,7 @@ export const AuthApi = {
 
   requestPasswordReset: async (email: string): Promise<void> => {
     try {
-      await apiClient.post('/auth/password-reset/request', { email })
+      await apiClient.post('/auth/password-reset/request', { email }, { timeout: 20000 })
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
