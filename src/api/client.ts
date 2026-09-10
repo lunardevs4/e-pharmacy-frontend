@@ -5,6 +5,26 @@ const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 const MAX_RETRIES = 1
 const RETRY_DELAY = 500
+const CSRF_HEADER = 'X-CSRF-Token'
+let csrfToken: string | null = null
+let csrfTokenPromise: Promise<string | null> | null = null
+
+async function ensureCsrfToken() {
+  if (csrfToken) return csrfToken
+  if (!csrfTokenPromise) {
+    csrfTokenPromise = axios.get(`${API_URL}/auth/csrf-token`, {
+      timeout: 5000,
+      withCredentials: true,
+    }).then((response) => {
+      const payload = response.data?.data || response.data
+      csrfToken = typeof payload?.csrfToken === 'string' ? payload.csrfToken : null
+      return csrfToken
+    }).finally(() => {
+      csrfTokenPromise = null
+    })
+  }
+  return csrfTokenPromise
+}
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -16,7 +36,15 @@ export const apiClient = axios.create({
 })
 
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    const method = (config.method || 'get').toUpperCase()
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      const token = await ensureCsrfToken()
+      if (token) {
+        config.headers = config.headers || {}
+        config.headers[CSRF_HEADER] = token
+      }
+    }
     return config
   },
   (error) => Promise.reject(error),
@@ -69,7 +97,12 @@ apiClient.interceptors.response.use(
           isRefreshing = true
           originalRequest._retry = true
           try {
-            await axios.post(`${API_URL}/auth/refresh`, undefined, { timeout: 5000, withCredentials: true })
+            const token = await ensureCsrfToken()
+            await axios.post(`${API_URL}/auth/refresh`, undefined, {
+              timeout: 5000,
+              withCredentials: true,
+              headers: token ? { [CSRF_HEADER]: token } : undefined,
+            })
             isRefreshing = false
             refreshQueue.forEach(({ resolve }) => resolve())
             refreshQueue = []

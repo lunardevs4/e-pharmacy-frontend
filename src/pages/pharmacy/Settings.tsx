@@ -4,6 +4,7 @@ import { insuranceApi, InsuranceProvider } from '@/services/insurance-api'
 import { getActivePharmacyInsurances, saveActivePharmacyInsurances } from '@/utils/insuranceCalculator'
 import PharmacyProfile from './Profile'
 import { Shield, Check, Loader2, Save, AlertCircle } from 'lucide-react'
+import { apiClient } from '@/api/client'
 
 export default function PharmacySettings() {
   const { user } = useAuthStore()
@@ -23,7 +24,7 @@ export default function PharmacySettings() {
       setErrorMsg(null)
       Promise.all([
         insuranceApi.getProviders(),
-        fetch(`/api/v1/pharmacies/${pharmacyId}/insurance`).then(r => r.json())
+        apiClient.get(`/pharmacies/${pharmacyId}/insurance`).then(r => r.data)
       ])
         .then(([providersData, agreementsData]) => {
           const activeProviders = (providersData || []).filter((p) => p.isActive !== false)
@@ -52,43 +53,31 @@ export default function PharmacySettings() {
     setSuccessMsg(null)
     setErrorMsg(null)
     try {
-      const agreementsResponse = await fetch(`/api/v1/pharmacies/${pharmacyId}/insurance`)
-      const agreementsData = await agreementsResponse.json()
+      const agreementsResponse = await apiClient.get(`/pharmacies/${pharmacyId}/insurance`)
+      const agreementsData = agreementsResponse.data
       const existingAgreements = agreementsData?.data || agreementsData || []
       
       const createPromises = selectedIds
         .filter(id => !existingAgreements.find((a: any) => a.insuranceId === id))
         .map(insuranceId => 
-          fetch(`/api/v1/pharmacies/${pharmacyId}/insurance`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          apiClient.post(`/pharmacies/${pharmacyId}/insurance`, {
               insuranceId,
               contractNumber: `AGR-${pharmacyId}-${insuranceId}-${Date.now()}`,
               discountRate: 0,
               startDate: new Date().toISOString(),
-            }),
-          })
+            })
         )
       
       const deactivatePromises = existingAgreements
         .filter((a: any) => a.status === 'ACTIVE' && !selectedIds.includes(a.insuranceId))
         .map((a: any) => 
-          fetch(`/api/v1/pharmacies/${pharmacyId}/insurance/${a.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'INACTIVE' }),
-          })
+          apiClient.patch(`/pharmacies/${pharmacyId}/insurance/${a.id}`, { status: 'INACTIVE' })
         )
       
       const reactivatePromises = existingAgreements
         .filter((a: any) => a.status !== 'ACTIVE' && selectedIds.includes(a.insuranceId))
         .map((a: any) => 
-          fetch(`/api/v1/pharmacies/${pharmacyId}/insurance/${a.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'ACTIVE' }),
-          })
+          apiClient.patch(`/pharmacies/${pharmacyId}/insurance/${a.id}`, { status: 'ACTIVE' })
         )
       
       await Promise.all([...createPromises, ...deactivatePromises, ...reactivatePromises])
