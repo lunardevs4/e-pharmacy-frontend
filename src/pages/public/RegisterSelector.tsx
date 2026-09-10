@@ -59,7 +59,9 @@ export default function RegisterSelector() {
               key={idx}
               to={opt.link}
               className={`group p-5 bg-white rounded-lg border border-gray-200 hover:border-[#059669] hover:shadow-md transition-all duration-200 flex items-start gap-4 text-left relative overflow-hidden auth-card xl:flex-shrink-0 xl:flex-col ${
-                idx < 2 ? 'xl:basis-[calc(50%-0.5rem)]' : 'xl:basis-full'
+                idx < 2
+                  ? 'xl:basis-[calc(50%-0.5rem)]'
+                  : 'xl:basis-[calc(50%-0.5rem)] xl:mx-auto'
               }`}
               style={{
                 borderColor: '#E5E7EB',
