@@ -598,22 +598,29 @@ export const AuthApi = {
 
 
   requestPasswordReset: async (email: string): Promise<void> => {
-    void email
-    return Promise.resolve()
+    try {
+      await apiClient.post('/auth/password-reset/request', { email })
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
   },
 
 
   verifyResetOTP: async (email: string, otp: string): Promise<void> => {
-    void email
-    void otp
-    return Promise.resolve()
+    try {
+      await apiClient.post('/auth/password-reset/verify', { email, otp })
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
   },
 
 
-  resetPassword: async (email: string, newPass: string): Promise<void> => {
-    void email
-    void newPass
-    return Promise.resolve()
+  resetPassword: async (email: string, newPass: string, otp: string): Promise<void> => {
+    try {
+      await apiClient.post('/auth/password-reset/complete', { email, otp, newPassword: newPass })
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
   },
 
 
