@@ -226,6 +226,7 @@ export const rw: Record<keyof typeof en, string> = {
   'error.accountNotAllowed': 'Konti yawe ntiyemerewe kwinjira muri uyu mwanya.',
   'error.accountNotFound': 'Konti ntiyabonetse.',
   'error.serverUnavailable': 'Urubuga rw\'amakuru ntiruboneka muri uyu mwanya. Ongera ugerageze mukanya.',
+  'error.rateLimited': 'Hari ibisabwa byinshi cyane. Tegereza akanya wongere ugerageze.',
   'error.requestFailed': 'Gusaba ntibikunze. Ongera ugerageze.',
 
   // Login Page Notifications

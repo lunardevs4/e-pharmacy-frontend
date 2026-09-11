@@ -226,6 +226,7 @@ export const fr: Record<keyof typeof en, string> = {
   'error.accountNotAllowed': 'Votre compte n\'est pas encore autorisé à se connecter.',
   'error.accountNotFound': 'Compte non trouvé.',
   'error.serverUnavailable': 'Le serveur d\'authentification est temporairement indisponible. Veuillez réessayer sous peu.',
+  'error.rateLimited': 'Trop de demandes. Veuillez patienter un instant puis réessayer.',
   'error.requestFailed': 'La demande a échoué. Veuillez réessayer.',
 
   // Login Page Notifications

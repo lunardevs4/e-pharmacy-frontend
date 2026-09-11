@@ -10,6 +10,7 @@ interface AuthStore {
   error: string | null
   login: (user: User) => void
   logout: () => void
+  expireSession: () => void
   setError: (error: string | null) => void
   updateProfile: (updatedFields: Partial<User>) => void
   initialise: () => void
@@ -41,6 +42,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   logout: () => {
     void AuthApi.logout()
+    set({ user: null, token: null, isAuthenticated: false, error: null })
+  },
+
+  expireSession: () => {
     set({ user: null, token: null, isAuthenticated: false, error: null })
   },
 

@@ -208,6 +208,7 @@ const getErrorMessage = (error: unknown): string => {
     if (axiosError.response?.status === 401) return t('error.incorrectCredentials')
     if (axiosError.response?.status === 403) return t('error.accountNotAllowed')
     if (axiosError.response?.status === 404) return t('error.accountNotFound')
+    if (axiosError.response?.status === 429) return t('error.rateLimited')
     if (axiosError.response?.status && axiosError.response.status >= 500) {
       return t('error.serverUnavailable')
     }

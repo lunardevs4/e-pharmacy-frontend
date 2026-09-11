@@ -224,6 +224,7 @@ export const en = {
   'error.accountNotAllowed': 'Your account is not allowed to sign in yet.',
   'error.accountNotFound': 'Account not found.',
   'error.serverUnavailable': 'The authentication server is temporarily unavailable. Please try again shortly.',
+  'error.rateLimited': 'Too many requests. Please wait a moment and try again.',
   'error.requestFailed': 'Request failed. Please try again.',
 
   // Login Page Notifications

@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosHeaders, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { useLanguageStore } from '@/store/languageStore'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
@@ -35,9 +35,121 @@ export const apiClient = axios.create({
   withCredentials: true,
 })
 
+// Several portal surfaces can request the same read during one render pass
+// (for example, a dashboard and its shared navigation). Share only identical
+// in-flight GETs; do not cache responses or deduplicate state-changing calls.
+const pendingGets = new Map<string, ReturnType<typeof apiClient.get>>()
+const rawGet = apiClient.get.bind(apiClient)
+const sharedGetTtlMs = 15_000
+const sharedGetCache = new Map<string, { response: AxiosResponse; expiresAt: number }>()
+const sharedGetWaiters = new Map<string, Array<(response: AxiosResponse) => void>>()
+const sharedCacheChannel = typeof BroadcastChannel !== 'undefined'
+  ? new BroadcastChannel('epharmacy-api-cache')
+  : null
+
+const isShareableGet = (url: string, config?: { responseType?: string }) =>
+  !url.includes('/auth/') && (!config?.responseType || config.responseType === 'json')
+
+const clearSharedGetCache = () => {
+  sharedGetCache.clear()
+}
+
+if (sharedCacheChannel) {
+  sharedCacheChannel.onmessage = (event: MessageEvent) => {
+    const message = event.data
+    if (message?.type === 'invalidate') {
+      clearSharedGetCache()
+      return
+    }
+    if (message?.type === 'get-request' && typeof message.key === 'string') {
+      const cached = sharedGetCache.get(message.key)
+      if (cached && cached.expiresAt > Date.now()) {
+        sharedCacheChannel.postMessage({
+          type: 'get-response',
+          key: message.key,
+          data: cached.response.data,
+          status: cached.response.status,
+          statusText: cached.response.statusText,
+          headers: AxiosHeaders.from(cached.response.headers as Record<string, string>).toJSON(),
+        })
+      }
+      return
+    }
+    if (message?.type !== 'get-response' || typeof message.key !== 'string') return
+
+    const response: AxiosResponse = {
+      data: message.data,
+      status: message.status || 200,
+      statusText: message.statusText || 'OK',
+      headers: AxiosHeaders.from(message.headers || {}),
+      config: {} as InternalAxiosRequestConfig,
+    }
+    sharedGetCache.set(message.key, { response, expiresAt: Date.now() + sharedGetTtlMs })
+    sharedGetWaiters.get(message.key)?.splice(0).forEach((resolve) => resolve(response))
+    sharedGetWaiters.delete(message.key)
+  }
+}
+
+const getSharedResponse = (key: string) => {
+  const cached = sharedGetCache.get(key)
+  if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.response)
+  sharedGetCache.delete(key)
+
+  return new Promise<AxiosResponse | null>((resolve) => {
+    const waiters = sharedGetWaiters.get(key) || []
+    const waiter = (response: AxiosResponse) => resolve(response)
+    waiters.push(waiter)
+    sharedGetWaiters.set(key, waiters)
+    window.setTimeout(() => {
+      const current = sharedGetWaiters.get(key)
+      if (!current) return
+      const index = current.indexOf(waiter)
+      if (index >= 0) current.splice(index, 1)
+      if (current.length === 0) sharedGetWaiters.delete(key)
+      resolve(null)
+    }, 50)
+    sharedCacheChannel?.postMessage({ type: 'get-request', key })
+  })
+}
+
+apiClient.get = ((url: string, config?: Parameters<typeof apiClient.get>[1]) => {
+  const requestConfig = config as (typeof config & { _skipDedupe?: boolean }) | undefined
+  if (requestConfig?._skipDedupe || !isShareableGet(url, requestConfig)) {
+    return rawGet(url, config)
+  }
+
+  const key = `${url}|${JSON.stringify(config?.params ?? null)}`
+  const pending = pendingGets.get(key)
+  if (pending) return pending
+
+  const request = getSharedResponse(key).then((sharedResponse) => {
+    if (sharedResponse) return sharedResponse
+    return rawGet(url, config).then((response) => {
+      sharedGetCache.set(key, { response, expiresAt: Date.now() + sharedGetTtlMs })
+      sharedCacheChannel?.postMessage({
+        type: 'get-response',
+        key,
+        data: response.data,
+        status: response.status,
+        statusText: response.statusText,
+        headers: AxiosHeaders.from(response.headers as Record<string, string>).toJSON(),
+      })
+      return response
+    })
+  }).finally(() => {
+    pendingGets.delete(key)
+  })
+  pendingGets.set(key, request)
+  return request
+}) as typeof apiClient.get
+
 apiClient.interceptors.request.use(
   async (config) => {
     const method = (config.method || 'get').toUpperCase()
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      clearSharedGetCache()
+      sharedCacheChannel?.postMessage({ type: 'invalidate' })
+    }
     if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
       const token = await ensureCsrfToken()
       if (token) {
@@ -61,6 +173,7 @@ apiClient.interceptors.response.use(
       _retryCount?: number
       _skipRetry?: boolean
       _skipAuthRefresh?: boolean
+      _skipDedupe?: boolean
     }
 
     if (originalRequest?._skipRetry) {
@@ -71,6 +184,7 @@ apiClient.interceptors.response.use(
       const retryCount = originalRequest._retryCount || 0
       if (retryCount < MAX_RETRIES) {
         originalRequest._retryCount = retryCount + 1
+        originalRequest._skipDedupe = true
         await sleep(RETRY_DELAY * Math.pow(2, retryCount))
         return apiClient(originalRequest)
       }
@@ -80,6 +194,7 @@ apiClient.interceptors.response.use(
       const retryCount = originalRequest._retryCount || 0
       if (retryCount < MAX_RETRIES) {
         originalRequest._retryCount = retryCount + 1
+        originalRequest._skipDedupe = true
         await sleep(RETRY_DELAY * Math.pow(2, retryCount))
         return apiClient(originalRequest)
       }
@@ -106,6 +221,7 @@ apiClient.interceptors.response.use(
             isRefreshing = false
             refreshQueue.forEach(({ resolve }) => resolve())
             refreshQueue = []
+            originalRequest._skipDedupe = true
             return apiClient(originalRequest)
           } catch (refreshError) {
             isRefreshing = false
@@ -123,6 +239,13 @@ apiClient.interceptors.response.use(
       // Let the caller handle an unauthenticated response. In particular, the
       // startup session probe must be allowed to resolve so public routes can
       // render when no authentication cookie exists.
+    }
+    if (
+      error.response.status === 401 &&
+      !isAuthRequest &&
+      !originalRequest._skipAuthRefresh
+    ) {
+      window.dispatchEvent(new Event('auth:expired'))
     }
     return Promise.reject(error)
   },
