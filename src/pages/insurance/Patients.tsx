@@ -117,7 +117,7 @@ export default function InsurancePatients() {
       setShowModal(false)
       await loadPatients()
     } catch (error: any) {
-      setFormError(error?.response?.data?.message || error?.message || 'Failed to register patient.')
+      setFormError(error?.response?.data?.error?.message || error?.message || 'Failed to register patient.')
     } finally {
       setIsSaving(false)
     }
