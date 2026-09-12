@@ -56,6 +56,8 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
   timeout: 8000,
   withCredentials: true,
+  xsrfCookieName: '__Host-epharmacy_csrf',
+  xsrfHeaderName: CSRF_HEADER,
 })
 
 // Several portal surfaces can request the same read during one render pass
