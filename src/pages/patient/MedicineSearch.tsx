@@ -143,35 +143,49 @@ export default function MedicineSearch() {
     setPrescriptionError(null)
   }
 
-  const getUserLocation = () => {
-    setLocationLoading(true)
-    setLocationError(null)
-    
-    if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser')
-      setLocationLoading(false)
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords
-        setUserLocation({ lat: latitude, lng: longitude })
-        setMapQuery(`${latitude},${longitude}`)
-        setMapZoom(15)
-        setLocationLoading(false)
-      },
-      (error) => {
-        setLocationError('Unable to retrieve your location. Using default location.')
-        setLocationLoading(false)
-        setUserLocation({ lat: -1.9441, lng: 30.0619 })
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+  const getUserLocation = (): Promise<{ lat: number; lng: number } | null> => {
+    return new Promise((resolve) => {
+      if (userLocation) {
+        resolve(userLocation)
+        return
       }
-    )
+
+      setLocationLoading(true)
+      setLocationError(null)
+      
+      if (!navigator.geolocation) {
+        setLocationError('Geolocation is not supported by your browser')
+        setLocationLoading(false)
+        const defaultLoc = { lat: -1.9441, lng: 30.0619 }
+        setUserLocation(defaultLoc)
+        resolve(defaultLoc)
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords
+          const loc = { lat: latitude, lng: longitude }
+          setUserLocation(loc)
+          setMapQuery(`${latitude},${longitude}`)
+          setMapZoom(15)
+          setLocationLoading(false)
+          resolve(loc)
+        },
+        (error) => {
+          setLocationError('Unable to retrieve your location. Using default location.')
+          setLocationLoading(false)
+          const defaultLoc = { lat: -1.9441, lng: 30.0619 }
+          setUserLocation(defaultLoc)
+          resolve(defaultLoc)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      )
+    })
   }
 
   const handleSearch = (e?: React.FormEvent) => {
@@ -229,48 +243,27 @@ export default function MedicineSearch() {
     setSelectedMedicine(med)
     setStockLoading(true)
     
-    getUserLocation()
+    const loc = await getUserLocation()
     
     try {
       const insurance = insuranceOverride ?? selectedInsurance
       const matchedProvider = providers.find(p => p.code === insurance || p.name === insurance)
       const insuranceId = insurance !== 'None' ? (matchedProvider?.id || null) : null
       
-      const list = await getMedicineAvailability(med.id, insuranceId)
+      const list = await getMedicineAvailability(
+        med.id, 
+        insuranceId,
+        loc?.lat,
+        loc?.lng
+      )
       
-      if (userLocation) {
-        const listWithDistances = list.map(pharmacy => {
-          const distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            pharmacy.lat,
-            pharmacy.lng
-          )
-          return { ...pharmacy, distance }
-        })
-        setStockList(listWithDistances)
-      } else {
-        setStockList(list)
-      }
-      
+      setStockList(list)
       setMobileView('list')
     } catch (err) {
       console.error(err)
     } finally {
       setStockLoading(false)
     }
-  }
-
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371 // Earth's radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLon = (lon2 - lon1) * Math.PI / 180
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    return R * c // Distance in km
   }
 
   const getSortedPharmacies = () => {
