@@ -494,7 +494,7 @@ export default function PharmacyInventory() {
         await MedicineApi.updatePharmacyInventory(pharmacyId, newMedId, priceNum, stockNum, true)
       } catch (stockErr: any) {
         const stockMsg =
-          stockErr?.response?.data?.message ||
+          stockErr?.response?.data?.error?.message ||
           stockErr?.message ||
           'Unknown stocking error'
         setFormError(
@@ -531,7 +531,7 @@ export default function PharmacyInventory() {
       }, 1500)
     } catch (err: any) {
       const backendMessage =
-        err?.response?.data?.message ||
+        err?.response?.data?.error?.message ||
         err?.message ||
         'Failed to add medicine.'
       setFormError(
@@ -717,7 +717,7 @@ export default function PharmacyInventory() {
       await loadInventory()
     } catch (err: any) {
       setImportError(
-        err?.response?.data?.message || err?.message || 'Import failed. Please check the file format.',
+        err?.response?.data?.error?.message || err?.message || 'Import failed. Please check the file format.',
       )
     } finally {
       setIsImporting(false)
