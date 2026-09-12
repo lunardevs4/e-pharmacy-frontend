@@ -362,7 +362,8 @@ export default function MedicineSearch() {
   useEffect(() => {
     if (results.length > 0) {
       const closest = results[0]
-      setMapQuery(`${closest.lat},${closest.lng}`)
+      const q = (closest.lat && closest.lng) ? `${closest.lat},${closest.lng}` : (closest.locationText || closest.pharmacyName || 'Kigali, Rwanda')
+      setMapQuery(q)
       setMapZoom(15)
     } else {
       setMapQuery('Kigali, Rwanda')
@@ -371,7 +372,8 @@ export default function MedicineSearch() {
   }, [results])
 
   const handleSelectPharmacyMap = (pharm: PharmacyStock) => {
-    setMapQuery(`${pharm.lat},${pharm.lng}`)
+    const q = (pharm.lat && pharm.lng) ? `${pharm.lat},${pharm.lng}` : (pharm.locationText || pharm.pharmacyName || 'Kigali, Rwanda')
+    setMapQuery(q)
     setMapZoom(16)
   }
 
