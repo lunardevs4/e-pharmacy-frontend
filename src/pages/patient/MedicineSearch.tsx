@@ -632,7 +632,7 @@ export default function MedicineSearch() {
         >
           <iframe
             title="Google Map Locator"
-            src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&hl=en&z=${mapZoom}&t=&ie=UTF8&iwloc=&output=embed`}
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=${mapZoom}&output=embed`}
             className="w-full h-full min-h-[300px] lg:min-h-full border-0 shadow-sm"
             allowFullScreen
             loading="lazy"
