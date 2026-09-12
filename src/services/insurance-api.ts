@@ -175,7 +175,13 @@ export const insuranceApi = {
 
   async getDashboardSummary(insuranceId?: string): Promise<DashboardSummary> {
     const params = insuranceId ? { insuranceId } : {}
-    const response = await apiClient.get('/insurance/summary', { params })
+    // The summary aggregates several claims, patient, tariff, and trend
+    // queries. Give this report endpoint more time than the normal API
+    // request timeout while the backend query is being optimized.
+    const response = await apiClient.get('/insurance/summary', {
+      params,
+      timeout: 30000,
+    })
     const raw = unwrap(response) ?? {}
     const s = raw?.summary ?? raw ?? {}
     const cbs = raw?.claimsByStatus ?? {}
