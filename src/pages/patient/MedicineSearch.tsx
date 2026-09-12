@@ -651,10 +651,7 @@ export default function MedicineSearch() {
         >
           <iframe
             title="Google Map Locator"
-            src={(userLocation && mapQuery !== 'Kigali, Rwanda' && mapQuery !== `${userLocation.lat},${userLocation.lng}`) 
-              ? `https://maps.google.com/maps?saddr=${userLocation.lat},${userLocation.lng}&daddr=${encodeURIComponent(mapQuery)}&t=m&z=${mapZoom}&output=embed`
-              : `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=${mapZoom}&output=embed`
-            }
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=${mapZoom}&output=embed`}
             className="w-full h-full min-h-[300px] lg:min-h-full border-0 shadow-sm"
             allowFullScreen
             loading="lazy"
