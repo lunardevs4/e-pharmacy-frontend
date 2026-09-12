@@ -385,10 +385,10 @@ export default function MedicineSearch() {
       setMapQuery(q)
       setMapZoom(15)
     } else {
-      setMapQuery('Kigali, Rwanda')
-      setMapZoom(13)
+      setMapQuery(userLocation ? `${userLocation.lat},${userLocation.lng}` : 'Kigali, Rwanda')
+      setMapZoom(14)
     }
-  }, [results])
+  }, [results, userLocation])
 
   const handleSelectPharmacyMap = (pharm: PharmacyStock) => {
     const q = (pharm.lat && pharm.lng) ? `${pharm.lat},${pharm.lng}` : (pharm.locationText || pharm.pharmacyName || 'Kigali, Rwanda')
@@ -651,7 +651,7 @@ export default function MedicineSearch() {
         >
           <iframe
             title="Google Map Locator"
-            src={(userLocation && mapQuery !== 'Kigali, Rwanda') 
+            src={(userLocation && mapQuery !== 'Kigali, Rwanda' && mapQuery !== `${userLocation.lat},${userLocation.lng}`) 
               ? `https://maps.google.com/maps?saddr=${userLocation.lat},${userLocation.lng}&daddr=${encodeURIComponent(mapQuery)}&t=m&z=${mapZoom}&output=embed`
               : `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=${mapZoom}&output=embed`
             }
@@ -660,7 +660,7 @@ export default function MedicineSearch() {
             loading="lazy"
           />
           
-          {userLocation && mapQuery !== 'Kigali, Rwanda' && (
+          {userLocation && mapQuery !== 'Kigali, Rwanda' && mapQuery !== `${userLocation.lat},${userLocation.lng}` && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
               <a
                 href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${encodeURIComponent(mapQuery)}&travelmode=driving`}
