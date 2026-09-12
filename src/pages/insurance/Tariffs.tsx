@@ -11,7 +11,7 @@ export default function InsuranceTariffs() {
   const { user } = useAuthStore()
   const insurerName = user?.insuranceProvider || 'RSSB'
 
-  const [insuranceId, setInsuranceId] = useState<string>('1') // default to RSSB ID
+  const [insuranceId, setInsuranceId] = useState<string>('')
   const [insuranceName, setInsuranceName] = useState<string>('RSSB')
   const [medicines, setMedicines] = useState<Medicine[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,7 +31,11 @@ export default function InsuranceTariffs() {
       try {
         const providersList = await insuranceApi.getProviders()
         const matched = providersList.find(p => p.code === insurerName || p.name === insurerName)
-        const id = matched?.id || '1'
+        if (!matched?.id) {
+          throw new Error(`Insurance provider "${insurerName}" was not found.`)
+        }
+
+        const id = matched.id
         const name = matched?.name || insurerName
         setInsuranceId(id)
         setInsuranceName(name)
@@ -66,11 +70,17 @@ export default function InsuranceTariffs() {
         const initialTariffs: Record<string, CustomTariff> = {}
         for (const med of normalizedMedicines) {
           const backendTariff = tariffsList.find(t => t.medicineId === med.id)
+          const loadedPrice = backendTariff ? Number(backendTariff.coveredPrice) : NaN
+          const loadedCoverage = backendTariff ? Number(backendTariff.coveragePercentage) : 0
           initialTariffs[med.id] = backendTariff ? {
             medicineId: med.id,
             covered: backendTariff.isCovered,
-            coveragePercentage: backendTariff.coveragePercentage,
-            maximumCoveredPrice: backendTariff.coveredPrice || null
+            coveragePercentage: Number.isFinite(loadedCoverage)
+              ? Math.min(100, Math.max(0, loadedCoverage))
+              : 0,
+            maximumCoveredPrice: Number.isFinite(loadedPrice) && loadedPrice > 0
+              ? loadedPrice
+              : null,
           } : {
             medicineId: med.id,
             covered: false,
@@ -137,7 +147,12 @@ export default function InsuranceTariffs() {
 
   const handleMaxPriceChange = (medId: string, value: string) => {
     const trimmed = value.trim()
-    const num = trimmed === '' ? null : Math.max(0, parseFloat(trimmed) || 0)
+    const parsed = trimmed === '' ? NaN : Number(trimmed)
+    const num = trimmed === ''
+      ? null
+      : Number.isFinite(parsed)
+        ? Math.max(0, parsed)
+        : null
     setTariffs(prev => ({
       ...prev,
       [medId]: {
@@ -154,6 +169,18 @@ export default function InsuranceTariffs() {
 
     try {
       const tariff = tariffs[medId]
+
+      if (!insuranceId) {
+        throw new Error('A valid insurance provider must be selected before saving a tariff.')
+      }
+
+      const maximumCoveredPrice = Number(tariff.maximumCoveredPrice)
+      const coveredPrice = Number.isFinite(maximumCoveredPrice) && maximumCoveredPrice > 0
+        ? maximumCoveredPrice
+        : 999999999
+      const coveragePercentage = Number.isFinite(Number(tariff.coveragePercentage))
+        ? Math.min(100, Math.max(0, Number(tariff.coveragePercentage)))
+        : 0
       
       if (tariff.covered) {
         if (tariff.coveragePercentage < 0 || tariff.coveragePercentage > 100) {
@@ -167,9 +194,9 @@ export default function InsuranceTariffs() {
       await insuranceApi.setTariff({
         insuranceId,
         medicineId: medId,
-        coveredPrice: tariff.maximumCoveredPrice !== null && tariff.maximumCoveredPrice > 0 ? tariff.maximumCoveredPrice : 999999999,
-        coveragePercentage: tariff.coveragePercentage,
-        copayPercentage: 100 - tariff.coveragePercentage,
+        coveredPrice,
+        coveragePercentage,
+        copayPercentage: 100 - coveragePercentage,
         isCovered: tariff.covered,
         requiresPreAuth: false,
         effectiveDate: new Date().toISOString(),
