@@ -32,6 +32,13 @@ const getErrorMessage = (error: unknown): string => {
   const { t } = useLanguageStore.getState()
   if (typeof error === 'object' && error !== null) {
     const axiosError = error as AxiosError
+    const status = axiosError.response?.status
+    if (status === 401) return t('error.sessionExpired')
+    if (status === 403) return t('error.forbidden')
+    if (status === 404) return t('error.notFound')
+    if (status === 409) return t('error.conflict')
+    if (status === 429) return t('error.rateLimited')
+    if (status && status >= 500) return t('error.serverUnavailable')
     const responseData = axiosError.response?.data as any
     if (responseData?.message) {
       if (typeof responseData.message === 'string') return responseData.message

@@ -220,6 +220,10 @@ export const rw: Record<keyof typeof en, string> = {
   'forgot.validationMatch': 'Ijambo ry\'ibanga rishya n\'iryo kwemeza ntibihuye.',
 
   // Error Messages & Status Code Fallbacks
+  'error.sessionExpired': 'Igihe cyo gukoresha konti cyarangiye. Ongera winjire.',
+  'error.forbidden': 'Ntabwo wemerewe gukora iki gikorwa.',
+  'error.notFound': 'Amakuru wasabye ntiyabonetse.',
+  'error.conflict': 'Iki gikorwa ntigishoboye gukorwa kuko amakuru asanzweho cyangwa yahindutse.',
   'error.networkError': 'Hari ikibazo kibaye. Ongera ugerageze.',
   'error.invalidRequest': 'Ibisabwa ntibyemewe. Reba neza imeli n\'ijambo ry\'ibanga.',
   'error.incorrectCredentials': 'Imeli cyangwa ijambo ry\'ibanga si byo.',

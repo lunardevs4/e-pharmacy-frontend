@@ -28,6 +28,29 @@ async function ensureCsrfToken() {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
+const getFriendlyStatusMessage = (status: number) => {
+  const key = status === 400 || status === 422
+    ? 'error.invalidRequest'
+    : status === 401
+      ? 'error.sessionExpired'
+      : status === 403
+        ? 'error.forbidden'
+        : status === 404
+          ? 'error.notFound'
+          : status === 409
+            ? 'error.conflict'
+            : status === 429
+              ? 'error.rateLimited'
+              : status >= 500
+                ? 'error.serverUnavailable'
+                : 'error.requestFailed'
+  return useLanguageStore.getState().t(key)
+}
+
+const hasTechnicalMessage = (message: unknown) =>
+  typeof message === 'string' &&
+  /throttlerexception|cannot (get|post|put|patch|delete|options)\s+\//i.test(message)
+
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -178,6 +201,15 @@ apiClient.interceptors.response.use(
 
     if (originalRequest?._skipRetry) {
       return Promise.reject(error)
+    }
+
+    if (error.response) {
+      const status = error.response.status
+      if (status === 400 || status === 401 || status === 403 || status === 404 ||
+          status === 409 || status === 422 || status === 429 || status >= 500 ||
+          hasTechnicalMessage(error.message)) {
+        error.message = getFriendlyStatusMessage(status)
+      }
     }
 
     if (!error.response && originalRequest && !originalRequest._retry) {

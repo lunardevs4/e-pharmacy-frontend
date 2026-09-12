@@ -218,6 +218,10 @@ export const en = {
   'forgot.validationMatch': 'New password and confirm password fields do not match.',
 
   // Error Messages & Status Code Fallbacks
+  'error.sessionExpired': 'Your session has expired. Please sign in again.',
+  'error.forbidden': 'You do not have permission to perform this action.',
+  'error.notFound': 'The requested information could not be found.',
+  'error.conflict': 'This action could not be completed because the information already exists or has changed.',
   'error.networkError': 'Oops! Something went wrong. Please try again.',
   'error.invalidRequest': 'The request was not valid. Please check your email and password.',
   'error.incorrectCredentials': 'Incorrect email or password.',

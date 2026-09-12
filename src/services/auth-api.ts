@@ -192,6 +192,12 @@ const getErrorMessage = (error: unknown): string => {
   const { t } = useLanguageStore.getState()
   if (typeof error === 'object' && error !== null) {
     const axiosError = error as AxiosError
+    const status = axiosError.response?.status
+    if (status === 401) return t('error.incorrectCredentials')
+    if (status === 403) return t('error.accountNotAllowed')
+    if (status === 404) return t('error.accountNotFound')
+    if (status === 429) return t('error.rateLimited')
+    if (status && status >= 500) return t('error.serverUnavailable')
     const responseData = axiosError.response?.data as ApiObject | undefined
     if (responseData?.message) {
       if (typeof responseData.message === 'string') {
@@ -205,13 +211,6 @@ const getErrorMessage = (error: unknown): string => {
     }
     if (responseData?.error && typeof responseData.error === 'string') return responseData.error
     if (axiosError.response?.status === 400) return t('error.invalidRequest')
-    if (axiosError.response?.status === 401) return t('error.incorrectCredentials')
-    if (axiosError.response?.status === 403) return t('error.accountNotAllowed')
-    if (axiosError.response?.status === 404) return t('error.accountNotFound')
-    if (axiosError.response?.status === 429) return t('error.rateLimited')
-    if (axiosError.response?.status && axiosError.response.status >= 500) {
-      return t('error.serverUnavailable')
-    }
   }
   if (error instanceof Error) return error.message
   return t('error.requestFailed')

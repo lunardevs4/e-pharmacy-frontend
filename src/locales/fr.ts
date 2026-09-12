@@ -220,6 +220,10 @@ export const fr: Record<keyof typeof en, string> = {
   'forgot.validationMatch': 'Le nouveau mot de passe et le mot de passe de confirmation ne correspondent pas.',
 
   // Error Messages & Status Code Fallbacks
+  'error.sessionExpired': 'Votre session a expiré. Veuillez vous reconnecter.',
+  'error.forbidden': 'Vous n\'êtes pas autorisé à effectuer cette action.',
+  'error.notFound': 'Les informations demandées sont introuvables.',
+  'error.conflict': 'Cette action ne peut pas être effectuée car les informations existent déjà ou ont changé.',
   'error.networkError': 'Oups! Quelque chose a mal tourné. Veuillez réessayer.',
   'error.invalidRequest': 'La demande n\'est pas valide. Veuillez vérifier votre e-mail et votre mot de passe.',
   'error.incorrectCredentials': 'E-mail ou mot de passe incorrect.',
