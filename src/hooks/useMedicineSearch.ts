@@ -1,39 +1,29 @@
 import { useState, useCallback } from 'react'
-import { Medicine } from '@/types'
+import { Medicine, PharmacyStock } from '@/types'
 import { MedicineApi } from '@/services/medicine-api'
 
 export function useMedicineSearch() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [results, setResults] = useState<Medicine[]>([])
+  const [results, setResults] = useState<(PharmacyStock & { medicine: Medicine })[]>([])
 
   const executeSearch = useCallback(
-    async (query: string, category: string, inStockOnly: boolean) => {
+    async (query: string, category: string, lat?: number, lng?: number, insuranceId?: string | null) => {
       setLoading(true)
       setError(null)
       try {
-        const data = await MedicineApi.searchMedicines(query, category, inStockOnly)
-        const normalizedQuery = query.trim().toLowerCase()
+        const data = await MedicineApi.searchNearbyPharmacies(query, category, lat, lng, 10, insuranceId)
+        
+        // Sort by distance (nulls to the bottom)
         const rankedResults = [...data].sort((a, b) => {
-          const rank = (medicine: Medicine) => {
-            if (!normalizedQuery) return 0
-
-            const tradeName = medicine.name.toLowerCase()
-            const genericName = medicine.genericName.toLowerCase()
-
-            if (tradeName === normalizedQuery) return 4
-            if (genericName === normalizedQuery) return 3
-            if (tradeName.startsWith(normalizedQuery)) return 2
-            if (genericName.startsWith(normalizedQuery)) return 1
-            return 0
-          }
-
-          return rank(b) - rank(a)
+          if (a.distance === 0 && b.distance !== 0) return 1;
+          if (b.distance === 0 && a.distance !== 0) return -1;
+          return a.distance - b.distance;
         })
 
         setResults(rankedResults)
       } catch (err: any) {
-        setError(err.message || 'Failed to search medicines.')
+        setError(err.message || 'Failed to search pharmacies.')
       } finally {
         setLoading(false)
       }

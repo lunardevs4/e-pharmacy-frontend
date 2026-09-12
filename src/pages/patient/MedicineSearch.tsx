@@ -91,16 +91,44 @@ export default function MedicineSearch() {
     setHasSearched(Boolean(initialQuery))
 
     if (initialQuery) {
-      executeSearch(initialQuery, '', false)
+      const fetchInitial = async () => {
+        const loc = await getUserLocation()
+        executeSearch(initialQuery, '', loc?.lat, loc?.lng, null)
+      }
+      fetchInitial()
       MedicineApi.saveSearchHistory(initialQuery, '')
     }
   }, [initialQuery, executeSearch])
 
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null)
-  const [stockList, setStockList] = useState<PharmacyStock[]>([])
-  const [stockLoading, setStockLoading] = useState(false)
-
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
+
+  const groupedResults = React.useMemo(() => {
+    return Object.values(
+      results.reduce((acc, curr) => {
+        if (!acc[curr.medicine.id]) {
+          acc[curr.medicine.id] = { medicine: curr.medicine, pharmacies: [] }
+        }
+        acc[curr.medicine.id].pharmacies.push(curr)
+        return acc
+      }, {} as Record<string, { medicine: Medicine; pharmacies: PharmacyStock[] }>)
+    )
+  }, [results])
+
+  const getSortedPharmacies = (pharmacies: PharmacyStock[]) => {
+    const list = [...pharmacies]
+    if (sortBy === 'proximity') {
+      return list.sort((a, b) => {
+        if (a.distance === 0 && b.distance !== 0) return 1;
+        if (b.distance === 0 && a.distance !== 0) return -1;
+        return a.distance - b.distance;
+      })
+    }
+    if (sortBy === 'price') return list.sort((a, b) => a.price - b.price)
+    if (sortBy === 'stock') return list.sort((a, b) => b.stock - a.stock)
+    if (sortBy === 'rating') return list.sort((a, b) => b.rating - a.rating)
+    return list
+  }
 
   const [showResModal, setShowResModal] = useState(false)
   const [resStep, setResStep] = useState<1 | 2 | 3 | 4 | 5>(1)
@@ -188,14 +216,14 @@ export default function MedicineSearch() {
     })
   }
 
-  const handleSearch = (e?: React.FormEvent) => {
+  const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     
-    getUserLocation()
+    const loc = await getUserLocation()
+    const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
+    const insuranceId = selectedInsurance !== 'None' ? (matchedProvider?.id || null) : null
     
-    setSelectedMedicine(null)
-    setStockList([])
-    executeSearch(query, category, inStockOnly)
+    executeSearch(query, category, loc?.lat, loc?.lng, insuranceId)
     if (query.trim()) {
       MedicineApi.saveSearchHistory(query, category)
       MedicineApi.getSearchHistory().then(setSearchHistory)
@@ -203,11 +231,13 @@ export default function MedicineSearch() {
     setHasSearched(true)
   }
 
-  const handlePopularSearch = (term: string) => {
+  const handlePopularSearch = async (term: string) => {
     setQuery(term)
-    setSelectedMedicine(null)
-    setStockList([])
-    executeSearch(term, category, inStockOnly)
+    const loc = await getUserLocation()
+    const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
+    const insuranceId = selectedInsurance !== 'None' ? (matchedProvider?.id || null) : null
+
+    executeSearch(term, category, loc?.lat, loc?.lng, insuranceId)
     MedicineApi.saveSearchHistory(term, category)
     MedicineApi.getSearchHistory().then(setSearchHistory)
     setHasSearched(true)
@@ -239,51 +269,9 @@ export default function MedicineSearch() {
     }
   }
 
-  const handleViewAvailability = async (med: Medicine, insuranceOverride?: string) => {
-    setSelectedMedicine(med)
-    setStockLoading(true)
-    
-    const loc = await getUserLocation()
-    
-    try {
-      const insurance = insuranceOverride ?? selectedInsurance
-      const matchedProvider = providers.find(p => p.code === insurance || p.name === insurance)
-      const insuranceId = insurance !== 'None' ? (matchedProvider?.id || null) : null
-      
-      const list = await getMedicineAvailability(
-        med.id, 
-        insuranceId,
-        loc?.lat,
-        loc?.lng
-      )
-      
-      setStockList(list)
-      setMobileView('list')
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setStockLoading(false)
-    }
-  }
 
-  const getSortedPharmacies = () => {
-    const list = [...stockList]
-    if (sortBy === 'proximity') {
-      return list.sort((a, b) => a.distance - b.distance)
-    }
-    if (sortBy === 'price') {
-      return list.sort((a, b) => a.price - b.price)
-    }
-    if (sortBy === 'stock') {
-      return list.sort((a, b) => b.stock - a.stock)
-    }
-    if (sortBy === 'rating') {
-      return list.sort((a, b) => b.rating - a.rating)
-    }
-    return list
-  }
 
-  const sortedPharmacies = getSortedPharmacies()
+
 
   const handleConfirmReservation = async () => {
     if (!selectedMedicine || !selectedPharmacy) return
@@ -346,14 +334,6 @@ export default function MedicineSearch() {
       })
       setCreatedReservation({ ...res, insuranceProvider: selectedInsurance, insurancePays, patientPays })
 
-      setStockList((prev) =>
-        prev.map((s) =>
-          s.pharmacyId === selectedPharmacy.pharmacyId
-            ? { ...s, stock: Math.max(0, s.stock - quantity) }
-            : s,
-        ),
-      )
-
       setResStep(5)
     } catch (err: any) {
       console.error(err)
@@ -380,15 +360,15 @@ export default function MedicineSearch() {
   const [locationError, setLocationError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (selectedMedicine && stockList.length > 0) {
-      const closest = stockList[0]
+    if (results.length > 0) {
+      const closest = results[0]
       setMapQuery(`${closest.lat},${closest.lng}`)
       setMapZoom(15)
     } else {
       setMapQuery('Kigali, Rwanda')
       setMapZoom(13)
     }
-  }, [selectedMedicine, stockList])
+  }, [results])
 
   const handleSelectPharmacyMap = (pharm: PharmacyStock) => {
     setMapQuery(`${pharm.lat},${pharm.lng}`)
@@ -444,11 +424,18 @@ export default function MedicineSearch() {
                   {searchHistory.slice(0, 5).map((item) => (
                     <div
                       key={item.id}
-                      onMouseDown={() => {
+                      onMouseDown={async () => {
                         setQuery(item.query)
+                        if (item.category !== 'All') {
+                          setCategory(item.category)
+                        }
                         setSelectedMedicine(null)
-                        setStockList([])
-                        executeSearch(item.query, item.category, inStockOnly)
+                        
+                        const loc = await getUserLocation()
+                        const matchedProvider = providers.find(p => p.code === selectedInsurance || p.name === selectedInsurance)
+                        const insuranceId = selectedInsurance !== 'None' ? (matchedProvider?.id || null) : null
+                        
+                        executeSearch(item.query, item.category !== 'All' ? item.category : '', loc?.lat, loc?.lng, insuranceId)
                         setHasSearched(true)
                       }}
                       className="p-2.5 hover:bg-slate-50 cursor-pointer flex items-center justify-between text-gray-900"
@@ -545,145 +532,92 @@ export default function MedicineSearch() {
             </div>
           )}
 
-          {hasSearched && !selectedMedicine && (
-            <div className="space-y-4">
+          {hasSearched && (
+            <div className="space-y-4 animate-fadeIn">
               <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                  National Search Matches
+                  Search Results
                 </h2>
                 <span className="text-xs font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                  {results.length} Indexed
+                  {results.length} Pharmacies Found
                 </span>
               </div>
 
-              {results.length === 0 && !loading && (
+              {loading ? (
+                <>
+                  <CardSkeleton />
+                  <CardSkeleton />
+                  <CardSkeleton />
+                </>
+              ) : groupedResults.length === 0 ? (
                 <div className="bg-white border rounded-xl p-10 text-center text-gray-400 text-xs">
-                  No medicines found matching the search filters.
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {loading ? (
-                  <>
-                    <CardSkeleton />
-                    <CardSkeleton />
-                    <CardSkeleton />
-                  </>
-                ) : (
-                  results.map((med) => (
-                    <MedicineCard
-                      key={med.id}
-                      medicine={med}
-                      onViewAvailability={handleViewAvailability}
-                      onReserve={handleViewAvailability}
-                      isBookmarked={bookmarkedMedicines.includes(med.id)}
-                      onToggleBookmark={handleToggleBookmarkMedicine}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-
-          {selectedMedicine && (
-            <div className="space-y-5 animate-fadeIn">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedMedicine(null)
-                  setStockList([])
-                }}
-                className="text-xs font-bold text-health-primary hover:underline flex items-center hover:text-health-secondary transition-colors"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-                <span>Back to Search Results</span>
-              </button>
-
-              <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
-                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                  <h2 className="font-black text-gray-900 text-lg">{selectedMedicine.name}</h2>
-                  {selectedMedicine.prescriptionRequired && (
-                    <span className="text-[9px] font-black text-red-755 bg-red-50 border border-red-250 px-1.5 py-0.5 rounded uppercase">
-                      Prescription Required
-                    </span>
-                  )}
-                </div>
-
-                <div className="text-xs space-y-2.5 text-gray-700 pt-3 border-t border-gray-150">
-                  {selectedMedicine.prescriptionRequired && (
-                    <div className="bg-amber-50 border border-amber-250 text-amber-900 rounded-lg p-3 text-[11px] font-bold mt-1 flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-                      <span>
-                        Always use prescription medicines strictly according to professional medical advice. Follow your physician's prescribed directions carefully.
-                      </span>
-                    </div>
-                  )}
-                  {selectedMedicine.storage && selectedMedicine.storage !== 'Not provided' && (
-                    <p>
-                      <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
-                      {selectedMedicine.storage}
-                    </p>
-                  )}
-                  {selectedMedicine.minTemperature != null && (
-                  <p>
-                    <span className="font-bold text-gray-900">Minimum Temperature:</span>{' '}
-                    {selectedMedicine.minTemperature != null ? `${selectedMedicine.minTemperature}°C` : 'Not provided'}
-                  </p>
-                  )}
-                  {selectedMedicine.maxTemperature != null && (
-                  <p>
-                    <span className="font-bold text-gray-900">Maximum Temperature:</span>{' '}
-                    {selectedMedicine.maxTemperature != null ? `${selectedMedicine.maxTemperature}°C` : 'Not provided'}
-                  </p>
-                  )}
-                </div>
-              </div>
-
-              {stockLoading ? (
-                <div className="text-center py-10 text-xs text-gray-400 flex items-center justify-center space-x-2">
-                  <RefreshCw className="w-5 h-5 animate-spin text-emerald-600" />
-                  <span>Loading inventory details...</span>
-                </div>
-              ) : sortedPharmacies.length === 0 ? (
-                <div className="text-center py-16 text-gray-400 space-y-4 border border-dashed rounded-xl">
-                  <MapPin className="w-12 h-12 text-gray-200 mx-auto" />
-                  <div>
-                    <p className="font-bold text-gray-700">No pharmacies found</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {selectedMedicine.name} is not currently available at any pharmacies near your location.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedMedicine(null)
-                      setStockList([])
-                    }}
-                    className="text-health-primary font-bold hover:underline text-xs"
-                  >
-                    Search for a different medicine
-                  </button>
+                  No pharmacies found matching the search criteria.
                 </div>
               ) : (
-                <PharmacyAvailabilityTable
-                  pharmacies={sortedPharmacies}
-                  medicineId={selectedMedicine.id}
-                  sortBy={sortBy}
-                  onSortChange={setSortBy}
-                  onReserve={(pharm) => {
-                    setSelectedPharmacy(pharm)
-                    setShowResModal(true)
-                  }}
-                  onSelectPharmacy={handleSelectPharmacyMap}
-                  bookmarkedPharmacies={bookmarkedPharmacies}
-                  onToggleBookmarkPharmacy={handleToggleBookmarkPharmacy}
-                  selectedInsurance={selectedInsurance}
-                  onInsuranceChange={(insurance) => {
-                    setSelectedInsurance(insurance)
-                    void handleViewAvailability(selectedMedicine, insurance)
-                  }}
-                  providers={providers}
-                />
+                <div className="space-y-10">
+                  {groupedResults.map((group) => (
+                    <div key={group.medicine.id} className="space-y-4">
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
+                        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                          <h2 className="font-black text-gray-900 text-lg">{group.medicine.name}</h2>
+                          {group.medicine.prescriptionRequired && (
+                            <span className="text-[9px] font-black text-red-755 bg-red-50 border border-red-250 px-1.5 py-0.5 rounded uppercase">
+                              Prescription Required
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs space-y-2.5 text-gray-700 pt-3 border-t border-gray-150">
+                          {group.medicine.prescriptionRequired && (
+                            <div className="bg-amber-50 border border-amber-250 text-amber-900 rounded-lg p-3 text-[11px] font-bold mt-1 flex items-start gap-2">
+                              <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                              <span>
+                                Always use prescription medicines strictly according to professional medical advice. Follow your physician's prescribed directions carefully.
+                              </span>
+                            </div>
+                          )}
+                          {group.medicine.storage && group.medicine.storage !== 'Not provided' && (
+                            <p>
+                              <span className="font-bold text-gray-900">Storage Conditions:</span>{' '}
+                              {group.medicine.storage}
+                            </p>
+                          )}
+                          {group.medicine.minTemperature != null && (
+                            <p>
+                              <span className="font-bold text-gray-900">Minimum Temperature:</span>{' '}
+                              {group.medicine.minTemperature}°C
+                            </p>
+                          )}
+                          {group.medicine.maxTemperature != null && (
+                            <p>
+                              <span className="font-bold text-gray-900">Maximum Temperature:</span>{' '}
+                              {group.medicine.maxTemperature}°C
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <PharmacyAvailabilityTable
+                        pharmacies={getSortedPharmacies(group.pharmacies)}
+                        medicineId={group.medicine.id}
+                        sortBy={sortBy}
+                        onSortChange={setSortBy}
+                        onReserve={(pharm) => {
+                          setSelectedMedicine(group.medicine)
+                          setSelectedPharmacy(pharm)
+                          setShowResModal(true)
+                        }}
+                        onSelectPharmacy={handleSelectPharmacyMap}
+                        bookmarkedPharmacies={bookmarkedPharmacies}
+                        onToggleBookmarkPharmacy={handleToggleBookmarkPharmacy}
+                        selectedInsurance={selectedInsurance}
+                        onInsuranceChange={(insurance) => {
+                          setSelectedInsurance(insurance)
+                        }}
+                        providers={providers}
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}

@@ -101,6 +101,78 @@ export const MedicineApi = {
     }))
   },
 
+  searchNearbyPharmacies: async (
+    query: string,
+    categoryName: string,
+    latitude?: number,
+    longitude?: number,
+    radius: number = 10,
+    insuranceId?: string | null
+  ): Promise<(PharmacyStock & { medicine: Medicine })[]> => {
+    let categoryId = undefined;
+    if (categoryName && categoryName.length === 36) {
+        categoryId = categoryName;
+    } else if (categoryName) {
+        try {
+            const response = await apiClient.get('/categories')
+            const cats = Array.isArray(response.data) ? response.data : response.data?.data || []
+            const cat = cats.find((c: any) => c.name.toLowerCase() === categoryName.toLowerCase());
+            if (cat) categoryId = cat.id;
+        } catch(e) {}
+    }
+
+    const params: Record<string, any> = {
+      page: 1,
+      limit: 100,
+      radius
+    }
+    if (query) params.query = query
+    if (categoryId) params.categoryId = categoryId
+    if (latitude !== undefined) params.latitude = latitude
+    if (longitude !== undefined) params.longitude = longitude
+    if (insuranceId) params.insuranceId = insuranceId
+
+    const response = await apiClient.get('/search/medicines', { params })
+    const payload = response?.data?.data ?? response?.data ?? {}
+    const items = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+
+    return items.map((item: any) => {
+      const med = item.medicine || {}
+      return {
+        pharmacyId: item.pharmacy?.id || '',
+        pharmacyName: item.pharmacy?.name || 'Pharmacy',
+        rating: 0,
+        isOpen: true,
+        distance: item.distance !== null && item.distance !== undefined ? Math.round(item.distance * 10) / 10 : 0,
+        price: Number(item.price || 0),
+        stock: Number(item.quantity || 0),
+        stockStatus: item.quantity === 0 ? 'OUT_OF_STOCK' : item.quantity < 10 ? 'ALMOST_OUT' : item.quantity < 35 ? 'LIMITED' : 'HIGH',
+        insuranceAccepted: item.insuranceCoverage?.hasAgreement ? [item.insuranceCoverage.insuranceCode] : [],
+        lat: Number(item.pharmacy?.latitude || 0),
+        lng: Number(item.pharmacy?.longitude || 0),
+        locationText: item.pharmacy?.address || '',
+        insuranceCoverage: item.insuranceCoverage,
+        medicine: {
+          id: med.id,
+          name: med.tradeName || med.name,
+          genericName: med.genericName || '',
+          tradeNames: [],
+          category: med.category?.name || '',
+          manufacturer: med.manufacturer?.name || '',
+          prescriptionRequired: false,
+          uses: med.uses || med.clinicalUses || 'Not provided',
+          dosage: med.dosage || med.dosageInstructions || 'Not provided',
+          warnings: med.warnings || med.safetyWarnings || 'Not provided',
+          sideEffects: med.sideEffects || 'Not provided',
+          interactions: med.interactions || 'Not provided',
+          storage: med.storage || med.storageConditions || med.batches?.map((batch: any) => batch.storageConditions).filter(Boolean).join('; ') || '',
+          minTemperature: med.minTemperature ?? med.batches?.find((batch: any) => batch.minTemperature != null)?.minTemperature ?? null,
+          maxTemperature: med.maxTemperature ?? med.batches?.find((batch: any) => batch.maxTemperature != null)?.maxTemperature ?? null,
+        }
+      }
+    })
+  },
+
   getMedicineDetails: async (id: string): Promise<Medicine> => {
     const response = await apiClient.get(`/medicines/${id}`)
     const item = response.data
