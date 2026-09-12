@@ -360,6 +360,25 @@ export default function MedicineSearch() {
   const [locationError, setLocationError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!navigator.geolocation) return;
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        setUserLocation(prev => {
+          // Avoid tiny updates to prevent iframe flickering
+          if (prev && Math.abs(prev.lat - latitude) < 0.0001 && Math.abs(prev.lng - longitude) < 0.0001) {
+            return prev
+          }
+          return { lat: latitude, lng: longitude }
+        })
+      },
+      (error) => console.error("Tracking error:", error),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 }
+    )
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [])
+
+  useEffect(() => {
     if (results.length > 0) {
       const closest = results[0]
       const q = (closest.lat && closest.lng) ? `${closest.lat},${closest.lng}` : (closest.locationText || closest.pharmacyName || 'Kigali, Rwanda')
@@ -640,6 +659,20 @@ export default function MedicineSearch() {
             allowFullScreen
             loading="lazy"
           />
+          
+          {userLocation && mapQuery !== 'Kigali, Rwanda' && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${encodeURIComponent(mapQuery)}&travelmode=driving`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-health-primary hover:bg-health-secondary text-white font-black px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 text-sm transition-all hover:scale-105 active:scale-95 border border-white/20"
+              >
+                <Navigation className="w-4 h-4 fill-current" />
+                <span>Live Navigation</span>
+              </a>
+            </div>
+          )}
         </div>
       </div>
 
