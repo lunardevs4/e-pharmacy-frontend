@@ -377,7 +377,11 @@ export const MedicineApi = {
         headers: { 'Content-Type': 'multipart/form-data' },
       },
     )
-    return response?.data?.data ?? response?.data
+    const payload = response?.data
+    if (payload?.data?.total !== undefined) {
+      return payload.data
+    }
+    return payload?.data ?? payload
   },
 
   calculateInsuranceCoverage: async (
