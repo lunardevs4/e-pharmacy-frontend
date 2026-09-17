@@ -207,7 +207,7 @@ apiClient.interceptors.response.use(
 
     if (error.response) {
       const status = error.response.status
-      const errData = error.response.data?.error || error.response.data
+      const errData = (error.response.data as any)?.error || error.response.data
       const code = errData?.code
 
       if (status === 503 && (code === 'SYSTEM_MAINTENANCE' || code === 'SYSTEM_EMERGENCY_LOCKDOWN')) {

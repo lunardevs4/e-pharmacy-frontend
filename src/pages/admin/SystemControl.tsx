@@ -10,12 +10,9 @@ import {
   Clock,
   RefreshCw,
   Power,
-  FileText,
   Shield,
   Activity,
   User,
-  Info,
-  Check,
   X,
 } from 'lucide-react'
 
@@ -125,7 +122,7 @@ export default function SystemControl() {
       setStatus(data.systemStatus || data)
       setFeedback({
         type: 'success',
-        message: 'System maintenance mode enabled successfully.',
+        message: 'Scheduled maintenance mode enabled successfully.',
       })
       fetchAuditLogs()
     } catch (err: any) {
@@ -203,128 +200,126 @@ export default function SystemControl() {
   const mode = status?.mode || 'OPERATIONAL'
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
-        <div>
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans">
+      {/* Top Header Card matching Rwanda E-Pharmacy Admin Console style */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="space-y-1.5">
           <div className="flex items-center space-x-2">
-            <Shield className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              System Control &amp; Emergency Kill-Switch
-            </h1>
+            <Shield className="w-5 h-5 text-emerald-700" />
+            <span className="text-[9px] sm:text-[10px] tracking-widest font-black uppercase text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+              Super Admin Console
+            </span>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900">
+            System Control &amp; Emergency Kill-Switch
+          </h1>
+          <p className="text-slate-500 text-[10px] sm:text-xs leading-relaxed">
             Manage system operational status, scheduled maintenance, and emergency kill-switch controls.
           </p>
         </div>
-        <button
-          onClick={() => {
-            fetchStatus()
-            fetchAuditLogs()
-          }}
-          className="inline-flex items-center space-x-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-        >
-          <RefreshCw className="w-3.5 h-3.5 text-gray-500" />
-          <span>Refresh Status</span>
-        </button>
+
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => {
+              fetchStatus()
+              fetchAuditLogs()
+            }}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 sm:px-4 py-2 rounded-lg text-[10px] sm:text-xs transition-colors flex items-center space-x-2 shadow-xs"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Refresh Status</span>
+          </button>
+        </div>
       </div>
 
-      {/* Feedback Toast */}
+      {/* Feedback Alert Banner */}
       {feedback && (
         <div
-          className={`p-4 rounded-xl border flex items-center justify-between shadow-sm ${
+          className={`p-4 rounded-xl border flex items-center justify-between text-xs font-medium ${
             feedback.type === 'success'
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
-              : 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              : 'bg-red-50 border-red-200 text-red-900'
           }`}
         >
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
             {feedback.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
             ) : (
-              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
             )}
-            <span className="text-sm font-medium">{feedback.message}</span>
+            <span>{feedback.message}</span>
           </div>
           <button
             onClick={() => setFeedback(null)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            className="text-gray-400 hover:text-gray-600"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Current Status Overview Banner */}
+      {/* Current System State Banner Card */}
       <div
-        className={`rounded-2xl p-6 border shadow-sm relative overflow-hidden transition-all ${
+        className={`rounded-xl p-5 sm:p-6 border shadow-xs transition-all ${
           mode === 'OPERATIONAL'
-            ? 'bg-gradient-to-r from-emerald-900/10 via-emerald-800/5 to-slate-900/5 dark:from-emerald-950/40 dark:to-slate-900/40 border-emerald-200 dark:border-emerald-800/80'
+            ? 'bg-emerald-50/70 border-emerald-200'
             : mode === 'MAINTENANCE'
-            ? 'bg-gradient-to-r from-amber-900/10 via-amber-800/5 to-slate-900/5 dark:from-amber-950/40 dark:to-slate-900/40 border-amber-200 dark:border-amber-800/80'
-            : 'bg-gradient-to-r from-red-900/20 via-red-800/10 to-slate-900/5 dark:from-red-950/60 dark:to-slate-900/40 border-red-300 dark:border-red-800'
+            ? 'bg-amber-50/70 border-amber-200'
+            : 'bg-red-50/80 border-red-300'
         }`}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start space-x-4">
             <div
-              className={`p-3.5 rounded-2xl flex items-center justify-center flex-shrink-0 border shadow-inner ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white shadow-md ${
                 mode === 'OPERATIONAL'
-                  ? 'bg-emerald-100 dark:bg-emerald-900/80 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'
+                  ? 'bg-emerald-600 shadow-emerald-700/20'
                   : mode === 'MAINTENANCE'
-                  ? 'bg-amber-100 dark:bg-amber-900/80 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-700'
-                  : 'bg-red-100 dark:bg-red-900/80 text-red-600 dark:text-red-300 border-red-200 dark:border-red-700'
+                  ? 'bg-amber-500 shadow-amber-600/20'
+                  : 'bg-red-600 shadow-red-700/20 animate-bounce'
               }`}
             >
               {mode === 'OPERATIONAL' ? (
-                <CheckCircle2 className="w-8 h-8" />
+                <CheckCircle2 className="w-6 h-6" />
               ) : mode === 'MAINTENANCE' ? (
-                <Wrench className="w-8 h-8" />
+                <Wrench className="w-6 h-6" />
               ) : (
-                <ShieldAlert className="w-8 h-8 animate-pulse" />
+                <ShieldAlert className="w-6 h-6" />
               )}
             </div>
 
             <div>
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <div className="flex items-center space-x-2.5 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Current System State
                 </span>
                 <span
-                  className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                  className={`inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
                     mode === 'OPERATIONAL'
-                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+                      ? 'bg-emerald-600 text-white'
                       : mode === 'MAINTENANCE'
-                      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30'
-                      : 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30 animate-pulse'
+                      ? 'bg-amber-600 text-white animate-pulse'
+                      : 'bg-red-600 text-white animate-pulse'
                   }`}
                 >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      mode === 'OPERATIONAL'
-                        ? 'bg-emerald-500'
-                        : mode === 'MAINTENANCE'
-                        ? 'bg-amber-500'
-                        : 'bg-red-500'
-                    }`}
-                  />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
                   <span>{mode}</span>
                 </span>
               </div>
 
-              <h2 className="text-xl font-extrabold text-gray-900 dark:text-white mt-1">
+              <h2 className="text-lg sm:text-xl font-black text-gray-900">
                 {mode === 'OPERATIONAL' && 'System is fully operational and serving traffic'}
-                {mode === 'MAINTENANCE' && 'Scheduled Maintenance in progress'}
+                {mode === 'MAINTENANCE' && 'Scheduled Maintenance Mode in progress'}
                 {mode === 'LOCKDOWN' && 'Emergency Kill-Switch / Lockdown Active'}
               </h2>
 
               {status?.reason && (
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 italic">
-                  "{status.reason}"
+                <p className="text-xs text-gray-700 mt-1.5 italic font-medium">
+                  Notice: "{status.reason}"
                 </p>
               )}
 
-              <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-3">
+              <div className="flex flex-wrap items-center gap-4 text-[11px] text-gray-500 mt-2.5">
                 {status?.updatedAt && (
                   <span className="flex items-center space-x-1">
                     <Clock className="w-3.5 h-3.5 text-gray-400" />
@@ -334,41 +329,41 @@ export default function SystemControl() {
                 {status?.updatedBy?.email && (
                   <span className="flex items-center space-x-1">
                     <User className="w-3.5 h-3.5 text-gray-400" />
-                    <span>By: {status.updatedBy.email}</span>
+                    <span>Admin: {status.updatedBy.email}</span>
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Quick Resume Button if in Maintenance or Lockdown */}
+          {/* Quick Resume Operations Button */}
           {mode !== 'OPERATIONAL' && (
             <button
               onClick={handleResumeOperation}
               disabled={submitting}
-              className="flex-shrink-0 inline-flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-lg shadow-emerald-900/30 transition border border-emerald-500 disabled:opacity-50"
+              className="flex-shrink-0 group inline-flex items-center justify-center space-x-2.5 bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-700 hover:to-emerald-900 text-white font-extrabold text-xs sm:text-sm px-6 py-3.5 rounded-xl shadow-md shadow-emerald-700/25 hover:shadow-lg hover:shadow-emerald-800/30 ring-1 ring-emerald-500/30 hover:ring-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition-all duration-200 ease-in-out transform hover:scale-[1.03] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              <Power className="w-4 h-4" />
+              <Power className="w-4.5 h-4.5 group-hover:animate-pulse" />
               <span>Resume Normal Operations</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Control Grid */}
+      {/* Governance Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Scheduled Maintenance Panel */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between">
+        {/* Schedule Maintenance Card */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-center space-x-3 mb-5 border-b border-gray-100 pb-4">
+              <div className="p-2.5 rounded-lg bg-amber-50 text-amber-600 border border-amber-200">
                 <Wrench className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">
                   Schedule Maintenance Mode
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-500">
                   Gracefully block non-admin users with custom maintenance message.
                 </p>
               </div>
@@ -376,7 +371,7 @@ export default function SystemControl() {
 
             <form onSubmit={handleEnableMaintenance} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
                   User Notification Message
                 </label>
                 <input
@@ -384,12 +379,12 @@ export default function SystemControl() {
                   value={maintMessage}
                   onChange={(e) => setMaintMessage(e.target.value)}
                   placeholder="System is currently undergoing scheduled maintenance..."
-                  className="w-full text-sm bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full text-xs sm:text-sm bg-gray-50 border border-gray-300 rounded-lg p-2.5 sm:p-3 text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
                   Internal / Official Reason
                 </label>
                 <input
@@ -397,26 +392,26 @@ export default function SystemControl() {
                   value={maintReason}
                   onChange={(e) => setMaintReason(e.target.value)}
                   placeholder="e.g. Database schema migration & security audit"
-                  className="w-full text-sm bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full text-xs sm:text-sm bg-gray-50 border border-gray-300 rounded-lg p-2.5 sm:p-3 text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
                   Estimated End Time (Optional)
                 </label>
                 <input
                   type="datetime-local"
                   value={maintEndTime}
                   onChange={(e) => setMaintEndTime(e.target.value)}
-                  className="w-full text-sm bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full text-xs sm:text-sm bg-gray-50 border border-gray-300 rounded-lg p-2.5 sm:p-3 text-gray-900 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full inline-flex items-center justify-center space-x-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm py-3 px-4 rounded-xl transition shadow-md shadow-amber-900/20 disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center space-x-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm py-3 px-4 rounded-lg shadow-xs transition disabled:opacity-50"
               >
                 <Wrench className="w-4 h-4" />
                 <span>
@@ -428,31 +423,31 @@ export default function SystemControl() {
         </div>
 
         {/* Emergency Kill-Switch Panel */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-red-200 dark:border-red-950/80 p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+        <div className="bg-white border border-red-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
+            <div className="flex items-center space-x-3 mb-5 border-b border-red-100 pb-4">
+              <div className="p-2.5 rounded-lg bg-red-50 text-red-600 border border-red-200">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">
                   Emergency Kill-Switch / Lockdown
                 </h3>
-                <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                <p className="text-xs text-red-600 font-semibold">
                   Instant platform access suspension for security incidents.
                 </p>
               </div>
             </div>
 
-            <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl p-4 mb-6 text-xs text-red-800 dark:text-red-300 space-y-2">
-              <div className="flex items-center space-x-2 font-bold uppercase tracking-wider">
-                <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+            <div className="bg-red-50/90 border border-red-200 rounded-xl p-4 mb-6 text-xs text-red-900 space-y-2">
+              <div className="flex items-center space-x-2 font-bold uppercase tracking-wider text-red-800">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
                 <span>Critical Governance Control</span>
               </div>
-              <p>
+              <p className="leading-relaxed">
                 Triggering Emergency Lockdown will immediately block all non-admin users across Patient, Pharmacy, Government, and Insurance portals with HTTP 503 error.
               </p>
-              <ul className="list-disc list-inside space-y-1 text-red-700 dark:text-red-300 pt-1">
+              <ul className="list-disc list-inside space-y-1 text-red-800 pt-1 font-medium">
                 <li>Authenticated System Administrators retain management access</li>
                 <li>Audit log entry will record admin user &amp; mandatory reason</li>
                 <li>Requires mandatory reason &amp; explicit confirmation</li>
@@ -466,7 +461,7 @@ export default function SystemControl() {
               setShowLockdownModal(true)
             }}
             disabled={submitting || mode === 'LOCKDOWN'}
-            className="w-full inline-flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-sm py-3 px-4 rounded-xl transition shadow-lg shadow-red-900/30 disabled:opacity-50"
+            className="w-full inline-flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs sm:text-sm py-3 px-4 rounded-lg shadow-sm shadow-red-700/20 transition disabled:opacity-50"
           >
             <ShieldAlert className="w-4 h-4" />
             <span>
@@ -476,56 +471,58 @@ export default function SystemControl() {
         </div>
       </div>
 
-      {/* Audit Log Trail Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+      {/* Governance Audit Log Table */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Activity className="w-5 h-5 text-gray-500" />
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              System Governance Audit Trail
+            <Activity className="w-4 h-4 text-emerald-700" />
+            <h3 className="text-sm font-bold text-gray-900">
+              System Governance Audit Log
             </h3>
           </div>
-          <span className="text-xs text-gray-500">Last 10 System Actions</span>
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+            Last 10 Actions
+          </span>
         </div>
 
         {auditLogs.length === 0 ? (
-          <p className="text-sm text-gray-500 italic py-4 text-center">
+          <p className="text-xs text-gray-500 italic py-6 text-center">
             No system status change logs recorded yet.
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-              <thead className="bg-gray-50 dark:bg-slate-800/60 text-gray-500 dark:text-gray-400 uppercase font-semibold">
+            <table className="w-full text-left text-xs text-gray-800">
+              <thead className="bg-gray-100 text-gray-600 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
                 <tr>
                   <th className="p-3">Timestamp</th>
                   <th className="p-3">Action</th>
                   <th className="p-3">Admin User</th>
-                  <th className="p-3">Details / Reason</th>
+                  <th className="p-3">Reason / Details</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-gray-100">
                 {auditLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
-                    <td className="p-3 font-mono text-gray-500">
+                  <tr key={log.id} className="hover:bg-gray-50/80 transition">
+                    <td className="p-3 font-mono text-[11px] text-gray-500">
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
                     <td className="p-3">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                           log.action.includes('LOCKDOWN')
-                            ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300'
+                            ? 'bg-red-100 text-red-800 border border-red-200'
                             : log.action.includes('ENABLED')
-                            ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300'
-                            : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                         }`}
                       >
                         {log.action}
                       </span>
                     </td>
-                    <td className="p-3 font-medium text-gray-900 dark:text-white">
+                    <td className="p-3 font-semibold text-gray-900">
                       {log.user?.email || 'System Admin'}
                     </td>
-                    <td className="p-3 truncate max-w-xs italic text-gray-500">
+                    <td className="p-3 truncate max-w-xs italic text-gray-600">
                       {log.metadata?.reason || log.metadata?.message || '-'}
                     </td>
                   </tr>
@@ -538,40 +535,40 @@ export default function SystemControl() {
 
       {/* Confirmation Modal for Emergency Lockdown */}
       {showLockdownModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-red-500/80 max-w-lg w-full p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl border-2 border-red-500 max-w-lg w-full p-6 shadow-2xl relative text-gray-900">
             <button
               onClick={() => setShowLockdownModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center space-x-3 text-red-600 dark:text-red-400 mb-4">
+            <div className="flex items-center space-x-3 text-red-600 mb-4">
               <ShieldAlert className="w-8 h-8 flex-shrink-0 animate-bounce" />
               <div>
-                <h3 className="text-xl font-extrabold text-gray-900 dark:text-white">
+                <h3 className="text-xl font-extrabold text-gray-900">
                   Confirm Emergency Lockdown
                 </h3>
-                <p className="text-xs text-red-600 dark:text-red-400 font-semibold">
+                <p className="text-xs text-red-600 font-bold uppercase tracking-wider">
                   Rwanda E-Pharmacy Emergency Protocol
                 </p>
               </div>
             </div>
 
             {lockdownError && (
-              <div className="bg-red-50 dark:bg-red-950/60 border border-red-300 dark:border-red-800 text-red-700 dark:text-red-200 text-xs p-3 rounded-xl mb-4 font-medium">
+              <div className="bg-red-50 border border-red-300 text-red-800 text-xs p-3 rounded-lg mb-4 font-medium">
                 {lockdownError}
               </div>
             )}
 
-            <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300">
-              <p>
-                You are about to activate the Emergency Kill-Switch for the platform. This action will immediately block all non-admin API requests with HTTP 503 error code.
+            <div className="space-y-4 text-xs sm:text-sm text-gray-700">
+              <p className="leading-relaxed">
+                You are about to activate the Emergency Kill-Switch. This action will immediately block all non-admin API requests across Patient, Pharmacy, Government, and Insurance portals with HTTP 503 error code.
               </p>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-800 mb-1">
                   Mandatory Security Reason <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -579,29 +576,29 @@ export default function SystemControl() {
                   value={lockdownReason}
                   onChange={(e) => setLockdownReason(e.target.value)}
                   placeholder="Describe the incident or reason for emergency lockdown..."
-                  className="w-full text-sm bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 outline-none"
+                  className="w-full text-xs sm:text-sm bg-gray-50 border border-gray-300 rounded-lg p-3 text-gray-900 focus:bg-white focus:ring-2 focus:ring-red-500 outline-none transition"
                 />
               </div>
 
-              <div className="flex items-start space-x-3 pt-2">
+              <div className="flex items-start space-x-3 pt-1">
                 <input
                   type="checkbox"
                   id="lockdown-confirm"
                   checked={lockdownConfirmed}
                   onChange={(e) => setLockdownConfirmed(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded text-red-600 focus:ring-red-500 border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800"
+                  className="mt-0.5 w-4 h-4 rounded text-red-600 focus:ring-red-500 border-gray-300 bg-gray-50"
                 />
-                <label htmlFor="lockdown-confirm" className="text-xs font-medium text-gray-600 dark:text-gray-300 select-none">
+                <label htmlFor="lockdown-confirm" className="text-xs font-medium text-gray-700 select-none">
                   I confirm that I am an authorized System Administrator and intend to restrict non-admin traffic immediately.
                 </label>
               </div>
             </div>
 
-            <div className="flex items-center justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 dark:border-slate-800">
+            <div className="flex items-center justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={() => setShowLockdownModal(false)}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition"
+                className="px-4 py-2 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition"
               >
                 Cancel
               </button>
@@ -609,7 +606,7 @@ export default function SystemControl() {
                 type="button"
                 onClick={handleConfirmLockdown}
                 disabled={submitting}
-                className="px-5 py-2.5 text-sm font-extrabold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-900/40 transition disabled:opacity-50 inline-flex items-center space-x-2"
+                className="px-5 py-2.5 text-xs sm:text-sm font-extrabold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm shadow-red-700/30 transition disabled:opacity-50 inline-flex items-center space-x-2"
               >
                 <ShieldAlert className="w-4 h-4" />
                 <span>Activate Lockdown</span>

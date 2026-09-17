@@ -18,6 +18,7 @@ import {
   AlertTriangle, Server, Clock, UserCheck, UserX, RefreshCw,
   ArrowRight, Shield, Settings, Cpu, Wifi, Database, Lock,
   TrendingUp, MapPin, FileText, DollarSign, ClipboardList, Building,
+  ShieldAlert,
 } from 'lucide-react'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Title, Tooltip, Legend, Filler)
@@ -212,9 +213,9 @@ export default function AdminDashboard() {
           </div>
           <Link
             to="/admin/system"
-            className="bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300 font-bold px-3 py-2 rounded-lg text-[10px] sm:text-xs transition border border-red-200 dark:border-red-800 flex items-center space-x-1.5"
+            className="group inline-flex items-center space-x-2 bg-gradient-to-br from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-extrabold px-3.5 py-2 rounded-lg text-[10px] sm:text-xs transition-all duration-200 shadow-sm shadow-red-700/20 hover:shadow-md hover:shadow-red-800/30 ring-1 ring-red-500/30 hover:ring-red-400/50 transform hover:scale-[1.03] active:scale-[0.97]"
           >
-            <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+            <ShieldAlert className="w-3.5 h-3.5 group-hover:animate-pulse" />
             <span>Kill-Switch</span>
           </Link>
           <button
