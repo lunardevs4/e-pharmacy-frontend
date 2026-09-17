@@ -96,8 +96,8 @@ export default function LocationSelector({
           }
         }
       }
-    } catch (error) {
-      console.error('Error loading location data:', error)
+    } catch {
+      // Fallback gracefully
     } finally {
       setIsLoading(false)
     }

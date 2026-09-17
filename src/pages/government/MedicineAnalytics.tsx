@@ -50,7 +50,6 @@ export default function MedicineAnalytics() {
       setEssentialMedicines(medicineArray)
     } catch (err: any) {
       setError(err.message || 'Failed to load medicine analytics')
-      console.error('Medicine analytics error:', err)
     } finally {
       setLoading(false)
     }

@@ -31,7 +31,7 @@ export default function PatientDashboard() {
           setProviders(data.filter((p: any) => p.isActive !== false))
         }
       })
-      .catch((err) => console.error('Error loading dynamic insurance providers:', err))
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -119,8 +119,8 @@ export default function PatientDashboard() {
         const stocks = await MedicineApi.getMedicineAvailability(allMeds[0].id).catch(() => [])
         setFavPharmacies(stocks.filter((s) => favPharmIds.includes(s.pharmacyId)))
       }
-    } catch (err) {
-      console.error('Error loading dashboard data', err)
+    } catch {
+      // Dashboard state will fallback gracefully
     } finally {
       setLoading(false)
     }
@@ -136,8 +136,8 @@ export default function PatientDashboard() {
     try {
       await MedicineApi.saveSearchHistory(query, 'All')
       navigate(`/patient/search?q=${encodeURIComponent(query)}`)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      navigate(`/patient/search?q=${encodeURIComponent(query)}`)
     }
   }
 
@@ -145,8 +145,8 @@ export default function PatientDashboard() {
     try {
       await MedicineApi.saveSearchHistory(pastQuery, category)
       navigate(`/patient/search?q=${encodeURIComponent(pastQuery)}`)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      navigate(`/patient/search?q=${encodeURIComponent(pastQuery)}`)
     }
   }
 
@@ -157,18 +157,14 @@ export default function PatientDashboard() {
       const updated = searchHistory.filter((item) => item.id !== id)
       localStorage.setItem(key, JSON.stringify(updated))
       setSearchHistory(updated)
-    } catch (err) {
-      console.error(err)
-    }
+    } catch {}
   }
 
   const handleClearHistory = async () => {
     try {
       await MedicineApi.clearSearchHistory()
       setSearchHistory([])
-    } catch (err) {
-      console.error(err)
-    }
+    } catch {}
   }
 
   const handleRemoveFavMedicine = async (e: React.MouseEvent, medId: string) => {
@@ -176,9 +172,7 @@ export default function PatientDashboard() {
     try {
       await MedicineApi.saveFavouriteMedicine(medId, false)
       setFavMedicines((prev) => prev.filter((m) => m.id !== medId))
-    } catch (err) {
-      console.error(err)
-    }
+    } catch {}
   }
 
   const handleRemoveFavPharmacy = async (e: React.MouseEvent, pharmId: string) => {
@@ -186,9 +180,7 @@ export default function PatientDashboard() {
     try {
       await MedicineApi.saveFavouritePharmacy(pharmId, false)
       setFavPharmacies((prev) => prev.filter((p) => p.pharmacyId !== pharmId))
-    } catch (err) {
-      console.error(err)
-    }
+    } catch {}
   }
 
   const pendingCount = reservations.filter((r) => r.status === 'PENDING' || r.status === 'CONFIRMED').length

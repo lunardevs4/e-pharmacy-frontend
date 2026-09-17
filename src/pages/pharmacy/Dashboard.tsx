@@ -70,7 +70,6 @@ export default function PharmacyDashboard() {
         setInventory(data.inventory || [])
         setAuditLogs(pharmacyAuditLogs || [])
       } catch (err: any) {
-        console.error(err)
         setErrorMsg(err.message || 'Unable to load pharmacy dashboard data.')
       } finally {
         setIsLoading(false)

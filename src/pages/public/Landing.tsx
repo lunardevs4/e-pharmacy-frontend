@@ -96,7 +96,7 @@ export default function LandingPage() {
           nationalAvailability: `${Number(data.nationalAvailability).toFixed(1)}%`,
         })
       })
-      .catch((error) => console.error('Unable to load public platform stats:', error))
+      .catch(() => {})
       .finally(() => {
         if (active) setStatsLoading(false)
       })
@@ -155,8 +155,8 @@ export default function LandingPage() {
         })
         lat = pos.coords.latitude
         lon = pos.coords.longitude
-      } catch (e) {
-        console.warn('Geolocation failed or denied. Searching without coordinates.', e)
+      } catch {
+        // Geolocation denied or unavailable
       }
 
       const response = await apiClient.get('/search/medicines', {
@@ -173,7 +173,6 @@ export default function LandingPage() {
       setSearchUsedFallback(Boolean(meta?.usedFallback))
       setSearchResults(Array.isArray(payload) ? payload : [])
     } catch (err: any) {
-      console.error(err)
       setSearchError(err.message || 'An error occurred while searching for medicines.')
       setSearchUsedFallback(false)
       setSearchResults([])

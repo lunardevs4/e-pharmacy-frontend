@@ -18,7 +18,6 @@ export default function MedicineRegistry() {
       const list = await MedicineApi.searchMedicines('', '', false)
       setMedicines(list)
     } catch (err: any) {
-      console.error(err)
       setErrorMsg(err.message || 'Unable to load the national medicine registry.')
     } finally {
       setLoading(false)

@@ -40,14 +40,22 @@ const normalizeAuditLog = (item: any): AuditEntry => {
   if (statusStr.includes('FAIL') || statusStr.includes('ERROR')) status = 'Failed'
   else if (statusStr.includes('WARN') || statusStr.includes('ALERT')) status = 'Warning'
 
+  const actorName = item.user
+    ? `${item.user.firstName || ''} ${item.user.lastName || ''}`.trim() || item.user.email || 'User'
+    : item.actor || item.performedBy || 'System'
+
+  const formattedDate = item.createdAt
+    ? new Date(item.createdAt).toLocaleString()
+    : item.timestamp || '—'
+
   return {
     id: item.id || item.logId || `LOG-${Math.random().toString(36).substr(2, 8)}`,
-    timestamp: item.timestamp || item.createdAt || new Date().toISOString().split('T')[0],
-    actor: item.actor || item.performedBy || item.user?.name || 'System',
-    role: item.role || item.user?.role || 'Automated',
-    action: item.action || item.description || 'System action',
-    resource: item.resource || item.entityType || 'System',
-    ip: item.ip || item.ipAddress || '—',
+    timestamp: formattedDate,
+    actor: actorName,
+    role: item.user?.role || item.role || (item.userId ? 'User' : 'System'),
+    action: item.action && item.entityType ? `${item.action} ${item.entityType}` : item.action || item.description || 'System action',
+    resource: item.entityType || item.resource || 'System',
+    ip: item.ipAddress || item.ip || '—',
     status,
   }
 }
@@ -69,7 +77,6 @@ export default function AdminAuditLogs() {
         setLogs(items.map(normalizeAuditLog))
       }
     } catch (error: any) {
-      console.warn('Using fallback audit logs due to error:', error)
       setErrorMsg(error?.message || 'Unable to load audit logs from backend. Using fallback data.')
     } finally {
       setIsLoading(false)

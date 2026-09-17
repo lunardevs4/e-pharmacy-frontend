@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
 
   test: {
@@ -17,6 +17,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+
+  esbuild: mode === 'production' ? {
+    drop: ['console', 'debugger'],
+  } : undefined,
 
   build: {
     // Raise the warning threshold slightly — we're splitting anyway
@@ -89,7 +93,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://127.0.0.1:3000',
         changeOrigin: true,
         secure: false,
       },
@@ -100,4 +104,4 @@ export default defineConfig({
   preview: {
     allowedHosts: true,
   },
-})
+}))

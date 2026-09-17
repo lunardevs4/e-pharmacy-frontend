@@ -151,8 +151,8 @@ export default function SidebarLayout() {
         return [
           { path: '/admin',          label: 'Dashboard',   icon: LayoutDashboard },
           { path: '/admin/users',    label: 'Users',       icon: Users           },
-          
           { path: '/admin/roles',    label: 'Roles',       icon: ShieldAlert     },
+          { path: '/admin/system',   label: 'Kill-Switch & System', icon: ShieldAlert },
           { path: '/admin/profile', label: 'Profile',     icon: User            },
           { path: '/admin/audit',    label: 'Audit Logs',  icon: FileLock2       },
         ]

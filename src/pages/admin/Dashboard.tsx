@@ -54,14 +54,26 @@ export default function AdminDashboard() {
       
       const auditItems = (auditData as any)?.data || auditData || []
       if (Array.isArray(auditItems)) {
-        setLogs(auditItems)
+        setLogs(
+          auditItems.map((item: any) => ({
+            id: item.id,
+            actor: item.user
+              ? `${item.user.firstName || ''} ${item.user.lastName || ''}`.trim() || item.user.email || 'User'
+              : item.actor || 'System',
+            role: item.user?.role || item.role || (item.userId ? 'User' : 'System'),
+            action: item.action && item.entityType ? `${item.action} ${item.entityType}` : item.action || item.description || 'Action',
+            resource: item.entityType || item.resource || 'System',
+            status: item.status || 'Success',
+            time: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : item.time || '—',
+          }))
+        )
       }
 
       setUsers(usersData)
       setMedicines(medicinesData)
       setPharmacies(pharmaciesData)
-    } catch (error) {
-      console.error('Error loading admin data:', error)
+    } catch {
+      // Fallback gracefully to default metrics
     } finally {
       setRefreshing(false)
       setIsLoading(false)
@@ -198,6 +210,13 @@ export default function AdminDashboard() {
             <div>{lastRefreshed.toLocaleTimeString()}</div>
             <div className="mt-1">System: <span className="text-emerald-700 font-bold">{t('common.active')}</span></div>
           </div>
+          <Link
+            to="/admin/system"
+            className="bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300 font-bold px-3 py-2 rounded-lg text-[10px] sm:text-xs transition border border-red-200 dark:border-red-800 flex items-center space-x-1.5"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+            <span>Kill-Switch</span>
+          </Link>
           <button
             onClick={handleRefresh}
             disabled={refreshing}

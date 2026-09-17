@@ -52,8 +52,8 @@ export default function PatientNotifications() {
     try {
       const data = await MedicineApi.getNotifications()
       setNotifications(data)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // Handled via UI state
     } finally {
       setLoading(false)
     }
@@ -79,8 +79,8 @@ export default function PatientNotifications() {
           return newItems.length > 0 ? [...newItems, ...prev] : prev
         })
       }
-    } catch (err) {
-      console.error('Error checking late pickups:', err)
+    } catch {
+      // Handled silently
     }
   }
 
@@ -96,7 +96,9 @@ export default function PatientNotifications() {
       await MedicineApi.markNotificationRead(id)
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
       triggerToast('Marked as read.')
-    } catch (err) { console.error(err) }
+    } catch {
+      triggerToast('Failed to mark alert as read.')
+    }
   }
 
   const handleMarkAllRead = async () => {
@@ -104,7 +106,9 @@ export default function PatientNotifications() {
       await MedicineApi.markAllNotificationsRead()
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
       triggerToast('All alerts marked as read.')
-    } catch (err) { console.error(err) }
+    } catch {
+      triggerToast('Failed to mark all alerts as read.')
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -112,7 +116,9 @@ export default function PatientNotifications() {
       await MedicineApi.deleteNotification(id)
       setNotifications(prev => prev.filter(n => n.id !== id))
       triggerToast('Alert deleted.')
-    } catch (err) { console.error(err) }
+    } catch {
+      triggerToast('Failed to delete alert.')
+    }
   }
 
   const handleClearAll = async () => {
@@ -120,7 +126,9 @@ export default function PatientNotifications() {
       await MedicineApi.clearAllNotifications()
       setNotifications([])
       triggerToast('Notifications cleared.')
-    } catch (err) { console.error(err) }
+    } catch {
+      triggerToast('Failed to clear notifications.')
+    }
   }
 
   const getIconMeta = (type: NotificationItem['type']) => {

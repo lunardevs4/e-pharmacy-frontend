@@ -100,7 +100,6 @@ export default function ProvinceAnalytics() {
       setProvinces(provinceArray)
     } catch (err: any) {
       setError(err.message || 'Failed to load province analytics')
-      console.error('Province analytics error:', err)
     } finally {
       setLoading(false)
     }

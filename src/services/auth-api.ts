@@ -366,7 +366,6 @@ export const AuthApi = {
       const response = await apiClient.get('/pharmacies', {
         params: { page: 1, limit: 1000 },
       })
-      console.log("PHARMACIES API RESPONSE: ",response.data)
       const payload = response.data
 
 
@@ -375,7 +374,6 @@ export const AuthApi = {
       if (Array.isArray(payload?.data?.data)) return payload.data.data
       return []
     } catch (error: unknown) {
-      console.error("Error fetching pharmacies: ", error)
       throw new Error(getErrorMessage(error))
     }
   },

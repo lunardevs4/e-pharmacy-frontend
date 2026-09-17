@@ -125,7 +125,6 @@ export default function PharmacyReservations() {
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unable to load reservations from backend. Using fallback data.'
-      console.warn('Using fallback reservations data due to error:', error)
       setErrorMsg(message)
     } finally {
       setIsLoading(false)

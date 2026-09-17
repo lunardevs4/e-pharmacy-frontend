@@ -144,7 +144,6 @@ export default function DistrictAnalytics() {
       setDistricts(districtArray)
     } catch (err: any) {
       setError(err.message || 'Failed to load district analytics')
-      console.error('District analytics error:', err)
     } finally {
       setLoading(false)
     }

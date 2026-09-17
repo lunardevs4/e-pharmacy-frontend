@@ -90,28 +90,14 @@ export default function GovernmentDashboard() {
             : []
         )
       } else {
-        console.error(
-          'Failed to load pharmacies:',
-          pharmacyResult.reason
-        )
         setPharmacies([])
       }
 
       if (summaryResult.status === 'fulfilled') {
-        console.log('SUMMARY:', summaryResult.value)
-        console.log(
-          'SUMMARY INNER DATA:',
-          (summaryResult.value as any)?.data
-        )
-
         setSummary(
           (summaryResult.value as any)?.data ?? summaryResult.value ?? null
         )
       } else {
-        console.error(
-          'Failed to load government summary:',
-          summaryResult.reason
-        )
         setSummary(null)
       }
 
@@ -122,31 +108,14 @@ export default function GovernmentDashboard() {
             : []
         )
       } else {
-        console.error(
-          'Failed to load low stock:',
-          lowStockResult.reason
-        )
         setLowStock([])
       }
 
       if (reservationResult.status === 'fulfilled') {
-        console.log(
-          'RESERVATION STATS:',
-          reservationResult.value
-        )
-      } else {
-        console.error(
-          'Failed to load reservation stats:',
-          reservationResult.reason
-        )
+        // Stats loaded successfully
       }
 
     } catch (err: any) {
-      console.error(
-        'Government dashboard error:',
-        err
-      )
-
       setErrorMsg(
         err.message ||
         'Failed to load dashboard metrics.'

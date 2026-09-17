@@ -23,8 +23,8 @@ export default function Reservations() {
     try {
       const data = await MedicineApi.getReservationHistory()
       setList(data)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // Handled silently
     } finally {
       setLoading(false)
     }

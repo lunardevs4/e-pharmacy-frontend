@@ -29,8 +29,7 @@ export default function AdminSettings() {
       if (settings.sessionTimeout) setSessionTimeout(String(settings.sessionTimeout))
       if (typeof settings.maintenanceMode === 'boolean') setMaintenanceMode(settings.maintenanceMode)
       if (typeof settings.twoFactorEnabled === 'boolean') setTwoFactor(settings.twoFactorEnabled)
-    } catch (error: any) {
-      console.warn('Could not load settings, using defaults:', error)
+    } catch {
       setErrorMsg('Could not load settings from backend. Using default values.')
     } finally {
       setIsLoading(false)

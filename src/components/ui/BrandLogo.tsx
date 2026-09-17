@@ -15,9 +15,6 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         src="/logo1.png" 
         alt="Rwanda E-Pharmacy Logo" 
         className={`object-contain ${className}`}
-        onError={() => {
-          console.error("Logo image failed to load from /logo1.png");
-        }}
       />
       {showText && (
         <span className="font-bold text-sm text-health-950 tracking-tight">

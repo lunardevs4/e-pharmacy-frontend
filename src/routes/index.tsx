@@ -64,6 +64,8 @@ const AdminUsers = lazy(() => import('@/pages/admin/Users'))
 const AdminRoles = lazy(() => import('@/pages/admin/Roles'))
 const AdminSettings = lazy(() => import('@/pages/admin/Settings'))
 const AdminAuditLogs = lazy(() => import('@/pages/admin/AuditLogs'))
+const AdminSystemControl = lazy(() => import('@/pages/admin/SystemControl'))
+const MaintenancePage = lazy(() => import('@/pages/public/Maintenance'))
 
 
 export default function AppRoutes() {
@@ -86,6 +88,7 @@ export default function AppRoutes() {
       </Route>
 
       <Route path="/change-password" element={<ChangePassword />} />
+      <Route path="/maintenance" element={<MaintenancePage />} />
 
       <Route element={<ProtectedRoute allowedRoles={['PATIENT']} />}>
         <Route path="/patient" element={<SidebarLayout />}>
@@ -160,6 +163,7 @@ export default function AppRoutes() {
           <Route path="roles" element={<AdminRoles />} />
           <Route path="profile" element={<AdminSettings />} />
           <Route path="audit" element={<AdminAuditLogs />} />
+          <Route path="system" element={<AdminSystemControl />} />
           <Route path="notifications" element={<SharedNotifications />} />
         </Route>
       </Route>

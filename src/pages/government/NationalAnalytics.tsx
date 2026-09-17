@@ -94,7 +94,6 @@ export default function NationalAnalytics() {
       setDistrictAlerts(alerts.slice(0, 10)) // Limit to top 10
     } catch (err: any) {
       setError(err.message || 'Failed to load national analytics')
-      console.error('National analytics error:', err)
     } finally {
       setLoading(false)
     }

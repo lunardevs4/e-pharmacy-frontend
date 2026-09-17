@@ -34,8 +34,7 @@ export default function PharmacySettings() {
             .map((a: any) => a.insuranceId)
           setSelectedIds(activeAgreementIds)
         })
-        .catch((err) => {
-          console.error(err)
+        .catch(() => {
           setErrorMsg('Failed to load insurance providers or agreements from the system.')
         })
         .finally(() => setLoading(false))

@@ -61,7 +61,7 @@ export default function MedicineSearch() {
           setProviders(data.filter((p: any) => p.isActive !== false))
         }
       })
-      .catch((err) => console.error('Error fetching registered insurance providers in search:', err))
+      .catch(() => {})
       .finally(() => setProvidersLoading(false))
   }, [])
 
@@ -251,8 +251,8 @@ export default function MedicineSearch() {
       setBookmarkedMedicines((prev) =>
         nextStatus ? [...prev, medId] : prev.filter((id) => id !== medId),
       )
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // Handled silently
     }
   }
 
@@ -264,8 +264,8 @@ export default function MedicineSearch() {
       setBookmarkedPharmacies((prev) =>
         nextStatus ? [...prev, pharmId] : prev.filter((id) => id !== pharmId),
       )
-    } catch (err) {
-      console.error(err)
+    } catch {
+      // Handled silently
     }
   }
 
@@ -336,7 +336,6 @@ export default function MedicineSearch() {
 
       setResStep(5)
     } catch (err: any) {
-      console.error(err)
       setPrescriptionError(err.message || 'Unable to upload the prescription and complete the reservation.')
     } finally {
       setResLoading(false)
@@ -372,7 +371,7 @@ export default function MedicineSearch() {
           return { lat: latitude, lng: longitude }
         })
       },
-      (error) => console.error("Tracking error:", error),
+      () => {},
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 }
     )
     return () => navigator.geolocation.clearWatch(watchId)

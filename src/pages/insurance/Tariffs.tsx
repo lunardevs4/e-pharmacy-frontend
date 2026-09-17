@@ -89,8 +89,8 @@ export default function InsuranceTariffs() {
           }
         }
         setTariffs(initialTariffs)
-      } catch (err) {
-        console.error('Failed to load tariff details', err)
+      } catch {
+        // Fallback gracefully
       } finally {
         setLoading(false)
       }
