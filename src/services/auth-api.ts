@@ -2,6 +2,7 @@ import { AxiosError } from 'axios'
 import { UserRole } from '@/types'
 import { apiClient } from '@/api/client'
 import { useLanguageStore } from '@/store/languageStore'
+import { TokenStorage } from '@/services/token-storage'
 
 
 export interface AuthUser {
@@ -68,6 +69,8 @@ export interface AuthUser {
 
 export interface AuthResponse {
   user: AuthUser
+  accessToken?: string
+  refreshToken?: string
 }
 
 type ApiObject = Record<string, unknown>
@@ -146,35 +149,35 @@ const normalizeUser = (payload: unknown): AuthUser => {
     patient:
       Object.keys(patientObj).length > 0
         ? {
-            id: toString(patientObj.id),
-            userId: toString(patientObj.userId),
-            medicalProfile:
-              patientObj.medicalProfile === null ? null : toString(patientObj.medicalProfile),
-            address: patientObj.address === null ? null : toString(patientObj.address),
-            dateOfBirth: patientObj.dateOfBirth === null ? null : toString(patientObj.dateOfBirth),
-            gender: patientObj.gender === null ? null : toString(patientObj.gender),
-            createdAt: toString(patientObj.createdAt),
-            updatedAt: toString(patientObj.updatedAt),
-          }
+          id: toString(patientObj.id),
+          userId: toString(patientObj.userId),
+          medicalProfile:
+            patientObj.medicalProfile === null ? null : toString(patientObj.medicalProfile),
+          address: patientObj.address === null ? null : toString(patientObj.address),
+          dateOfBirth: patientObj.dateOfBirth === null ? null : toString(patientObj.dateOfBirth),
+          gender: patientObj.gender === null ? null : toString(patientObj.gender),
+          createdAt: toString(patientObj.createdAt),
+          updatedAt: toString(patientObj.updatedAt),
+        }
         : undefined,
     pharmacy:
       Object.keys(pharmacyObj).length > 0
         ? {
-            id: toString(pharmacyObj.id),
-            name: toString(pharmacyObj.name),
-            address: toString(pharmacyObj.address),
-            phone: toString(pharmacyObj.phone),
-            licenseNumber: toString(pharmacyObj.licenseNumber),
-            district: toString(pharmacyObj.district),
-            province: toString(pharmacyObj.province),
-            managerName: toString(pharmacyObj.managerName),
-            status: toString(pharmacyObj.status),
-            isActive: typeof pharmacyObj.isActive === 'boolean' ? pharmacyObj.isActive : undefined,
-            category: toString(pharmacyObj.category),
-            ownershipType: toString(pharmacyObj.ownershipType),
-            createdAt: toString(pharmacyObj.createdAt),
-            updatedAt: toString(pharmacyObj.updatedAt),
-          }
+          id: toString(pharmacyObj.id),
+          name: toString(pharmacyObj.name),
+          address: toString(pharmacyObj.address),
+          phone: toString(pharmacyObj.phone),
+          licenseNumber: toString(pharmacyObj.licenseNumber),
+          district: toString(pharmacyObj.district),
+          province: toString(pharmacyObj.province),
+          managerName: toString(pharmacyObj.managerName),
+          status: toString(pharmacyObj.status),
+          isActive: typeof pharmacyObj.isActive === 'boolean' ? pharmacyObj.isActive : undefined,
+          category: toString(pharmacyObj.category),
+          ownershipType: toString(pharmacyObj.ownershipType),
+          createdAt: toString(pharmacyObj.createdAt),
+          updatedAt: toString(pharmacyObj.updatedAt),
+        }
         : undefined,
   }
 }
@@ -183,8 +186,21 @@ const normalizeAuthResponse = (payload: unknown): AuthResponse => {
   const raw = getObject(payload)
   const data = getObject(raw.data ?? payload)
 
+  const accessToken =
+    toString(data.accessToken) ||
+    toString(data.token) ||
+    toString(data.jwt) ||
+    toString(raw.accessToken) ||
+    toString(raw.token)
+  const refreshToken =
+    toString(data.refreshToken) ||
+    toString(data.refresh_token) ||
+    toString(raw.refreshToken)
+
   return {
     user: normalizeUser(data.user ?? data),
+    accessToken: accessToken || undefined,
+    refreshToken: refreshToken || undefined,
   }
 }
 
@@ -406,7 +422,7 @@ export const AuthApi = {
   getGovernmentLowStock: async (threshold = 10): Promise<unknown[]> => {
     try {
       const response = await apiClient.get(`/government/low-stock?threshold=${threshold}`)
-      const payload= response.data
+      const payload = response.data
       if (Array.isArray(payload)) return payload
       if (Array.isArray(payload?.data)) return payload.data
       return []
@@ -430,9 +446,9 @@ export const AuthApi = {
   getGovernmentReservationStats: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/government/reservation-stats')
-      const payload= response.data
-      if(Array.isArray(payload)) return payload;
-      if(Array.isArray(payload?.data)) return payload.data;
+      const payload = response.data
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload?.data)) return payload.data;
       return []
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
@@ -535,8 +551,8 @@ export const AuthApi = {
       const list: unknown[] = Array.isArray(response.data)
         ? response.data
         : Array.isArray(response.data?.data)
-        ? response.data.data
-        : []
+          ? response.data.data
+          : []
 
       return (
         list.find((item) => {
@@ -559,7 +575,11 @@ export const AuthApi = {
   restoreSession: async (): Promise<AuthResponse | null> => {
     try {
       const user = await AuthApi.getProfile('', true)
-      return { user }
+      return {
+        user,
+        accessToken: TokenStorage.getToken() ?? undefined,
+        refreshToken: TokenStorage.getRefreshToken() ?? undefined,
+      }
     } catch {
       return null
     }

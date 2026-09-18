@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { MedicineApi } from '@/services/medicine-api'
+import { ErrorFallback } from '@/components/patient/LoadingSkeleton'
+import { normalizeError, AppError } from '@/utils/error-handler'
 import { 
   Bell, Plus, Clock, Calendar, Trash2, CheckCircle2, 
-  Edit, X, AlertCircle, Pill, Info, Save, RefreshCw 
+  Edit, X, AlertCircle, Pill, Info, Save, RefreshCw, WifiOff
 } from 'lucide-react'
 
 interface Reminder {
@@ -24,9 +26,10 @@ interface Reminder {
 export default function PatientReminders() {
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<AppError | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [addLoading, setAddLoading] = useState(false)
+  const [toastMsg, setToastMsg] = useState<{ text: string; isError?: boolean } | null>(null)
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'toggle'; id: string; isActive?: boolean } | null>(null)
 
   const [medicineName, setMedicineName] = useState('')
@@ -37,9 +40,10 @@ export default function PatientReminders() {
   const [endDate, setEndDate] = useState('')
   const [notes, setNotes] = useState('')
   const [pharmacistInstructions, setPharmacistInstructions] = useState('')
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
-  const triggerToast = (msg: string) => {
-    setToastMsg(msg)
+  const triggerToast = (text: string, isError = false) => {
+    setToastMsg({ text, isError })
     setTimeout(() => setToastMsg(null), 3000)
   }
 
@@ -49,29 +53,44 @@ export default function PatientReminders() {
 
   const loadReminders = async () => {
     setLoading(true)
-    setError(null)
+    setLoadError(null)
     try {
       const data = await MedicineApi.getReminders()
       setReminders(data)
     } catch (err: any) {
-      setError(err.message || 'Failed to load reminders')
+      const normalized = normalizeError(err)
+      setLoadError(normalized)
     } finally {
       setLoading(false)
     }
   }
 
+  const validateReminderForm = () => {
+    const errors: Record<string, string> = {}
+    if (!medicineName.trim()) {
+      errors.medicineName = 'Please enter the medication name.'
+    }
+    if (times.length === 0 || times.some((t) => !t.trim())) {
+      errors.times = 'Please select at least one dosage time.'
+    }
+    if (endDate && startDate && new Date(endDate) < new Date(startDate)) {
+      errors.endDate = 'End date cannot be earlier than start date.'
+    }
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleAddReminder = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!medicineName.trim() || times.length === 0) {
-      triggerToast('Please fill in medicine name and at least one time')
-      return
-    }
+    if (!validateReminderForm()) return
+    if (addLoading) return
 
+    setAddLoading(true)
     try {
       await MedicineApi.createReminder({
         medicineId: medicineId || undefined,
         medicineName: medicineName.trim(),
-        times: times.sort(),
+        times: [...times].sort(),
         frequency,
         startDate,
         endDate: endDate || undefined,
@@ -83,7 +102,10 @@ export default function PatientReminders() {
       resetForm()
       loadReminders()
     } catch (err: any) {
-      triggerToast(err.message || 'Failed to create reminder')
+      const normalized = normalizeError(err)
+      triggerToast(normalized.message || 'Failed to create reminder. Please try again.', true)
+    } finally {
+      setAddLoading(false)
     }
   }
 
@@ -93,7 +115,8 @@ export default function PatientReminders() {
       triggerToast('Reminder deleted successfully!')
       loadReminders()
     } catch (err: any) {
-      triggerToast(err.message || 'Failed to delete reminder')
+      const normalized = normalizeError(err)
+      triggerToast(normalized.message || 'Failed to delete reminder.', true)
     }
   }
 
@@ -103,7 +126,8 @@ export default function PatientReminders() {
       triggerToast(`Reminder ${!isActive ? 'activated' : 'deactivated'}!`)
       loadReminders()
     } catch (err: any) {
-      triggerToast(err.message || 'Failed to update reminder')
+      const normalized = normalizeError(err)
+      triggerToast(normalized.message || 'Failed to update reminder.', true)
     }
   }
 
@@ -124,15 +148,21 @@ export default function PatientReminders() {
       triggerToast('Medicine marked as taken!')
       loadReminders()
     } catch (err: any) {
-      triggerToast(err.message || 'Failed to mark as taken')
+      const normalized = normalizeError(err)
+      triggerToast(normalized.message || 'Failed to mark as taken.', true)
     }
   }
 
   const addTimeSlot = () => {
     if (times.length < 6) {
       setTimes([...times, '12:00'])
+      if (formErrors.times) {
+        const next = { ...formErrors }
+        delete next.times
+        setFormErrors(next)
+      }
     } else {
-      triggerToast('Maximum 6 time slots allowed')
+      triggerToast('Maximum 6 time slots allowed.', true)
     }
   }
 
@@ -140,7 +170,7 @@ export default function PatientReminders() {
     if (times.length > 1) {
       setTimes(times.filter((_, i) => i !== index))
     } else {
-      triggerToast('At least one time slot is required')
+      triggerToast('At least one time slot is required.', true)
     }
   }
 
@@ -148,6 +178,11 @@ export default function PatientReminders() {
     const updated = [...times]
     updated[index] = value
     setTimes(updated)
+    if (formErrors.times) {
+      const next = { ...formErrors }
+      delete next.times
+      setFormErrors(next)
+    }
   }
 
   const resetForm = () => {
@@ -159,6 +194,7 @@ export default function PatientReminders() {
     setEndDate('')
     setNotes('')
     setPharmacistInstructions('')
+    setFormErrors({})
   }
 
   const getNextDoseInfo = (reminder: Reminder) => {
@@ -208,9 +244,15 @@ export default function PatientReminders() {
       )}
       
       {toastMsg && (
-        <div className="fixed top-20 right-6 z-50 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{toastMsg}</span>
+        <div
+          role="alert"
+          aria-live="polite"
+          className={`fixed top-20 right-6 z-50 border px-4 py-3 rounded-lg shadow-xl text-xs font-bold flex items-center space-x-2 ${
+            toastMsg.isError ? 'bg-red-50 border-red-200 text-red-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+          }`}
+        >
+          {toastMsg.isError ? <AlertCircle className="w-4 h-4 text-red-600" /> : <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+          <span>{toastMsg.text}</span>
         </div>
       )}
 
@@ -273,10 +315,19 @@ export default function PatientReminders() {
             <RefreshCw className="w-5 h-5 animate-spin text-emerald-600" />
             <span>Loading reminders...</span>
           </div>
-        ) : error ? (
-          <div className="py-12 text-center text-red-600 text-xs">{error}</div>
+        ) : loadError ? (
+          <div className="p-6">
+            <ErrorFallback
+              title={loadError.isNetwork ? 'Connection Problem' : 'Failed to Load Reminders'}
+              message={loadError.message}
+              isNetwork={loadError.isNetwork}
+              onRetry={loadReminders}
+              isRetrying={loading}
+              retryLabel="Retry Loading"
+            />
+          </div>
         ) : reminders.length === 0 ? (
-          <div className="py-16 text-center text-gray-400 space-y-3">
+          <div className="py-16 text-center text-gray-400 space-y-3" data-testid="empty-reminders">
             <Bell className="w-12 h-12 text-gray-200 mx-auto" />
             <p className="text-xs">No reminders set up yet. Create your first reminder to stay on track with your medications.</p>
           </div>
@@ -329,6 +380,7 @@ export default function PatientReminders() {
                               <span>{time}</span>
                               {reminder.isActive && (
                                 <button
+                                  type="button"
                                   onClick={() => handleMarkTaken(reminder.id, time)}
                                   className="hover:text-emerald-600 transition-colors"
                                   title="Mark as taken"
@@ -364,6 +416,7 @@ export default function PatientReminders() {
 
                       <div className="flex items-center space-x-2">
                         <button
+                          type="button"
                           onClick={() => handleToggleActive(reminder.id, reminder.isActive)}
                           className={`p-2 rounded-lg transition-colors ${
                             reminder.isActive
@@ -372,9 +425,10 @@ export default function PatientReminders() {
                           }`}
                           title={reminder.isActive ? 'Deactivate' : 'Activate'}
                         >
-                          {reminder.isActive ? <Bell className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+                          <Bell className="w-4 h-4" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteReminder(reminder.id)}
                           className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                           title="Delete reminder"
@@ -405,32 +459,48 @@ export default function PatientReminders() {
                   <p className="text-[11px] text-gray-500 mt-0.5">Set up your medication schedule</p>
                 </div>
               </div>
-              <button onClick={() => setShowAddModal(false)} aria-label="Close reminder dialog" className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                aria-label="Close reminder dialog"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleAddReminder} className="portal-form p-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Medicine Name *</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Medicine Name *</label>
                 <input
                   type="text"
-                  required
                   value={medicineName}
-                  onChange={(e) => setMedicineName(e.target.value)}
+                  onChange={(e) => {
+                    setMedicineName(e.target.value)
+                    if (formErrors.medicineName) {
+                      const next = { ...formErrors }
+                      delete next.medicineName
+                      setFormErrors(next)
+                    }
+                  }}
                   placeholder="e.g. Amoxicillin 500mg"
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
+                  aria-invalid={Boolean(formErrors.medicineName)}
+                  className={`w-full bg-gray-50 border rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold ${
+                    formErrors.medicineName ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+                  }`}
                 />
+                {formErrors.medicineName && (
+                  <p role="alert" className="text-[11px] font-bold text-red-600">{formErrors.medicineName}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Dosage Times *</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Dosage Times *</label>
                 <div className="space-y-2">
                   {times.map((time, idx) => (
                     <div key={idx} className="flex items-center space-x-2">
                       <input
                         type="time"
-                        required
                         value={time}
                         onChange={(e) => updateTimeSlot(idx, e.target.value)}
                         className="flex-grow bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
@@ -446,6 +516,9 @@ export default function PatientReminders() {
                       )}
                     </div>
                   ))}
+                  {formErrors.times && (
+                    <p role="alert" className="text-[11px] font-bold text-red-600">{formErrors.times}</p>
+                  )}
                   {times.length < 6 && (
                     <button
                       type="button"
@@ -461,7 +534,7 @@ export default function PatientReminders() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Frequency</label>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Frequency</label>
                   <select
                     value={frequency}
                     onChange={(e) => setFrequency(e.target.value as any)}
@@ -474,10 +547,9 @@ export default function PatientReminders() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Start Date</label>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Start Date</label>
                   <input
                     type="date"
-                    required
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
@@ -486,17 +558,29 @@ export default function PatientReminders() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">End Date (Optional)</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">End Date (Optional)</label>
                 <input
                   type="date"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold"
+                  onChange={(e) => {
+                    setEndDate(e.target.value)
+                    if (formErrors.endDate) {
+                      const next = { ...formErrors }
+                      delete next.endDate
+                      setFormErrors(next)
+                    }
+                  }}
+                  className={`w-full bg-gray-50 border rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 text-gray-950 font-bold ${
+                    formErrors.endDate ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+                  }`}
                 />
+                {formErrors.endDate && (
+                  <p role="alert" className="text-[11px] font-bold text-red-600">{formErrors.endDate}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Pharmacist Instructions</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Pharmacist Instructions</label>
                 <textarea
                   rows={2}
                   value={pharmacistInstructions}
@@ -507,7 +591,7 @@ export default function PatientReminders() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Personal Notes</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Personal Notes</label>
                 <textarea
                   rows={2}
                   value={notes}
@@ -527,10 +611,20 @@ export default function PatientReminders() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-health-primary hover:bg-health-secondary text-white font-bold py-2 rounded-lg text-xs transition-colors flex items-center justify-center space-x-2"
+                  disabled={addLoading}
+                  className="flex-1 bg-health-primary hover:bg-health-secondary text-white font-bold py-2 rounded-lg text-xs transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>Create Reminder</span>
+                  {addLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin mr-1" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Create Reminder</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

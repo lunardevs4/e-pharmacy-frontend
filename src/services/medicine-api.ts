@@ -332,6 +332,10 @@ export const MedicineApi = {
     }
   },
 
+  // Backward-compatible name used by older reservation flows.
+  getMedicineStock: async (medicineId: string): Promise<PharmacyStock[]> =>
+    MedicineApi.getMedicineAvailability(medicineId),
+
   updatePharmacyInventory: async (
     pharmacyId: string,
     medicineId: string,

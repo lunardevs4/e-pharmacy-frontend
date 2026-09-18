@@ -874,7 +874,10 @@ export default function PharmacyInventory() {
               <option value="high">High (&ge; 20)</option>
               <option value="low">Low (&lt; 20)</option>
               <option value="out">Out of Stock</option>
+            <option>f Stock</option>
             </select>
+          
+
             <button
               onClick={loadInventory}
               aria-label="Refresh inventory"

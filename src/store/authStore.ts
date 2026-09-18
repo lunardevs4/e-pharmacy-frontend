@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { User } from '@/types'
 import { AuthApi } from '@/services/auth-api'
+import { TokenStorage } from '@/services/token-storage'
 
 interface AuthStore {
   user: User | null
@@ -8,7 +9,7 @@ interface AuthStore {
   isAuthenticated: boolean
   isInitialising: boolean
   error: string | null
-  login: (user: User) => void
+  login: (user: User, accessToken?: string, refreshToken?: string) => void
   logout: () => void
   expireSession: () => void
   setError: (error: string | null) => void
@@ -24,24 +25,44 @@ export const useAuthStore = create<AuthStore>((set) => ({
   error: null,
 
   initialise: async () => {
+    const hasCachedToken = TokenStorage.isAuthenticated()
+    if (!hasCachedToken) {
+      set({ isInitialising: false })
+      return
+    }
     try {
       const session = await AuthApi.restoreSession()
       if (session?.user) {
-        set({ user: session.user as User, isAuthenticated: true, isInitialising: false })
+        set({
+          user: session.user as User,
+          token: session.accessToken ?? TokenStorage.getToken(),
+          isAuthenticated: true,
+          isInitialising: false,
+        })
         return
       }
     } catch {
-      // An absent or expired HttpOnly cookie means there is no active session.
+      // Token is stale — clear it before reporting signed-out state.
+      TokenStorage.clearToken()
     }
     set({ isInitialising: false })
   },
 
-  login: (user) => {
-    set({ user, token: null, isAuthenticated: true, error: null })
+  login: (user, accessToken, refreshToken) => {
+    if (accessToken) {
+      TokenStorage.setTokens(accessToken, refreshToken)
+    }
+    set({
+      user,
+      token: accessToken ?? TokenStorage.getToken(),
+      isAuthenticated: true,
+      error: null,
+    })
   },
 
   logout: () => {
     void AuthApi.logout()
+    TokenStorage.clearToken()
     set({ user: null, token: null, isAuthenticated: false, error: null })
   },
 

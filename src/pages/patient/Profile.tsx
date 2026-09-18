@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { AuthApi } from '@/services/auth-api'
 import { validateEmail } from '@/utils/validation'
+import { normalizeError } from '@/utils/error-handler'
 import PasswordStrengthMeter from '@/components/patient/PasswordStrengthMeter'
 import LocationSelector from '@/components/LocationSelector'
 import { User, Shield, Key, Eye, EyeOff, Save, RefreshCw, CheckCircle, AlertCircle, Camera, Bell } from 'lucide-react'
@@ -15,7 +16,7 @@ export default function PatientProfile() {
   const [phone, setPhone] = useState(user?.phone || '')
   const [nid] = useState(user?.nid || '1199580048123984') // Read-only National ID
   const [insuranceProvider, setInsuranceProvider] = useState(user?.insuranceProvider || 'RSSB')
-  
+
   const [province, setProvince] = useState(user?.province || '')
   const [district, setDistrict] = useState(user?.district || '')
   const [sector, setSector] = useState(user?.sector || '')
@@ -39,6 +40,9 @@ export default function PatientProfile() {
   const [emailPreferencesLoading, setEmailPreferencesLoading] = useState(false)
   const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({})
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({})
+
   useEffect(() => {
     MedicineApi.getEmailNotificationPreferences()
       .then((preferences) => setEmailPreferences((current) => ({ ...current, ...preferences })))
@@ -54,7 +58,8 @@ export default function PatientProfile() {
       triggerToast('success', 'Email notification preferences saved.')
     } catch (err: any) {
       setEmailPreferences(emailPreferences)
-      triggerToast('error', err.message || 'Failed to save email preferences.')
+      const normalized = normalizeError(err)
+      triggerToast('error', normalized.message || 'Failed to save email preferences.')
     } finally {
       setEmailPreferencesLoading(false)
     }
@@ -77,37 +82,29 @@ export default function PatientProfile() {
 
   const triggerToast = (type: 'success' | 'error', text: string) => {
     setToastMsg({ type, text })
-    setTimeout(() => setToastMsg(null), 3000)
+    setTimeout(() => setToastMsg(null), 3500)
   }
 
-  const handleProvinceChange = (e: string) => {
-    setProvince(e)
-  }
-
-  const handleDistrictChange = (d: string) => {
-    setDistrict(d)
-  }
-
-  const handleSectorChange = (s: string) => {
-    setSector(s)
-  }
-
-  const handleCellChange = (c: string) => {
-    setCell(c)
-  }
-
-  const handleVillageChange = (v: string) => {
-    setVillage(v)
+  const validateProfileForm = () => {
+    const errors: Record<string, string> = {}
+    if (!name.trim()) {
+      errors.name = 'Please enter your full name.'
+    }
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      errors.email = emailValidation.error || 'Please enter a valid email address.'
+    }
+    if (!phone.trim()) {
+      errors.phone = 'Please enter your phone number.'
+    }
+    setProfileErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const emailValidation = validateEmail(email)
-    if (!emailValidation.isValid) {
-      triggerToast('error', emailValidation.error || 'Please enter a valid email address.')
-      return
-    }
+    if (!validateProfileForm()) return
+    if (profileLoading) return
     
     setProfileLoading(true)
     try {
@@ -128,22 +125,34 @@ export default function PatientProfile() {
       updateProfile(updated)
       triggerToast('success', 'Profile updated successfully!')
     } catch (err: any) {
-      triggerToast('error', err.message || 'Failed to update profile.')
+      const normalized = normalizeError(err)
+      triggerToast('error', normalized.message || 'Failed to update profile.')
     } finally {
       setProfileLoading(false)
     }
   }
 
+  const validatePasswordForm = () => {
+    const errors: Record<string, string> = {}
+    if (!currentPass) {
+      errors.currentPass = 'Please enter your current password.'
+    }
+    if (!newPass) {
+      errors.newPass = 'Please enter a new password.'
+    } else if (newPass.length < 8) {
+      errors.newPass = 'Password must be at least 8 characters long.'
+    }
+    if (newPass !== confirmPass) {
+      errors.confirmPass = 'New passwords do not match.'
+    }
+    setPasswordErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (newPass !== confirmPass) {
-      triggerToast('error', 'New passwords do not match.')
-      return
-    }
-    if (newPass.length < 8) {
-      triggerToast('error', 'Password must satisfy security length constraints.')
-      return
-    }
+    if (!validatePasswordForm()) return
+    if (securityLoading) return
 
     setSecurityLoading(true)
     try {
@@ -166,8 +175,10 @@ export default function PatientProfile() {
       setCurrentPass('')
       setNewPass('')
       setConfirmPass('')
+      setPasswordErrors({})
     } catch (err: any) {
-      triggerToast('error', err.message || 'Change password failed.')
+      const normalized = normalizeError(err)
+      triggerToast('error', normalized.message || 'Unable to update password. Please check your current password and try again.')
     } finally {
       setSecurityLoading(false)
     }
@@ -181,7 +192,8 @@ export default function PatientProfile() {
         setProfilePhoto(res.profilePhoto)
         triggerToast('success', 'Photo pre-loaded successfully! Save profile to persist changes.')
       } catch (err: any) {
-        triggerToast('error', 'Failed to upload photo.')
+        const normalized = normalizeError(err)
+        triggerToast('error', normalized.message || 'Failed to upload photo.')
       }
     }
   }
@@ -190,9 +202,13 @@ export default function PatientProfile() {
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
       
       {toastMsg && (
-        <div className={`fixed top-20 right-6 z-55 flex items-center space-x-2 px-4.5 py-3 rounded-lg border shadow-xl animate-fadeIn ${
-          toastMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-250' : 'bg-red-50 text-red-800 border-red-200'
-        }`}>
+        <div
+          role="alert"
+          aria-live="polite"
+          className={`fixed top-20 right-6 z-55 flex items-center space-x-2 px-4.5 py-3 rounded-lg border shadow-xl animate-fadeIn ${
+            toastMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-250' : 'bg-red-50 text-red-800 border-red-200'
+          }`}
+        >
           {toastMsg.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
           <span className="text-xs font-bold">{toastMsg.text}</span>
         </div>
@@ -246,14 +262,25 @@ export default function PatientProfile() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold text-gray-700">
               
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Full Name</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Full Name *</label>
                 <input
                   type="text"
-                  required
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold"
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    if (profileErrors.name) {
+                      const next = { ...profileErrors }
+                      delete next.name
+                      setProfileErrors(next)
+                    }
+                  }}
+                  className={`w-full bg-gray-50 border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold ${
+                    profileErrors.name ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+                  }`}
                 />
+                {profileErrors.name && (
+                  <p role="alert" className="text-[11px] font-bold text-red-600">{profileErrors.name}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -267,29 +294,51 @@ export default function PatientProfile() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Email Address</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Email Address *</label>
                 <input
                   type="email"
-                  required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold"
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (profileErrors.email) {
+                      const next = { ...profileErrors }
+                      delete next.email
+                      setProfileErrors(next)
+                    }
+                  }}
+                  className={`w-full bg-gray-50 border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold ${
+                    profileErrors.email ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+                  }`}
                 />
+                {profileErrors.email && (
+                  <p role="alert" className="text-[11px] font-bold text-red-600">{profileErrors.email}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Phone Number</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Phone Number *</label>
                 <input
                   type="text"
-                  required
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold"
+                  onChange={(e) => {
+                    setPhone(e.target.value)
+                    if (profileErrors.phone) {
+                      const next = { ...profileErrors }
+                      delete next.phone
+                      setProfileErrors(next)
+                    }
+                  }}
+                  className={`w-full bg-gray-50 border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold ${
+                    profileErrors.phone ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+                  }`}
                 />
+                {profileErrors.phone && (
+                  <p role="alert" className="text-[11px] font-bold text-red-600">{profileErrors.phone}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Insurance Provider</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Insurance Provider</label>
                 <select
                   value={insuranceProvider}
                   onChange={(e) => setInsuranceProvider(e.target.value)}
@@ -304,7 +353,7 @@ export default function PatientProfile() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Preferred Pharmacy</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Preferred Pharmacy</label>
                 <select
                   value={preferredPharmacy}
                   onChange={(e) => setPreferredPharmacy(e.target.value)}
@@ -342,7 +391,7 @@ export default function PatientProfile() {
             <div className="space-y-4 pt-2 border-t border-gray-150 text-xs font-bold text-gray-700">
               
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Emergency Contact (Name &amp; Phone)</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Emergency Contact (Name &amp; Phone)</label>
                 <input
                   type="text"
                   placeholder="e.g. Marie Habimana (+250 788 000 111)"
@@ -353,7 +402,7 @@ export default function PatientProfile() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Medical Notes &amp; Allergies (Optional)</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Medical Notes &amp; Allergies (Optional)</label>
                 <textarea
                   rows={3}
                   placeholder="Enter chronic diseases, drug allergies, or other warnings for the pharmacist..."
@@ -410,14 +459,22 @@ export default function PatientProfile() {
             <div className="space-y-3.5 text-xs font-bold text-gray-700">
               
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Current Password</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Current Password *</label>
                 <div className="relative">
                   <input
                     type={showCurrent ? 'text' : 'password'}
-                    required
                     value={currentPass}
-                    onChange={(e) => setCurrentPass(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg pl-3 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold"
+                    onChange={(e) => {
+                      setCurrentPass(e.target.value)
+                      if (passwordErrors.currentPass) {
+                        const next = { ...passwordErrors }
+                        delete next.currentPass
+                        setPasswordErrors(next)
+                      }
+                    }}
+                    className={`w-full bg-gray-50 border rounded-lg pl-3 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold ${
+                      passwordErrors.currentPass ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+                    }`}
                   />
                   <button
                     type="button"
@@ -427,17 +484,28 @@ export default function PatientProfile() {
                     {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {passwordErrors.currentPass && (
+                  <p role="alert" className="text-[11px] font-bold text-red-600">{passwordErrors.currentPass}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">New Password</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">New Password *</label>
                 <div className="relative">
                   <input
                     type={showNew ? 'text' : 'password'}
-                    required
                     value={newPass}
-                    onChange={(e) => setNewPass(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-lg pl-3 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold"
+                    onChange={(e) => {
+                      setNewPass(e.target.value)
+                      if (passwordErrors.newPass) {
+                        const next = { ...passwordErrors }
+                        delete next.newPass
+                        setPasswordErrors(next)
+                      }
+                    }}
+                    className={`w-full bg-gray-50 border rounded-lg pl-3 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold ${
+                      passwordErrors.newPass ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+                    }`}
                   />
                   <button
                     type="button"
@@ -447,28 +515,51 @@ export default function PatientProfile() {
                     {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {passwordErrors.newPass && (
+                  <p role="alert" className="text-[11px] font-bold text-red-600">{passwordErrors.newPass}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-gray-400 uppercase tracking-wider text-[10px]">Confirm New Password</label>
+                <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Confirm New Password *</label>
                 <input
                   type="password"
-                  required
                   value={confirmPass}
-                  onChange={(e) => setConfirmPass(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold"
+                  onChange={(e) => {
+                    setConfirmPass(e.target.value)
+                    if (passwordErrors.confirmPass) {
+                      const next = { ...passwordErrors }
+                      delete next.confirmPass
+                      setPasswordErrors(next)
+                    }
+                  }}
+                  className={`w-full bg-gray-50 border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 font-bold ${
+                    passwordErrors.confirmPass ? 'border-red-400 bg-red-50/20' : 'border-gray-300'
+                  }`}
                 />
+                {passwordErrors.confirmPass && (
+                  <p role="alert" className="text-[11px] font-bold text-red-600">{passwordErrors.confirmPass}</p>
+                )}
               </div>
 
               <PasswordStrengthMeter pass={newPass} />
 
               <button
                 type="submit"
-                disabled={securityLoading || !currentPass || !newPass || !confirmPass}
+                disabled={securityLoading}
                 className="w-full bg-health-primary hover:bg-health-secondary text-white font-bold py-2.5 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5 shadow-sm disabled:opacity-50 mt-2 focus:outline-none"
               >
-                {securityLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
-                <span>Change Password</span>
+                {securityLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin mr-1" />
+                    <span>Updating Password...</span>
+                  </>
+                ) : (
+                  <>
+                    <Key className="w-4 h-4" />
+                    <span>Change Password</span>
+                  </>
+                )}
               </button>
 
             </div>
