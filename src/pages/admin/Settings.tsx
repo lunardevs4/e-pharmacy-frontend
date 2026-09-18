@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { User, Save, CheckCircle2, Globe, Clock, Shield, Server, Loader2, ShieldAlert } from 'lucide-react'
+import { User, Save, CheckCircle2, Globe, Clock, Shield, Server, Loader2 } from 'lucide-react'
 import { apiClient } from '@/api/client'
 
 interface SystemSettings {

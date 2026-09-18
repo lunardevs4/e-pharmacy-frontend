@@ -18,7 +18,6 @@ import {
   AlertTriangle, Server, Clock, UserCheck, UserX, RefreshCw,
   ArrowRight, Shield, Settings, Cpu, Wifi, Database, Lock,
   TrendingUp, MapPin, FileText, DollarSign, ClipboardList, Building,
-  ShieldAlert,
 } from 'lucide-react'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Title, Tooltip, Legend, Filler)
@@ -211,13 +210,6 @@ export default function AdminDashboard() {
             <div>{lastRefreshed.toLocaleTimeString()}</div>
             <div className="mt-1">System: <span className="text-emerald-700 font-bold">{t('common.active')}</span></div>
           </div>
-          <Link
-            to="/admin/system"
-            className="group inline-flex items-center space-x-2 bg-gradient-to-br from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-extrabold px-3.5 py-2 rounded-lg text-[10px] sm:text-xs transition-all duration-200 shadow-sm shadow-red-700/20 hover:shadow-md hover:shadow-red-800/30 ring-1 ring-red-500/30 hover:ring-red-400/50 transform hover:scale-[1.03] active:scale-[0.97]"
-          >
-            <ShieldAlert className="w-3.5 h-3.5 group-hover:animate-pulse" />
-            <span>Kill-Switch</span>
-          </Link>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
