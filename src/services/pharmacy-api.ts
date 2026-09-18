@@ -19,6 +19,9 @@ export const PharmacyApi = {
       throw err
     }
   },
+  updateDetails: async (pharmacyId: string, data: Record<string, unknown>) => {
+    return unwrap(await apiClient.patch(`/pharmacies/${pharmacyId}`, data))
+  },
   getEmployees: async (pharmacyId: string) => {
     const response = await apiClient.get(`/pharmacies/${pharmacyId}/employees`)
     return unwrap(response)
