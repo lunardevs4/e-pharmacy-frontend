@@ -23,7 +23,6 @@ type Preferences = {
   expiryWarningDays: number
   reservationDuration: number
   autoExpire: boolean
-  importMethod: 'manual' | 'csv'
   language: 'English' | 'Français' | 'Kinyarwanda'
   twoFactor: boolean
 }
@@ -32,7 +31,6 @@ const defaults: Preferences = {
   expiryWarningDays: 30,
   reservationDuration: 24,
   autoExpire: true,
-  importMethod: 'manual',
   language: 'English',
   twoFactor: false,
 }
@@ -418,19 +416,6 @@ export default function PharmacySettings() {
                       setPref('reservationDuration', Math.max(1, Number(e.target.value)))
                     }
                   />
-                </label>
-                <label className="text-xs font-bold text-gray-600">
-                  Inventory import method
-                  <select
-                    className={`${input} mt-1.5`}
-                    value={preferences.importMethod}
-                    onChange={(e) =>
-                      setPref('importMethod', e.target.value as Preferences['importMethod'])
-                    }
-                  >
-                    <option value="manual">Manual entry</option>
-                    <option value="csv">CSV import</option>
-                  </select>
                 </label>
               </div>
               <Toggle
