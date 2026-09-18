@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { PharmacyApi } from '@/services/pharmacy-api'
 import {
-  Bell,
   Check,
   Clock3,
   ExternalLink,
@@ -18,15 +17,8 @@ import {
   X,
 } from 'lucide-react'
 
-type Tab = 'profile' | 'staff' | 'notifications' | 'operations' | 'security'
+type Tab = 'profile' | 'staff' | 'operations' | 'security'
 type Preferences = {
-  lowStock: boolean
-  expiry: boolean
-  newReservation: boolean
-  cancellation: boolean
-  sms: boolean
-  email: boolean
-  inApp: boolean
   lowStockThreshold: number
   expiryWarningDays: number
   reservationDuration: number
@@ -36,13 +28,6 @@ type Preferences = {
   twoFactor: boolean
 }
 const defaults: Preferences = {
-  lowStock: true,
-  expiry: true,
-  newReservation: true,
-  cancellation: true,
-  sms: false,
-  email: true,
-  inApp: true,
   lowStockThreshold: 10,
   expiryWarningDays: 30,
   reservationDuration: 24,
@@ -54,7 +39,6 @@ const defaults: Preferences = {
 const tabs: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
   { id: 'profile', label: 'Pharmacy profile', icon: Store },
   { id: 'staff', label: 'Staff & account', icon: Users },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'operations', label: 'Inventory & reservations', icon: Clock3 },
   { id: 'security', label: 'Security & preferences', icon: ShieldCheck },
 ]
@@ -391,59 +375,6 @@ export default function PharmacySettings() {
                 </div>
               </Section>
             </div>
-          )}
-
-          {tab === 'notifications' && (
-            <Section
-              title="Notification preferences"
-              description="Choose which events matter to your team and how alerts are delivered."
-            >
-              <div className="grid gap-3 md:grid-cols-2">
-                <Toggle
-                  checked={preferences.lowStock}
-                  onChange={(v) => setPref('lowStock', v)}
-                  label="Low-stock alerts"
-                  description="Notify staff when inventory reaches its threshold."
-                />
-                <Toggle
-                  checked={preferences.expiry}
-                  onChange={(v) => setPref('expiry', v)}
-                  label="Expiry alerts"
-                />
-                <Toggle
-                  checked={preferences.newReservation}
-                  onChange={(v) => setPref('newReservation', v)}
-                  label="New reservation alerts"
-                />
-                <Toggle
-                  checked={preferences.cancellation}
-                  onChange={(v) => setPref('cancellation', v)}
-                  label="Reservation cancellations"
-                />
-              </div>
-              <div className="border-t border-gray-100 pt-4">
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">
-                  Delivery channels
-                </p>
-                <div className="grid gap-3 md:grid-cols-3">
-                  <Toggle
-                    checked={preferences.sms}
-                    onChange={(v) => setPref('sms', v)}
-                    label="SMS"
-                  />
-                  <Toggle
-                    checked={preferences.email}
-                    onChange={(v) => setPref('email', v)}
-                    label="Email"
-                  />
-                  <Toggle
-                    checked={preferences.inApp}
-                    onChange={(v) => setPref('inApp', v)}
-                    label="In-app"
-                  />
-                </div>
-              </div>
-            </Section>
           )}
 
           {tab === 'operations' && (
