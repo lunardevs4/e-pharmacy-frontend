@@ -210,13 +210,6 @@ export default function AdminDashboard() {
             <div>{lastRefreshed.toLocaleTimeString()}</div>
             <div className="mt-1">System: <span className="text-emerald-700 font-bold">{t('common.active')}</span></div>
           </div>
-          <Link
-            to="/admin/system"
-            className="bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300 font-bold px-3 py-2 rounded-lg text-[10px] sm:text-xs transition border border-red-200 dark:border-red-800 flex items-center space-x-1.5"
-          >
-            <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
-            <span>Kill-Switch</span>
-          </Link>
           <button
             onClick={handleRefresh}
             disabled={refreshing}

@@ -207,28 +207,8 @@ apiClient.interceptors.response.use(
 
     if (error.response) {
       const status = error.response.status
-      const errData = error.response.data?.error || error.response.data
-      const code = errData?.code
 
-      if (status === 503 && (code === 'SYSTEM_MAINTENANCE' || code === 'SYSTEM_EMERGENCY_LOCKDOWN')) {
-        const user = (await import('@/store/authStore')).useAuthStore.getState().user
-        if (user?.role !== 'ADMIN') {
-          try {
-            sessionStorage.setItem('maintenance_info', JSON.stringify({
-              code,
-              message: errData.message,
-              reason: errData.reason,
-              estimatedEndTime: errData.estimatedEndTime,
-              updatedAt: errData.updatedAt,
-            }))
-          } catch {
-            // ignore session storage quota errors
-          }
-          if (window.location.pathname !== '/maintenance') {
-            window.location.href = '/maintenance'
-          }
-        }
-      } else if (status === 400 || status === 401 || status === 403 || status === 404 ||
+      if (status === 400 || status === 401 || status === 403 || status === 404 ||
           status === 409 || status === 422 || status === 429 || status >= 500 ||
           hasTechnicalMessage(error.message)) {
         error.message = getFriendlyStatusMessage(status)
