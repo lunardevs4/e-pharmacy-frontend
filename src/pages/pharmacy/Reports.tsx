@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Bar, Line, Doughnut } from 'react-chartjs-2'
+import { useEffect, useMemo, useState } from 'react'
+import {  Line, Doughnut } from 'react-chartjs-2'
 import '@/utils/chartTheme'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Tooltip, Legend, Filler } from 'chart.js'
 import { useAuthStore } from '@/store/authStore'

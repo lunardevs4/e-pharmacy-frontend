@@ -2,13 +2,19 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { PharmacyApi } from '@/services/pharmacy-api'
+import { AuthApi } from '@/services/auth-api'
 import {
   Check,
+  CheckCircle2,
   Clock3,
   ExternalLink,
+  Eye,
+  EyeOff,
   Globe2,
   KeyRound,
+  Lock,
   Loader2,
+  Mail,
   MapPin,
   Save,
   ShieldCheck,
@@ -18,6 +24,7 @@ import {
 } from 'lucide-react'
 
 type Tab = 'profile' | 'staff' | 'operations' | 'security'
+type PasswordStep = 'CLOSED' | 'OTP' | 'NEW' | 'SUCCESS'
 type Preferences = {
   lowStockThreshold: number
   expiryWarningDays: number
@@ -100,8 +107,14 @@ export default function PharmacySettings() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
   const pharmacyId = user?.pharmacyId || user?.pharmacy?.id
-  const storageKey = `pharmacy-settings-${pharmacyId || 'unknown'}`
   const [tab, setTab] = useState<Tab>('profile')
+  const [passwordStep, setPasswordStep] = useState<PasswordStep>('CLOSED')
+  const [passwordOtp, setPasswordOtp] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
   const [pharmacy, setPharmacy] = useState<any>(user?.pharmacy || {})
   const [preferences, setPreferences] = useState<Preferences>(defaults)
   const [saving, setSaving] = useState(false)
@@ -134,16 +147,55 @@ export default function PharmacySettings() {
         }))
       })
       .catch(() => setError('Unable to load pharmacy profile.'))
-    try {
-      setPreferences({ ...defaults, ...JSON.parse(localStorage.getItem(storageKey) || '{}') })
-    } catch {
-      /* defaults */
-    }
-  }, [pharmacyId, storageKey, user?.email])
+    PharmacyApi.getSettings(pharmacyId)
+      .then((settings: any) => setPreferences({
+        lowStockThreshold: settings.lowStockThreshold,
+        expiryWarningDays: settings.expiryWarningDays,
+        reservationDuration: settings.reservationDurationHours,
+        autoExpire: settings.autoExpireReservations,
+        language: settings.language,
+        twoFactor: settings.twoFactorEnabled,
+      }))
+      .catch(() => setError('Unable to load pharmacy settings.'))
+  }, [pharmacyId, user?.email])
   const setField = (field: string, value: string) =>
     setForm((current) => ({ ...current, [field]: value }))
   const setPref = <K extends keyof Preferences>(field: K, value: Preferences[K]) =>
     setPreferences((current) => ({ ...current, [field]: value }))
+  const passwordCriteria = {
+    length: newPassword.length >= 8,
+    uppercase: /[A-Z]/.test(newPassword),
+    lowercase: /[a-z]/.test(newPassword),
+    number: /\d/.test(newPassword),
+    special: /[@$!%*?&]/.test(newPassword),
+  }
+  const passwordIsValid = Object.values(passwordCriteria).every(Boolean)
+  const passwordEmail = user?.email || pharmacy?.owner?.email || ''
+  const startPasswordChange = async () => {
+    if (!passwordEmail) { setPasswordError('No email address is available for this account.'); return }
+    setPasswordLoading(true); setPasswordError(null)
+    try { await AuthApi.requestPasswordReset(passwordEmail); setPasswordStep('OTP') }
+    catch (err: any) { setPasswordError(err?.message || 'Unable to send the verification code.') }
+    finally { setPasswordLoading(false) }
+  }
+  const verifyPasswordOtp = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!/^\d{6}$/.test(passwordOtp)) { setPasswordError('Enter the 6-digit verification code.'); return }
+    setPasswordLoading(true); setPasswordError(null)
+    try { await AuthApi.verifyResetOTP(passwordEmail, passwordOtp); setPasswordStep('NEW') }
+    catch (err: any) { setPasswordError(err?.message || 'The code is invalid or expired.') }
+    finally { setPasswordLoading(false) }
+  }
+  const completePasswordChange = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!passwordIsValid) { setPasswordError('New password does not meet all password rules.'); return }
+    if (newPassword !== confirmPassword) { setPasswordError('Passwords do not match.'); return }
+    setPasswordLoading(true); setPasswordError(null)
+    try { await AuthApi.resetPassword(passwordEmail, newPassword, passwordOtp); setPasswordStep('SUCCESS') }
+    catch (err: any) { setPasswordError(err?.message || 'Unable to update your password.') }
+    finally { setPasswordLoading(false) }
+  }
+  const closePasswordFlow = () => { setPasswordStep('CLOSED'); setPasswordOtp(''); setNewPassword(''); setConfirmPassword(''); setPasswordError(null); setShowNewPassword(false) }
   const save = async () => {
     setSaving(true)
     setMessage(null)
@@ -163,7 +215,16 @@ export default function PharmacySettings() {
         })
         setPharmacy(updated)
         setForm((current) => ({ ...current, ...updated }))
-      } else localStorage.setItem(storageKey, JSON.stringify(preferences))
+      } else if (pharmacyId) {
+        await PharmacyApi.updateSettings(pharmacyId, {
+          lowStockThreshold: preferences.lowStockThreshold,
+          expiryWarningDays: preferences.expiryWarningDays,
+          reservationDurationHours: preferences.reservationDuration,
+          autoExpireReservations: preferences.autoExpire,
+          language: preferences.language,
+          twoFactorEnabled: preferences.twoFactor,
+        })
+      }
       setMessage('Settings saved successfully.')
       window.setTimeout(() => setMessage(null), 3000)
     } catch (err: any) {
@@ -364,7 +425,7 @@ export default function PharmacySettings() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate('/change-password')}
+                    onClick={startPasswordChange}
                     className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700"
                   >
                     <KeyRound className="h-4 w-4" />
@@ -442,7 +503,7 @@ export default function PharmacySettings() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <button
                     type="button"
-                    onClick={() => navigate('/change-password')}
+                    onClick={startPasswordChange}
                     className="flex items-center justify-between rounded-lg border border-gray-200 p-4 text-left"
                   >
                     <span>
@@ -508,6 +569,46 @@ export default function PharmacySettings() {
           )}
         </div>
       </div>
+      {passwordStep !== 'CLOSED' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 py-6">
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6">
+            <div className="mb-5 flex items-start justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-health-primary">Account security</p>
+                <h2 className="mt-1 text-xl font-bold text-gray-900">
+                  {passwordStep === 'OTP' ? 'Verify your email' : passwordStep === 'NEW' ? 'Create a new password' : 'Password updated'}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  {passwordStep === 'OTP' ? `We sent a 6-digit code to ${passwordEmail}.` : passwordStep === 'NEW' ? 'Choose a strong password for your account.' : 'Your password has been changed successfully.'}
+                </p>
+              </div>
+              <button type="button" onClick={closePasswordFlow} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="Close password change"><X className="h-5 w-5" /></button>
+            </div>
+
+            {passwordError && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{passwordError}</div>}
+
+            {passwordStep === 'OTP' && <form onSubmit={verifyPasswordOtp} className="space-y-4">
+              <label className="block text-xs font-bold text-gray-600">Verification code
+                <div className="relative mt-1.5"><Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" /><input autoFocus required inputMode="numeric" maxLength={6} value={passwordOtp} onChange={e => setPasswordOtp(e.target.value.replace(/\D/g, ''))} className={`${input} pl-10 text-center font-mono tracking-[0.35em]`} placeholder="000000" /></div>
+              </label>
+              <p className="text-xs text-gray-500">The code expires after 15 minutes.</p>
+              <button type="submit" disabled={passwordLoading} className="w-full rounded-lg bg-health-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-health-secondary disabled:opacity-60">{passwordLoading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : 'Verify code'}</button>
+              <button type="button" disabled={passwordLoading} onClick={startPasswordChange} className="w-full text-xs font-bold text-health-primary hover:underline">Resend code</button>
+            </form>}
+
+            {passwordStep === 'NEW' && <form onSubmit={completePasswordChange} className="space-y-4">
+              <label className="block text-xs font-bold text-gray-600">New password
+                <div className="relative mt-1.5"><Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" /><input autoFocus required type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} className={`${input} pl-10 pr-10`} placeholder="Enter new password" /><button type="button" onClick={() => setShowNewPassword(value => !value)} className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-700">{showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div>
+              </label>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600"><p className="mb-2 font-bold text-gray-700">Password rules</p>{[['length','At least 8 characters'],['uppercase','One uppercase letter'],['lowercase','One lowercase letter'],['number','One number'],['special','One special character (@$!%*?&)']].map(([key, label]) => <div key={key} className="flex items-center gap-2 py-0.5"><span className={`h-2 w-2 rounded-full ${passwordCriteria[key as keyof typeof passwordCriteria] ? 'bg-health-primary' : 'bg-gray-300'}`} />{label}</div>)}</div>
+              <label className="block text-xs font-bold text-gray-600">Confirm password<input required type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={`${input} mt-1.5`} placeholder="Confirm new password" /></label>
+              <button type="submit" disabled={passwordLoading || !passwordIsValid || newPassword !== confirmPassword} className="w-full rounded-lg bg-health-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-health-secondary disabled:opacity-60">{passwordLoading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : 'Update password'}</button>
+            </form>}
+
+            {passwordStep === 'SUCCESS' && <div className="space-y-4 text-center"><CheckCircle2 className="mx-auto h-12 w-12 text-health-primary" /><p className="text-sm text-gray-600">Your new password is active. You can continue using your pharmacy account.</p><button type="button" onClick={closePasswordFlow} className="w-full rounded-lg bg-health-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-health-secondary">Done</button></div>}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

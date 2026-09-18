@@ -22,6 +22,12 @@ export const PharmacyApi = {
   updateDetails: async (pharmacyId: string, data: Record<string, unknown>) => {
     return unwrap(await apiClient.patch(`/pharmacies/${pharmacyId}`, data))
   },
+  getSettings: async (pharmacyId: string) => {
+    return unwrap(await apiClient.get(`/pharmacies/${pharmacyId}/settings`))
+  },
+  updateSettings: async (pharmacyId: string, data: Record<string, unknown>) => {
+    return unwrap(await apiClient.patch(`/pharmacies/${pharmacyId}/settings`, data))
+  },
   getEmployees: async (pharmacyId: string) => {
     const response = await apiClient.get(`/pharmacies/${pharmacyId}/employees`)
     return unwrap(response)
