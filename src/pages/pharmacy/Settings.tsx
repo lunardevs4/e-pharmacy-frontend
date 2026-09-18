@@ -500,38 +500,19 @@ export default function PharmacySettings() {
                   label="Two-factor authentication"
                   description="Require an additional verification step at sign in."
                 />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={startPasswordChange}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 p-4 text-left"
-                  >
-                    <span>
-                      <span className="block text-sm font-bold">Change password</span>
-                      <span className="text-xs text-gray-500">
-                        Update your owner account password.
-                      </span>
+                <button
+                  type="button"
+                  onClick={startPasswordChange}
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 p-4 text-left"
+                >
+                  <span>
+                    <span className="block text-sm font-bold">Change password</span>
+                    <span className="text-xs text-gray-500">
+                      Update your owner account password.
                     </span>
-                    <KeyRound className="h-4 w-4 text-health-primary" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setMessage(
-                        'Sign out of all devices is ready to be connected to the session service.',
-                      )
-                    }
-                    className="flex items-center justify-between rounded-lg border border-gray-200 p-4 text-left"
-                  >
-                    <span>
-                      <span className="block text-sm font-bold">Sign out all devices</span>
-                      <span className="text-xs text-gray-500">
-                        End active sessions across devices.
-                      </span>
-                    </span>
-                    <ShieldCheck className="h-4 w-4 text-health-primary" />
-                  </button>
-                </div>
+                  </span>
+                  <KeyRound className="h-4 w-4 text-health-primary" />
+                </button>
               </Section>
               <Section title="Preferences">
                 <label className="max-w-sm text-xs font-bold text-gray-600">
