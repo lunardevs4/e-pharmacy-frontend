@@ -380,7 +380,7 @@ export default function PharmacySettings() {
               title="Inventory & reservations"
               description="Set the defaults used by stock and reservation workflows."
             >
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <label className="text-xs font-bold text-gray-600">
                   Low-stock threshold
                   <input
