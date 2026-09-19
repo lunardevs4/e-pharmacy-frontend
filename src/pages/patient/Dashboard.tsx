@@ -268,12 +268,14 @@ export default function PatientDashboard() {
           <form onSubmit={handleQuickSearchSubmit} className="relative w-full max-w-lg pt-3">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 mt-1.5 pointer-events-none" />
             <input
+              id="dashboard-search-history"
               type="text"
               placeholder={t('patient.dash.quickSearchPlaceholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full pl-9 pr-24 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-[10px] sm:text-xs font-bold text-gray-950 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
             />
+            <label htmlFor="dashboard-search-history" className="sr-only">Search medicine and pharmacy history</label>
             <button
               type="submit"
               className="absolute right-1 top-1/2 -translate-y-1/2 mt-1.5 py-1.5 px-3 bg-health-primary hover:bg-emerald-900 rounded-md text-white font-bold text-[9px] sm:text-[10px] uppercase transition-colors"
@@ -302,18 +304,20 @@ export default function PatientDashboard() {
 
           {isEditingInsurance ? (
             <div className="space-y-2">
-              <select
-                value={selectedInsurance}
+          <select
+            id="dashboard-insurance-provider"
+            value={selectedInsurance}
                 onChange={(e) => setSelectedInsurance(e.target.value)}
                 className="w-full bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              >
+          >
                 {providers.map((prov) => (
                   <option key={prov.id} value={prov.code || prov.name}>
                     {prov.code || prov.name}
                   </option>
                 ))}
                 <option value="None">{t('patient.dash.payingCash')}</option>
-              </select>
+          </select>
+          <label htmlFor="dashboard-insurance-provider" className="sr-only">Insurance provider</label>
               <div className="flex items-center space-x-1.5">
                 <button
                   type="button"

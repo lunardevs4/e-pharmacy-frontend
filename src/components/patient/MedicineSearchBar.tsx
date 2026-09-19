@@ -42,12 +42,14 @@ export default function MedicineSearchBar({
         <div className="relative flex-grow">
           <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
           <input
+            id="medicine-search-query"
             type="text"
             placeholder="Search trade brand or generic drug name..."
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-gray-900 shadow-sm text-sm font-semibold transition-all"
           />
+          <label htmlFor="medicine-search-query" className="sr-only">Search medicine name</label>
         </div>
         <button
           type="submit"
@@ -72,6 +74,7 @@ export default function MedicineSearchBar({
         <div className="flex items-center space-x-2">
           <span>Category:</span>
           <select
+            id="medicine-search-category"
             value={category}
             onChange={(e) => onCategoryChange(e.target.value)}
             className="bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-1 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -82,6 +85,7 @@ export default function MedicineSearchBar({
             <option value="Antidiabetics">Antidiabetics</option>
             <option value="Antihypertensives">Antihypertensives</option>
           </select>
+          <label htmlFor="medicine-search-category" className="sr-only">Filter by medicine category</label>
         </div>
       </div>
 

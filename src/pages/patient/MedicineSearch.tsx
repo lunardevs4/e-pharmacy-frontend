@@ -396,7 +396,7 @@ export default function MedicineSearch() {
   }
 
   return (
-    <div className="flex flex-col relative overflow-visible" style={{ height: 'calc(100dvh - 4rem)' }}>
+    <div className="patient-search-shell flex flex-col relative overflow-visible">
       {/* ── Search Bar Header ── */}
       <div className="relative z-10 flex-shrink-0 bg-white border-b border-gray-200 py-3 px-4 sm:px-6">
         <form
@@ -428,6 +428,7 @@ export default function MedicineSearch() {
             {/* Search input with autocomplete */}
             <div className="relative flex-grow min-w-0">
               <input
+                id="patient-medicine-search"
                 type="text"
                 placeholder="Search trade brand or generic molecule name..."
                 value={query}
@@ -436,6 +437,7 @@ export default function MedicineSearch() {
                 onBlur={() => setTimeout(() => setInputFocused(false), 200)}
                 className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white text-gray-950 text-xs font-semibold"
               />
+              <label htmlFor="patient-medicine-search" className="sr-only">Search medicine name</label>
               {inputFocused && searchHistory.length > 0 && (
                 <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-250 rounded-lg shadow-xl z-[60] max-h-48 overflow-y-auto text-xs font-bold text-gray-700 divide-y divide-gray-100">
                   <div className="p-2 bg-gray-55/30 text-[9px] uppercase tracking-wider text-gray-400">
@@ -473,6 +475,7 @@ export default function MedicineSearch() {
             {/* Category + Location + Search in one flex row on mobile */}
             <div className="flex gap-2">
               <select
+                id="patient-medicine-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="flex-1 sm:flex-none bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2.5 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -483,11 +486,13 @@ export default function MedicineSearch() {
                 <option value="Antidiabetics">Antidiabetics</option>
                 <option value="Antihypertensives">Antihypertensives</option>
               </select>
+              <label htmlFor="patient-medicine-category" className="sr-only">Filter by medicine category</label>
 
               <button
                 type="button"
                 onClick={getUserLocation}
                 disabled={locationLoading}
+                aria-label="Get my current location"
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-2.5 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5 flex-shrink-0"
                 title="Get my current location"
               >
@@ -675,6 +680,8 @@ export default function MedicineSearch() {
       <div className="lg:hidden absolute bottom-20 right-4 z-30 safe-area-bottom">
         <button
           type="button"
+          aria-label="Show map"
+          aria-expanded={mobileView === 'map'}
           onClick={() => setMobileView((prev) => (prev === 'list' ? 'map' : 'list'))}
           className="bg-slate-900 text-white font-bold px-4 py-3 rounded-full flex items-center justify-center space-x-2 shadow-2xl focus:outline-none"
         >

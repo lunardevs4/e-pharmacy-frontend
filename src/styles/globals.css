@@ -131,6 +131,17 @@ h1, h2, h3, h4, h5, h6 {
    4. LOGIN PAGE SPECIFIC
    -------------------------------------------------------------------------- */
 
+/* Cross-browser viewport fallback for the patient medicine search shell. */
+.patient-search-shell {
+  height: calc(100vh - 4rem);
+}
+
+@supports (height: 100dvh) {
+  .patient-search-shell {
+    height: calc(100dvh - 4rem);
+  }
+}
+
 /* ---- 4.1 Login Card Wrapper & ISO/GDPR/MOH Trust Badges ---------------- */
 /* White card housing logo, welcome heading, form inputs, buttons, and
    trust seals along the bottom divider. */

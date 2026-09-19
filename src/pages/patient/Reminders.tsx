@@ -224,9 +224,9 @@ export default function PatientReminders() {
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
       {confirmAction && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-gray-900/30" onClick={() => setConfirmAction(null)} />
-          <div role="dialog" aria-modal="true" className="relative w-full max-w-xs rounded-xl bg-white border border-gray-200 shadow-2xl p-5">
-            <h3 className="text-sm font-black text-gray-900">Are you sure?</h3>
+          <div className="absolute inset-0 bg-gray-900/30" aria-hidden="true" onClick={() => setConfirmAction(null)} />
+          <div role="dialog" aria-modal="true" aria-labelledby="reminder-action-title" className="relative w-full max-w-xs rounded-xl bg-white border border-gray-200 shadow-2xl p-5">
+            <h3 id="reminder-action-title" className="text-sm font-black text-gray-900">Are you sure?</h3>
             <p className="text-xs text-gray-500 mt-1.5">{confirmAction.type === 'delete' ? 'This reminder will be permanently deleted.' : `Are you sure you want to ${confirmAction.isActive ? 'deactivate' : 'activate'} this reminder?`}</p>
             <div className="flex gap-2 mt-4">
               <button type="button" onClick={() => setConfirmAction(null)} className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50">Cancel</button>
@@ -495,15 +495,15 @@ export default function PatientReminders() {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
-          <div className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-          <div className="portal-modal-panel relative w-full max-w-lg bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-10">
+          <div className="portal-modal-backdrop absolute inset-0 bg-gray-900/50 backdrop-blur-sm" aria-hidden="true" onClick={() => setShowAddModal(false)} />
+          <div role="dialog" aria-modal="true" aria-labelledby="add-reminder-title" className="portal-modal-panel relative w-full max-w-lg bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden z-10">
             <div className="bg-white text-gray-900 px-6 py-5 flex items-center justify-between border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100">
                   <Pill className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base">Add Medicine Reminder</h3>
+                  <h3 id="add-reminder-title" className="font-black text-base">Add Medicine Reminder</h3>
                   <p className="text-[11px] text-gray-500 mt-0.5">Set up your medication schedule</p>
                 </div>
               </div>
@@ -519,8 +519,9 @@ export default function PatientReminders() {
 
             <form onSubmit={handleAddReminder} className="portal-form p-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Medicine Name *</label>
+                <label htmlFor="reminder-medicine-name" className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Medicine Name *</label>
                 <input
+                  id="reminder-medicine-name"
                   type="text"
                   value={medicineName}
                   onChange={(e) => {
@@ -543,11 +544,13 @@ export default function PatientReminders() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Dosage Times *</label>
+                <span className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Dosage Times *</span>
                 <div className="space-y-2">
                   {times.map((time, idx) => (
                     <div key={idx} className="flex items-center space-x-2">
                       <input
+                        id={`reminder-time-${idx}`}
+                        aria-label={`Dosage time ${idx + 1}`}
                         type="time"
                         value={time}
                         onChange={(e) => updateTimeSlot(idx, e.target.value)}
@@ -557,6 +560,7 @@ export default function PatientReminders() {
                         <button
                           type="button"
                           onClick={() => removeTimeSlot(idx)}
+                          aria-label={`Remove dosage time ${idx + 1}`}
                           className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -582,8 +586,9 @@ export default function PatientReminders() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Frequency</label>
+                  <label htmlFor="reminder-frequency" className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Frequency</label>
                   <select
+                    id="reminder-frequency"
                     value={frequency}
                     onChange={(e) => setFrequency(e.target.value as any)}
                     className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -595,8 +600,9 @@ export default function PatientReminders() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Start Date</label>
+                  <label htmlFor="reminder-start-date" className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Start Date</label>
                   <input
+                    id="reminder-start-date"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
@@ -606,8 +612,9 @@ export default function PatientReminders() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">End Date (Optional)</label>
+                <label htmlFor="reminder-end-date" className="block text-xs font-bold text-gray-600 uppercase tracking-wider">End Date (Optional)</label>
                 <input
+                  id="reminder-end-date"
                   type="date"
                   value={endDate}
                   onChange={(e) => {
@@ -628,8 +635,9 @@ export default function PatientReminders() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Pharmacist Instructions</label>
+                <label htmlFor="reminder-pharmacist-instructions" className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Pharmacist Instructions</label>
                 <textarea
+                  id="reminder-pharmacist-instructions"
                   rows={2}
                   value={pharmacistInstructions}
                   onChange={(e) => setPharmacistInstructions(e.target.value)}
@@ -639,8 +647,9 @@ export default function PatientReminders() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Personal Notes</label>
+                <label htmlFor="reminder-notes" className="block text-xs font-bold text-gray-600 uppercase tracking-wider">Personal Notes</label>
                 <textarea
+                  id="reminder-notes"
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}

@@ -121,15 +121,18 @@ export default function PatientHistory() {
           <div className="relative flex-grow max-w-md">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
             <input
+              id="history-search"
               type="text"
               placeholder="Search medicine, pharmacy, or generic name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
             />
+            <label htmlFor="history-search" className="sr-only">Search medicine history</label>
           </div>
 
           <select
+            id="history-pharmacy-filter"
             value={pharmacyFilter}
             onChange={(e) => setPharmacyFilter(e.target.value)}
             className="bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -139,13 +142,16 @@ export default function PatientHistory() {
               <option key={pharmacy} value={pharmacy}>{pharmacy}</option>
             ))}
           </select>
+          <label htmlFor="history-pharmacy-filter" className="sr-only">Filter history by pharmacy</label>
 
           <input
+            id="history-date-filter"
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
             className="bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
+          <label htmlFor="history-date-filter" className="sr-only">Filter history by date</label>
         </div>
       </div>
 
