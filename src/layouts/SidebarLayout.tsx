@@ -97,7 +97,7 @@ export default function SidebarLayout() {
           { path: '/patient/reservations',   label: 'My Reservations',icon: ClipboardList   },
           { path: '/patient/history',        label: 'History',        icon: History         },
           { path: '/patient/reminders',      label: 'Reminders',      icon: AlarmClock      },
-          { path: '/patient/adherence',      label: 'Adherence',      icon: Activity        },
+
           { path: '/patient/notifications',  label: 'Notifications',  icon: Bell            },
           { path: '/patient/profile',        label: 'Profile',        icon: User            },
         ]
@@ -121,7 +121,7 @@ export default function SidebarLayout() {
         }
         links.push(
           { path: '/pharmacy/reports',       label: 'Reports',        icon: BarChart2       },
-          { path: '/pharmacy/adherence',     label: 'Adherence',      icon: Activity        },
+
           { path: '/pharmacy/profile',       label: 'Profile',        icon: User            },
         )
         return links
@@ -174,8 +174,7 @@ export default function SidebarLayout() {
       case 'Patients':           return t('nav.patients')
       case 'Billing':            return t('nav.billing' as any) || 'Billing'
       case 'Staff':              return t('nav.staff')
-      case 'Audit Trail':        return t('nav.audit')
-      case 'Adherence':          return 'Adherence'
+
       case 'Reports':            return t('nav.reports')
       case 'Settings':           return t('nav.settings')
       case 'Claims':             return t('nav.claims')
