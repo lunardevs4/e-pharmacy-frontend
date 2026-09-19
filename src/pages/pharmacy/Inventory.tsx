@@ -516,12 +516,49 @@ export default function PharmacyInventory() {
 
       localStorage.setItem('pharmacy_audit_logs', JSON.stringify(logs))
 
+      const newItem: InventoryItem = {
+        medicine: {
+          id: newMedId,
+          name: medName.trim(),
+          genericName: medGenericName.trim(),
+          tradeNames: [medName.trim()],
+          category: medCategory.trim(),
+          manufacturer: 'Unknown',
+          prescriptionRequired: false,
+          uses: '',
+          dosage: '',
+          warnings: '',
+          sideEffects: '',
+          interactions: '',
+          storage: 'Room Temperature (<30°C)',
+        },
+        stockInfo: {
+          pharmacyId: pharmacyId,
+          pharmacyName: pharmacyName,
+          rating: 4.5,
+          isOpen: true,
+          distance: 1.0,
+          price: priceNum,
+          stock: stockNum,
+          stockStatus: stockNum === 0 ? 'OUT_OF_STOCK' : stockNum < 10 ? 'ALMOST_OUT' : stockNum < 35 ? 'LIMITED' : 'HIGH',
+          insuranceAccepted: activeInsurances.map(p => p.code),
+          lat: -1.94,
+          lng: 30.06,
+          locationText: 'Kigali City'
+        },
+        customBatch: medBatchNumber.trim(),
+        customExpiry: medExpiry,
+        customSupplier: 'Unknown',
+        customCostPrice: costNum,
+        customStorage: 'Room Temperature (<30°C)',
+      }
+      setInventoryList(prev => [newItem, ...prev])
+
       setFormSuccess('Medicine successfully registered and stocked!')
 
       setTimeout(() => {
         setShowAddModal(false)
         resetForm()
-        loadInventory()
       }, 1500)
     } catch (err: any) {
       const backendMessage =
