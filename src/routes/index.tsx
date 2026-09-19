@@ -55,8 +55,7 @@ const InsurancePayments = lazy(() => import('@/pages/insurance/Payments'))
 const InsuranceReports = lazy(() => import('@/pages/insurance/Reports'))
 const InsuranceTariffs = lazy(() => import('@/pages/insurance/Tariffs'))
 
-const AdherenceHistory = lazy(() => import('@/pages/patient/AdherenceHistory'))
-const PharmacyAdherenceReport = lazy(() => import('@/pages/pharmacy/AdherenceReport'))
+
 
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'))
 const AdminUsers = lazy(() => import('@/pages/admin/Users'))
@@ -95,7 +94,7 @@ export default function AppRoutes() {
           <Route path="reservations" element={<Reservations />} />
           <Route path="history" element={<PatientHistory />} />
           <Route path="reminders" element={<PatientReminders />} />
-          <Route path="adherence" element={<AdherenceHistory />} />
+
           <Route path="notifications" element={<SharedNotifications />} />
           <Route path="profile" element={<PatientProfile />} />
         </Route>
@@ -118,7 +117,7 @@ export default function AppRoutes() {
           </Route>
 
           <Route path="reports" element={<PharmacyReports />} />
-          <Route path="adherence" element={<PharmacyAdherenceReport />} />
+
           <Route path="profile" element={<PharmacySettings />} />
           <Route path="notifications" element={<SharedNotifications />} />
         </Route>

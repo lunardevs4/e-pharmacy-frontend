@@ -374,14 +374,12 @@ export default function PharmacyInventory() {
       !medName ||
       !medGenericName ||
       !medCategory ||
-      !medManufacturer ||
       !medBatchNumber ||
       !medLotNumber ||
       !medExpiry ||
       !medCost ||
       !medPrices.CASH?.trim() ||
-      medStock === '' ||
-      !medStorageConditions
+      medStock === ''
     ) {
       setFormError('Please fill in all required fields.')
       return
@@ -472,9 +470,7 @@ export default function PharmacyInventory() {
         ...(matchedCat?.id || medCategoryId
           ? { categoryId: matchedCat?.id || medCategoryId }
           : { categoryName: medCategory.trim() }),
-        ...(matchedMfr?.id || medManufacturerId
-          ? { manufacturerId: matchedMfr?.id || medManufacturerId }
-          : { manufacturerName: medManufacturer.trim() }),
+
         initialBatch: {
           batchNumber: medBatchNumber.trim(),
           lotNumber: medLotNumber.trim(),
@@ -482,9 +478,7 @@ export default function PharmacyInventory() {
           unitCost: costNum,
           unitSellingPrice: priceNum,
           initialStock: stockNum,
-          storageConditions: medStorageConditions.trim(),
-          minTemperature,
-          maxTemperature,
+
         },
       })
 
@@ -522,12 +516,49 @@ export default function PharmacyInventory() {
 
       localStorage.setItem('pharmacy_audit_logs', JSON.stringify(logs))
 
+      const newItem: InventoryItem = {
+        medicine: {
+          id: newMedId,
+          name: medName.trim(),
+          genericName: medGenericName.trim(),
+          tradeNames: [medName.trim()],
+          category: medCategory.trim(),
+          manufacturer: 'Unknown',
+          prescriptionRequired: false,
+          uses: '',
+          dosage: '',
+          warnings: '',
+          sideEffects: '',
+          interactions: '',
+          storage: 'Room Temperature (<30°C)',
+        },
+        stockInfo: {
+          pharmacyId: pharmacyId,
+          pharmacyName: pharmacyName,
+          rating: 4.5,
+          isOpen: true,
+          distance: 1.0,
+          price: priceNum,
+          stock: stockNum,
+          stockStatus: stockNum === 0 ? 'OUT_OF_STOCK' : stockNum < 10 ? 'ALMOST_OUT' : stockNum < 35 ? 'LIMITED' : 'HIGH',
+          insuranceAccepted: activeInsurances.map(p => p.code),
+          lat: -1.94,
+          lng: 30.06,
+          locationText: 'Kigali City'
+        },
+        customBatch: medBatchNumber.trim(),
+        customExpiry: medExpiry,
+        customSupplier: 'Unknown',
+        customCostPrice: costNum,
+        customStorage: 'Room Temperature (<30°C)',
+      }
+      setInventoryList(prev => [newItem, ...prev])
+
       setFormSuccess('Medicine successfully registered and stocked!')
 
       setTimeout(() => {
         setShowAddModal(false)
         resetForm()
-        loadInventory()
       }, 1500)
     } catch (err: any) {
       const backendMessage =
@@ -1352,7 +1383,7 @@ export default function PharmacyInventory() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div ref={categoryRef} className="relative">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                         Category *
@@ -1409,68 +1440,6 @@ export default function PharmacyInventory() {
                           ) : (
                             <div className="px-3 py-3 text-xs text-gray-500">
                               Start typing to search categories.
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div ref={manufacturerRef} className="relative">
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Manufacturer *
-                      </label>
-
-                      <input
-                        type="text"
-                        required
-                        value={medManufacturer}
-                        onChange={(e) => {
-                          setMedManufacturer(e.target.value)
-                          setMedManufacturerId(undefined)
-                          setShowManufacturerSuggestions(true)
-                        }}
-                        onFocus={() => {
-                          setShowManufacturerSuggestions(true)
-                        }}
-                        placeholder="Type manufacturer..."
-                        autoComplete="off"
-                        className="block w-full px-3 py-2 pr-8 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-
-                      <ChevronDown
-                        className={`absolute right-2 top-[30px] w-3.5 h-3.5 text-gray-400 transition-transform ${
-                          showManufacturerSuggestions ? 'rotate-180' : ''
-                        }`}
-                      />
-
-                      {showManufacturerSuggestions && (
-                        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {filteredManufacturers.length > 0 ? (
-                            filteredManufacturers.map((manufacturer) => (
-                              <button
-                                key={manufacturer.id}
-                                type="button"
-                                onClick={() => {
-                                  setMedManufacturer(manufacturer.name)
-                                  setMedManufacturerId(manufacturer.id)
-                                  setShowManufacturerSuggestions(false)
-                                }}
-                                className="w-full text-left px-3 py-2.5 text-xs text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
-                              >
-                                {manufacturer.name}
-                              </button>
-                            ))
-                          ) : medManufacturer.trim() ? (
-                            <div className="px-3 py-3 text-xs">
-                              <div className="text-gray-500">No matching manufacturer found.</div>
-
-                              <div className="mt-1 text-emerald-600 font-semibold">
-                                "{medManufacturer}" will be created when you register the medicine.
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="px-3 py-3 text-xs text-gray-500">
-                              Start typing to search manufacturers.
                             </div>
                           )}
                         </div>
@@ -1657,74 +1626,7 @@ export default function PharmacyInventory() {
                 </div>
               </section>
 
-              <section className="pt-5 border-t border-gray-200">
-                <div className="mb-3">
-                  <h4 className="text-sm font-black text-gray-900">Storage Requirements</h4>
 
-                  <p className="text-[10px] text-gray-500 mt-0.5">
-                    Enter the storage requirements provided for this medicine.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                      Storage Conditions *
-                    </label>
-
-                    <textarea
-                      required
-                      rows={2}
-                      value={medStorageConditions}
-                      onChange={(e) => setMedStorageConditions(e.target.value)}
-                      placeholder="e.g. Store in a cool, dry place away from direct sunlight."
-                      className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Minimum Temperature (°C)
-                      </label>
-
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={medMinTemperature}
-                        onChange={(e) => setMedMinTemperature(e.target.value)}
-                        placeholder="e.g. 2"
-                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Maximum Temperature (°C)
-                      </label>
-
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={medMaxTemperature}
-                        onChange={(e) => setMedMaxTemperature(e.target.value)}
-                        placeholder="e.g. 25"
-                        className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start space-x-2">
-                    <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-
-                    <p className="text-[10px] text-blue-700 leading-relaxed">
-                      Enter the storage temperature range according to the manufacturer's
-                      instructions. Leave the temperature fields empty if the medicine does not have
-                      a specific temperature range.
-                    </p>
-                  </div>
-                </div>
-              </section>
 
               <div className="flex space-x-3 pt-5 border-t border-gray-200">
                 <button
