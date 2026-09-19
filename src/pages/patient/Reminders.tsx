@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { MedicineApi } from '@/services/medicine-api'
 import { ErrorFallback } from '@/components/patient/LoadingSkeleton'
 import { normalizeError, AppError } from '@/utils/error-handler'
+import { useMedicationAdherence } from '@/hooks/useMedicationAdherence'
 import { 
   Bell, Plus, Clock, Calendar, Trash2, CheckCircle2, 
-  Edit, X, AlertCircle, Pill, Info, Save, RefreshCw, WifiOff
+  Edit, X, AlertCircle, Pill, Info, Save, RefreshCw, WifiOff, 
+  ClipboardCheck, AlertTriangle, Loader2
 } from 'lucide-react'
 
 interface Reminder {
@@ -142,17 +144,6 @@ export default function PatientReminders() {
     else await toggleReminder(action.id, action.isActive || false)
   }
 
-  const handleMarkTaken = async (id: string, time: string) => {
-    try {
-      await MedicineApi.markReminderTaken(id, time)
-      triggerToast('Medicine marked as taken!')
-      loadReminders()
-    } catch (err: any) {
-      const normalized = normalizeError(err)
-      triggerToast(normalized.message || 'Failed to mark as taken.', true)
-    }
-  }
-
   const addTimeSlot = () => {
     if (times.length < 6) {
       setTimes([...times, '12:00'])
@@ -226,6 +217,8 @@ export default function PatientReminders() {
     const nextDose = getNextDoseInfo(r)
     return nextDose?.isDue
   }).length
+
+  const adherence = useMedicationAdherence(reminders)
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
@@ -309,6 +302,71 @@ export default function PatientReminders() {
         </div>
       </div>
 
+      <section className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden" aria-labelledby="dose-confirmation-heading">
+        <div className="p-5 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-lg bg-emerald-50 text-health-primary">
+              <ClipboardCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 id="dose-confirmation-heading" className="font-black text-gray-900">Today&apos;s dose confirmation</h2>
+              <p className="text-xs text-gray-500 mt-1">Confirm each dose after you take it so your adherence stays accurate.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-5 text-xs">
+            <div><span className="block text-[10px] uppercase font-bold text-gray-400">Adherence</span><strong className="text-lg text-health-primary">{adherence.summary.adherencePercentage}%</strong></div>
+            <div><span className="block text-[10px] uppercase font-bold text-gray-400">Completed</span><strong className="text-lg text-gray-900">{adherence.summary.completedDoses}</strong></div>
+            <div><span className="block text-[10px] uppercase font-bold text-gray-400">Missed</span><strong className="text-lg text-amber-700">{adherence.summary.missedDoses || adherence.missedDoses.length}</strong></div>
+          </div>
+        </div>
+
+        {adherence.error ? (
+          <div className="p-4 flex items-center justify-between gap-3 bg-amber-50 text-amber-900 text-xs">
+            <span>{adherence.error}</span>
+            <button type="button" onClick={adherence.refresh} className="font-bold underline">Retry</button>
+          </div>
+        ) : adherence.loading && adherence.doseAlerts.length === 0 ? (
+          <div className="p-8 flex items-center justify-center gap-2 text-xs text-gray-400"><Loader2 className="w-4 h-4 animate-spin" /> Checking dose confirmations…</div>
+        ) : adherence.doseAlerts.length === 0 ? (
+          <div className="p-8 text-center">
+            <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500" />
+            <p className="mt-2 text-sm font-bold text-gray-800">You&apos;re all caught up</p>
+            <p className="mt-1 text-xs text-gray-500">No pending or missed doses have been detected.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {adherence.doseAlerts.slice(0, 8).map((dose) => (
+              <div key={dose.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className={`mt-0.5 p-2 rounded-full ${dose.status === 'missed' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700'}`}>
+                    {dose.status === 'missed' ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">{dose.medicineName}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {dose.status === 'missed' ? 'Missed dose detected' : 'Dose awaiting confirmation'} · scheduled {dose.time}
+                    </p>
+                  </div>
+                </div>
+                {dose.logId && dose.status === 'pending' ? (
+                  <button
+                    type="button"
+                    onClick={() => adherence.confirmDose(dose.logId as string)}
+                    disabled={adherence.confirmingId === dose.logId}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-health-primary px-4 py-2 text-xs font-bold text-white hover:bg-health-secondary disabled:opacity-60"
+                  >
+                    {adherence.confirmingId === dose.logId && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    {adherence.confirmingId === dose.logId ? 'Confirming…' : 'I took this dose'}
+                  </button>
+                ) : (
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">Review with your care team</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-12 text-center text-xs text-gray-400 flex items-center justify-center space-x-2">
@@ -378,16 +436,6 @@ export default function PatientReminders() {
                             >
                               <Clock className="w-3 h-3" />
                               <span>{time}</span>
-                              {reminder.isActive && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleMarkTaken(reminder.id, time)}
-                                  className="hover:text-emerald-600 transition-colors"
-                                  title="Mark as taken"
-                                >
-                                  <CheckCircle2 className="w-3 h-3" />
-                                </button>
-                              )}
                             </div>
                           )
                         })}

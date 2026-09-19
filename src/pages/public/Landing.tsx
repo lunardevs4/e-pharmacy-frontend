@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { apiClient } from '@/api/client'
+import { apiClient, unwrap } from '@/api/client'
 import { useLanguageStore } from '@/store/languageStore'
 import LanguageSelector from '@/components/common/LanguageSelector'
 
@@ -86,7 +86,7 @@ export default function LandingPage() {
     apiClient
       .get('/public/stats')
       .then((response) => {
-        const data = response.data?.data ?? response.data
+        const data = unwrap<any>(response)
         if (!active || !data) return
 
         setStats({
@@ -168,8 +168,9 @@ export default function LandingPage() {
         },
       })
 
-      const payload = response.data?.data?.data ?? response.data?.data ?? response.data ?? []
-      const meta = response.data?.data?.meta ?? response.data?.meta
+      const responsePayload = unwrap<any>(response)
+      const payload = Array.isArray(responsePayload) ? responsePayload : responsePayload?.data ?? []
+      const meta = responsePayload?.meta
       setSearchUsedFallback(Boolean(meta?.usedFallback))
       setSearchResults(Array.isArray(payload) ? payload : [])
     } catch (err: any) {

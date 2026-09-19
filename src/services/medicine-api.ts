@@ -1,6 +1,6 @@
 import { Medicine, PharmacyStock, Reservation, Notification } from '@/types'
 import { INSURANCE_COVERAGE_RATES } from '@/config/insurance-rates'
-import { apiClient } from '@/api/client'
+import { apiClient, unwrap, unwrapList } from '@/api/client'
 
 const extractArrayPayload = (payload: any): any[] => {
   if (Array.isArray(payload)) return payload
@@ -81,7 +81,7 @@ export const MedicineApi = {
         category: category || undefined,
       },
     })
-    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    const payload = unwrapList(response)
     return payload.map((item: any) => ({
       id: item.id,
       name: item.tradeName || item.name,
@@ -115,7 +115,7 @@ export const MedicineApi = {
     } else if (categoryName) {
         try {
             const response = await apiClient.get('/categories')
-            const cats = Array.isArray(response.data) ? response.data : response.data?.data || []
+            const cats = unwrapList(response)
             const cat = cats.find((c: any) => c.name.toLowerCase() === categoryName.toLowerCase());
             if (cat) categoryId = cat.id;
         } catch(e) {}
@@ -133,7 +133,7 @@ export const MedicineApi = {
     if (insuranceId) params.insuranceId = insuranceId
 
     const response = await apiClient.get('/search/medicines', { params })
-    const payload = response?.data?.data ?? response?.data ?? {}
+    const payload = unwrap<any>(response) || {}
     const items = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
 
     return items.map((item: any) => {
@@ -175,7 +175,7 @@ export const MedicineApi = {
 
   getMedicineDetails: async (id: string): Promise<Medicine> => {
     const response = await apiClient.get(`/medicines/${id}`)
-    const item = response.data
+    const item = unwrap<any>(response)
     return {
       id: item.id,
       name: item.tradeName || item.name,
@@ -197,36 +197,36 @@ export const MedicineApi = {
 
   getMedicines: async (page = 1, limit = 100, includeArchived = false): Promise<any[]> => {
     const response = await apiClient.get('/medicines', { params: { page, limit, includeArchived } })
-    return Array.isArray(response.data) ? response.data : response.data?.data || []
+    return unwrapList(response)
   },
 
   getCategories: async (search?: string): Promise<any[]> => {
     const response = await apiClient.get('/categories', {
       params: search?.trim() ? { search: search.trim() } : undefined,
     })
-    return Array.isArray(response.data) ? response.data : response.data?.data || []
+    return unwrapList(response)
   },
 
   getManufacturers: async (search?: string): Promise<any[]> => {
     const response = await apiClient.get('/manufacturers', {
       params: search?.trim() ? { search: search.trim() } : undefined,
     })
-    return Array.isArray(response.data) ? response.data : response.data?.data || []
+    return unwrapList(response)
   },
 
   getPharmacyInventory: async (pharmacyId: string): Promise<any[]> => {
     const response = await apiClient.get(`/pharmacies/${pharmacyId}/inventory`)
-    return Array.isArray(response.data) ? response.data : response.data?.data || []
+    return unwrapList(response)
   },
 
   createCategory: async (name: string): Promise<any> => {
     const response = await apiClient.post('/categories', { name })
-    return response.data
+    return unwrap(response)
   },
 
   createManufacturer: async (name: string): Promise<any> => {
     const response = await apiClient.post('/manufacturers', { name })
-    return response.data
+    return unwrap(response)
   },
 
   createMedicine: async (
@@ -258,7 +258,7 @@ export const MedicineApi = {
         },
   ): Promise<any> => {
     const response = await apiClient.post('/medicines', data)
-    return response.data?.data || response.data
+    return unwrap(response)
   },
 
   updateMedicine: async (
@@ -276,12 +276,12 @@ export const MedicineApi = {
     },
   ): Promise<any> => {
     const response = await apiClient.patch(`/medicines/${id}`, data)
-    return response.data
+    return unwrap(response)
   },
 
   deleteMedicine: async (id: string): Promise<any> => {
     const response = await apiClient.delete(`/medicines/${id}`)
-    return response.data
+    return unwrap(response)
   },
 
   getMedicineAvailability: async (
@@ -344,7 +344,7 @@ export const MedicineApi = {
     isOpen?: boolean,
   ): Promise<boolean> => {
     const response = await apiClient.get(`/pharmacies/${pharmacyId}/inventory`)
-    const inventory = Array.isArray(response.data) ? response.data : response.data?.data || []
+    const inventory = unwrapList(response)
     const existing = inventory.find(
       (item: any) => item.medicineId === medicineId || item.medicine?.id === medicineId,
     )
@@ -421,7 +421,7 @@ export const MedicineApi = {
       },
     })
     return {
-      fileUrl: response.data.fileUrl,
+      fileUrl: unwrap<any>(response).fileUrl,
       fileName: file.name,
     }
   },
@@ -448,7 +448,7 @@ export const MedicineApi = {
         quantity: data.quantity,
       }],
     })
-    return response.data
+    return unwrap(response)
   },
 
   createReservation: async (data: {
@@ -464,7 +464,7 @@ export const MedicineApi = {
       quantity: data.quantity,
       expiresAt,
     })
-    return normalizeReservation(response.data)
+    return normalizeReservation(unwrap<any>(response))
   },
 
   cancelReservation: async (id: string): Promise<boolean> => {
@@ -474,13 +474,13 @@ export const MedicineApi = {
 
   getReservationHistory: async (): Promise<Reservation[]> => {
     const response = await apiClient.get('/reservations')
-    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    const payload = unwrapList(response)
     return (payload as any[]).map(normalizeReservation)
   },
 
   getPatientDashboardReport: async (): Promise<any> => {
     const response = await apiClient.get('/reports/patient/me')
-    return response.data
+    return unwrap(response)
   },
 
   getPharmacyDashboardData: async (pharmacyId: string): Promise<any> => {
@@ -490,18 +490,16 @@ export const MedicineApi = {
       apiClient.get(`/reports/pharmacy/${pharmacyId}`),
     ])
     const reservations = (
-      Array.isArray(reservationsRes.data) ? reservationsRes.data : reservationsRes.data?.data || []
+      unwrapList(reservationsRes)
     ).map(normalizeReservation)
-    const inventory = Array.isArray(inventoryRes.data)
-      ? inventoryRes.data
-      : inventoryRes.data?.data || []
-    const report = reportRes.data || {}
+    const inventory = unwrapList(inventoryRes)
+    const report = unwrap<any>(reportRes) || {}
     return { reservations, inventory, report }
   },
 
   getNotifications: async (): Promise<Notification[]> => {
     const response = await apiClient.get('/notifications')
-    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    const payload = unwrapList(response)
     return (payload as any[]).map(normalizeNotification)
   },
 
@@ -535,12 +533,12 @@ export const MedicineApi = {
 
   getEmailNotificationPreferences: async (): Promise<Record<string, boolean>> => {
     const response = await apiClient.get('/notifications/email-preferences')
-    return response.data?.data || response.data
+    return unwrap(response)
   },
 
   updateEmailNotificationPreferences: async (preferences: Record<string, boolean>): Promise<Record<string, boolean>> => {
     const response = await apiClient.patch('/notifications/email-preferences', preferences)
-    return response.data?.data || response.data
+    return unwrap(response)
   },
 
   getFavouriteMedicines: async (): Promise<string[]> => {
@@ -614,7 +612,7 @@ export const MedicineApi = {
 
   getReminders: async (): Promise<any[]> => {
     const response = await apiClient.get('/reminders/schedules')
-    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    const payload = unwrapList(response)
     return payload.map((item: any) => ({
       id: item.id,
       medicineId: item.medicineId,
@@ -642,7 +640,7 @@ export const MedicineApi = {
     pharmacistInstructions?: string
   }): Promise<any> => {
     const response = await apiClient.post('/reminders/schedules', data)
-    return response.data?.data || response.data
+    return unwrap(response)
   },
 
   updateReminder: async (id: string, data: {
@@ -663,14 +661,31 @@ export const MedicineApi = {
     return true
   },
 
-  markReminderTaken: async (id: string, time: string): Promise<boolean> => {
-    await apiClient.post(`/reminders/schedules/${id}/take`, { time })
+  markReminderLogTaken: async (id: string): Promise<boolean> => {
+    await apiClient.patch(`/reminders/logs/${id}/complete`)
     return true
+  },
+
+  getReminderLogs: async (params: {
+    page?: number
+    limit?: number
+    status?: string
+    startDate?: string
+    endDate?: string
+  } = {}): Promise<any[]> => {
+    const response = await apiClient.get('/reminders/logs', { params })
+    const payload = unwrap<any>(response)
+    return Array.isArray(payload) ? payload : []
+  },
+
+  getAdherenceSummary: async (): Promise<any> => {
+    const response = await apiClient.get('/reminders/adherence/summary')
+    return unwrap<any>(response) || {}
   },
 
   getMedicineHistory: async (): Promise<any[]> => {
     const response = await apiClient.get('/reports/patient/me')
-    const report = response.data || {}
+    const report = unwrap<any>(response) || {}
     const prescriptions = Array.isArray(report.prescriptions) ? report.prescriptions : []
     const reservations = Array.isArray(report.reservations) ? report.reservations : []
 
@@ -704,7 +719,7 @@ export const MedicineApi = {
 
   checkLatePickups: async (): Promise<any[]> => {
     const response = await apiClient.get('/reservations/late')
-    const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+    const payload = unwrapList(response)
     return payload.map((item: any) => ({
       reservationId: item.id,
       medicineName: item.medicineName,

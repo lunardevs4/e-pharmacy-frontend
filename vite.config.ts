@@ -23,11 +23,13 @@ export default defineConfig(({ mode }) => ({
   } : undefined,
 
   build: {
+    modulePreload: false,
     // Raise the warning threshold slightly — we're splitting anyway
     chunkSizeWarningLimit: 600,
 
     rollupOptions: {
       output: {
+        onlyExplicitManualChunks: true,
         manualChunks(id) {
           // ── Vendor chunks ──────────────────────────────────────────────
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
@@ -38,6 +40,9 @@ export default defineConfig(({ mode }) => ({
           }
           if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs')) {
             return 'vendor-charts'
+          }
+          if (id.includes('node_modules/rwanda-geo-data')) {
+            return 'vendor-locations'
           }
           if (id.includes('node_modules/lucide-react')) {
             return 'vendor-icons'
@@ -51,40 +56,8 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('node_modules/zod') || id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform')) {
             return 'vendor-forms'
           }
-          if (id.includes('node_modules/')) {
-            return 'vendor-misc'
-          }
-
           // ── App portal chunks ──────────────────────────────────────────
-          if (id.includes('/pages/patient/')) {
-            return 'portal-patient'
-          }
-          if (id.includes('/pages/pharmacy/')) {
-            return 'portal-pharmacy'
-          }
-          if (id.includes('/pages/government/')) {
-            return 'portal-government'
-          }
-          if (id.includes('/pages/insurance/')) {
-            return 'portal-insurance'
-          }
-          if (id.includes('/pages/admin/')) {
-            return 'portal-admin'
-          }
-          if (id.includes('/pages/public/')) {
-            return 'portal-public'
-          }
-          if (id.includes('/pages/common/')) {
-            return 'shared-pages'
-          }
-
           // ── Shared app code ────────────────────────────────────────────
-          if (id.includes('/layouts/') || id.includes('/components/')) {
-            return 'shared-ui'
-          }
-          if (id.includes('/services/') || id.includes('/store/') || id.includes('/hooks/')) {
-            return 'shared-core'
-          }
         },
       },
     },

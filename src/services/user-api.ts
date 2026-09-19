@@ -1,4 +1,4 @@
-import { apiClient } from '@/api/client'
+import { apiClient, unwrap, unwrapList } from '@/api/client'
 import { AxiosError } from 'axios'
 import { useLanguageStore } from '@/store/languageStore'
 
@@ -15,17 +15,7 @@ export interface AdminUser {
 }
 
 const unwrapApiResponse = (response: any): any[] => {
-    const payload = response?.data ?? response
-    if (Array.isArray(payload)) {
-        return payload
-    }
-    if (Array.isArray(payload.data)) {
-        return payload.data
-    }
-    if (Array.isArray(payload.data?.data)) {
-        return payload.data.data
-    }
-    return []
+    return unwrapList(response)
 }
 
 const getErrorMessage = (error: unknown): string => {
@@ -66,7 +56,7 @@ export const UserApi = {
                 timeout: 60000,
                 _skipRetry: true,
             } as any)
-            return response.data
+            return unwrap(response)
         } catch (error) {
             throw new Error(getErrorMessage(error))
         }
@@ -75,7 +65,7 @@ export const UserApi = {
     updateUserStatus: async (id: string, isActive: boolean) => {
         try {
             const response = await apiClient.patch(`/users/${id}/status`, { isActive })
-            return response.data
+            return unwrap(response)
         } catch (error) {
             throw new Error(getErrorMessage(error))
         }
@@ -84,7 +74,7 @@ export const UserApi = {
     deleteUser: async (id: string) => {
         try {
             const response = await apiClient.delete(`/users/${id}`)
-            return response.data
+            return unwrap(response)
         } catch (error) {
             throw new Error(getErrorMessage(error))
         }

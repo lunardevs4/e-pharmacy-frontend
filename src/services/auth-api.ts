@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios'
 import { UserRole } from '@/types'
-import { apiClient } from '@/api/client'
+import { apiClient, unwrap, unwrapList } from '@/api/client'
 import { useLanguageStore } from '@/store/languageStore'
 import { TokenStorage } from '@/services/token-storage'
 
@@ -235,21 +235,21 @@ const getErrorMessage = (error: unknown): string => {
 
 export const AuthApi = {
   verifyEmail: async (token: string): Promise<{ message: string }> => {
-    try { const response = await apiClient.get('/auth/verify-email', { params: { token } }); return response.data?.data || response.data }
+    try { const response = await apiClient.get('/auth/verify-email', { params: { token } }); return unwrap(response) }
     catch (error) { throw new Error(getErrorMessage(error)) }
   },
   resendVerification: async (email: string): Promise<{ message: string }> => {
-    try { const response = await apiClient.post('/auth/resend-verification', { email }); return response.data?.data || response.data }
+    try { const response = await apiClient.post('/auth/resend-verification', { email }); return unwrap(response) }
     catch (error) { throw new Error(getErrorMessage(error)) }
   },
   createStaff: async (pharmacyId: string, data: { firstName: string; lastName: string; email: string; phone: string; role: string; position: string }) => {
     const response = await apiClient.post(`/auth/pharmacies/${pharmacyId}/staff`, data)
-    return response.data
+    return unwrap(response)
   },
   createGovernmentUser: async (data: { firstName: string; lastName: string; email: string; phone: string; role: string; position?: string }) => {
     try {
       const response = await apiClient.post('/auth/managed-users/government', data)
-      return response.data
+      return unwrap(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -257,7 +257,7 @@ export const AuthApi = {
   createInsuranceUser: async (data: { firstName: string; lastName: string; email: string; phone: string; role: string; position?: string }) => {
     try {
       const response = await apiClient.post('/auth/managed-users/insurance', data)
-      return response.data
+      return unwrap(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -276,7 +276,7 @@ export const AuthApi = {
         firstName: userData.fullName.split(/\s+/)[0],
         lastName: userData.fullName.split(/\s+/).slice(1).join(' ') || 'Patient',
       })
-      return normalizeAuthResponse(response.data)
+      return normalizeAuthResponse(unwrap(response))
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
@@ -284,7 +284,7 @@ export const AuthApi = {
   listPendingPharmacies: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/auth/pharmacies/pending')
-      return Array.isArray(response.data) ? response.data : response.data?.data || []
+      return unwrapList(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -292,7 +292,7 @@ export const AuthApi = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
     try {
       const response = await apiClient.post('/auth/login', { email, password })
-      const normalized = normalizeAuthResponse(response.data)
+      const normalized = normalizeAuthResponse(unwrap(response))
       return normalized
     } catch (error: unknown) {
       const msg = getErrorMessage(error)
@@ -329,7 +329,7 @@ export const AuthApi = {
         firstName,
         lastName,
       })
-      const normalized = normalizeAuthResponse(response.data)
+      const normalized = normalizeAuthResponse(unwrap(response))
       return normalized
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -350,7 +350,7 @@ export const AuthApi = {
         phone: pharmacyData.phone,
         password: pharmacyData.passwordHash,
       })
-      return response.data
+       return unwrap(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -370,7 +370,7 @@ export const AuthApi = {
         phone: insuranceData.phone,
         password: insuranceData.passwordHash,
       })
-      return response.data
+       return unwrap(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -382,7 +382,7 @@ export const AuthApi = {
       const response = await apiClient.get('/pharmacies', {
         params: { page: 1, limit: 1000 },
       })
-      const payload = response.data
+       const payload = unwrap<any>(response)
 
 
       if (Array.isArray(payload)) return payload
@@ -398,7 +398,7 @@ export const AuthApi = {
   getGovernmentSummary: async (): Promise<unknown> => {
     try {
       const response = await apiClient.get('/government/summary')
-      const payload = response.data
+       const payload = unwrap<any>(response)
       return payload?.data ?? payload
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -409,7 +409,7 @@ export const AuthApi = {
   getGovernmentMedicineAvailability: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/government/medicine-availability')
-      const payload = response.data
+       const payload = unwrap<any>(response)
       if (Array.isArray(payload)) return payload
       if (Array.isArray(payload?.data)) return payload.data
       return []
@@ -422,7 +422,7 @@ export const AuthApi = {
   getGovernmentLowStock: async (threshold = 10): Promise<unknown[]> => {
     try {
       const response = await apiClient.get(`/government/low-stock?threshold=${threshold}`)
-      const payload = response.data
+       const payload = unwrap<any>(response)
       if (Array.isArray(payload)) return payload
       if (Array.isArray(payload?.data)) return payload.data
       return []
@@ -434,7 +434,7 @@ export const AuthApi = {
   getGovernmentDistrictCoverage: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/government/district-coverage')
-      const payload = response.data
+       const payload = unwrap<any>(response)
       if (Array.isArray(payload)) return payload
       if (Array.isArray(payload?.data)) return payload.data
       return []
@@ -446,7 +446,7 @@ export const AuthApi = {
   getGovernmentReservationStats: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/government/reservation-stats')
-      const payload = response.data
+       const payload = unwrap<any>(response)
       if (Array.isArray(payload)) return payload;
       if (Array.isArray(payload?.data)) return payload.data;
       return []
@@ -462,7 +462,7 @@ export const AuthApi = {
       if (entityType) params.entityType = entityType
       if (action) params.action = action
       const response = await apiClient.get('/audit-logs', { params })
-      return response.data
+       return unwrap(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -472,7 +472,7 @@ export const AuthApi = {
   getInsuranceReport: async (): Promise<unknown> => {
     try {
       const response = await apiClient.get('/reports/insurance')
-      return response.data
+       return unwrap(response)
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
@@ -482,7 +482,7 @@ export const AuthApi = {
   approvePharmacy: async (pharmacyId: string): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'APPROVED' })
-      return response.data
+       return unwrap(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -492,7 +492,7 @@ export const AuthApi = {
   rejectPharmacy: async (pharmacyId: string): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'REJECTED' })
-      return response.data
+       return unwrap(response)
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
@@ -502,7 +502,7 @@ export const AuthApi = {
   reactivatePharmacy: async (pharmacyId: string): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, { status: 'APPROVED' })
-      return response.data
+       return unwrap(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -516,7 +516,7 @@ export const AuthApi = {
       if (endDate) query.push(`endDate=${encodeURIComponent(endDate)}`)
       const url = `/reports/government${query.length ? `?${query.join('&')}` : ''}`
       const response = await apiClient.get(url)
-      const payload = response.data
+      const payload = unwrap<any>(response)
       return payload?.data ?? payload
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
@@ -526,7 +526,7 @@ export const AuthApi = {
   getPlatformReport: async (): Promise<unknown> => {
     try {
       const response = await apiClient.get('/reports/platform')
-      return response.data
+      return unwrap(response)
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
@@ -538,7 +538,7 @@ export const AuthApi = {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}/approve`, {
         status: 'PENDING',
       })
-      return response.data
+      return unwrap(response)
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
@@ -548,11 +548,7 @@ export const AuthApi = {
   getRegistrationStatus: async (email: string): Promise<unknown> => {
     try {
       const response = await apiClient.get('/pharmacies')
-      const list: unknown[] = Array.isArray(response.data)
-        ? response.data
-        : Array.isArray(response.data?.data)
-          ? response.data.data
-          : []
+       const list: unknown[] = unwrapList(response)
 
       return (
         list.find((item) => {
@@ -655,7 +651,7 @@ export const AuthApi = {
         phone: updatedFields.phone,
         insuranceProvider: updatedFields.insuranceProvider,
       })
-      const normalized = normalizeUser(response.data)
+       const normalized = normalizeUser(unwrap(response))
       return normalized
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -679,7 +675,7 @@ export const AuthApi = {
   }): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/pharmacies/${pharmacyId}`, data)
-      return response.data
+       return unwrap(response)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -694,7 +690,7 @@ export const AuthApi = {
         // call the refresh endpoint and consume the auth rate limit.
         _skipAuthRefresh: skipAuthRefresh,
       } as never)
-      return normalizeUser(response.data)
+       return normalizeUser(unwrap(response))
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
@@ -708,7 +704,7 @@ export const AuthApi = {
   getInsuranceClaims: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/insurance/claims')
-      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+       const payload = unwrapList(response)
       return payload
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
@@ -718,7 +714,7 @@ export const AuthApi = {
   getInsurancePatients: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/insurance/patients')
-      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+       const payload = unwrapList(response)
       return payload
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
@@ -728,7 +724,7 @@ export const AuthApi = {
   getInsurancePayments: async (): Promise<unknown[]> => {
     try {
       const response = await apiClient.get('/insurance/payments')
-      const payload = Array.isArray(response.data) ? response.data : response.data?.data || []
+       const payload = unwrapList(response)
       return payload
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
@@ -738,7 +734,7 @@ export const AuthApi = {
   updateInsuranceClaimStatus: async (claimId: string, status: string): Promise<unknown> => {
     try {
       const response = await apiClient.patch(`/insurance/claims/${claimId}`, { status })
-      return response.data
+       return unwrap(response)
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }
@@ -747,7 +743,7 @@ export const AuthApi = {
   processInsurancePayment: async (paymentId: string): Promise<unknown> => {
     try {
       const response = await apiClient.post(`/insurance/payments/${paymentId}/process`)
-      return response.data
+       return unwrap(response)
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error))
     }

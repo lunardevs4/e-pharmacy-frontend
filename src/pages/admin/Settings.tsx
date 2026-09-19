@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { User, Save, CheckCircle2, Globe, Clock, Shield, Server, Loader2 } from 'lucide-react'
-import { apiClient } from '@/api/client'
+import { apiClient, unwrap } from '@/api/client'
 
 interface SystemSettings {
   apiUrl: string
@@ -24,7 +24,7 @@ export default function AdminSettings() {
     setErrorMsg(null)
     try {
       const response = await apiClient.get('/admin/settings')
-      const settings = response.data || {}
+      const settings = unwrap<any>(response) || {}
       if (settings.apiUrl) setApiUrl(settings.apiUrl)
       if (settings.sessionTimeout) setSessionTimeout(String(settings.sessionTimeout))
       if (typeof settings.maintenanceMode === 'boolean') setMaintenanceMode(settings.maintenanceMode)

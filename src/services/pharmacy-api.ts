@@ -1,7 +1,4 @@
-import { apiClient } from '@/api/client'
-
-const unwrap = (response: any) =>
-  response?.data?.data ?? response?.data ?? []
+import { apiClient, unwrap } from '@/api/client'
 
 const isNetworkError = (err: any) =>
   !err?.response ||
@@ -97,7 +94,7 @@ export const PharmacyApi = {
   updateReservationStatusSimple: async (reservationId: string, status: string) => {
     try {
       const response = await apiClient.patch(`/reservations/${reservationId}`, { status })
-      return response.data
+      return unwrap(response)
     } catch (err) {
       if (isNetworkError(err)) {
         return { id: reservationId, status }

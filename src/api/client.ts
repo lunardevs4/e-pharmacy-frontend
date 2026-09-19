@@ -288,6 +288,22 @@ apiClient.interceptors.response.use(
   },
 )
 
-export const unwrap = <T = any>(response: AxiosResponse): T => {
-  return (response as any).unwrappedData ?? response.data
+/** Normalize the backend's { success, data, message, meta } response envelope. */
+export const unwrap = <T = any>(response: AxiosResponse | unknown): T => {
+  if ((response as any)?.unwrappedData !== undefined) {
+    return (response as any).unwrappedData as T
+  }
+
+  const payload = (response as any)?.data ?? response
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    return payload.data as T
+  }
+  return payload as T
+}
+
+export const unwrapList = <T = any>(response: AxiosResponse | unknown): T[] => {
+  const payload = unwrap<any>(response)
+  if (Array.isArray(payload)) return payload as T[]
+  if (Array.isArray(payload?.data)) return payload.data as T[]
+  return []
 }

@@ -1,6 +1,4 @@
-import { apiClient } from '@/api/client'
-
-const unwrap = (response: any) => response?.data?.data ?? response?.data
+import { apiClient, unwrap } from '@/api/client'
 
 export interface InsuranceProvider {
   id: string
@@ -468,6 +466,6 @@ export const insuranceApi = {
       params: { insuranceId },
       responseType: 'blob',
     });
-    return response.data;
+    return unwrap(response)
   },
 }

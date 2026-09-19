@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { apiClient } from '@/api/client'
+import { apiClient, unwrapList } from '@/api/client'
 import { useAuthStore } from '@/store/authStore'
 import {
   Activity, RefreshCw, AlertCircle, CheckCircle2,
@@ -44,7 +44,7 @@ export default function PharmacyAdherenceReport() {
     setLoading(true)
     apiClient.get(`/pharmacies/${pharmacyId}/patients`)
       .then(res => {
-        const raw = Array.isArray(res.data) ? res.data : res.data?.data ?? []
+        const raw = unwrapList(res)
         const mapped: PatientAdherence[] = raw.map((p: any) => {
           const rate = p.adherenceRate ?? Math.floor(Math.random() * 40 + 60)
           return {
