@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import { GlobalToaster } from '@/components/ui/GlobalToaster'
 import { useUIStore } from '@/store/uiStore'
 import { useLanguageStore } from '@/store/languageStore'
-import { AppErrorBoundary } from '@/components/ui/ErrorBoundary'
+// import { AppErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { NetworkOfflineBanner } from '@/components/ui/NetworkOfflineBanner'
 
 const queryClient = new QueryClient({
@@ -77,9 +77,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppErrorBoundary>
+        {/* <AppErrorBoundary> */}
           <AppShell />
-        </AppErrorBoundary>
+        {/* </AppErrorBoundary> */}
       </BrowserRouter>
     </QueryClientProvider>
   )
