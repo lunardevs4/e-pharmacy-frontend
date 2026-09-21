@@ -64,6 +64,7 @@ const extractBackendMessage = (data: any): string | null => {
     if (typeof first === 'string') msg = first
     else if (typeof first?.message === 'string') msg = first.message
   } else if (typeof data.error === 'string') msg = data.error
+  else if (typeof data.error === 'object' && data.error !== null && typeof data.error.message === 'string') msg = data.error.message
   else if (typeof data.msg === 'string') msg = data.msg
   else if (data.data && typeof data.data.message === 'string') msg = data.data.message
 
@@ -118,6 +119,7 @@ export const extractValidationErrors = (data: any): ValidationFieldError[] => {
     data?.validationErrors,
     data?.fieldErrors,
     data?.data?.errors,
+    data?.error?.details,
     Array.isArray(data?.message) ? data.message : null,
   ]
 

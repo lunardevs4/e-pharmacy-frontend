@@ -208,26 +208,38 @@ const getErrorMessage = (error: unknown): string => {
   const { t } = useLanguageStore.getState()
   if (typeof error === 'object' && error !== null) {
     const axiosError = error as AxiosError
+    const responseData = axiosError.response?.data as ApiObject | undefined
+    
+    // First priority: backend's explicit error message
+    if (responseData?.message) {
+      if (typeof responseData.message === 'string') {
+        if (!/^Cannot (GET|POST|PUT|PATCH|DELETE|OPTIONS)\s+\//i.test(responseData.message)) {
+          return responseData.message
+        }
+      } else if (Array.isArray(responseData.message)) {
+        return (responseData.message as string[]).join(' · ')
+      }
+    }
+    
+    if (responseData?.error && typeof responseData.error === 'string') {
+      return responseData.error
+    }
+
+    // Second priority: HTTP status code mappings
     const status = axiosError.response?.status
     if (status === 401) return t('error.incorrectCredentials')
     if (status === 403) return t('error.accountNotAllowed')
     if (status === 404) return t('error.accountNotFound')
     if (status === 429) return t('error.rateLimited')
+    if (status === 400) return t('error.invalidRequest')
     if (status && status >= 500) return t('error.serverUnavailable')
-    const responseData = axiosError.response?.data as ApiObject | undefined
-    if (responseData?.message) {
-      if (typeof responseData.message === 'string') {
-        // Never expose framework/proxy routing errors to end users.
-        if (/^Cannot (GET|POST|PUT|PATCH|DELETE|OPTIONS)\s+\//i.test(responseData.message)) {
-          return t('error.serverUnavailable')
-        }
-        return responseData.message
-      }
-      if (Array.isArray(responseData.message)) return (responseData.message as string[]).join(' · ')
+
+    // Third priority: AppError object created by normalizeError
+    if (typeof (error as any).message === 'string') {
+      return (error as any).message
     }
-    if (responseData?.error && typeof responseData.error === 'string') return responseData.error
-    if (axiosError.response?.status === 400) return t('error.invalidRequest')
   }
+  
   if (error instanceof Error) return error.message
   return t('error.requestFailed')
 }
