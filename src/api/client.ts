@@ -39,6 +39,9 @@ export const apiClient = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 12000,
+  // Authentication is stored in HTTP-only cookies by the API. Tell the
+  // browser to include those cookies on cross-origin localhost requests.
+  withCredentials: true,
 })
 
 // Several portal surfaces can request the same read during one render pass
@@ -219,7 +222,11 @@ apiClient.interceptors.response.use(
           isRefreshing = true
           originalRequest._retry = true
           try {
-            const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken }, { timeout: 6000 })
+            const res = await axios.post(
+              `${API_URL}/auth/refresh`,
+              {},
+              { timeout: 6000, withCredentials: true },
+            )
             const payload = res.data?.data || res.data
             const accessToken = payload?.accessToken
             if (accessToken) {
