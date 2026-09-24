@@ -693,7 +693,7 @@ export default function PharmacyInventory() {
     (i) => i.stockInfo.stock > 0 && i.stockInfo.stock < 20,
   ).length
 
-  const outOfStockCount = inventoryList.filter((i) => i.stockInfo.stock === 0).length
+  const outOfStockItems = inventoryList.filter((i) => i.stockInfo.stock === 0)
 
   const totalValue = inventoryList.reduce(
     (acc, item) => acc + item.stockInfo.stock * item.stockInfo.price,
@@ -784,6 +784,25 @@ export default function PharmacyInventory() {
         </div>
       </div>
 
+      {outOfStockItems.length > 0 && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 shadow-xs"
+        >
+          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" aria-hidden="true" />
+          <div className="text-xs">
+            <p className="font-black">
+              {outOfStockItems.length === 1
+                ? 'Medicine is out of stock'
+                : 'Medicines are out of stock'}
+            </p>
+            <p className="mt-0.5 font-medium">
+              {outOfStockItems.map((item) => item.medicine.name).join(', ')}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
           <div>
@@ -793,9 +812,6 @@ export default function PharmacyInventory() {
 
             <p className="text-3xl font-black text-gray-900 mt-1">{loading ? '...' : totalSKUs}</p>
 
-            <span className="text-[10px] text-red-500 font-semibold mt-1 block">
-              {outOfStockCount} out of stock
-            </span>
           </div>
 
           <div className="p-3 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100">
