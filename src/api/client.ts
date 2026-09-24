@@ -186,7 +186,7 @@ apiClient.interceptors.request.use(
 
       const requestUrl = config.url || ''
       const isCsrfExempt =
-        requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register')
+        requestUrl.endsWith('/auth/login') || requestUrl.endsWith('/auth/register')
       if (!isCsrfExempt && config.headers) {
         config.headers['X-CSRF-Token'] = await getCsrfToken()
       }
@@ -254,10 +254,15 @@ apiClient.interceptors.response.use(
           isRefreshing = true
           originalRequest._retry = true
           try {
+            const csrfTokenForRefresh = await getCsrfToken()
             const res = await axios.post(
               `${API_URL}/auth/refresh`,
               {},
-              { timeout: 6000, withCredentials: true },
+              { 
+                timeout: 6000, 
+                withCredentials: true,
+                headers: { 'X-CSRF-Token': csrfTokenForRefresh }
+              },
             )
             const payload = res.data?.data || res.data
             const accessToken = payload?.accessToken
