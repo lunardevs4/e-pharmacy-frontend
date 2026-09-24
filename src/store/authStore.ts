@@ -25,11 +25,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
   error: null,
 
   initialise: async () => {
-    const hasCachedToken = TokenStorage.isAuthenticated()
-    if (!hasCachedToken) {
-      set({ isInitialising: false })
-      return
-    }
     try {
       const session = await AuthApi.restoreSession()
       if (session?.user) {

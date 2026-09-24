@@ -213,15 +213,7 @@ export default function InsurancePatients() {
               ) : filtered.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3">
-                    <div className="flex items-center space-x-2">
-                      <div
-                        aria-hidden="true"
-                        className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-600 flex-shrink-0"
-                      >
-                        {p.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                      </div>
-                      <span className="font-bold text-gray-900">{p.fullName}</span>
-                    </div>
+                    <span className="font-bold text-gray-900">{p.fullName}</span>
                   </td>
                   <td className="px-5 py-3 font-mono text-gray-500">{p.nationalId}</td>
                   <td className="px-5 py-3 text-gray-600">{p.phone || '—'}</td>

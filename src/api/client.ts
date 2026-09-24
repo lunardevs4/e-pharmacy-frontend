@@ -225,6 +225,7 @@ apiClient.interceptors.response.use(
       _retry?: boolean
       _retryCount?: number
       _skipRetry?: boolean
+      _skipAuthRefresh?: boolean
     }
 
     if ((error as any)?.userFriendly === true) {
@@ -246,7 +247,12 @@ apiClient.interceptors.response.use(
     const isLoginRequest = !!originalRequest?.url?.includes('/auth/login')
     const status = error.response?.status
 
-    if (status === 401 && !isLoginRequest && !originalRequest?._retry) {
+    if (
+      status === 401 &&
+      !isLoginRequest &&
+      !originalRequest?._retry &&
+      !originalRequest?._skipAuthRefresh
+    ) {
       const refreshToken = TokenStorage.getRefreshToken()
 
       if (refreshToken) {
