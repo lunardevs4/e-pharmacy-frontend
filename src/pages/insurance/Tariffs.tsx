@@ -17,6 +17,7 @@ export default function InsuranceTariffs() {
   const [loading, setLoading] = useState(true)
   const [saveLoading, setSaveLoading] = useState<Record<string, boolean>>({})
 
+  const [search, setSearch] = useState('')
   const [tariffs, setTariffs] = useState<Record<string, CustomTariff>>({})
   const [successMsgs, setSuccessMsgs] = useState<Record<string, string>>({})
   const [errorMsgs, setErrorMsgs] = useState<Record<string, string>>({})
@@ -24,6 +25,11 @@ export default function InsuranceTariffs() {
   const [defaultCoverage, setDefaultCoverage] = useState(80)
   const [generalSaveSuccess, setGeneralSaveSuccess] = useState(false)
   const [generalSaveError, setGeneralSaveError] = useState<string | null>(null)
+
+  const filteredMedicines = medicines.filter(m => {
+    const q = search.toLowerCase()
+    return m.name.toLowerCase().includes(q) || m.genericName.toLowerCase().includes(q) || m.category.toLowerCase().includes(q)
+  })
 
   useEffect(() => {
     const init = async () => {
@@ -304,10 +310,20 @@ export default function InsuranceTariffs() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center gap-3">
-          <p className="text-xs text-gray-500">All medicines in the system catalogue, with newly added medicines first.</p>
-          <div className="text-[10px] text-gray-400 font-bold uppercase">
-            {medicines.length} Medicines
+        <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="relative flex-grow max-w-sm">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" aria-hidden="true" />
+            <input
+              type="search"
+              aria-label="Search medicine tariffs"
+              placeholder="Search trade name, generic name, category..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+            />
+          </div>
+          <div className="text-[10px] text-gray-500 font-bold uppercase">
+            Showing {filteredMedicines.length} of {medicines.length} Medicines
           </div>
         </div>
 
@@ -329,7 +345,7 @@ export default function InsuranceTariffs() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {medicines.map((m) => {
+                {filteredMedicines.map((m) => {
                   const tariff = tariffs[m.id] || {
                     medicineId: m.id,
                     covered: false,

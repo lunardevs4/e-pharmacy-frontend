@@ -1,9 +1,8 @@
 /**
  * E2E-style tests — Insurance portal flows
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import InsuranceDashboard from '@/pages/insurance/Dashboard'
 import InsuranceClaims from '@/pages/insurance/Claims'
@@ -28,26 +27,108 @@ vi.mock('@/store/languageStore', () => ({
   }),
 }))
 
-const MOCK_CLAIMS = [
-  { id: 'clm-001', status: 'PENDING',  amount: 15000, patientName: 'Alice Mukamana',  medicine: 'Insulin Glargine', createdAt: new Date().toISOString() },
-  { id: 'clm-002', status: 'APPROVED', amount: 8500,  patientName: 'Bob Habimana',     medicine: 'Metformin 850mg',  createdAt: new Date().toISOString() },
-  { id: 'clm-003', status: 'REJECTED', amount: 2200,  patientName: 'Carol Ingabire',   medicine: 'Atenolol 50mg',    createdAt: new Date().toISOString() },
+const mockProviders = [
+  { id: 'prov-1', name: 'RSSB', code: 'RSSB', defaultCoveragePercentage: 85, defaultCopayPercentage: 15, status: 'ACTIVE', isActive: true, email: 'info@rssb.rw', phone: '+250788000111', address: 'Kigali' },
 ]
 
-vi.mock('@/services/auth-api', () => ({
-  AuthApi: {
-    getInsuranceClaims:    vi.fn().mockResolvedValue(MOCK_CLAIMS),
-    getInsurancePatients:  vi.fn().mockResolvedValue([
-      { id: 'pat-1', name: 'Alice Mukamana', insuranceId: 'RSSB-001', totalClaims: 3 },
-      { id: 'pat-2', name: 'Bob Habimana',   insuranceId: 'RSSB-002', totalClaims: 1 },
-    ]),
-    getInsurancePayments:  vi.fn().mockResolvedValue([
-      { id: 'pay-1', amount: 15000, status: 'PENDING',   pharmacyName: 'Kigali Pharmacy', processedAt: null },
-      { id: 'pay-2', amount: 8500,  status: 'PROCESSED', pharmacyName: 'MedPlus Heights', processedAt: new Date().toISOString() },
-    ]),
-    updateInsuranceClaimStatus: vi.fn().mockResolvedValue({}),
-    processInsurancePayment:    vi.fn().mockResolvedValue({}),
-    getInsuranceReport:    vi.fn().mockResolvedValue({}),
+const mockClaims = [
+  {
+    id: 'clm-001',
+    claimNumber: 'RSSB-2026-000001',
+    insuranceId: 'prov-1',
+    pharmacyId: 'ph-1',
+    insuredPatientId: '1199070000000',
+    quantity: 2,
+    unitPrice: 7500,
+    totalAmount: 15000,
+    insuranceAmount: 12750,
+    patientAmount: 2250,
+    status: 'PENDING',
+    claimedAt: new Date().toISOString(),
+    medicineName: 'Insulin Glargine',
+    pharmacy: { name: 'Kigali Pharmacy' },
+    insuredPatient: { fullName: 'Alice Mukamana', policyNumber: 'RSSB-001', nationalId: '1199070000000' },
+  },
+  {
+    id: 'clm-002',
+    claimNumber: 'RSSB-2026-000002',
+    insuranceId: 'prov-1',
+    pharmacyId: 'ph-1',
+    insuredPatientId: '1199080000000',
+    quantity: 1,
+    unitPrice: 8500,
+    totalAmount: 8500,
+    insuranceAmount: 7225,
+    patientAmount: 1275,
+    status: 'APPROVED',
+    claimedAt: new Date().toISOString(),
+    medicineName: 'Metformin 850mg',
+    pharmacy: { name: 'Kigali Pharmacy' },
+    insuredPatient: { fullName: 'Bob Habimana', policyNumber: 'RSSB-002', nationalId: '1199080000000' },
+  },
+  {
+    id: 'clm-003',
+    claimNumber: 'RSSB-2026-000003',
+    insuranceId: 'prov-1',
+    pharmacyId: 'ph-2',
+    insuredPatientId: '1199090000000',
+    quantity: 1,
+    unitPrice: 2200,
+    totalAmount: 2200,
+    insuranceAmount: 1870,
+    patientAmount: 330,
+    status: 'REJECTED',
+    claimedAt: new Date().toISOString(),
+    medicineName: 'Atenolol 50mg',
+    pharmacy: { name: 'MedPlus Heights' },
+    insuredPatient: { fullName: 'Carol Ingabire', policyNumber: 'RSSB-003', nationalId: '1199090000000' },
+  },
+]
+
+vi.mock('@/services/insurance-api', () => ({
+  insuranceApi: {
+    getProviders: vi.fn().mockImplementation(() => Promise.resolve(mockProviders)),
+    getDashboardSummary: vi.fn().mockImplementation(() => Promise.resolve({
+      totalClaims: 3,
+      totalClaimsAmount: 25700,
+      approvedClaims: 1,
+      approvedClaimsAmount: 7225,
+      pendingClaims: 1,
+      pendingClaimsAmount: 12750,
+      rejectedClaims: 1,
+      rejectedClaimsAmount: 2200,
+      paidClaims: 0,
+      paidClaimsAmount: 0,
+      totalPatients: 3,
+      newPatientsThisMonth: 1,
+      totalAgreements: 2,
+      totalTariffs: 15,
+      outstandingPaymentsAmount: 7225,
+      approvalPercentage: 33.33,
+      claimsGrowthPercentage: 10,
+      recentClaims: mockClaims,
+      claimsByStatus: { PENDING: 1, APPROVED: 1, REJECTED: 1, PAID: 0 },
+      claimsTrend: [],
+    })),
+    getClaims: vi.fn().mockImplementation(() => Promise.resolve({ data: mockClaims, meta: { total: 3 } })),
+    getPatients: vi.fn().mockImplementation(() => Promise.resolve({
+      data: [
+        { id: 'pat-1', fullName: 'Alice Mukamana', policyNumber: 'RSSB-001', nationalId: '1199070000000', status: 'ACTIVE', coveragePercentage: 85, insurance: { name: 'RSSB' }, claims: [] },
+        { id: 'pat-2', fullName: 'Bob Habimana', policyNumber: 'RSSB-002', nationalId: '1199080000000', status: 'ACTIVE', coveragePercentage: 85, insurance: { name: 'RSSB' }, claims: [] },
+      ],
+      meta: { total: 2 },
+    })),
+    getOutstandingPayments: vi.fn().mockImplementation(() => Promise.resolve({
+      totalOutstanding: 7225,
+      claimCount: 1,
+      claims: [mockClaims[1]],
+    })),
+    updateClaimStatus: vi.fn().mockResolvedValue({}),
+    batchPayClaims: vi.fn().mockResolvedValue({ total: 1, successful: 1, failed: 0, results: [] }),
+    registerPatient: vi.fn().mockResolvedValue({ id: 'pat-new' }),
+    setTariff: vi.fn().mockResolvedValue({}),
+    getTariffs: vi.fn().mockResolvedValue([]),
+    exportReport: vi.fn().mockResolvedValue(new Blob(['test'])),
   },
 }))
 
@@ -65,23 +146,22 @@ describe('Insurance Claims', () => {
   it('renders the claims list', async () => {
     renderWithRouter(<InsuranceClaims />)
     await waitFor(() => {
-      expect(screen.getByText(/Alice Mukamana/i)).toBeInTheDocument()
+      expect(screen.getByText(/RSSB-2026-000001/i)).toBeInTheDocument()
     })
   })
 
-  it('shows all three claim statuses', async () => {
+  it('shows all claim numbers and pharmacy details', async () => {
     renderWithRouter(<InsuranceClaims />)
     await waitFor(() => {
-      expect(screen.getByText(/Bob Habimana/i)).toBeInTheDocument()
-      expect(screen.getByText(/Carol Ingabire/i)).toBeInTheDocument()
+      expect(screen.getByText(/RSSB-2026-000002/i)).toBeInTheDocument()
+      expect(screen.getByText(/RSSB-2026-000003/i)).toBeInTheDocument()
     })
   })
 
   it('shows claim amounts', async () => {
     renderWithRouter(<InsuranceClaims />)
     await waitFor(() => {
-      // At least one amount should appear
-      expect(screen.getByText(/15.000|15,000|15000/)).toBeInTheDocument()
+      expect(screen.getByText(/15,000/)).toBeInTheDocument()
     })
   })
 })
@@ -89,13 +169,14 @@ describe('Insurance Claims', () => {
 describe('Insurance Patients', () => {
   it('renders patient list', async () => {
     renderWithRouter(<InsurancePatients />)
-    await waitFor(() => expect(document.body).toBeTruthy())
+    await waitFor(() => expect(screen.getByText(/Alice Mukamana/i)).toBeInTheDocument())
   })
 })
 
 describe('Insurance Payments', () => {
   it('renders payment list', async () => {
     renderWithRouter(<InsurancePayments />)
-    await waitFor(() => expect(document.body).toBeTruthy())
+    await waitFor(() => expect(screen.getByText(/Kigali Pharmacy/i)).toBeInTheDocument())
   })
 })
+

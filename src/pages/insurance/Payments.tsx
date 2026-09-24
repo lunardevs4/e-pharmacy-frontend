@@ -9,6 +9,7 @@ interface OutstandingPayment {
   claimsCount: number
   totalAmount: number
   insuranceId: string
+  claimIds: string[]
 }
 
 interface OutstandingPaymentsResponse {
@@ -52,10 +53,14 @@ export default function InsurancePayments() {
             claimsCount: 0,
             totalAmount: 0,
             insuranceId: claim.insuranceId,
+            claimIds: [],
           }
         }
         grouped[pid].claimsCount += 1
         grouped[pid].totalAmount += Number(claim.insuranceAmount ?? 0)
+        if (claim.id) {
+          grouped[pid].claimIds.push(claim.id)
+        }
       }
 
       setOutstandingPayments(Object.values(grouped))
@@ -75,10 +80,13 @@ export default function InsurancePayments() {
 
   const processBatch = async (pharmacyId: string) => {
     try {
-      const pharmacyPayments = outstandingPayments.filter(p => p.pharmacyId === pharmacyId)
-      const claimIds = pharmacyPayments.map(p => p.pharmacyId) // This would need actual claim IDs from API
-      await insuranceApi.batchPayClaims({ claimIds })
-      setToastMsg(`Payment processed for pharmacy ${pharmacyId}`)
+      const target = outstandingPayments.find(p => p.pharmacyId === pharmacyId)
+      if (!target || target.claimIds.length === 0) {
+        setErrorMsg('No eligible claim IDs found to process.')
+        return
+      }
+      await insuranceApi.batchPayClaims({ claimIds: target.claimIds })
+      setToastMsg(`Payment processed for ${target.pharmacyName} (${target.claimIds.length} claim(s)).`)
       setTimeout(() => setToastMsg(null), 3000)
       await loadOutstandingPayments()
     } catch (error: any) {

@@ -157,7 +157,7 @@ export default function InsuranceClaims() {
                 <tr key={c.id} className="hover:bg-gray-50/50">
                   <td className="px-5 py-3 font-mono font-bold text-gray-900">{c.claimNumber}</td>
                   <td className="px-5 py-3 font-semibold text-gray-800">{c.pharmacy?.name || 'Pharmacy'}</td>
-                  <td className="px-5 py-3 font-mono text-gray-500">{c.insuredPatientId}</td>
+                  <td className="px-5 py-3 font-mono text-gray-500">{c.insuredPatient?.nationalId || c.insuredPatient?.policyNumber || c.insuredPatientId || '—'}</td>
                   <td className="px-5 py-3">{c.medicineName || c.medicine?.tradeName || c.medicine?.genericName || 'Unknown Medicine'}</td>
                   <td className="px-5 py-3 font-black text-gray-900">RWF {c.totalAmount.toLocaleString()}</td>
                   <td className="px-5 py-3 text-emerald-700 font-bold">RWF {c.insuranceAmount.toLocaleString()}</td>
