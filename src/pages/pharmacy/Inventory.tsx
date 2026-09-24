@@ -555,11 +555,8 @@ export default function PharmacyInventory() {
       setInventoryList(prev => [newItem, ...prev])
 
       setFormSuccess('Medicine successfully registered and stocked!')
-
-      setTimeout(() => {
-        setShowAddModal(false)
-        resetForm()
-      }, 1500)
+      setShowAddModal(false)
+      resetForm()
     } catch (err: any) {
       const backendMessage =
         err?.response?.data?.error?.message ||
@@ -1187,7 +1184,7 @@ export default function PharmacyInventory() {
                     step="0.01"
                     value={editPrices.CASH ?? ''}
                     onChange={(e) => setEditPrices(prev => ({ ...prev, CASH: Math.max(0, parseFloat(e.target.value) || 0) }))}
-                    className="block w-full pl-12 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                    className="block w-full !pl-12 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
                   />
                 </div>
               </div>
@@ -1221,7 +1218,7 @@ export default function PharmacyInventory() {
                           return copy
                         })
                       }}
-                      className="block w-full pl-12 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                      className="block w-full !pl-12 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
                     />
                   </div>
                 </div>

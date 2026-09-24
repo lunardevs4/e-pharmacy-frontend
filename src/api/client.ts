@@ -44,6 +44,31 @@ export const apiClient = axios.create({
   withCredentials: true,
 })
 
+let csrfToken: string | null = null
+let csrfTokenRequest: Promise<string> | null = null
+
+const getCsrfToken = async (): Promise<string> => {
+  if (csrfToken) return csrfToken
+  if (!csrfTokenRequest) {
+    csrfTokenRequest = axios
+      .get(`${API_URL}/auth/csrf-token`, {
+        timeout: 6000,
+        withCredentials: true,
+      })
+      .then((response) => {
+        const payload = response.data?.data || response.data
+        const token = payload?.csrfToken
+        if (!token) throw new Error('CSRF token was not returned by the API')
+        csrfToken = token
+        return token
+      })
+      .finally(() => {
+        csrfTokenRequest = null
+      })
+  }
+  return csrfTokenRequest
+}
+
 // Several portal surfaces can request the same read during one render pass
 // (for example, a dashboard and its shared navigation). Share only identical
 // in-flight GETs; do not cache responses or deduplicate state-changing calls.
@@ -153,11 +178,18 @@ apiClient.get = ((url: string, config?: Parameters<typeof apiClient.get>[1]) => 
 }) as typeof apiClient.get
 
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const method = (config.method || 'get').toUpperCase()
     if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
       clearSharedGetCache()
       sharedCacheChannel?.postMessage({ type: 'invalidate' })
+
+      const requestUrl = config.url || ''
+      const isCsrfExempt =
+        requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register')
+      if (!isCsrfExempt && config.headers) {
+        config.headers['X-CSRF-Token'] = await getCsrfToken()
+      }
     }
     const token = TokenStorage.getToken()
     if (token && config.headers) {

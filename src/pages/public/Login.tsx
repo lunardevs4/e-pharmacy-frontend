@@ -113,35 +113,33 @@ export default function Login() {
       setSuccessMsg(t('auth.authSuccessful'))
       login(res.user, res.accessToken, res.refreshToken)
 
-      setTimeout(() => {
-        if (res.user.firstLogin) {
-          navigate('/change-password')
-          return
-        }
+      if (res.user.firstLogin) {
+        navigate('/change-password')
+        return
+      }
 
-        switch (res.user.role) {
-          case 'PATIENT':
-            navigate('/patient')
-            break
-          case 'PHARMACY':
-          case 'PHARMACY_OWNER':
-          case 'PHARMACIST':
-            navigate('/pharmacy')
-            break
+      switch (res.user.role) {
+        case 'PATIENT':
+          navigate('/patient')
+          break
+        case 'PHARMACY':
+        case 'PHARMACY_OWNER':
+        case 'PHARMACIST':
+          navigate('/pharmacy')
+          break
 
-          case 'GOVERNMENT':
-            navigate('/government')
-            break
-          case 'INSURANCE':
-            navigate('/insurance')
-            break
-          case 'ADMIN':
-            navigate('/admin')
-            break
-          default:
-            navigate('/')
-        }
-      }, 1200)
+        case 'GOVERNMENT':
+          navigate('/government')
+          break
+        case 'INSURANCE':
+          navigate('/insurance')
+          break
+        case 'ADMIN':
+          navigate('/admin')
+          break
+        default:
+          navigate('/')
+      }
     } catch (err: unknown) {
       const error = err as Error & { message?: string }
       if (error.message && error.message.startsWith('PHARMACY_STATUS_ERROR:')) {
