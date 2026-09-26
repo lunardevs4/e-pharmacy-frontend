@@ -678,11 +678,6 @@ export const MedicineApi = {
     return Array.isArray(payload) ? payload : []
   },
 
-  getAdherenceSummary: async (): Promise<any> => {
-    const response = await apiClient.get('/reminders/adherence/summary')
-    return unwrap<any>(response) || {}
-  },
-
   getMedicineHistory: async (): Promise<any[]> => {
     const response = await apiClient.get('/reports/patient/me')
     const report = unwrap<any>(response) || {}

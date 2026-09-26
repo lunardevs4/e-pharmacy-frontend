@@ -24,9 +24,9 @@ function riskFromRate(rate: number): PatientAdherence['riskLevel'] {
 }
 
 const RISK_STYLES = {
-  low:    { label: 'Good',     badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', bar: 'bg-emerald-500' },
-  medium: { label: 'At Risk',  badge: 'bg-amber-50 text-amber-700 border-amber-200',       bar: 'bg-amber-500'   },
-  high:   { label: 'Critical', badge: 'bg-red-50 text-red-700 border-red-200',             bar: 'bg-red-500'     },
+  low: { label: 'Good', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', bar: 'bg-emerald-500' },
+  medium: { label: 'At Risk', badge: 'bg-amber-50 text-amber-700 border-amber-200', bar: 'bg-amber-500' },
+  high: { label: 'Critical', badge: 'bg-red-50 text-red-700 border-red-200', bar: 'bg-red-500' },
 }
 
 export default function PharmacyAdherenceReport() {
@@ -72,9 +72,9 @@ export default function PharmacyAdherenceReport() {
   })
 
   const counts = {
-    low:    patients.filter(p => p.riskLevel === 'low').length,
+    low: patients.filter(p => p.riskLevel === 'low').length,
     medium: patients.filter(p => p.riskLevel === 'medium').length,
-    high:   patients.filter(p => p.riskLevel === 'high').length,
+    high: patients.filter(p => p.riskLevel === 'high').length,
   }
 
   const avgRate = patients.length > 0
@@ -111,14 +111,12 @@ export default function PharmacyAdherenceReport() {
             <button
               key={level}
               onClick={() => setRiskFilter(riskFilter === level ? 'all' : level)}
-              className={`border rounded-xl p-3 sm:p-4 text-left transition-all ${
-                riskFilter === level ? s.badge + ' ring-2 ring-offset-1' : 'bg-white border-gray-200 hover:border-gray-300'
-              }`}
+              className={`border rounded-xl p-3 sm:p-4 text-left transition-all ${riskFilter === level ? s.badge + ' ring-2 ring-offset-1' : 'bg-white border-gray-200 hover:border-gray-300'
+                }`}
             >
               <span className="text-2xl sm:text-3xl font-black text-gray-900 block">{counts[level]}</span>
-              <span className={`text-[10px] font-bold uppercase tracking-wider block mt-0.5 ${
-                riskFilter === level ? '' : 'text-gray-400'
-              }`}>{s.label}</span>
+              <span className={`text-[10px] font-bold uppercase tracking-wider block mt-0.5 ${riskFilter === level ? '' : 'text-gray-400'
+                }`}>{s.label}</span>
             </button>
           )
         })}
@@ -192,10 +190,9 @@ export default function PharmacyAdherenceReport() {
                       </td>
                       <td className="px-4 sm:px-5 py-3.5">
                         <div className="flex items-center gap-2">
-                          <span className={`font-black text-sm ${
-                            p.adherenceRate >= 80 ? 'text-emerald-600'
-                            : p.adherenceRate >= 60 ? 'text-amber-600' : 'text-red-600'
-                          }`}>{p.adherenceRate}%</span>
+                          <span className={`font-black text-sm ${p.adherenceRate >= 80 ? 'text-emerald-600'
+                              : p.adherenceRate >= 60 ? 'text-amber-600' : 'text-red-600'
+                            }`}>{p.adherenceRate}%</span>
                           <div className="w-16 h-1.5 bg-gray-100 rounded-full">
                             <div className={`h-1.5 rounded-full ${s.bar}`} style={{ width: `${p.adherenceRate}%` }} />
                           </div>

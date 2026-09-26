@@ -71,7 +71,6 @@ export function useMedicationAdherence(schedules: AdherenceSchedule[]) {
     completedDoses: 0,
     missedDoses: 0,
     skippedDoses: 0,
-    adherencePercentage: 0,
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -81,10 +80,7 @@ export function useMedicationAdherence(schedules: AdherenceSchedule[]) {
     setLoading(true)
     setError(null)
     try {
-      const [rawLogs, rawSummary] = await Promise.all([
-        MedicineApi.getReminderLogs({ limit: 100 }),
-        MedicineApi.getAdherenceSummary(),
-      ])
+      const rawLogs = await MedicineApi.getReminderLogs({ limit: 100 })
       setLogs(rawLogs.map((log: any) => ({
         id: String(log.id),
         scheduleId: String(log.scheduleId || log.schedule?.id || ''),
@@ -94,15 +90,16 @@ export function useMedicationAdherence(schedules: AdherenceSchedule[]) {
         confirmationTime: log.confirmationTime,
         dosage: log.schedule?.dosage,
       })))
+      const completed = rawLogs.filter((l: any) => normalizeStatus(l.status) === 'completed').length
+      const missed = rawLogs.filter((l: any) => normalizeStatus(l.status) === 'missed').length
       setSummary({
-        scheduledDoses: Number(rawSummary.scheduledDoses || 0),
-        completedDoses: Number(rawSummary.completedDoses || 0),
-        missedDoses: Number(rawSummary.missedDoses || 0),
-        skippedDoses: Number(rawSummary.skippedDoses || 0),
-        adherencePercentage: Number(rawSummary.adherencePercentage || 0),
+        scheduledDoses: rawLogs.length,
+        completedDoses: completed,
+        missedDoses: missed,
+        skippedDoses: 0,
       })
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Unable to load medication adherence data.')
+      setError(err?.response?.data?.message || err?.message || 'Unable to load dose logs.')
     } finally {
       setLoading(false)
     }

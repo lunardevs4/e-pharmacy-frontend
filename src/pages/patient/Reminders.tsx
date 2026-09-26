@@ -310,11 +310,10 @@ export default function PatientReminders() {
             </div>
             <div>
               <h2 id="dose-confirmation-heading" className="font-black text-gray-900">Today&apos;s dose confirmation</h2>
-              <p className="text-xs text-gray-500 mt-1">Confirm each dose after you take it so your adherence stays accurate.</p>
+              <p className="text-xs text-gray-500 mt-1">Confirm each dose after you take it to update your medication log.</p>
             </div>
           </div>
           <div className="flex items-center gap-5 text-xs">
-            <div><span className="block text-[10px] uppercase font-bold text-gray-400">Adherence</span><strong className="text-lg text-health-primary">{adherence.summary.adherencePercentage}%</strong></div>
             <div><span className="block text-[10px] uppercase font-bold text-gray-400">Completed</span><strong className="text-lg text-gray-900">{adherence.summary.completedDoses}</strong></div>
             <div><span className="block text-[10px] uppercase font-bold text-gray-400">Missed</span><strong className="text-lg text-amber-700">{adherence.summary.missedDoses || adherence.missedDoses.length}</strong></div>
           </div>

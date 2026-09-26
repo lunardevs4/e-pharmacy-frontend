@@ -63,7 +63,7 @@ export default function ProvinceAnalytics() {
         provinceData.pharmacies++
         if (pharm.status === 'APPROVED') {
           provinceData.approvedPharm++
-          provinceData.reservations += Math.floor(Math.random() * 100) + 50
+          provinceData.reservations += pharm._count?.reservations || 0
         } else if (pharm.status === 'PENDING') {
           provinceData.pendingPharm++
         }

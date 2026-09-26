@@ -60,6 +60,7 @@ export interface InsuranceClaim {
   insuredPatient?: {
     fullName: string
     policyNumber: string
+    nationalId?: string
   }
   patient?: {
     user?: {

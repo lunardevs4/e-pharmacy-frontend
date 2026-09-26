@@ -494,21 +494,24 @@ export default function PharmacyRegistry() {
                       { key: 'taxCertificate', label: 'RRA Tax Clearance Certificate' }
                     ].map((doc) => {
                       const file = selectedPharm.documents?.find(d => d.name.toLowerCase().includes(doc.key.toLowerCase()))
-                        || { name: `${doc.key}_mock_file.pdf`, fileType: 'application/pdf', fileSize: 240000 }
                       return (
                         <div key={doc.key} className="border border-gray-200 rounded-xl p-3 flex items-center justify-between bg-gray-50/50 shadow-xxs">
                           <div className="space-y-0.5">
                             <span className="text-gray-700 font-bold block leading-none">{doc.label}</span>
-                            <span className="text-[9px] text-gray-400 font-mono block truncate max-w-[150px]">{file.name}</span>
+                            <span className="text-[9px] text-gray-400 font-mono block truncate max-w-[150px]">{file ? file.name : 'No document on file'}</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setViewingDoc({ label: doc.label, name: file.name })}
-                            className="bg-white border border-gray-300 hover:border-health-primary text-gray-700 hover:text-health-primary text-[10px] font-bold px-2 py-1 rounded transition-colors flex items-center gap-1 shadow-sm"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Audit</span>
-                          </button>
+                          {file ? (
+                            <button
+                              type="button"
+                              onClick={() => setViewingDoc({ label: doc.label, name: file.name })}
+                              className="bg-white border border-gray-300 hover:border-health-primary text-gray-700 hover:text-health-primary text-[10px] font-bold px-2 py-1 rounded transition-colors flex items-center gap-1 shadow-sm"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Audit</span>
+                            </button>
+                          ) : (
+                            <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Pending</span>
+                          )}
                         </div>
                       )
                     })}
@@ -693,7 +696,7 @@ export default function PharmacyRegistry() {
                 </div>
 
                 <div className="flex justify-between items-center text-[9px] font-bold text-gray-450 border-t border-gray-100 pt-4">
-                  <span className="font-mono">VERIFIED MoH MOCK</span>
+                  <span className="font-mono">VERIFIED MoH COMPLIANCE</span>
                   <span>Board Inspector Seal</span>
                 </div>
               </div>

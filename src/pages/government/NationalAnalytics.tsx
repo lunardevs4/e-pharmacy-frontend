@@ -61,7 +61,7 @@ export default function NationalAnalytics() {
           const districtData = districtMap.get(district)!
           districtData.activePharmacies++
           if (pharm.status === 'APPROVED') {
-            districtData.activeReservations += Math.floor(Math.random() * 50) + 10 // Mock reservation count
+            districtData.activeReservations += pharm._count?.reservations || 0
           }
         }
       })
