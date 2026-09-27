@@ -403,7 +403,7 @@ export default function AuthLayout({
               "
             >
               <img
-                src="/logo1.png"
+                src="/logo1-optimized.png"
                 alt="E-Pharmacy Logo"
                 className="w-full h-full object-contain"
               />
@@ -526,7 +526,7 @@ export default function AuthLayout({
                 to="/"
                 className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center bg-white border border-gray-150 rounded-[5px] shadow-sm p-1.5 hover:opacity-90 transition-opacity cursor-pointer"
               >
-                <img src="/logo1.png" alt="E-Pharmacy Logo" className="w-full h-full object-contain" />
+                <img src="/logo1-optimized.png" alt="E-Pharmacy Logo" className="w-full h-full object-contain" />
               </Link>
             </div>
 

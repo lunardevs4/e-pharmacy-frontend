@@ -125,6 +125,10 @@ if (sharedCacheChannel) {
 }
 
 const getSharedResponse = (key: string) => {
+  // Without BroadcastChannel there is no other tab to answer this request.
+  // Avoid delaying every GET just to wait for a response that cannot arrive.
+  if (!sharedCacheChannel) return Promise.resolve<AxiosResponse | null>(null)
+
   const cached = sharedGetCache.get(key)
   if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.response)
   sharedGetCache.delete(key)

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AppRoutes from '@/routes'
 import { useAuthStore } from '@/store/authStore'
@@ -20,12 +20,40 @@ const queryClient = new QueryClient({
 
 function AppShell() {
   const { initialise } = useAuthStore()
+  const location = useLocation()
   const warningToast = useUIStore((s) => s.warningToast)
   const t = useLanguageStore((s) => s.t)
 
   useEffect(() => {
-    initialise()
-  }, [])
+    let cancelled = false
+    const start = () => {
+      if (!cancelled) void initialise()
+    }
+
+    // The public landing page does not need session data to render. Let its
+    // first paint win, while protected routes still initialise immediately.
+    if (location.pathname === '/') {
+      const idleWindow = window as Window & {
+        requestIdleCallback?: (callback: IdleRequestCallback, options?: { timeout: number }) => number
+        cancelIdleCallback?: (handle: number) => void
+      }
+      if (idleWindow.requestIdleCallback) {
+        const handle = idleWindow.requestIdleCallback(start, { timeout: 1500 })
+        return () => {
+          cancelled = true
+          idleWindow.cancelIdleCallback?.(handle)
+        }
+      }
+      const handle = window.setTimeout(start, 0)
+      return () => {
+        cancelled = true
+        window.clearTimeout(handle)
+      }
+    }
+
+    start()
+    return () => { cancelled = true }
+  }, [initialise, location.pathname])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

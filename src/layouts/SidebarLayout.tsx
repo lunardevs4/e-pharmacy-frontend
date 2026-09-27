@@ -259,7 +259,7 @@ export default function SidebarLayout() {
         <div className={`h-16 flex items-center justify-between px-4 border-b ${borderClass} flex-shrink-0`}>
           <div className="flex items-center space-x-2.5 min-w-0">
             <div className="flex-shrink-0 rounded-lg overflow-hidden">
-              <img src="/logo1.png" alt="Rwanda E-Pharmacy" className="h-8 w-8 object-contain" />
+              <img src="/logo1-optimized.png" alt="Rwanda E-Pharmacy" className="h-8 w-8 object-contain" />
             </div>
             <div className="min-w-0">
               <span className="font-black text-sm leading-none block text-white tracking-wide">Rwanda</span>

@@ -3,8 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
 import SidebarLayout from '@/layouts/SidebarLayout'
+import LandingPage from '@/pages/public/Landing'
 
-const LandingPage = lazy(() => import('@/pages/public/Landing'))
 const Login = lazy(() => import('@/pages/public/Login'))
 const RegisterSelector = lazy(() => import('@/pages/public/RegisterSelector'))
 const PatientRegister = lazy(() => import('@/pages/public/PatientRegister'))

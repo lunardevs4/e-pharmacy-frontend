@@ -495,7 +495,7 @@ export default function PharmacyBilling() {
                   <div>
                     <div className="flex items-center gap-3">
                       <img
-                        src="/logo1.png"
+                        src="/logo1-optimized.png"
                         alt="Rwanda E-Pharmacy Logo"
                         className="w-12 h-12 rounded-xl object-contain"
                       />

@@ -12,7 +12,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   return (
     <div className="flex items-center gap-2">
       <img 
-        src="/logo1.png" 
+        src="/logo1-optimized.png" 
         alt="Rwanda E-Pharmacy Logo" 
         className={`object-contain ${className}`}
       />
