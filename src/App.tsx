@@ -25,34 +25,14 @@ function AppShell() {
   const t = useLanguageStore((s) => s.t)
 
   useEffect(() => {
-    let cancelled = false
-    const start = () => {
-      if (!cancelled) void initialise()
-    }
-
-    // The public landing page does not need session data to render. Let its
-    // first paint win, while protected routes still initialise immediately.
+    // The public landing page does not need session data to render and should
+    // not make an anonymous /users/profile request at all. Authentication is
+    // initialized as soon as the user enters a login or protected route.
     if (location.pathname === '/') {
-      const idleWindow = window as Window & {
-        requestIdleCallback?: (callback: IdleRequestCallback, options?: { timeout: number }) => number
-        cancelIdleCallback?: (handle: number) => void
-      }
-      if (idleWindow.requestIdleCallback) {
-        const handle = idleWindow.requestIdleCallback(start, { timeout: 1500 })
-        return () => {
-          cancelled = true
-          idleWindow.cancelIdleCallback?.(handle)
-        }
-      }
-      const handle = window.setTimeout(start, 0)
-      return () => {
-        cancelled = true
-        window.clearTimeout(handle)
-      }
+      return
     }
 
-    start()
-    return () => { cancelled = true }
+    void initialise()
   }, [initialise, location.pathname])
 
   useEffect(() => {

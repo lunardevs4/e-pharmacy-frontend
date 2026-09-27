@@ -17,6 +17,10 @@ interface AuthStore {
   initialise: () => void
 }
 
+// React StrictMode runs effects twice in development. Share the in-flight
+// restore operation so protected routes do not issue duplicate profile calls.
+let initialisePromise: Promise<void> | null = null
+
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   token: null,
@@ -24,23 +28,31 @@ export const useAuthStore = create<AuthStore>((set) => ({
   isInitialising: true,   // start as true — will be set false after restore attempt
   error: null,
 
-  initialise: async () => {
-    try {
-      const session = await AuthApi.restoreSession()
-      if (session?.user) {
-        set({
-          user: session.user as User,
-          token: session.accessToken ?? TokenStorage.getToken(),
-          isAuthenticated: true,
-          isInitialising: false,
-        })
-        return
+  initialise: () => {
+    if (initialisePromise) return initialisePromise
+
+    initialisePromise = (async () => {
+      try {
+        const session = await AuthApi.restoreSession()
+        if (session?.user) {
+          set({
+            user: session.user as User,
+            token: session.accessToken ?? TokenStorage.getToken(),
+            isAuthenticated: true,
+            isInitialising: false,
+          })
+          return
+        }
+      } catch {
+        // Token is stale — clear it before reporting signed-out state.
+        TokenStorage.clearToken()
       }
-    } catch {
-      // Token is stale — clear it before reporting signed-out state.
-      TokenStorage.clearToken()
-    }
-    set({ isInitialising: false })
+      set({ isInitialising: false })
+    })().finally(() => {
+      initialisePromise = null
+    })
+
+    return initialisePromise
   },
 
   login: (user, accessToken, refreshToken) => {
