@@ -27,13 +27,13 @@ export default function AuthLayout({
   const computedMode =
     mode ||
     (title?.toLowerCase().includes('register') ||
-    title?.toLowerCase().includes('create') ||
-    title?.toLowerCase().includes('account')
+      title?.toLowerCase().includes('create') ||
+      title?.toLowerCase().includes('account')
       ? 'register'
       : title?.toLowerCase().includes('password') ||
-          title?.toLowerCase().includes('verify') ||
-          title?.toLowerCase().includes('email') ||
-          title?.toLowerCase().includes('check')
+        title?.toLowerCase().includes('verify') ||
+        title?.toLowerCase().includes('email') ||
+        title?.toLowerCase().includes('check')
         ? 'reset'
         : 'login')
 
