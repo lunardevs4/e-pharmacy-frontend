@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { UserRole } from '@/types'
@@ -9,7 +9,11 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, isInitialising, user } = useAuthStore()
+  const { initialise, isAuthenticated, isInitialising, user } = useAuthStore()
+
+  useEffect(() => {
+    void initialise()
+  }, [initialise])
 
   if (isInitialising) return <AuthLoadingSkeleton />
 

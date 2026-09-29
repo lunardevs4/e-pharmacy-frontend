@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter, useLocation } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AppRoutes from '@/routes'
-import { useAuthStore } from '@/store/authStore'
 import { GlobalToaster } from '@/components/ui/GlobalToaster'
 import { useUIStore } from '@/store/uiStore'
 import { useLanguageStore } from '@/store/languageStore'
@@ -19,18 +18,8 @@ const queryClient = new QueryClient({
 })
 
 function AppShell() {
-  const { initialise } = useAuthStore()
-  const location = useLocation()
   const warningToast = useUIStore((s) => s.warningToast)
   const t = useLanguageStore((s) => s.t)
-
-  useEffect(() => {
-    if (location.pathname === '/') {
-      return
-    }
-
-    void initialise()
-  }, [initialise, location.pathname])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

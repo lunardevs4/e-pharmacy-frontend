@@ -2,9 +2,10 @@ import React, { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
-import SidebarLayout from '@/layouts/SidebarLayout'
 import LandingPage from '@/pages/public/Landing'
 import { AuthLoadingSkeleton } from '@/components/ui/AuthLoadingSkeleton'
+
+const SidebarLayout = lazy(() => import('@/layouts/SidebarLayout'))
 
 const Login = lazy(() => import('@/pages/public/Login'))
 const RegisterSelector = lazy(() => import('@/pages/public/RegisterSelector'))
