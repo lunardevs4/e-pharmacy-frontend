@@ -16,9 +16,6 @@ interface AuthStore {
   updateProfile: (updatedFields: Partial<User>) => void
   initialise: () => void
 }
-
-// React StrictMode runs effects twice in development. Share the in-flight
-// restore operation so protected routes do not issue duplicate profile calls.
 let initialisePromise: Promise<void> | null = null
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -44,7 +41,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
           return
         }
       } catch {
-        // Token is stale — clear it before reporting signed-out state.
         TokenStorage.clearToken()
       }
       set({ isInitialising: false })

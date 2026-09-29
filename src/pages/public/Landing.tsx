@@ -296,7 +296,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <LanguageSelector />
 
-            {/* Login — always visible */}
+           
             <Link
               to="/login"
               className="inline-flex items-center justify-center border border-gray-300 hover:border-health-primary text-xs font-bold text-gray-700 hover:text-health-primary px-3 py-2 rounded-lg transition-colors whitespace-nowrap leading-none"

@@ -25,9 +25,6 @@ function AppShell() {
   const t = useLanguageStore((s) => s.t)
 
   useEffect(() => {
-    // The public landing page does not need session data to render and should
-    // not make an anonymous /users/profile request at all. Authentication is
-    // initialized as soon as the user enters a login or protected route.
     if (location.pathname === '/') {
       return
     }
@@ -65,9 +62,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        {/* <AppErrorBoundary> */}
           <AppShell />
-        {/* </AppErrorBoundary> */}
       </BrowserRouter>
     </QueryClientProvider>
   )
