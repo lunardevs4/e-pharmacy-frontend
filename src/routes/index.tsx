@@ -4,6 +4,7 @@ import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
 import SidebarLayout from '@/layouts/SidebarLayout'
 import LandingPage from '@/pages/public/Landing'
+import { AuthLoadingSkeleton } from '@/components/ui/AuthLoadingSkeleton'
 
 const Login = lazy(() => import('@/pages/public/Login'))
 const RegisterSelector = lazy(() => import('@/pages/public/RegisterSelector'))
@@ -67,7 +68,7 @@ const AdminAuditLogs = lazy(() => import('@/pages/admin/AuditLogs'))
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><span className="text-sm text-gray-500">Loading…</span></div>}>
+      <Suspense fallback={<AuthLoadingSkeleton />}>
       <Routes>
       <Route path="/" element={<LandingPage />} />
 

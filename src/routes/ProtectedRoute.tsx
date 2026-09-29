@@ -2,6 +2,7 @@ import React from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { UserRole } from '@/types'
+import { AuthLoadingSkeleton } from '@/components/ui/AuthLoadingSkeleton'
 
 interface ProtectedRouteProps {
   allowedRoles?: UserRole[]
@@ -10,7 +11,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const { isAuthenticated, isInitialising, user } = useAuthStore()
 
-  if (isInitialising) return null
+  if (isInitialising) return <AuthLoadingSkeleton />
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
