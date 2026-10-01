@@ -209,7 +209,12 @@ apiClient.interceptors.request.use(
 )
 
 let isRefreshing = false
-let refreshQueue: Array<(token: string) => void> = []
+// The API stores both tokens in HTTP-only cookies. A refresh therefore may
+// succeed without returning an access token in the response body.
+let refreshQueue: Array<{
+  resolve: (token?: string) => void
+  reject: (error: unknown) => void
+}> = []
 
 const unwrapData = (response: AxiosResponse): any => {
   const payload = response.data
@@ -257,45 +262,47 @@ apiClient.interceptors.response.use(
       !originalRequest?._retry &&
       !originalRequest?._skipAuthRefresh
     ) {
-      const refreshToken = TokenStorage.getRefreshToken()
+      if (!isRefreshing) {
+        isRefreshing = true
+        originalRequest._retry = true
+        try {
+          const csrfTokenForRefresh = await getCsrfToken()
+          const res = await axios.post(
+            `${API_URL}/auth/refresh`,
+            {},
+            {
+              timeout: 6000,
+              withCredentials: true,
+              headers: { 'X-CSRF-Token': csrfTokenForRefresh },
+            },
+          )
+          const payload = res.data?.data || res.data
+          const accessToken = payload?.accessToken
 
-      if (refreshToken) {
-        if (!isRefreshing) {
-          isRefreshing = true
-          originalRequest._retry = true
-          try {
-            const csrfTokenForRefresh = await getCsrfToken()
-            const res = await axios.post(
-              `${API_URL}/auth/refresh`,
-              {},
-              { 
-                timeout: 6000, 
-                withCredentials: true,
-                headers: { 'X-CSRF-Token': csrfTokenForRefresh }
-              },
-            )
-            const payload = res.data?.data || res.data
-            const accessToken = payload?.accessToken
-            if (accessToken) {
-              TokenStorage.setToken(accessToken)
-              if (payload?.refreshToken) TokenStorage.setRefreshToken(payload.refreshToken)
-              isRefreshing = false
-              refreshQueue.forEach((cb) => cb(accessToken))
-              refreshQueue = []
-              return apiClient(originalRequest)
-            }
-          } catch {
-            isRefreshing = false
-            refreshQueue = []
-          }
-        } else {
-          return new Promise((resolve) => {
-            refreshQueue.push((token: string) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`
-              resolve(apiClient(originalRequest))
-            })
-          })
+          // Cookie-based deployments rotate the cookies and intentionally
+          // return no token fields. A 2xx refresh is still a valid refresh.
+          if (accessToken) TokenStorage.setToken(accessToken)
+          if (payload?.refreshToken) TokenStorage.setRefreshToken(payload.refreshToken)
+
+          isRefreshing = false
+          refreshQueue.forEach(({ resolve }) => resolve(accessToken))
+          refreshQueue = []
+          return apiClient(originalRequest)
+        } catch (refreshError) {
+          isRefreshing = false
+          refreshQueue.forEach(({ reject }) => reject(refreshError))
+          refreshQueue = []
         }
+      } else {
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({
+            resolve: (token?: string) => {
+              if (token) originalRequest.headers.Authorization = `Bearer ${token}`
+              resolve(apiClient(originalRequest))
+            },
+            reject,
+          })
+        })
       }
       TokenStorage.clearToken()
       useAuthStore.getState().logout()
