@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { User } from '@/types'
 import { AuthApi } from '@/services/auth-api'
 import { TokenStorage } from '@/services/token-storage'
+import { resetCsrfToken } from '@/api/client'
 
 interface AuthStore {
   user: User | null
@@ -44,6 +45,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   login: (user, accessToken, refreshToken) => {
+    resetCsrfToken()
     if (accessToken) {
       TokenStorage.setTokens(accessToken, refreshToken)
     }
@@ -56,6 +58,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   logout: () => {
+    resetCsrfToken()
     void AuthApi.logout()
     TokenStorage.clearToken()
     set({ user: null, token: null, isAuthenticated: false, error: null })

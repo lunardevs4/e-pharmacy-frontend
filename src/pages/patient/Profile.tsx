@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { useUIStore } from '@/store/uiStore'
 import { AuthApi } from '@/services/auth-api'
 import { validateEmail } from '@/utils/validation'
 import { normalizeError } from '@/utils/error-handler'
@@ -15,7 +16,7 @@ export default function PatientProfile() {
   const [email, setEmail] = useState(user?.email || '')
   const [phone, setPhone] = useState(user?.phone || '')
   const [nid] = useState(user?.nid || '1199580048123984') // Read-only National ID
-  const [insuranceProvider, setInsuranceProvider] = useState(user?.insuranceProvider || 'RSSB')
+  const [insuranceProvider, setInsuranceProvider] = useState(user?.insuranceProvider || '')
 
   const [province, setProvince] = useState(user?.province || '')
   const [district, setDistrict] = useState(user?.district || '')
@@ -81,8 +82,11 @@ export default function PatientProfile() {
     profilePhoto !== (user?.profilePhoto || '')
 
   const triggerToast = (type: 'success' | 'error', text: string) => {
-    setToastMsg({ type, text })
-    setTimeout(() => setToastMsg(null), 3500)
+    if (type === 'success') {
+      useUIStore.getState().successToast('Success', text)
+    } else {
+      useUIStore.getState().errorToast(new Error(text), 'Error', text)
+    }
   }
 
   const validateProfileForm = () => {
@@ -201,19 +205,6 @@ export default function PatientProfile() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
       
-      {toastMsg && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className={`fixed top-20 right-6 z-55 flex items-center space-x-2 px-4.5 py-3 rounded-lg border shadow-xl animate-fadeIn ${
-            toastMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-250' : 'bg-red-50 text-red-800 border-red-200'
-          }`}
-        >
-          {toastMsg.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <span className="text-xs font-bold">{toastMsg.text}</span>
-        </div>
-      )}
-
       {hasUnsavedChanges && (
         <div className="bg-amber-50 border border-amber-250 text-amber-800 px-4 py-3 rounded-xl flex items-center justify-between text-xs animate-fadeIn shadow-xs">
           <div className="flex items-center space-x-2">

@@ -4,65 +4,91 @@ import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
 import SidebarLayout from '@/layouts/SidebarLayout'
 
-const LandingPage = lazy(() => import('@/pages/public/Landing'))
-const Login = lazy(() => import('@/pages/public/Login'))
-const RegisterSelector = lazy(() => import('@/pages/public/RegisterSelector'))
-const PatientRegister = lazy(() => import('@/pages/public/PatientRegister'))
-const PharmacyRegister = lazy(() => import('@/pages/public/PharmacyRegister'))
-const InsuranceRegister = lazy(() => import('@/pages/public/InsuranceRegister'))
-const ForgotPassword = lazy(() => import('@/pages/public/ForgotPassword'))
-const ChangePassword = lazy(() => import('@/pages/public/ChangePassword'))
-const VerifyEmail = lazy(() => import('@/pages/public/VerifyEmail'))
-const CheckEmail = lazy(() => import('@/pages/public/CheckEmail'))
+function lazyRetry<T extends React.ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>
+) {
+  return lazy(async () => {
+    const storageKey = 'epharmacy_lazy_retry'
+    try {
+      const component = await componentImport()
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(storageKey)
+      }
+      return component
+    } catch (error: any) {
+      const isChunkError =
+        error?.message?.includes('dynamically imported module') ||
+        error?.message?.includes('Failed to fetch') ||
+        error?.name === 'ChunkLoadError'
 
-const PatientDashboard = lazy(() => import('@/pages/patient/Dashboard'))
-const MedicineSearch = lazy(() => import('@/pages/patient/MedicineSearch'))
-const MedicineDetails = lazy(() => import('@/pages/patient/MedicineDetails'))
-const Reservations = lazy(() => import('@/pages/patient/Reservations'))
-const PatientHistory = lazy(() => import('@/pages/patient/History'))
-const PatientReminders = lazy(() => import('@/pages/patient/Reminders'))
-const SharedNotifications = lazy(() => import('@/pages/common/Notifications'))
-const PatientProfile = lazy(() => import('@/pages/patient/Profile'))
+      if (isChunkError && typeof window !== 'undefined') {
+        const hasReloaded = window.sessionStorage.getItem(storageKey)
+        if (!hasReloaded) {
+          window.sessionStorage.setItem(storageKey, 'true')
+          window.location.reload()
+          return new Promise<{ default: T }>(() => {})
+        }
+      }
+      throw error
+    }
+  })
+}
 
-const PharmacyDashboard = lazy(() => import('@/pages/pharmacy/Dashboard'))
-const PharmacyInventory = lazy(() => import('@/pages/pharmacy/Inventory'))
-const PharmacyReservations = lazy(() => import('@/pages/pharmacy/Reservations'))
-const PharmacyInsuranceClaims = lazy(() => import('@/pages/pharmacy/InsuranceClaims'))
-const PharmacyPatients = lazy(() => import('@/pages/pharmacy/Patients'))
-const PharmacyStaff = lazy(() => import('@/pages/pharmacy/StaffManagement'))
-const PharmacyAudit = lazy(() => import('@/pages/pharmacy/AuditTrail'))
-const PharmacyReports = lazy(() => import('@/pages/pharmacy/Reports'))
-const PharmacySettings = lazy(() => import('@/pages/pharmacy/Settings'))
-const PharmacyProfile = lazy(() => import('@/pages/pharmacy/Profile'))
-const PharmacyInsurance = lazy(() => import('@/pages/pharmacy/Insurance'))
+const LandingPage = lazyRetry(() => import('@/pages/public/Landing'))
+const Login = lazyRetry(() => import('@/pages/public/Login'))
+const RegisterSelector = lazyRetry(() => import('@/pages/public/RegisterSelector'))
+const PatientRegister = lazyRetry(() => import('@/pages/public/PatientRegister'))
+const PharmacyRegister = lazyRetry(() => import('@/pages/public/PharmacyRegister'))
+const InsuranceRegister = lazyRetry(() => import('@/pages/public/InsuranceRegister'))
+const ForgotPassword = lazyRetry(() => import('@/pages/public/ForgotPassword'))
+const ChangePassword = lazyRetry(() => import('@/pages/public/ChangePassword'))
+const VerifyEmail = lazyRetry(() => import('@/pages/public/VerifyEmail'))
+const CheckEmail = lazyRetry(() => import('@/pages/public/CheckEmail'))
+const NotFound = lazyRetry(() => import('@/pages/public/NotFound'))
 
+const PatientDashboard = lazyRetry(() => import('@/pages/patient/Dashboard'))
+const MedicineSearch = lazyRetry(() => import('@/pages/patient/MedicineSearch'))
+const MedicineDetails = lazyRetry(() => import('@/pages/patient/MedicineDetails'))
+const Reservations = lazyRetry(() => import('@/pages/patient/Reservations'))
+const PatientHistory = lazyRetry(() => import('@/pages/patient/History'))
+const PatientReminders = lazyRetry(() => import('@/pages/patient/Reminders'))
+const SharedNotifications = lazyRetry(() => import('@/pages/common/Notifications'))
+const PatientProfile = lazyRetry(() => import('@/pages/patient/Profile'))
 
+const PharmacyDashboard = lazyRetry(() => import('@/pages/pharmacy/Dashboard'))
+const PharmacyInventory = lazyRetry(() => import('@/pages/pharmacy/Inventory'))
+const PharmacyReservations = lazyRetry(() => import('@/pages/pharmacy/Reservations'))
+const PharmacyInsuranceClaims = lazyRetry(() => import('@/pages/pharmacy/InsuranceClaims'))
+const PharmacyPatients = lazyRetry(() => import('@/pages/pharmacy/Patients'))
+const PharmacyStaff = lazyRetry(() => import('@/pages/pharmacy/StaffManagement'))
+const PharmacyAudit = lazyRetry(() => import('@/pages/pharmacy/AuditTrail'))
+const PharmacyReports = lazyRetry(() => import('@/pages/pharmacy/Reports'))
+const PharmacySettings = lazyRetry(() => import('@/pages/pharmacy/Settings'))
+const PharmacyProfile = lazyRetry(() => import('@/pages/pharmacy/Profile'))
+const PharmacyInsurance = lazyRetry(() => import('@/pages/pharmacy/Insurance'))
 
-const GovernmentDashboard = lazy(() => import('@/pages/government/Dashboard'))
-const PharmacyRegistry = lazy(() => import('@/pages/government/PharmacyRegistry'))
-const MedicineRegistry = lazy(() => import('@/pages/government/MedicineRegistry'))
-const NationalAnalytics = lazy(() => import('@/pages/government/NationalAnalytics'))
-const DistrictAnalytics = lazy(() => import('@/pages/government/DistrictAnalytics'))
-const MedicineAnalytics = lazy(() => import('@/pages/government/MedicineAnalytics'))
-const ProvinceAnalytics = lazy(() => import('@/pages/government/ProvinceAnalytics'))
-const GovernmentCompliance = lazy(() => import('@/pages/government/Compliance'))
-const GovernmentReports = lazy(() => import('@/pages/government/Reports'))
+const GovernmentDashboard = lazyRetry(() => import('@/pages/government/Dashboard'))
+const PharmacyRegistry = lazyRetry(() => import('@/pages/government/PharmacyRegistry'))
+const MedicineRegistry = lazyRetry(() => import('@/pages/government/MedicineRegistry'))
+const NationalAnalytics = lazyRetry(() => import('@/pages/government/NationalAnalytics'))
+const DistrictAnalytics = lazyRetry(() => import('@/pages/government/DistrictAnalytics'))
+const MedicineAnalytics = lazyRetry(() => import('@/pages/government/MedicineAnalytics'))
+const ProvinceAnalytics = lazyRetry(() => import('@/pages/government/ProvinceAnalytics'))
+const GovernmentCompliance = lazyRetry(() => import('@/pages/government/Compliance'))
+const GovernmentReports = lazyRetry(() => import('@/pages/government/Reports'))
 
-const InsuranceDashboard = lazy(() => import('@/pages/insurance/Dashboard'))
-const InsuranceClaims = lazy(() => import('@/pages/insurance/Claims'))
-const InsurancePatients = lazy(() => import('@/pages/insurance/Patients'))
-const InsurancePayments = lazy(() => import('@/pages/insurance/Payments'))
-const InsuranceReports = lazy(() => import('@/pages/insurance/Reports'))
-const InsuranceTariffs = lazy(() => import('@/pages/insurance/Tariffs'))
+const InsuranceDashboard = lazyRetry(() => import('@/pages/insurance/Dashboard'))
+const InsuranceClaims = lazyRetry(() => import('@/pages/insurance/Claims'))
+const InsurancePatients = lazyRetry(() => import('@/pages/insurance/Patients'))
+const InsurancePayments = lazyRetry(() => import('@/pages/insurance/Payments'))
+const InsuranceReports = lazyRetry(() => import('@/pages/insurance/Reports'))
+const InsuranceTariffs = lazyRetry(() => import('@/pages/insurance/Tariffs'))
 
-
-
-const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'))
-const AdminUsers = lazy(() => import('@/pages/admin/Users'))
-
-const AdminRoles = lazy(() => import('@/pages/admin/Roles'))
-const AdminSettings = lazy(() => import('@/pages/admin/Settings'))
-const AdminAuditLogs = lazy(() => import('@/pages/admin/AuditLogs'))
+const AdminDashboard = lazyRetry(() => import('@/pages/admin/Dashboard'))
+const AdminUsers = lazyRetry(() => import('@/pages/admin/Users'))
+const AdminRoles = lazyRetry(() => import('@/pages/admin/Roles'))
+const AdminSettings = lazyRetry(() => import('@/pages/admin/Settings'))
+const AdminAuditLogs = lazyRetry(() => import('@/pages/admin/AuditLogs'))
 
 
 export default function AppRoutes() {
@@ -164,7 +190,7 @@ export default function AppRoutes() {
       </Route>
 
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   )

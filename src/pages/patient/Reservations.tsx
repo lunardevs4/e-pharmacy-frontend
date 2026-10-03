@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { MedicineApi } from '@/services/medicine-api'
+import { useUIStore } from '@/store/uiStore'
 import { Reservation } from '@/types'
 import ConfirmationDialog from '@/components/patient/ConfirmationDialog'
 import { ClipboardList, Clock, CheckCircle2, AlertTriangle, ArrowRight, ShieldCheck, MapPin, X, ArrowLeft, Info, HelpCircle } from 'lucide-react'
@@ -14,8 +15,7 @@ export default function Reservations() {
   const [toastMsg, setToastMsg] = useState<string | null>(null)
 
   const triggerToast = (msg: string) => {
-    setToastMsg(msg)
-    setTimeout(() => setToastMsg(null), 2500)
+    useUIStore.getState().infoToast('Notification', msg)
   }
 
   const loadReservations = async () => {
@@ -123,12 +123,7 @@ export default function Reservations() {
         isLoading={cancelLoading}
       />
 
-      {toastMsg && (
-        <div className="fixed top-20 right-6 z-55 bg-emerald-50 border border-emerald-250 text-emerald-800 px-4.5 py-3 rounded-lg shadow-xl animate-fadeIn flex items-center space-x-2 text-xs font-bold">
-          <CheckCircle2 className="w-5 h-5" />
-          <span>{toastMsg}</span>
-        </div>
-      )}
+
 
       {!selectedRes ? (
         <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 shadow-sm space-y-6">

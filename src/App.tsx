@@ -3,11 +3,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AppRoutes from '@/routes'
 import { useAuthStore } from '@/store/authStore'
-import { GlobalToaster } from '@/components/ui/GlobalToaster'
 import { useUIStore } from '@/store/uiStore'
 import { useLanguageStore } from '@/store/languageStore'
-// import { AppErrorBoundary } from '@/components/ui/ErrorBoundary'
-import { NetworkOfflineBanner } from '@/components/ui/NetworkOfflineBanner'
+import { GlobalToaster, AppErrorBoundary, NetworkOfflineBanner } from '@/components/ui'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,9 +55,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        {/* <AppErrorBoundary> */}
+        <AppErrorBoundary>
           <AppShell />
-        {/* </AppErrorBoundary> */}
+        </AppErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   )

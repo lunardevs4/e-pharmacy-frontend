@@ -9,7 +9,12 @@ export function getDefaultActiveInsurances(providers: InsuranceProvider[]): stri
 
 export function getActivePharmacyInsurances(pharmacyId: string, providers: InsuranceProvider[]): string[] {
   const data = localStorage.getItem(`epharmacy_active_insurances_${pharmacyId}`)
-  if (data) return JSON.parse(data)
+  if (data) {
+    try {
+      const parsed = JSON.parse(data)
+      if (Array.isArray(parsed)) return parsed
+    } catch {}
+  }
   return getDefaultActiveInsurances(providers)
 }
 
@@ -28,7 +33,17 @@ export function getPharmacyInsurancePrice(
     return { price: basePrice, isCustom: false }
   }
   
-  const prices: InsurancePrices = JSON.parse(data)
+  let prices: Partial<InsurancePrices> = {}
+  try {
+    const parsed = JSON.parse(data)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      prices = parsed
+    } else {
+      return { price: basePrice, isCustom: false }
+    }
+  } catch {
+    return { price: basePrice, isCustom: false }
+  }
   
   if (!insuranceId || insuranceId === 'CASH' || insuranceId === 'None') {
     return { price: prices.CASH ?? basePrice, isCustom: prices.CASH !== undefined }
@@ -46,7 +61,17 @@ export function getInsuranceTariff(insuranceId: string | null, medicineId: strin
   if (!insuranceId || insuranceId === 'None') return null
   const data = localStorage.getItem(`epharmacy_tariffs_${insuranceId}`)
   if (!data) return null
-  const tariffs: Record<string, CustomTariff> = JSON.parse(data)
+  let tariffs: Record<string, CustomTariff> = {}
+  try {
+    const parsed = JSON.parse(data)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      tariffs = parsed
+    } else {
+      return null
+    }
+  } catch {
+    return null
+  }
   const tariff = tariffs[medicineId]
   if (!tariff) return null
 
@@ -54,7 +79,12 @@ export function getInsuranceTariff(insuranceId: string | null, medicineId: strin
     const settingsStr = localStorage.getItem(`epharmacy_provider_settings_${insuranceId}`)
     let defaultCoverage = 80
     if (settingsStr) {
-      defaultCoverage = JSON.parse(settingsStr).defaultCoveragePercentage ?? 80
+      try {
+        const parsed = JSON.parse(settingsStr)
+        if (parsed && typeof parsed === 'object' && typeof parsed.defaultCoveragePercentage === 'number') {
+          defaultCoverage = parsed.defaultCoveragePercentage
+        }
+      } catch {}
     } else {
       if (insuranceId === '1') defaultCoverage = 85
       else if (insuranceId === '2') defaultCoverage = 90
@@ -72,7 +102,15 @@ export function getInsuranceTariff(insuranceId: string | null, medicineId: strin
 export function saveInsuranceTariff(insuranceId: string, medicineId: string, tariff: CustomTariff): void {
   const key = `epharmacy_tariffs_${insuranceId}`
   const data = localStorage.getItem(key)
-  const tariffs: Record<string, CustomTariff> = data ? JSON.parse(data) : {}
+  let tariffs: Record<string, CustomTariff> = {}
+  if (data) {
+    try {
+      const parsed = JSON.parse(data)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        tariffs = parsed
+      }
+    } catch {}
+  }
   tariffs[medicineId] = tariff
   localStorage.setItem(key, JSON.stringify(tariffs))
 }

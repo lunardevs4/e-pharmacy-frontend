@@ -44,10 +44,33 @@ export const apiClient = axios.create({
   withCredentials: true,
 })
 
+function getCsrfFromCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  const cookies = document.cookie.split(';')
+  for (const cookie of cookies) {
+    const [name, ...valParts] = cookie.trim().split('=')
+    if (name === 'epharmacy_csrf' || name === '__Host-epharmacy_csrf') {
+      const val = valParts.join('=').trim()
+      if (val) return decodeURIComponent(val)
+    }
+  }
+  return null
+}
+
 let csrfToken: string | null = null
 let csrfTokenRequest: Promise<string> | null = null
 
+export const resetCsrfToken = () => {
+  csrfToken = null
+  csrfTokenRequest = null
+}
+
 const getCsrfToken = async (): Promise<string> => {
+  const cookieToken = getCsrfFromCookie()
+  if (cookieToken) {
+    csrfToken = cookieToken
+    return cookieToken
+  }
   if (csrfToken) return csrfToken
   if (!csrfTokenRequest) {
     csrfTokenRequest = axios
@@ -129,6 +152,8 @@ const getSharedResponse = (key: string) => {
   if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.response)
   sharedGetCache.delete(key)
 
+  if (!sharedCacheChannel) return Promise.resolve(null)
+
   return new Promise<AxiosResponse | null>((resolve) => {
     const waiters = sharedGetWaiters.get(key) || []
     const waiter = (response: AxiosResponse) => resolve(response)
@@ -141,7 +166,7 @@ const getSharedResponse = (key: string) => {
       if (index >= 0) current.splice(index, 1)
       if (current.length === 0) sharedGetWaiters.delete(key)
       resolve(null)
-    }, 50)
+    }, 5)
     sharedCacheChannel?.postMessage({ type: 'get-request', key })
   })
 }
@@ -188,7 +213,11 @@ apiClient.interceptors.request.use(
       const isCsrfExempt =
         requestUrl.endsWith('/auth/login') || requestUrl.endsWith('/auth/register')
       if (!isCsrfExempt && config.headers) {
-        config.headers['X-CSRF-Token'] = await getCsrfToken()
+        try {
+          config.headers['X-CSRF-Token'] = await getCsrfToken()
+        } catch {
+          // Fallback gracefully if CSRF token fetch fails
+        }
       }
     }
     const token = TokenStorage.getToken()
@@ -245,59 +274,83 @@ apiClient.interceptors.response.use(
     }
 
     const isLoginRequest = !!originalRequest?.url?.includes('/auth/login')
+    const isRefreshRequest = !!originalRequest?.url?.includes('/auth/refresh')
     const status = error.response?.status
 
     if (
       status === 401 &&
       !isLoginRequest &&
+      !isRefreshRequest &&
       !originalRequest?._retry &&
       !originalRequest?._skipAuthRefresh
     ) {
-      const refreshToken = TokenStorage.getRefreshToken()
-
-      if (refreshToken) {
-        if (!isRefreshing) {
-          isRefreshing = true
-          originalRequest._retry = true
-          try {
-            const csrfTokenForRefresh = await getCsrfToken()
-            const res = await axios.post(
-              `${API_URL}/auth/refresh`,
-              {},
-              { 
-                timeout: 6000, 
-                withCredentials: true,
-                headers: { 'X-CSRF-Token': csrfTokenForRefresh }
-              },
-            )
-            const payload = res.data?.data || res.data
-            const accessToken = payload?.accessToken
-            if (accessToken) {
-              TokenStorage.setToken(accessToken)
-              if (payload?.refreshToken) TokenStorage.setRefreshToken(payload.refreshToken)
-              isRefreshing = false
-              refreshQueue.forEach((cb) => cb(accessToken))
-              refreshQueue = []
-              return apiClient(originalRequest)
-            }
-          } catch {
-            isRefreshing = false
-            refreshQueue = []
+      if (!isRefreshing) {
+        isRefreshing = true
+        if (originalRequest) originalRequest._retry = true
+        try {
+          const csrfTokenForRefresh = await getCsrfToken().catch(() => '')
+          const res = await axios.post(
+            `${API_URL}/auth/refresh`,
+            {},
+            { 
+              timeout: 6000, 
+              withCredentials: true,
+              headers: csrfTokenForRefresh ? { 'X-CSRF-Token': csrfTokenForRefresh } : {}
+            },
+          )
+          const payload = res.data?.data || res.data
+          const accessToken = payload?.accessToken
+          if (accessToken) {
+            TokenStorage.setToken(accessToken)
+            if (payload?.refreshToken) TokenStorage.setRefreshToken(payload.refreshToken)
           }
-        } else {
-          return new Promise((resolve) => {
-            refreshQueue.push((token: string) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`
-              resolve(apiClient(originalRequest))
-            })
-          })
+          isRefreshing = false
+          refreshQueue.forEach((cb) => cb(accessToken || ''))
+          refreshQueue = []
+          if (originalRequest) {
+            if (accessToken) {
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`
+            }
+            return apiClient(originalRequest)
+          }
+        } catch {
+          isRefreshing = false
+          refreshQueue = []
+          TokenStorage.clearToken()
+          useAuthStore.getState().logout()
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.setItem('epharmacy_auth_expired', '1')
+            window.location.href = '/login'
+          }
+          return Promise.reject(error)
         }
+      } else {
+        return new Promise((resolve) => {
+          refreshQueue.push((token: string) => {
+            if (originalRequest) {
+              if (token) originalRequest.headers.Authorization = `Bearer ${token}`
+              resolve(apiClient(originalRequest))
+            }
+          })
+        })
       }
-      TokenStorage.clearToken()
-      useAuthStore.getState().logout()
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem('epharmacy_auth_expired', '1')
-        window.location.href = '/login'
+    }
+
+    const isCsrfError =
+      status === 403 &&
+      (JSON.stringify(error.response?.data || '').toLowerCase().includes('csrf'))
+
+    if (isCsrfError && originalRequest && !(originalRequest as any)._retryCsrf) {
+      ;(originalRequest as any)._retryCsrf = true
+      resetCsrfToken()
+      try {
+        const freshCsrf = await getCsrfToken()
+        if (originalRequest.headers) {
+          originalRequest.headers['X-CSRF-Token'] = freshCsrf
+        }
+        return apiClient(originalRequest)
+      } catch {
+        // fall through to error handling
       }
     }
 
