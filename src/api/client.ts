@@ -148,6 +148,10 @@ if (sharedCacheChannel) {
 }
 
 const getSharedResponse = (key: string) => {
+  // Without BroadcastChannel there is no other tab to answer this request.
+  // Avoid delaying every GET just to wait for a response that cannot arrive.
+  if (!sharedCacheChannel) return Promise.resolve<AxiosResponse | null>(null)
+
   const cached = sharedGetCache.get(key)
   if (cached && cached.expiresAt > Date.now()) return Promise.resolve(cached.response)
   sharedGetCache.delete(key)
@@ -234,7 +238,12 @@ apiClient.interceptors.request.use(
 )
 
 let isRefreshing = false
-let refreshQueue: Array<(token: string) => void> = []
+// The API stores both tokens in HTTP-only cookies. A refresh therefore may
+// succeed without returning an access token in the response body.
+let refreshQueue: Array<{
+  resolve: (token?: string) => void
+  reject: (error: unknown) => void
+}> = []
 
 const unwrapData = (response: AxiosResponse): any => {
   const payload = response.data
@@ -305,7 +314,7 @@ apiClient.interceptors.response.use(
             if (payload?.refreshToken) TokenStorage.setRefreshToken(payload.refreshToken)
           }
           isRefreshing = false
-          refreshQueue.forEach((cb) => cb(accessToken || ''))
+          refreshQueue.forEach((cb) => cb.resolve(accessToken))
           refreshQueue = []
           if (originalRequest) {
             if (accessToken) {
@@ -313,8 +322,9 @@ apiClient.interceptors.response.use(
             }
             return apiClient(originalRequest)
           }
-        } catch {
+        } catch (refreshErr) {
           isRefreshing = false
+          refreshQueue.forEach((cb) => cb.reject(refreshErr))
           refreshQueue = []
           TokenStorage.clearToken()
           useAuthStore.getState().logout()
@@ -325,12 +335,15 @@ apiClient.interceptors.response.use(
           return Promise.reject(error)
         }
       } else {
-        return new Promise((resolve) => {
-          refreshQueue.push((token: string) => {
-            if (originalRequest) {
-              if (token) originalRequest.headers.Authorization = `Bearer ${token}`
-              resolve(apiClient(originalRequest))
-            }
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({
+            resolve: (token?: string) => {
+              if (originalRequest) {
+                if (token) originalRequest.headers.Authorization = `Bearer ${token}`
+                resolve(apiClient(originalRequest))
+              }
+            },
+            reject,
           })
         })
       }

@@ -2,7 +2,10 @@ import React, { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
-import SidebarLayout from '@/layouts/SidebarLayout'
+import LandingPage from '@/pages/public/Landing'
+import { AuthLoadingSkeleton } from '@/components/ui/AuthLoadingSkeleton'
+
+const SidebarLayout = lazy(() => import('@/layouts/SidebarLayout'))
 
 function lazyRetry<T extends React.ComponentType<any>>(
   componentImport: () => Promise<{ default: T }>
@@ -93,7 +96,7 @@ const AdminAuditLogs = lazyRetry(() => import('@/pages/admin/AuditLogs'))
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><span className="text-sm text-gray-500">Loading…</span></div>}>
+      <Suspense fallback={<AuthLoadingSkeleton />}>
       <Routes>
       <Route path="/" element={<LandingPage />} />
 

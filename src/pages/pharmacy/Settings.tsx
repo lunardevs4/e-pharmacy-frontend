@@ -50,6 +50,27 @@ const tabs: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
 const input =
   'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-health-primary focus:ring-1 focus:ring-health-primary'
 
+function PharmacyProfileField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <label className="text-xs font-bold text-gray-600">
+      {label}
+      <input
+        className={`${input} mt-1.5`}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
+  )
+}
+
 function Section({
   title,
   description,
@@ -233,16 +254,6 @@ export default function PharmacySettings() {
       setSaving(false)
     }
   }
-  const Field = ({ name, label }: { name: string; label: string }) => (
-    <label className="text-xs font-bold text-gray-600">
-      {label}
-      <input
-        className={`${input} mt-1.5`}
-        value={(form as any)[name] || ''}
-        onChange={(e) => setField(name, e.target.value)}
-      />
-    </label>
-  )
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-16">
       <div className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
@@ -346,14 +357,14 @@ export default function PharmacySettings() {
                 description="This information is shown to patients when they find your pharmacy."
               >
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Field name="name" label="Pharmacy name" />
-                  <Field name="phone" label="Phone" />
-                  <Field name="email" label="Email" />
-                  <Field name="licenseNumber" label="License number" />
-                  <Field name="province" label="Province" />
-                  <Field name="district" label="District" />
-                  <Field name="address" label="Address" />
-                  <Field name="licenseUrl" label="Logo / license URL" />
+                  <PharmacyProfileField label="Pharmacy name" value={form.name} onChange={(value) => setField('name', value)} />
+                  <PharmacyProfileField label="Phone" value={form.phone} onChange={(value) => setField('phone', value)} />
+                  <PharmacyProfileField label="Email" value={form.email} onChange={(value) => setField('email', value)} />
+                  <PharmacyProfileField label="License number" value={form.licenseNumber} onChange={(value) => setField('licenseNumber', value)} />
+                  <PharmacyProfileField label="Province" value={form.province} onChange={(value) => setField('province', value)} />
+                  <PharmacyProfileField label="District" value={form.district} onChange={(value) => setField('district', value)} />
+                  <PharmacyProfileField label="Address" value={form.address} onChange={(value) => setField('address', value)} />
+                  <PharmacyProfileField label="Logo / license URL" value={form.licenseUrl} onChange={(value) => setField('licenseUrl', value)} />
                   <label className="text-xs font-bold text-gray-600 md:col-span-2">
                     Description
                     <textarea
@@ -369,8 +380,8 @@ export default function PharmacySettings() {
                 description="Help patients plan their visit and find you on a map."
               >
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Field name="latitude" label="Latitude" />
-                  <Field name="longitude" label="Longitude" />
+                  <PharmacyProfileField label="Latitude" value={form.latitude} onChange={(value) => setField('latitude', value)} />
+                  <PharmacyProfileField label="Longitude" value={form.longitude} onChange={(value) => setField('longitude', value)} />
                   <label className="text-xs font-bold text-gray-600 md:col-span-2">
                     Opening hours
                     <input

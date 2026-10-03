@@ -32,7 +32,7 @@ export const LogoBrand: React.FC<LogoBrandProps> = ({
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <img
-        src="/logo1.png"
+        src="/logo1-optimized.png"
         alt="Rwanda E-Pharmacy Logo"
         onError={() => setImageError(true)}
         className={`${logoSizes[size]} object-contain drop-shadow-sm`}

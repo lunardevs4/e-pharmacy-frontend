@@ -276,7 +276,7 @@ export default function LandingPage() {
           {/* Brand */}
           <div className="flex flex-col items-center flex-shrink-0 leading-none">
             <img
-              src="/logo1.png"
+              src="/logo1-optimized.png"
               alt="Rwanda E-Pharmacy Logo"
               className="h-8 sm:h-10 lg:h-12 w-auto object-contain flex-shrink-0"
             />
@@ -296,7 +296,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <LanguageSelector />
 
-            {/* Login — always visible */}
+           
             <Link
               to="/login"
               className="inline-flex items-center justify-center border border-gray-300 hover:border-health-primary text-xs font-bold text-gray-700 hover:text-health-primary px-3 py-2 rounded-lg transition-colors whitespace-nowrap leading-none"
@@ -622,6 +622,8 @@ export default function LandingPage() {
                 <img
                   src="/pharmacy.png"
                   alt="Healthcare Workers"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -745,8 +747,10 @@ export default function LandingPage() {
             <div className="col-span-2 sm:col-span-2 md:col-span-1 space-y-4">
               <div className="flex items-center space-x-3">
                 <img
-                  src="/logo1.png"
+                  src="/logo1-optimized.png"
                   alt="Rwanda E-Pharmacy Logo"
+                  loading="lazy"
+                  decoding="async"
                   className="h-9 sm:h-10 w-auto object-contain flex-shrink-0"
                 />
                 <div>

@@ -17,13 +17,8 @@ const queryClient = new QueryClient({
 })
 
 function AppShell() {
-  const { initialise } = useAuthStore()
   const warningToast = useUIStore((s) => s.warningToast)
   const t = useLanguageStore((s) => s.t)
-
-  useEffect(() => {
-    initialise()
-  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

@@ -582,7 +582,17 @@ export const AuthApi = {
 
   restoreSession: async (): Promise<AuthResponse | null> => {
     try {
-      const user = await AuthApi.getProfile('', true)
+      // First use the current access cookie without triggering a redirect.
+      // If it has expired, refresh the HTTP-only cookie pair explicitly and
+      // then load the profile again. This prevents a page reload from looking
+      // like a signed-out session while the refresh cookie is still valid.
+      let user: AuthUser
+      try {
+        user = await AuthApi.getProfile('', true)
+      } catch {
+        await apiClient.post('/auth/refresh', {}, { _skipAuthRefresh: true } as never)
+        user = await AuthApi.getProfile('', true)
+      }
       return {
         user,
         accessToken: TokenStorage.getToken() ?? undefined,
