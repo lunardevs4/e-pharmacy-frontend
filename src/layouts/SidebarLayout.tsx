@@ -94,6 +94,7 @@ export default function SidebarLayout() {
         return [
           { path: '/patient',               label: 'Dashboard',      icon: LayoutDashboard },
           { path: '/patient/search',         label: 'Search Medicine',icon: Search          },
+          { path: '/patient/prescriptions',  label: 'Prescriptions',  icon: FileText        },
           { path: '/patient/reservations',   label: 'My Reservations',icon: ClipboardList   },
           { path: '/patient/history',        label: 'History',        icon: History         },
           { path: '/patient/reminders',      label: 'Reminders',      icon: AlarmClock      },
@@ -108,6 +109,7 @@ export default function SidebarLayout() {
         const links = [
           { path: '/pharmacy',               label: 'Dashboard',      icon: LayoutDashboard },
           { path: '/pharmacy/inventory',     label: 'Inventory',      icon: Package         },
+          { path: '/pharmacy/prescriptions', label: 'Prescriptions',  icon: FileText        },
           { path: '/pharmacy/reservations',  label: 'Reservations',   icon: ClipboardList   },
           { path: '/pharmacy/patients',      label: 'Patients',       icon: Users           },
           { path: '/pharmacy/claims',        label: 'Billing',        icon: DollarSign      },
@@ -217,7 +219,7 @@ export default function SidebarLayout() {
       case 'PHARMACIST': return t('role.pharmacy.portal')
       case 'GOVERNMENT': return t('role.government.portal')
       case 'ADMIN': return t('role.admin.portal')
-      case 'INSURANCE': return isInsurance ? (insurer === 'MMI' ? 'MMI' : 'RSSB') : t('role.insurance.portal')
+      case 'INSURANCE': return isInsurance ? (insurer || t('role.insurance.portal')) : t('role.insurance.portal')
       default: return role
     }
   }
@@ -226,9 +228,9 @@ export default function SidebarLayout() {
   const portalLabel = `${translatedPortal} ${t('nav.portal')}`
 
   const portalSub = isInsurance
-    ? insurer === 'MMI'
-      ? 'MMI Insurance'
-      : 'RSSB Insurance'
+    ? insurer
+      ? `${insurer} Insurance`
+      : 'Insurance Portal'
     : 'E-Pharmacy'
 
   const headerBg = 'bg-white'

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams, Link } from 'react-router-dom'
 import {
   Map,
   List,
@@ -583,13 +583,22 @@ export default function MedicineSearch() {
                   {groupedResults.map((group) => (
                     <div key={group.medicine.id} className="space-y-4">
                       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4">
-                        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                          <h2 className="font-black text-gray-900 text-lg">{group.medicine.name}</h2>
-                          {group.medicine.prescriptionRequired && (
-                            <span className="text-[9px] font-black text-red-755 bg-red-50 border border-red-250 px-1.5 py-0.5 rounded uppercase">
-                              Prescription Required
-                            </span>
-                          )}
+                        <div className="flex items-center space-x-2 flex-wrap gap-y-1 justify-between">
+                          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                            <h2 className="font-black text-gray-900 text-lg">{group.medicine.name}</h2>
+                            {group.medicine.prescriptionRequired && (
+                              <span className="text-[9px] font-black text-red-755 bg-red-50 border border-red-250 px-1.5 py-0.5 rounded uppercase">
+                                Prescription Required
+                              </span>
+                            )}
+                          </div>
+                          <Link
+                            to={`/patient/medicines/${group.medicine.id}`}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-health-primary hover:text-health-secondary hover:underline"
+                          >
+                            <span>View Details &amp; Monograph</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </Link>
                         </div>
                         <div className="text-xs space-y-2.5 text-gray-700 pt-3 border-t border-gray-150">
                           {group.medicine.prescriptionRequired && (

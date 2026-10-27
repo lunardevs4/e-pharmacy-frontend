@@ -8,6 +8,7 @@ import PasswordStrengthMeter from '@/components/patient/PasswordStrengthMeter'
 import LocationSelector from '@/components/LocationSelector'
 import { User, Shield, Key, Eye, EyeOff, Save, RefreshCw, CheckCircle, AlertCircle, Camera, Bell } from 'lucide-react'
 import { MedicineApi } from '@/services/medicine-api'
+import { insuranceApi, InsuranceProvider } from '@/services/insurance-api'
 
 export default function PatientProfile() {
   const { user, updateProfile } = useAuthStore()
@@ -15,8 +16,10 @@ export default function PatientProfile() {
   const [name, setName] = useState(user?.name || '')
   const [email, setEmail] = useState(user?.email || '')
   const [phone, setPhone] = useState(user?.phone || '')
-  const [nid] = useState(user?.nid || '1199580048123984') // Read-only National ID
-  const [insuranceProvider, setInsuranceProvider] = useState(user?.insuranceProvider || '')
+  const [nid] = useState(user?.nid || '') // Read-only National ID
+  const [insuranceProvider, setInsuranceProvider] = useState(user?.insuranceProvider || 'None')
+  const [providers, setProviders] = useState<InsuranceProvider[]>([])
+  const [providersLoading, setProvidersLoading] = useState(false)
 
   const [province, setProvince] = useState(user?.province || '')
   const [district, setDistrict] = useState(user?.district || '')
@@ -50,6 +53,29 @@ export default function PatientProfile() {
       .catch(() => undefined)
   }, [])
 
+  useEffect(() => {
+    setProvidersLoading(true)
+    insuranceApi.getProviders()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProviders(data.filter((p: any) => p.isActive !== false && p.status !== 'INACTIVE'))
+        }
+      })
+      .catch(() => {})
+      .finally(() => setProvidersLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (user?.insuranceProvider && user.insuranceProvider !== 'None') {
+      const matched = providers.find(
+        (p) => p.code === user.insuranceProvider || p.name === user.insuranceProvider
+      )
+      setInsuranceProvider(matched ? (matched.code || matched.name) : user.insuranceProvider)
+    } else if (user?.insuranceProvider === 'None' || !user?.insuranceProvider) {
+      setInsuranceProvider('None')
+    }
+  }, [user?.insuranceProvider, providers])
+
   const handleEmailPreferences = async (key: keyof typeof emailPreferences) => {
     const updated = { ...emailPreferences, [key]: !emailPreferences[key] }
     setEmailPreferences(updated)
@@ -65,12 +91,15 @@ export default function PatientProfile() {
       setEmailPreferencesLoading(false)
     }
   }
+
+  const normalizedCurrentInsurance = (user?.insuranceProvider && user.insuranceProvider !== 'None') ? user.insuranceProvider : 'None'
+  const normalizedSelectedInsurance = (insuranceProvider && insuranceProvider !== 'None') ? insuranceProvider : 'None'
   
   const hasUnsavedChanges = 
     name !== (user?.name || '') ||
     email !== (user?.email || '') ||
     phone !== (user?.phone || '') ||
-    insuranceProvider !== (user?.insuranceProvider || '') ||
+    normalizedSelectedInsurance !== normalizedCurrentInsurance ||
     province !== (user?.province || '') ||
     district !== (user?.district || '') ||
     sector !== (user?.sector || '') ||
@@ -116,7 +145,7 @@ export default function PatientProfile() {
         firstName: name,
         email,
         phone,
-        insuranceProvider,
+        insuranceProvider: insuranceProvider === 'None' ? '' : insuranceProvider,
         province,
         district,
         sector,
@@ -236,7 +265,9 @@ export default function PatientProfile() {
                 </div>
                 <div>
                   <h2 className="text-base font-black text-gray-900">{name || 'Patient Profile'}</h2>
-                  <p className="text-[11px] text-gray-400 font-bold uppercase mt-0.5">National ID Registered</p>
+                  <p className="text-[11px] text-gray-400 font-bold uppercase mt-0.5">
+                    {nid ? 'National ID Registered' : 'National ID Not Provided'}
+                  </p>
                 </div>
               </div>
 
@@ -279,8 +310,9 @@ export default function PatientProfile() {
                 <input
                   type="text"
                   readOnly
-                  value={nid}
-                  className="w-full bg-gray-100 border border-gray-250 rounded-lg px-3 py-2 text-gray-450 font-mono focus:outline-none"
+                  value={nid || ''}
+                  placeholder="Not Provided"
+                  className="w-full bg-gray-100 border border-gray-250 rounded-lg px-3 py-2 text-gray-500 font-mono focus:outline-none placeholder:text-gray-400"
                 />
               </div>
 
@@ -331,15 +363,23 @@ export default function PatientProfile() {
               <div className="space-y-1.5">
                 <label className="block text-gray-600 uppercase tracking-wider text-[10px]">Insurance Provider</label>
                 <select
-                  value={insuranceProvider}
+                  value={insuranceProvider || 'None'}
                   onChange={(e) => setInsuranceProvider(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2 text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  disabled={providersLoading}
+                  className="w-full bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2 text-gray-950 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-60"
                 >
-                  <option value="None">Private Patient</option>
-                  <option value="RSSB">Mutuelle de Santé (RSSB)</option>
-                  <option value="MMI">Military Medical Insurance (MMI)</option>
-                  <option value="SANLAM">SANLAM Healthcare</option>
-                  <option value="Radiant">Radiant Insurance</option>
+                  <option value="None">None (Private / Paying Cash)</option>
+                  {providers.map((p) => {
+                    const val = p.code || p.name
+                    const label = p.name && p.code && p.name !== p.code
+                      ? `${p.name} (${p.code})`
+                      : (p.name || p.code)
+                    return (
+                      <option key={p.id} value={val}>
+                        {label}
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
 

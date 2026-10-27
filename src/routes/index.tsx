@@ -56,10 +56,12 @@ const PatientHistory = lazyRetry(() => import('@/pages/patient/History'))
 const PatientReminders = lazyRetry(() => import('@/pages/patient/Reminders'))
 const SharedNotifications = lazyRetry(() => import('@/pages/common/Notifications'))
 const PatientProfile = lazyRetry(() => import('@/pages/patient/Profile'))
+const PatientPrescriptions = lazyRetry(() => import('@/pages/patient/Prescriptions'))
 
 const PharmacyDashboard = lazyRetry(() => import('@/pages/pharmacy/Dashboard'))
 const PharmacyInventory = lazyRetry(() => import('@/pages/pharmacy/Inventory'))
 const PharmacyReservations = lazyRetry(() => import('@/pages/pharmacy/Reservations'))
+const PharmacyPrescriptions = lazyRetry(() => import('@/pages/pharmacy/Prescriptions'))
 const PharmacyInsuranceClaims = lazyRetry(() => import('@/pages/pharmacy/InsuranceClaims'))
 const PharmacyPatients = lazyRetry(() => import('@/pages/pharmacy/Patients'))
 const PharmacyStaff = lazyRetry(() => import('@/pages/pharmacy/StaffManagement'))
@@ -118,7 +120,9 @@ export default function AppRoutes() {
         <Route path="/patient" element={<SidebarLayout />}>
           <Route index element={<PatientDashboard />} />
           <Route path="search" element={<MedicineSearch />} />
+          <Route path="medicines/:id" element={<MedicineDetails />} />
           <Route path="details" element={<MedicineDetails />} />
+          <Route path="prescriptions" element={<PatientPrescriptions />} />
           <Route path="reservations" element={<Reservations />} />
           <Route path="history" element={<PatientHistory />} />
           <Route path="reminders" element={<PatientReminders />} />
@@ -132,6 +136,7 @@ export default function AppRoutes() {
         <Route path="/pharmacy" element={<SidebarLayout />}>
           <Route index element={<PharmacyDashboard />} />
           <Route path="inventory" element={<PharmacyInventory />} />
+          <Route path="prescriptions" element={<PharmacyPrescriptions />} />
           <Route path="reservations" element={<PharmacyReservations />} />
           <Route path="patients" element={<PharmacyPatients />} />
           <Route path="claims" element={<PharmacyInsuranceClaims />} />

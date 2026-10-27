@@ -35,10 +35,15 @@ export default function PatientDashboard() {
   }, [])
 
   useEffect(() => {
-    if (user?.insuranceProvider) {
-      setSelectedInsurance(user.insuranceProvider)
+    if (user?.insuranceProvider && user.insuranceProvider !== 'None') {
+      const matched = providers.find(
+        (p) => p.code === user.insuranceProvider || p.name === user.insuranceProvider
+      )
+      setSelectedInsurance(matched ? (matched.code || matched.name) : user.insuranceProvider)
+    } else {
+      setSelectedInsurance('None')
     }
-  }, [user?.insuranceProvider])
+  }, [user?.insuranceProvider, providers])
 
   const handleSaveInsurance = async () => {
     setInsuranceSaveError(null)
@@ -50,7 +55,7 @@ export default function PatientDashboard() {
         lastName: user?.lastName || '',
         email: user?.email || '',
         phone: user?.phone || '',
-        insuranceProvider: selectedInsurance,
+        insuranceProvider: selectedInsurance === 'None' ? '' : selectedInsurance,
         province: user?.province || '',
         district: user?.district || '',
         sector: user?.sector || '',
@@ -310,11 +315,17 @@ export default function PatientDashboard() {
                 onChange={(e) => setSelectedInsurance(e.target.value)}
                 className="w-full bg-white border border-gray-300 rounded px-1.5 py-1 text-[11px] text-gray-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
           >
-                {providers.map((prov) => (
-                  <option key={prov.id} value={prov.code || prov.name}>
-                    {prov.code || prov.name}
-                  </option>
-                ))}
+                {providers.map((prov) => {
+                  const val = prov.code || prov.name
+                  const label = prov.name && prov.code && prov.name !== prov.code
+                    ? `${prov.name} (${prov.code})`
+                    : (prov.name || prov.code)
+                  return (
+                    <option key={prov.id} value={val}>
+                      {label}
+                    </option>
+                  )
+                })}
                 <option value="None">{t('patient.dash.payingCash')}</option>
           </select>
           <label htmlFor="dashboard-insurance-provider" className="sr-only">Insurance provider</label>
@@ -347,14 +358,19 @@ export default function PatientDashboard() {
                 <>
                   <div className="flex items-center justify-center space-x-1 text-emerald-700">
                     <Shield className="w-4 h-4 fill-emerald-100" />
-                    <span className="text-xs font-black">{user.insuranceProvider} {t('common.active')}</span>
+                    <span className="text-xs font-black">
+                      {(() => {
+                        const matched = providers.find(p => p.code === user.insuranceProvider || p.name === user.insuranceProvider)
+                        return (matched ? matched.name : user.insuranceProvider) + ' ' + t('common.active')
+                      })()}
+                    </span>
                   </div>
                   <span className="block text-[10px] text-emerald-750 font-semibold leading-none">
                     {(() => {
                       const matched = providers.find(p => p.code === user.insuranceProvider || p.name === user.insuranceProvider)
                       if (matched) {
-                        const pct = matched.defaultCoveragePercentage
-                        const display = pct > 1 ? pct : Math.round(pct * 100)
+                        const pct = Number(matched.defaultCoveragePercentage)
+                        const display = pct > 1 ? Math.round(pct) : Math.round(pct * 100)
                         return t('patient.dash.costCovered', { pct: display })
                       }
                       return t('patient.dash.discountActive')
@@ -362,7 +378,11 @@ export default function PatientDashboard() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setIsEditingInsurance(true)}
+                    onClick={() => {
+                      const matched = providers.find(p => p.code === user.insuranceProvider || p.name === user.insuranceProvider)
+                      setSelectedInsurance(matched ? (matched.code || matched.name) : (user.insuranceProvider || 'None'))
+                      setIsEditingInsurance(true)
+                    }}
                     className="text-[9px] text-emerald-800 hover:text-emerald-950 font-bold block mx-auto hover:underline cursor-pointer"
                   >
                     {t('patient.dash.changeProvider')} &rarr;
@@ -376,7 +396,12 @@ export default function PatientDashboard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setIsEditingInsurance(true)}
+                    onClick={() => {
+                      if (providers.length > 0) {
+                        setSelectedInsurance(providers[0].code || providers[0].name)
+                      }
+                      setIsEditingInsurance(true)
+                    }}
                     className="text-[9px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-2 py-1 rounded shadow-xs transition-colors block mx-auto cursor-pointer"
                   >
                     {t('patient.dash.linkInsurance')}

@@ -3,7 +3,7 @@ import { InsurancePrices, CustomTariff } from '@/types/insurance'
 
 export function getDefaultActiveInsurances(providers: InsuranceProvider[]): string[] {
   return providers
-    .filter(p => p.code === 'RSSB' || p.code === 'MMI' || p.name === 'RSSB' || p.name === 'MMI')
+    .filter(p => p.isActive !== false && p.status !== 'INACTIVE')
     .map(p => p.id)
 }
 

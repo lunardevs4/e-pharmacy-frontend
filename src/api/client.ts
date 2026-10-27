@@ -319,6 +319,8 @@ apiClient.interceptors.response.use(
           if (originalRequest) {
             if (accessToken) {
               originalRequest.headers.Authorization = `Bearer ${accessToken}`
+            } else if (originalRequest.headers) {
+              delete originalRequest.headers.Authorization
             }
             return apiClient(originalRequest)
           }
@@ -339,7 +341,11 @@ apiClient.interceptors.response.use(
           refreshQueue.push({
             resolve: (token?: string) => {
               if (originalRequest) {
-                if (token) originalRequest.headers.Authorization = `Bearer ${token}`
+                if (token) {
+                  originalRequest.headers.Authorization = `Bearer ${token}`
+                } else if (originalRequest.headers) {
+                  delete originalRequest.headers.Authorization
+                }
                 resolve(apiClient(originalRequest))
               }
             },
@@ -392,12 +398,14 @@ apiClient.interceptors.response.use(
     }
 
     if (typeof window !== 'undefined' && import.meta.env.DEV) {
-      console.warn('[API Error]', {
-        status: normalized.statusCode,
-        message: normalized.message,
-        url: originalRequest?.url,
-        validationErrors: normalized.validationErrors,
-      })
+      if (!(status === 401 && originalRequest?._skipAuthRefresh)) {
+        console.warn('[API Error]', {
+          status: normalized.statusCode,
+          message: normalized.message,
+          url: originalRequest?.url,
+          validationErrors: normalized.validationErrors,
+        })
+      }
     }
 
     return Promise.reject(normalized)

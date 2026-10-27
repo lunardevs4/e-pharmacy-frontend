@@ -102,4 +102,22 @@ export const PharmacyApi = {
       throw err
     }
   },
+
+  getPrescriptions: async (pharmacyId: string) => {
+    const response = await apiClient.get(`/pharmacies/${pharmacyId}/prescriptions`)
+    return unwrap(response)
+  },
+
+  updatePrescriptionStatus: async (
+    pharmacyId: string,
+    prescriptionId: string,
+    status: string,
+    notes?: string
+  ) => {
+    const response = await apiClient.patch(
+      `/pharmacies/${pharmacyId}/prescriptions/${prescriptionId}`,
+      { status, notes }
+    )
+    return unwrap(response)
+  },
 }

@@ -541,6 +541,43 @@ export const MedicineApi = {
     return unwrap(response)
   },
 
+  getMyPrescriptions: async (): Promise<any[]> => {
+    const response = await apiClient.get('/prescriptions')
+    return unwrap(response)
+  },
+
+  submitPrescription: async (data: {
+    documentUrl?: string
+    pharmacyId?: string
+    notes?: string
+    medicines?: Array<{
+      medicineId: string
+      dosage: string
+      frequency: string
+      duration: string
+      quantity: number
+    }>
+  }): Promise<any> => {
+    const response = await apiClient.post('/prescriptions', {
+      documentUrl: data.documentUrl,
+      pharmacyId: data.pharmacyId,
+      notes: data.notes,
+      medicines: data.medicines || [],
+    })
+    return unwrap(response)
+  },
+
+  uploadPrescriptionFile: async (file: File): Promise<{ fileUrl: string }> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post('/upload/prescription', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return unwrap(response)
+  },
+
   getFavouriteMedicines: async (): Promise<string[]> => {
     const key = 'epharmacy_fav_medicines'
     const data = localStorage.getItem(key)

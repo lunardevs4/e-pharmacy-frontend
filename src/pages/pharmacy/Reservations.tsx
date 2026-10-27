@@ -45,21 +45,12 @@ interface Reservation {
   prescriptionRequired: boolean
 }
 
-const FALLBACK: Reservation[] = [
-  { id: 'RES-2026-001', patient: 'Marie Uwimana',        nationalId: '1199580048123984', medicine: 'Artemether + Lumefantrine', qty: 1, date: '2026-08-01', pickupDeadline: '2026-08-03', insurance: true,  insurer: 'RSSB', patientPays: 700,   status: 'READY',  prescriptionRequired: true  },
-  { id: 'RES-2026-002', patient: 'Jean-Pierre Nkurunziza',nationalId: '1199380092384728', medicine: 'Amoxicillin 500mg',         qty: 2, date: '2026-08-01', pickupDeadline: '2026-08-03', insurance: false,           patientPays: 1600,  status: 'PENDING',            prescriptionRequired: true  },
-  { id: 'RES-2026-003', patient: 'Aline Mukamana',        nationalId: '1199680018374829', medicine: 'Insulin Glargine',          qty: 1, date: '2026-07-31', pickupDeadline: '2026-08-02', insurance: true,  insurer: 'MMI', patientPays: 2700,  status: 'COLLECTED',          prescriptionRequired: true  },
-  { id: 'RES-2026-004', patient: 'Emmanuel Habimana',     nationalId: '1199080037284729', medicine: 'Metformin 850mg',           qty: 2, date: '2026-07-31', pickupDeadline: '2026-08-02', insurance: true,  insurer: 'RSSB', patientPays: 230,   status: 'EXPIRED',            prescriptionRequired: false },
-  { id: 'RES-2026-005', patient: 'Clarisse Ingabire',     nationalId: '1199880018374928', medicine: 'Paracetamol 500mg',         qty: 3, date: '2026-07-30', pickupDeadline: '2026-08-01', insurance: false,           patientPays: 900,   status: 'COLLECTED',          prescriptionRequired: false },
-  { id: 'RES-2026-006', patient: 'Robert Uwera',          nationalId: '1198980028384920', medicine: 'Atenolol 50mg',             qty: 1, date: '2026-08-01', pickupDeadline: '2026-08-04', insurance: true,  insurer: 'SANLAM', patientPays: 238, status: 'PENDING',            prescriptionRequired: true  },
-]
-
 const STATUS_STYLES: Record<ResStatus, string> = {
-  'READY':      'text-emerald-700 bg-emerald-50 border-emerald-200',
-  'PENDING':    'text-amber-700 bg-amber-50 border-amber-200',
-  'COLLECTED':  'text-slate-600 bg-slate-50 border-slate-200',
-  'EXPIRED':    'text-red-700 bg-red-50 border-red-200',
-  'CANCELLED':  'text-gray-500 bg-gray-100 border-gray-200',
+  READY: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  PENDING: 'text-amber-700 bg-amber-50 border-amber-200',
+  COLLECTED: 'text-slate-600 bg-slate-50 border-slate-200',
+  EXPIRED: 'text-red-700 bg-red-50 border-red-200',
+  CANCELLED: 'text-gray-500 bg-gray-100 border-gray-200',
 }
 
 const normalizeReservation = (item: ReservationApiItem): Reservation => {
@@ -100,7 +91,7 @@ const normalizeReservation = (item: ReservationApiItem): Reservation => {
 
 export default function PharmacyReservations() {
   const { user } = useAuthStore()
-  const [reservations, setReservations] = useState<Reservation[]>(FALLBACK)
+  const [reservations, setReservations] = useState<Reservation[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ResStatus | ''>('')
   const [isLoading, setIsLoading] = useState(true)
@@ -120,11 +111,13 @@ export default function PharmacyReservations() {
     setErrorMsg(null)
     try {
       const data = await PharmacyApi.getReservations(pharmacyId)
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setReservations(data.map((item) => normalizeReservation(item as ReservationApiItem)))
+      } else {
+        setReservations([])
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unable to load reservations from backend. Using fallback data.'
+      const message = error instanceof Error ? error.message : 'Unable to load reservations from backend.'
       setErrorMsg(message)
     } finally {
       setIsLoading(false)
@@ -181,9 +174,18 @@ export default function PharmacyReservations() {
       )}
 
       {errorMsg && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start space-x-2 text-red-800 text-xs">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <span>{errorMsg}</span>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between text-red-800 text-xs">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+          <button
+            onClick={loadReservations}
+            disabled={isLoading}
+            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-xs transition-colors"
+          >
+            Retry
+          </button>
         </div>
       )}
 

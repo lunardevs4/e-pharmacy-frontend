@@ -671,7 +671,17 @@ export const AuthApi = {
         firstName: updatedFields.firstName,
         lastName: updatedFields.lastName,
         phone: updatedFields.phone,
+        email: updatedFields.email,
         insuranceProvider: updatedFields.insuranceProvider,
+        province: updatedFields.province,
+        district: updatedFields.district,
+        sector: updatedFields.sector,
+        cell: updatedFields.cell,
+        village: updatedFields.village,
+        emergencyContact: updatedFields.emergencyContact,
+        preferredPharmacy: updatedFields.preferredPharmacy,
+        medicalNotes: updatedFields.medicalNotes,
+        profilePhoto: updatedFields.profilePhoto,
       })
        const normalized = normalizeUser(unwrap(response))
       return normalized
